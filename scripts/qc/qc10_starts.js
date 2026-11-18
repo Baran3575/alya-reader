@@ -8,11 +8,11 @@ for (const pg of Object.keys(data)) {
   let lastSubj = null;
   data[pg] = data[pg].map((t) => {
     let out = t;
-    const m = out.match(/^(Masachika|Alisa|Yuki|Ayano|Maria)\b/);
+    const m = out.match(/^(Masachika|Alisa|Yuki|Ayano|Maria)(?!\p{L})/u);
     if (m) {
       if (m[1] === lastSubj) {
         st.subj++;
-        out = out.replace(/^(Masachika|Alisa|Yuki|Ayano|Maria)\b/, 'O');
+        out = out.replace(/^(Masachika|Alisa|Yuki|Ayano|Maria)(?!\p{L})/u, 'O');
       }
       lastSubj = m[1];
     } else {

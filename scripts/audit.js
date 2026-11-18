@@ -38,7 +38,7 @@ function paragraphs(text) {
   return out;
 }
 
-const EN_STOP = /\b(the|and|you|your|was|were|with|that|this|have|has|she|her|his|they|their|from|what|would|could|just|because|about|there|then|when|which|into|been|being|are|not|but|for|him|how|did|does|is|it|of|on|to|as|at|be|by|do|if|in|my|me|we|or|so|an)\b/gi;
+const EN_STOP = /(?<!\p{L})(the|and|you|your|was|were|with|that|this|have|has|she|her|his|they|their|from|what|would|could|just|because|about|there|then|when|which|into|been|being|are|not|but|for|him|how|did|does|is|it|of|on|to|as|at|be|by|do|if|in|my|me|we|or|so|an)(?!\p{L})/giu;
 
 let stats = { pages: 0, paras: 0, empty: 0 };
 const issues = [];
@@ -58,8 +58,8 @@ for (const p of src) {
     if (left >= 4) issues.push({ p: p.page, i, kind: 'ingilizce ' + left, t: t.slice(0, 110) });
     const q = (t.match(/"/g) || []).length;
     if (q % 2 && !/^["]/.test(t) === false && q > 0) issues.push({ p: p.page, i, kind: 'tırnak', t: t.slice(0, 80) });
-    if (/[A-Za-z]{3,}\s*[.,;]\s*[A-Za-z]{3,}/.test(t) && /\b\w+\s\w+\s\w+\s\w+/.test(t) === false) issues.push({ p: p.page, i, kind: 'kırık', t: t.slice(0, 90) });
-    if (/(\b\w+\b)(\s+\1\b){1,}/.test(t)) issues.push({ p: p.page, i, kind: 'tekrar', t: t.slice(0, 90) });
+    if (/[A-Za-z]{3,}\s*[.,;]\s*[A-Za-z]{3,}/.test(t) && /(?<!\p{L})[\p{L}\p{N}]+\s+[\p{L}\p{N}]+\s+[\p{L}\p{N}]+\s+[\p{L}\p{N}]+(?!\p{L})/u.test(t) === false) issues.push({ p: p.page, i, kind: 'kırık', t: t.slice(0, 90) });
+    if (/((?<!\p{L})[\p{L}\p{N}]+(?!\p{L}))(\s+\1){1,}/u.test(t)) issues.push({ p: p.page, i, kind: 'tekrar', t: t.slice(0, 90) });
   });
 }
 
