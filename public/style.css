@@ -801,3 +801,20 @@ figure.page-img.zoom img {
   padding: 0.36rem 0.85rem;
   color: var(--muted);
 }
+
+/* çevrimdışı göstergesi */
+.offline-badge {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line, #2c2a27);
+  background: var(--panel, #1b1917);
+  color: var(--dim, #9c948a);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}

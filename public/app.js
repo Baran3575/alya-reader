@@ -70,9 +70,47 @@
   };
 
   /* ---------------- veri ---------------- */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
+  function imgSrc(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    if (pack && pack[key]) return pack[key];
+    return p.img;
+  }
+
+  /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
+  function bundleBook(v) {
+    const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
+    return b || null;
+  }
+
+  function cachedBook(v) {
+    const ver = window.ALYA_BUNDLE_VERSION || 'dev';
+    const hit = LS.get('bookver:' + v, null);
+    if (!hit || hit !== ver) return null;
+    return LS.get('book:' + v, null);
+  }
+
+  async function readBook(v) {
+    const cached = cachedBook(v);
+    if (cached) return cached;
+    const embedded = bundleBook(v);
+    if (embedded) {
+      LS.set('book:' + v, embedded);
+      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
+      return embedded;
+    }
+    const res = await fetch('api/book?v=' + encodeURIComponent(v));
+    const book = await res.json();
+    try {
+      LS.set('book:' + v, book);
+      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
+    } catch (e) {}
+    return book;
+  }
+
   async function load() {
-    const res = await fetch('/api/book?v=' + encodeURIComponent(state.vol));
-    state.book = await res.json();
+    state.book = await readBook(state.vol);
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
@@ -149,7 +187,7 @@
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = p.img;
+    img.src = imgSrc(p);
     img.alt = 'Sayfa ' + p.n;
     img.loading = 'lazy';
     img.decoding = 'async';
@@ -161,7 +199,7 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(p.img, 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
     return fig;
   }
 
@@ -417,6 +455,18 @@
     }
   }
 
+  function offlineHint() {
+    const el = document.getElementById('offline');
+    if (el) el.hidden = navigator.onLine;
+  }
+  window.addEventListener('online', offlineHint);
+  window.addEventListener('offline', offlineHint);
+  offlineHint();
+
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
   window.addEventListener('scroll', scheduleProgress, { passive: true });
   window.addEventListener('resize', scheduleProgress);
 
@@ -424,13 +474,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(p.img);
+      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
     if (nxt) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(p.img);
+        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
