@@ -18,6 +18,7 @@ const row = (label, n, note = '') => rows.push([label, n, note]);
 row('1. noktalama', count(/\.{2,}/g), 'çift nokta');
 row('  ', count(/\s+[,.;:!?]/g), 'noktalama öncesi boşluk');
 row('  ', count(/[!?]\./g), '"?." kalıbı');
+row('  ', count(/!{2,}/g), 'ünlem tekrarı');
 let unbalQ = 0;
 let unbalP = 0;
 for (const x of paras) {

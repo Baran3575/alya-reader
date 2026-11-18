@@ -2,6 +2,18 @@
 const { run } = require('./lib');
 
 const PAIRS = [
+  [/-+([!?]+)/g, '$1'],                         // tire yığılması
+  [/\s*~+\s*([!?….]+)/g, '$1'],                 // noktalama öncesi tilde
+  [/~+(?=[”"』)\]]|$)/g, '…'],                  // diyalog sonu tilde
+  [/~+\s+(?=[A-ZÇĞİÖŞÜ])/gu, '… '],             // cümle başı öncesi tilde
+  [/~+\s*,/g, ','],                             // tilde + virgül
+  [/~+\s*/g, ', '],                             // genel tilde -> virgül
+  [/,\s*,+/g, ','],
+  [/,\s*([.!?…])/g, '$1'],
+  [/[!?]*\?[!?]*![!?]*/g, '?!'],                // karışık ünlem/soru
+  [/[!?]*![!?]*\?[!?]*/g, '?!'],
+  [/!{2,}/g, '!'],                              // ünlem tekrarı
+  [/\?{2,}/g, '?'],                             // soru işareti tekrarı
   [/\s*([,.;:!?…])(?=\s|$)/g, '$1'],            // boşluk + noktalama
   [/([,;:!?])(?=[^\s"”'’»)\]}…!?])/g, '$1 '],     // noktalama + boşluksuz devam
   [/(?<!\d)\.(?=[^\s"”'’»)\]}…!?0-9\d])/g, '. '], // cümle sonu nokta

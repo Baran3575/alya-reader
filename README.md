@@ -54,7 +54,7 @@ Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, 
 
 `master` dalına yapılan her push'ta `.github/workflows/qc.yml` iki cildi ayrı ayrı doğrular:
 `verify.js` + `quality.js` + `scripts/qc/cli.js --vol <cilt>`. Taban çizgisi `data/qc_baseline.json`
-(Cilt 4: ortalama 0.15 / 24 bayrak; Cilt 4.5: 0.27 / 54). Kapı kırmızıysa çeviri bozulmuştur.
+(Cilt 4: ortalama 0.09 / 9 bayrak; Cilt 4.5: 0.27 / 54). Kapı kırmızıysa çeviri bozulmuştur.
 
 Yerel çalıştırma:
 
