@@ -21,9 +21,9 @@ for (const pg of Object.keys(data)) {
       return pre + (st.ancak % 2 ? 'Ne var ki ' : 'Ama ');
     });
     // dolgu "gerçekten" (yanında başka pekiştirme varsa) at
-    out = out.replace(/\b(çok|epey|fazlasıyla|son derece)\s+gerçekten\s+/g, '$1 ');
-    out = out.replace(/\bgerçekten\s+(çok|epey|fazlasıyla)\s+/g, '$1 ');
-    if (out.match(/\bgerçekten\b/g)?.length < t.match(/\bgerçekten\b/g)?.length) st.ger++;
+    out = out.replace(/(?<!\p{L})(çok|epey|fazlasıyla|son derece)\s+gerçekten\s+/gu, '$1 ');
+    out = out.replace(/(?<!\p{L})gerçekten\s+(çok|epey|fazlasıyla)\s+/gu, '$1 ');
+    if (out.match(/(?<!\p{L})gerçekten(?!\p{L})/gu)?.length < t.match(/(?<!\p{L})gerçekten(?!\p{L})/gu)?.length) st.ger++;
     out = out.replace(/([.!?…]\s+)([a-zçğıöşü])/gu, (m, a, c) => a + c.toLocaleUpperCase('tr'));
     return out;
   });

@@ -1,0 +1,26 @@
+{
+  "name": "alya-reader",
+  "version": "1.0.0",
+  "description": "Alya Bazen Duygularını Rusça Saklar — Cilt 4 ve Cilt 4.5 Türkçe okuyucu",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/qc-verification.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "test:suite": "node test/qc-verification.test.js",
+    "qc": "node scripts/qc/cli.js",
+    "qc:strict": "node scripts/qc/cli.js --strict",
+    "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",
+    "qc:v45": "node scripts/qc/cli.js --volume 4.5 --strict --check-regression",
+    "patch:dry": "node scripts/patch.js --dry-run",
+    "patch:apply": "node scripts/patch.js"
+  },
+  "keywords": [
+    "alya",
+    "light-novel",
+    "reader",
+    "turkish-translation",
+    "qc"
+  ],
+  "author": "Baran3575",
+  "license": "MIT"
+}

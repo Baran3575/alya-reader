@@ -32,4 +32,4 @@ jobs:
       - name: Kalite puanı (quality.js)
         run: node scripts/qc/quality.js ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
       - name: Eşik kapısı (cli.js)
-        run: node scripts/qc/cli.js --vol ${{ matrix.vol }}
+        run: node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict

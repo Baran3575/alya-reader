@@ -14,7 +14,7 @@ const SYN = {
 function diversify(t) {
   let out = t;
   for (const [word, alts] of Object.entries(SYN)) {
-    const re = new RegExp('\\b' + word.replace(' ', '\\s+') + '\\b', 'gi');
+    const re = new RegExp('(?<!\\p{L})' + word.replace(' ', '\\s+') + '(?!\\p{L})', 'giu');
     const count = (out.match(re) || []).length;
     if (count < 3) continue;
     let n = 0;
@@ -34,10 +34,10 @@ function varyStarts(arr) {
   const CONN = { 'Ardından': ['Sonra', 'Peşinden'], 'Sonra': ['Ardından', 'Ondan sonra'], 'Ancak': ['Ama', 'Yalnız'], 'Ama': ['Ancak', 'Yine de'] };
   let changed = 0;
   for (let i = 1; i < arr.length; i++) {
-    const m = arr[i].match(/^(Ardından|Sonra|Ancak|Ama)\b/);
+    const m = arr[i].match(/^(Ardından|Sonra|Ancak|Ama)(?!\p{L})/u);
     if (!m) continue;
     const prev = arr[i - 1];
-    if (!new RegExp('^' + m[1] + '\\b').test(prev)) continue;
+    if (!new RegExp('^' + m[1] + '(?![\\p{L}])', 'u').test(prev)) continue;
     const alts = CONN[m[1]];
     if (!alts) continue;
     arr[i] = arr[i].replace(m[1], alts[(i + changed) % alts.length]);
