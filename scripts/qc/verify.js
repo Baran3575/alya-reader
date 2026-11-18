@@ -22,7 +22,6 @@ function runVerify(filePath) {
   row('  ', count(/\s+[,.;:!?]/g), 'noktalama öncesi boşluk');
   row('  ', count(/[!?]\./g), '"?." kalıbı');
   row('  ', count(/["']/g), 'düz tırnak');
-  row('  ', count(/!{2,}/g), 'ünlem tekrarı');
   let unbalQ = 0;
   let unbalP = 0;
   for (const x of paras) {
