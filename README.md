@@ -67,6 +67,24 @@ node scripts/qc/cli.js --volume 4.5 --strict
 node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
 ```
 
+### Sunucusuz (çevrimdışı) okuma
+
+`scripts/build_bundle.js` iki cildin Türkçe + İngilizce metnini ve **illüstrasyon görsellerini**
+tarayıcı paketine gömer:
+
+| Dosya | İçerik | Boyut |
+|---|---|---|
+| `public/bundle.js` | `window.ALYA_BUNDLE` — iki cildin sayfa/paragraf/EN verisi + bölüm listesi | ~1,5 MB |
+| `public/bundle-art.js` | `window.ALYA_ART` — 31 illüstrasyon, `data:image/webp;base64` olarak gömülü | ~4,0 MB |
+
+Okuyucu veriyi şu sırayla bulur: **localStorage** (`alya4:book:<cilt>`) → gömülü paket → `/api/book`.
+Yani ilk açılıştan sonra sunucu kapalı olsa da, hatta `index.html` doğrudan `file://` ile açılsa da okuma sürer.
+`public/sw.js` service worker'ı kabuğu, sayfa görsellerini ve `/api/book` yanıtlarını Cache Storage'a yazar.
+
+```bash
+node scripts/build_bundle.js   # metin/EN/görsel değişince yeniden üret
+```
+
 ## Özellikler
 
 - Koyu / açık tema (t), sistem temasına göre başlar

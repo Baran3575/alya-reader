@@ -176,6 +176,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
+function start() {
 server.listen(PORT, () => {
   console.log('Okuyucu hazır:  http://localhost:' + PORT);
   console.log('Cilt 4       :', book.total, 'sayfa |', book.chapters.length, 'bölüm');
@@ -187,3 +188,8 @@ server.listen(PORT, () => {
   }
   console.log('Çeviri       : DeepL + Google (data/paragraphs_final.json, data45/paragraphs_final.json)');
 });
+}
+
+if (require.main === module) start();
+
+module.exports = { buildBook, getBook, start };
