@@ -22,7 +22,7 @@ for (const [p, arr] of Object.entries(data)) {
   const keep = arr.filter((t) => {
     const letters = (t.match(/[A-Za-zÇĞİÖŞÜçğıöşü]/g) || []).length;
     const word = /[a-zçğıöşü]{3,}/.test(t);
-    const junk = letters < 6 || !word || /\d\s*[/)]/.test(t);
+    const junk = letters < 6 || !word || /\d\s*[/)]/.test(t) || /V1\s+Ar/i.test(t);
     if (junk) report.ocr.push(p + ': ' + t.slice(0, 40));
     return !junk;
   });
