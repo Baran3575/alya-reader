@@ -3,12 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const TR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'data/paragraphs_final.json';
-const topArg = process.argv.indexOf('--top');
-const TOP = topArg > -1 ? Number(process.argv[topArg + 1]) : 25;
-
-const data = JSON.parse(fs.readFileSync(path.resolve(TR), 'utf8'));
-
 // Ağırlıklı izler: [ad, regex, puan]
 const SIGNS = [
   ['kalıp: bir şekilde', /bir şekilde/g, 2],
@@ -25,8 +19,8 @@ const SIGNS = [
   ['kalıp: fark etmeden', /farkında olmadan|fark etmeden/g, 1],
   ['edilgen: -ilmektedir', /[ıiuü]lmektedir|[ıiuü]lmıştır/g, 3],
   ['edilgen zinciri', /(?:ildi|ıldı|uldu|üldü)(?!\p{L})[^.!?]{0,120}?(?:ildi|ıldı|uldu|üldü)(?!\p{L})/gu, 2],
-  ['İngilizce kalıntı', /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gu, 3],
-  ['çevirmen notu', /\b(?:ÇN|TN)\s*:/g, 5],
+  ['İngilizce kalıntı', /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui, 3],
+  ['çevirmen notu', /(?<!\p{L})(?:ÇN|TN)\s*:/gu, 5],
   ['düz tırnak', /["']/g, 2],
   ['çift boşluk', / {2,}/g, 1],
   ['nokta tekrarı', /([!?.])\1{1,}/g, 2],
@@ -38,10 +32,19 @@ function sentences(t) {
 }
 
 function score(p, i, x) {
+  if (x === undefined && typeof p === 'string') {
+    x = p;
+    p = '0';
+    i = 0;
+  }
   const notes = [];
   let s = 0;
   for (const [name, re, w] of SIGNS) {
-    const m = x.match(re);
+    let target = x;
+    if (name === 'İngilizce kalıntı') {
+      target = x.replace(/https?:\s*\/\/[^\n]+/gi, '');
+    }
+    const m = target.match(re);
     if (m) {
       s += w * Math.min(m.length, 3);
       notes.push(name + (m.length > 1 ? '×' + m.length : ''));
@@ -58,7 +61,7 @@ function score(p, i, x) {
     s += 2;
     notes.push('tek nefeslik blok');
   }
-  const ve = (x.match(/\bve\b/g) || []).length;
+  const ve = (x.match(/(?<!\p{L})ve(?!\p{L})/gu) || []).length;
   if (ve >= 4) {
     s += ve - 3;
     notes.push('“ve”×' + ve);
@@ -90,29 +93,44 @@ function score(p, i, x) {
   return { key: p + '.' + i, page: +p, idx: i, score: s, notes, words: words.length, text: x };
 }
 
-const rows = [];
-for (const [p, arr] of Object.entries(data)) arr.forEach((x, i) => rows.push(score(p, i, x)));
+function evaluateData(data, top = 25) {
+  const rows = [];
+  for (const [p, arr] of Object.entries(data)) arr.forEach((x, i) => rows.push(score(p, i, x)));
 
-rows.sort((a, b) => b.score - a.score || b.words - a.words);
-const total = rows.length;
-const flagged = rows.filter((r) => r.score >= 3);
-const sum = rows.reduce((a, r) => a + r.score, 0);
-
-console.log('=== ' + path.basename(TR) + ' ===');
-console.log('paragraf:', total, '| ortalama puan:', (sum / total).toFixed(2), '| 3+ puanlı:', flagged.length);
-const byNote = {};
-for (const r of flagged) for (const n of r.notes) {
-  const k = n.replace(/×\d+$/, '').replace(/:.*$/, '');
-  byNote[k] = (byNote[k] || 0) + 1;
-}
-console.log('iz dağılımı:', Object.entries(byNote).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v).join(' · '));
-console.log('\n--- en kötü ' + TOP + ' ---');
-for (const r of rows.slice(0, TOP)) {
-  console.log('s' + r.key + ' [' + r.score + '] ' + r.notes.join(', '));
-  console.log('   ' + r.text.slice(0, 200).replace(/\n/g, ' '));
+  rows.sort((a, b) => b.score - a.score || b.words - a.words);
+  const total = rows.length;
+  const flagged = rows.filter((r) => r.score >= 3);
+  const sum = rows.reduce((a, r) => a + r.score, 0);
+  const avg = total > 0 ? Number((sum / total).toFixed(2)) : 0;
+  return { total, avg, flagged: flagged.length, rows, flaggedRows: flagged };
 }
 
-if (process.argv.includes('--json')) {
-  fs.writeFileSync('data/quality_queue.json', JSON.stringify(rows.filter((r) => r.score >= 3).slice(0, 200), null, 0));
-  console.log('\nkuiuk: data/quality_queue.json');
+if (require.main === module) {
+  const TR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'data/paragraphs_final.json';
+  const topArg = process.argv.indexOf('--top');
+  const TOP = topArg > -1 ? Number(process.argv[topArg + 1]) : 25;
+
+  const data = JSON.parse(fs.readFileSync(path.resolve(TR), 'utf8'));
+  const res = evaluateData(data, TOP);
+
+  console.log('=== ' + path.basename(TR) + ' ===');
+  console.log('paragraf:', res.total, '| ortalama puan:', res.avg.toFixed(2), '| 3+ puanlı:', res.flagged);
+  const byNote = {};
+  for (const r of res.flaggedRows) for (const n of r.notes) {
+    const k = n.replace(/×\d+$/, '').replace(/:.*$/, '');
+    byNote[k] = (byNote[k] || 0) + 1;
+  }
+  console.log('iz dağılımı:', Object.entries(byNote).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v).join(' · '));
+  console.log('\n--- en kötü ' + TOP + ' ---');
+  for (const r of res.rows.slice(0, TOP)) {
+    console.log('s' + r.key + ' [' + r.score + '] ' + r.notes.join(', '));
+    console.log('   ' + r.text.slice(0, 200).replace(/\n/g, ' '));
+  }
+
+  if (process.argv.includes('--json')) {
+    fs.writeFileSync('data/quality_queue.json', JSON.stringify(res.flaggedRows.slice(0, 200), null, 0));
+    console.log('\nkuiuk: data/quality_queue.json');
+  }
 }
+
+module.exports = { SIGNS, sentences, score, evaluateData };

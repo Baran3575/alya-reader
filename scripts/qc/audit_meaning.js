@@ -7,7 +7,7 @@ const src = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/source.json'), 'utf
 const tr = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/paragraphs_final.json'), 'utf8'));
 
 const NEG_EN = /\b(not|n't|no|never|none|nothing|nobody|cannot|hardly)\b/i;
-const NEG_TR = /\b(değil|yok|asla|hiç|olmaz|olmuyor|edemez|amaz|emez|madı|medi|maz|mez|sız|siz|suz|süz)\b/iu;
+const NEG_TR = /(?<!\p{L})(değil|yok|asla|hiç|olmaz|olmuyor|edemez|amaz|emez|madı|medi|maz|mez|sız|siz|suz|süz)(?!\p{L})/giu;
 
 const rows = [];
 for (const p of src) {

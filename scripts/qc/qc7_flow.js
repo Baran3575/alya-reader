@@ -5,11 +5,11 @@ const data = load();
 const stat = { long: 0, commas: 0, deg: 0, chain: 0 };
 
 const DEG = [
-  [/\boldukça\b/g, 'epey'],
-  [/\bson derece\b/g, 'fazlasıyla'],
-  [/\bgerçekten çok\b/g, 'çok'],
-  [/\bgerçekten de\b/g, 'gerçekten'],
-  [/\bbir hayli\b/g, 'epey'],
+  [/(?<!\p{L})oldukça(?!\p{L})/gu, 'epey'],
+  [/(?<!\p{L})son derece(?!\p{L})/gu, 'fazlasıyla'],
+  [/(?<!\p{L})gerçekten çok(?!\p{L})/gu, 'çok'],
+  [/(?<!\p{L})gerçekten de(?!\p{L})/gu, 'gerçekten'],
+  [/(?<!\p{L})bir hayli(?!\p{L})/gu, 'epey'],
 ];
 
 for (const pg of Object.keys(data)) {

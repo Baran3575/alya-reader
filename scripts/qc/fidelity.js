@@ -20,8 +20,8 @@ for (const p of src) {
   if (!en.trim()) continue;
   const wEn = words(en), wTr = words(t);
   const ratio = wEn ? wTr / wEn : 0;
-  const missing = NAMES.filter((n) => (en.match(new RegExp('\\b' + n + '\\b', 'g')) || []).length > (t.match(new RegExp('\\b' + n + '\\b', 'g')) || []).length);
-  const extra = NAMES.filter((n) => (t.match(new RegExp('\\b' + n + '\\b', 'g')) || []).length > (en.match(new RegExp('\\b' + n + '\\b', 'g')) || []).length);
+  const missing = NAMES.filter((n) => (en.match(new RegExp('(?<!\\p{L})' + n + '(?!\\p{L})', 'gu')) || []).length > (t.match(new RegExp('(?<!\\p{L})' + n + '(?!\\p{L})', 'gu')) || []).length);
+  const extra = NAMES.filter((n) => (t.match(new RegExp('(?<!\\p{L})' + n + '(?!\\p{L})', 'gu')) || []).length > (en.match(new RegExp('(?<!\\p{L})' + n + '(?!\\p{L})', 'gu')) || []).length);
   const numOk = nums(en) === nums(t);
   rows.push({ page: p.page, wEn, wTr, ratio, sEn: sents(en), sTr: sents(t), missing, extra, numOk, dq: Math.round(quotes(en)), dtq: Math.round(quotes(t)) });
 }

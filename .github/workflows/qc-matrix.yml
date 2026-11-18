@@ -1,0 +1,51 @@
+name: QC CLI Matrix Gating
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'data/**'
+      - 'data45/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - 'package.json'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  qc-matrix:
+    name: QC Matrix (Cilt ${{ matrix.volume }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    strategy:
+      fail-fast: false
+      matrix:
+        volume: ['4', '4.5']
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Ensure source files remain read-only
+        run: |
+          chmod 444 data/source.json data45/source.json
+
+      - name: Dry-run patch regression test (Volume 4)
+        if: matrix.volume == '4'
+        run: node scripts/patch.js --dry-run
+
+      - name: Run Unified QC CLI (${{ matrix.volume }})
+        run: node scripts/qc/cli.js --volume ${{ matrix.volume }} --strict --check-regression
+
+      - name: Verify source files were untouched
+        run: |
+          git diff --exit-code data/source.json data45/source.json

@@ -2,19 +2,19 @@
 const { run } = require('./lib');
 
 const SPELL = [
-  [/\bherşey\b/gi, 'her şey'],
-  [/\bbirşey\b/gi, 'bir şey'],
-  [/\bhiçbirşey\b/gi, 'hiçbir şey'],
-  [/\bbir çok\b/gi, 'birçok'],
-  [/\bherkez\b/gi, 'herkes'],
-  [/\byanlız\b/gi, 'yalnız'],
-  [/\bşu an da\b/gi, 'şu anda'],
-  [/\bbir an önce\b/gi, 'bir an önce'],
-  [/\bhalbuki\b/gi, 'halbuki'],
-  [/\bneyse ki\b/gi, 'neyse ki'],
-  [/\bher nekadar\b/gi, 'her ne kadar'],
-  [/\böncelik le\b/gi, 'öncelikle'],
-  [/\bmiş gibi\b/gi, 'miş gibi'],
+  [/(?<!\p{L})herşey(?!\p{L})/giu, 'her şey'],
+  [/(?<!\p{L})birşey(?!\p{L})/giu, 'bir şey'],
+  [/(?<!\p{L})hiçbirşey(?!\p{L})/giu, 'hiçbir şey'],
+  [/(?<!\p{L})bir çok(?!\p{L})/giu, 'birçok'],
+  [/(?<!\p{L})herkez(?!\p{L})/giu, 'herkes'],
+  [/(?<!\p{L})yanlız(?!\p{L})/giu, 'yalnız'],
+  [/(?<!\p{L})şu an da(?!\p{L})/giu, 'şu anda'],
+  [/(?<!\p{L})bir an önce(?!\p{L})/giu, 'bir an önce'],
+  [/(?<!\p{L})halbuki(?!\p{L})/giu, 'halbuki'],
+  [/(?<!\p{L})neyse ki(?!\p{L})/giu, 'neyse ki'],
+  [/(?<!\p{L})her nekadar(?!\p{L})/giu, 'her ne kadar'],
+  [/(?<!\p{L})öncelik le(?!\p{L})/giu, 'öncelikle'],
+  [/(?<!\p{L})miş gibi(?!\p{L})/giu, 'miş gibi'],
 ];
 
 function grammar(t, pg) {
@@ -22,7 +22,7 @@ function grammar(t, pg) {
   for (const [re, to] of SPELL) out = out.replace(re, to);
   // ikiz kelime (Türkçede meşru olanlar hariç)
   const legit = new Set(['uzun', 'azar', 'diken', 'yare', 'peki', 'tık', 'tak', 'pat', 'küt', 'hızlı', 'yavaş', 'tek', 'bir', 'sık', 'bol', 'kendi', 'gizli', 'sessiz', 'usul', 'yavaş', 'şöyle', 'böyle', 'öyle', 'güzel', 'iyi']);
-  out = out.replace(/\b([\p{L}]{2,})\s+\1\b/giu, (m, w) => (legit.has(w.toLocaleLowerCase('tr')) ? m : w));
+  out = out.replace(/(?<!\p{L})([\p{L}]{2,})\s+\1(?!\p{L})/giu, (m, w) => (legit.has(w.toLocaleLowerCase('tr')) ? m : w));
   // paragraf sonunda noktalama eksikse ekle (yalnızca tam cümlelerde)
   const trimmed = out.trimEnd();
   const words = trimmed.split(/\s+/).length;

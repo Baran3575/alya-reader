@@ -7,7 +7,7 @@ const src = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/source.json'), 'utf
 const tr = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/paragraphs_final.json'), 'utf8'));
 
 const nums = (s) => (String(s).match(/\d+(?:[.,]\d+)?/g) || []);
-const names = (s) => [...String(s).matchAll(/\b(Masachika|Alisa|Yuki|Ayano|Maria|Chisaki|Touya|Sayaka|Nonoa|Sarashina|Kuze|Kujou|Suou|Alya|Masha)\b/g)].map((m) => m[1]);
+const names = (s) => [...String(s).matchAll(/(?<!\p{L})(Masachika|Alisa|Yuki|Ayano|Maria|Chisaki|Touya|Sayaka|Nonoa|Sarashina|Kuze|Kujou|Suou|Alya|Masha)(?!\p{L})/gu)].map((m) => m[1]);
 
 const rows = [];
 for (const p of src) {
