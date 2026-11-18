@@ -1,0 +1,21 @@
+     0 1. noktalama çift nokta                                     
+     0    noktalama öncesi boşluk                                  
+     0    "?." kalıbı                                              
+    24    tek sayıda tırnak (sayfa bölünmesi olabilir)             
+     7    dengesiz parantez                                        
+    60 2. doğal ifade "Ancak"                                      
+    13    "Ayrıca"                                                 
+     0    "söz konusu"                                             
+     0    "diye söyledi"                                           
+    68 3. tekrar "ardından"                                        
+    87    "bir şekilde"                                            
+    13    tek paragrafta en çok yinelenen kelime: bölüm            
+     0 4. fiil/zarf "-maktadır"                                    
+     0    "-mıştır"                                                
+     0    "değildir"                                               
+     0    "olmuştur"                                               
+     0    "bulunmaktadır"                                          
+     0 5. gramer bitişik/imla hatası                               
+    24    ikiz kelime                                              
+
+paragraf: 2282 | sayfa: 347

@@ -1,0 +1,52 @@
+SADAKAT RAPORU — Cilt 4
+sayfa: 274 | kelime EN 72211 / TR 53490 | ortalama TR/EN kelime oranı: 74.1%
+cümle EN 11252 / TR 7276
+
+[1] Kısa kalan sayfalar (<%72): 87
+  s 12  0%  EN 39 → TR 0
+  s282  43%  EN 7 → TR 3
+  s237  53%  EN 17 → TR 9
+  s239  56%  EN 297 → TR 167
+  s 15  56%  EN 337 → TR 190
+  s 34  58%  EN 24 → TR 14
+  s101  61%  EN 290 → TR 176
+  s 20  61%  EN 220 → TR 135
+  s168  63%  EN 24 → TR 15
+  s133  64%  EN 269 → TR 172
+  s 47  64%  EN 296 → TR 190
+  s194  65%  EN 208 → TR 135
+
+[2] Şişkin sayfalar (>%118): 0
+
+[3] Sayı uyuşmayan sayfalar: 269
+  s14
+  s15
+  s16
+  s17
+  s18
+  s19
+  s20
+  s21
+  s22
+  s23
+  s24
+  s25
+
+[4] İsim sayısı uyuşmayan sayfalar: 66
+  s15  eksik: Masachika  fazla: -
+  s28  eksik: -  fazla: Kuze
+  s36  eksik: -  fazla: Masachika
+  s41  eksik: -  fazla: Ayano
+  s48  eksik: -  fazla: Yuki
+  s49  eksik: Yuki  fazla: -
+  s50  eksik: -  fazla: Yuki
+  s53  eksik: -  fazla: Ayano
+  s73  eksik: Alisa  fazla: -
+  s76  eksik: Masachika  fazla: -
+  s78  eksik: Masachika  fazla: -
+  s80  eksik: Masachika  fazla: -
+  s83  eksik: Alisa  fazla: Masachika
+  s84  eksik: Masachika  fazla: -
+  s87  eksik: -  fazla: Alisa
+
+[5] Tırnak (diyalog) dengesi: EN 2169 / TR 2202

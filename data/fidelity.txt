@@ -1,0 +1,18 @@
+SADAKAT ve İSİM DENETİMİ
+tarih: 2026-11-17 17:41
+
+--- Cilt 4
+bölüm: 13 | sayfa: 282
+isim tutarsızlığı (bölüm bazlı): 1
+takma ad sapması (Alya/Masha, ±3): 0
+sayı kaybı yaşanan bölüm (≥2 sayı): 12
+hiç geçmeyen isim: 0
+tam isim sayıları: Masachika 1164 · Kuze 48 · Alisa 474 · Alya 80 · Maria 248 · Masha 47 · Yuki 373 · Ayano 175 · Sayaka 50 · Touya 87 · Chisaki 90 · Nonoa 39 · Kinjou undefined · Mimiko undefined · Sarashina 22 · Suou 27 · Kujou 9
+
+--- Cilt 4.5
+bölüm: 14 | sayfa: 347
+isim tutarsızlığı (bölüm bazlı): 2
+takma ad sapması (Alya/Masha, ±3): 0
+sayı kaybı yaşanan bölüm (≥2 sayı): 0
+hiç geçmeyen isim: 2
+tam isim sayıları: Masachika 544 · Kuze 29 · Alisa 437 · Alya 94 · Maria 156 · Masha 40 · Yuki 351 · Ayano 226 · Sayaka 109 · Touya 113 · Chisaki 135 · Nonoa 111 · Kinjou 43 · Mimiko 4 · Sarashina 29 · Suou 17 · Kujou 9

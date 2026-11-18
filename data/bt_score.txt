@@ -1,0 +1,112 @@
+GERİ ÇEVİRİ SADAKAT SKORU — Cilt 4
+ölçülen paragraf: 3052
+ortalama içerik örtüşmesi: 74.9%
+düşük örtüşmeli paragraf (<%45): 310
+
+EN içeriği en az kapsanan sayfalar (olası atlama/yanlış anlama): 19
+  s1  kapsam 0%  (EN 0 içerik kelimesi)
+  s2  kapsam 0%  (EN 1 içerik kelimesi)
+  s282  kapsam 25%  (EN 4 içerik kelimesi)
+  s109  kapsam 43%  (EN 14 içerik kelimesi)
+  s72  kapsam 44%  (EN 124 içerik kelimesi)
+  s65  kapsam 50%  (EN 16 içerik kelimesi)
+  s68  kapsam 56%  (EN 109 içerik kelimesi)
+  s147  kapsam 56%  (EN 55 içerik kelimesi)
+  s34  kapsam 57%  (EN 14 içerik kelimesi)
+  s98  kapsam 58%  (EN 130 içerik kelimesi)
+  s54  kapsam 59%  (EN 83 içerik kelimesi)
+  s239  kapsam 59%  (EN 113 içerik kelimesi)
+  s112  kapsam 59%  (EN 128 içerik kelimesi)
+  s73  kapsam 60%  (EN 110 içerik kelimesi)
+  s75  kapsam 60%  (EN 10 içerik kelimesi)
+
+En düşük örtüşmeli 20 paragraf:
+
+  s1.0  örtüşme 0%
+  BT: P 0) 1/ 7 7’1 l 1) c, -z T’ d V A/ Q
+  TR: P 0) 1/ 7 7’1 l 1) c, -z T’ d V A/ Q
+
+  s2.0  örtüşme 0%
+  BT: drawings
+  TR: Çizimler
+  kaynakta olmayan: drawin
+
+  s13.13  örtüşme 0%
+  BT: pictures
+  TR: Resimler
+  kaynakta olmayan: pictur
+
+  s18.9  örtüşme 0%
+  BT: Nevermind…!!!
+  TR: Boş ver…!!!
+  kaynakta olmayan: neverm
+
+  s18.10  örtüşme 0%
+  BT: …
+  TR: …
+
+  s19.3  örtüşme 0%
+  BT: …
+  TR: …
+
+  s20.4  örtüşme 0%
+  BT: “Ahhh?!”
+  TR: “Ahhh?!”
+  kaynakta olmayan: ahhh
+
+  s20.6  örtüşme 0%
+  BT: “Oh, you're awake.”
+  TR: “Ah, uyanmışsın.”
+  kaynakta olmayan: you're, awake
+
+  s22.9  örtüşme 0%
+  BT: “!!!”
+  TR: “!!!”
+
+  s23.0  örtüşme 0%
+  BT: “So, what the hell is this!?”
+  TR: “Peki, bu da ne böyle!?”
+  kaynakta olmayan: hell
+
+  s23.9  örtüşme 0%
+  BT: "What--?!"
+  TR: “Ne--?!”
+
+  s23.13  örtüşme 0%
+  BT: “Other than that?”
+  TR: “Bunun dışında?”
+
+  s24.2  örtüşme 0%
+  BT: “What did you understand?”
+  TR: “Neyi anladın?”
+  kaynakta olmayan: unders
+
+  s24.3  örtüşme 0%
+  BT: "Thing…"
+  TR: “Şey…”
+  kaynakta olmayan: th
+
+  s24.9  örtüşme 0%
+  BT: “So, what is it?”
+  TR: “Peki, ne var?”
+
+  s24.11  örtüşme 0%
+  BT: “…Is that so?”
+  TR: “…Öyle mi peki?”
+
+  s24.15  örtüşme 0%
+  BT: “…”
+  TR: “…”
+
+  s25.12  örtüşme 0%
+  BT: “W-What!”
+  TR: “N-Ne!”
+
+  s27.7  örtüşme 0%
+  BT: “Just?”
+  TR: “Sadece mi?”
+
+  s29.11  örtüşme 0%
+  BT: "…Really?"
+  TR: “…Öyle mi?”
+  kaynakta olmayan: real

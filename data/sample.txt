@@ -1,0 +1,155 @@
+[s4.0]
+EN: 
+TR: 
+
+[s8.0]
+EN: 
+TR: 
+
+[s11.0]
+EN: 
+TR: 
+
+[s15.1]
+EN: (TN: the reason why I didn't translate "Kaa-sama" to mother is because this is the slang of how Masachika would refer to his mother. I feel that gives us insight into Masachika as a character. One argument you can make, for example, is that Masachika is a naturally casual, laid back or friendly person despite being bor
+TR: (ÇN: "Kaa-sama"yı "anne" olarak çevirmememin nedeni, bunun Masachika'nın annesine hitap ederken kullandığı argo bir ifade olmasıdır. Bunun, Masachika karakterini daha iyi anlamamıza yardımcı olacağını düşünüyorum. Örneğin, Masachika'nın böylesine prestijli bir çevrede doğmuş olmasına rağmen doğuştan rahat, sakin ve dost canlısı bir kişi olduğu söylenebilir.) "Özür dilerim, Nii-sama. Sürekli uyuyakaldığım için Nii-sam
+
+[s17.9]
+EN: As usual? Does Ojii-sama want .... me to keep working hard just like before? How could I possibly do that? that... why, why don't you understand my suffering! It hurts. It really hurts. Ojii-sama's wish is very painful. Living with Kaa-sama is very painful. Yuki and Ayano's innocent gazes were... painful. I've had enou
+TR: Her zamanki gibi mi? Ojii-sama... benim eskisi gibi sıkı çalışmaya devam etmemi mi istiyor? Bunu nasıl yapabilirim ki? O... neden, neden çektiğim acıyı anlamıyorsun ki! Canım yanıyor. Gerçekten çok canım yanıyor. Ojii-sama'nın isteği çok acı verici. Kaa-sama ile yaşamak çok acı verici. Yuki ve Ayano'nun masum bakışları... acı vericiydi. Artık bıktım. Ben... artık bu evde yaşamak istemiyorum.
+
+[s18.9]
+EN: Ignore... ... ... ...!!!
+TR: Boş ver…!!!
+
+[s27.10]
+EN: Upon hearing Masachika's words, Yuki's expression suddenly turned serious and her body that was leaning forward, returned to its original position. Then, she tilted her head without blinking.
+TR: Masachika'nın sözlerini duyunca Yuki'nin yüzündeki ifade birden ciddileşti ve öne doğru eğilmiş olan vücudu eski konumuna geri döndü. Ardından, gözünü kırpmadan başını yana eğdi.
+
+[s34.0]
+EN: "Not really..."
+TR: "Pek sayılmaz..."
+
+[s42.2]
+EN: Masachika could not help but immediately widen his eyes and was shocked when he saw the appearance of Ayano entering the living room. Ayano only was wearing light purple underwear. Moreover, rather than being called underwear, the word lingerie was more suitable to describe it, and it looked more fashionable and sexy t
+TR: Masachika, oturma odasına giren Ayano'nun görünüşünü görünce gözlerini hemen kocaman açmaktan kendini alamadı ve şok oldu. Ayano sadece açık mor renkli bir iç çamaşırı giyiyordu. Üstelik buna iç çamaşırı demek yerine, "lingerie" kelimesi daha uygun olurdu; beklediğimden daha şık ve seksi görünüyordu. Göğüsleri sütyenin üzerinde derin bir dekolte oluşturuyordu ve beli o kadar inceydi ki kırılacakmış gibi görünüyordu.
+
+[s53.7]
+EN: Masachika's cheeks twitched as he was guided to the front row seats for four people. Yuki also tried to cover it up with a light shout, but her face was slightly tense. Ayano was still expressionless as usual.
+TR: Masachika, dört kişilik ön sıradaki koltuklara yönlendirilirken yanakları seğirdi. Yuki de hafif bir haykırışla bunu gizlemeye çalıştı, ancak yüzü biraz gergindi. Ayano ise her zamanki gibi ifadesizdi.
+
+[s60.11]
+EN: Sayaka suddenly shouted loudly, stood up while pounding the table with both hands, and leaned her body towards Yuki's direction. Even Yuki herself was taken aback by this. As soon as she brought her face closer to Yuki, which almost showed her true nature, Sayaka then said.
+TR: Sayaka aniden yüksek sesle bağırdı, iki eliyle masaya vurarak ayağa kalktı ve vücudunu Yuki'nin yönüne doğru eğdi. Bu durum Yuki'yi bile şaşırttı. Neredeyse gerçek doğasını ortaya çıkaran bir şekilde yüzünü Yuki'ye yaklaştırır yaklaştırmaz, Sayaka şöyle dedi.
+
+[s67.13]
+EN: When Masachika tilted his head slightly and nodded, Sayaka looked surprised and choked. She held her slightly open mouth with trembling hands,.... and tears began to flow from her wide-open eyes.
+TR: Masachika başını hafifçe yana eğip başını salladığında, Sayaka şaşkın bir ifadeyle boğazına bir şey takılmış gibi oldu. Titreyen elleriyle hafifçe aralanmış ağzını kapattı... ve kocaman açılmış gözlerinden gözyaşları akmaya başladı.
+
+[s79.3]
+EN: When he turned his face away from the bed, Masachika replied quietly as he hurriedly sat on the bed. Then, the bedroom door slowly opened, and Alisa entered with a calm expression on her face looked at Masachika diagonally. (Why did you even come?!) Masachika's cheeks twitched at this completely unexpected development.
+TR: Yüzünü yataktan başka yöne çevirdiğinde, Masachika aceleyle yatağa otururken sessizce cevap verdi. Ardından yatak odasının kapısı yavaşça açıldı ve Alisa, yüzünde sakin bir ifadeyle içeri girip Masachika'ya yan gözle baktı. (Neden geldin ki?!) Masachika'nın yanakları, bu tamamen beklenmedik gelişme karşısında seğirdi. Ancak Alisa bunu fark etmemiş gibiydi; sol elini göğsünün altında kavuşturdu ve sağ eliyle saçlarıyl
+
+[s87.7]
+EN: As instructed, Masachika then raised his elbow lightly and stood beside Alisa, and he inserted his hand to support her elbow a little awkwardly. And then... she blatantly raised her eyebrows.
+TR: Talimatlara uygun olarak Masachika dirseğini hafifçe kaldırdı ve Alisa'nın yanına geçti; ardından elini uzatarak, biraz beceriksizce onun dirseğini destekledi. Ve sonra... Alisa açıkça kaşlarını kaldırdı.
+
+[s96.1]
+EN: Even though Masachika was asking if she disliked spicy food based on the current situation. Apparently, Alisa was still thinking that she hadn't been caught nearly dying in front of a bowl of super spicy ramen. (But yeah, if she insists that she likes spicy food, I won't ask any further questions...) Alisa continued to
+TR: Masachika, mevcut duruma bakarak ona acı yemekleri sevip sevmediğini soruyor olsa da, görünüşe göre Alisa hâlâ, aşırı acı bir ramen kasesi önünde neredeyse can çekişirken yakalanmadığını düşünüyordu. (Ama evet, eğer acı yemeği sevdiğinde ısrar ediyorsa, daha fazla soru sormayacağım...) Alisa, içten içe onun bu konuda neden bu kadar inatçı davrandığını sormak isteyen Masachika'ya sorular sormaya devam etti.
+
+[s106.4]
+EN: Then, Yuki was pulled straight to the station by Maria. After looking at her back for a few seconds, Masachika called out to the remaining Alisa and Ayano.
+TR: Ardından Yuki, Maria tarafından doğrudan istasyona sürüklendi. Birkaç saniye boyunca onun arkasını izledikten sonra Masachika, geride kalan Alisa ve Ayano'ya seslendi.
+
+[s111.4]
+EN: The emperor, who is the final boss, just grunts as he says, "That's just the naïve ideals of the poor. is just the naïve ideal of the weak," but he also changed his judgment of the heroine ..... in that scene, Masachika also subconsciously shouted in amazement 'The heroine is really cool--!'. I see, so Sarashina-senpai
+TR: Son boss olan imparator, şöyle derken sadece homurdanır: "Bunlar sadece yoksulların naif idealleri. Zayıfların naif idealleri, " derken, aynı zamanda kahraman kız hakkındaki yargısını da değiştirir... O sahnede Masachika da bilinçaltında şaşkınlıkla "Kahraman kız gerçekten çok havalı--!" diye bağırır. Anlıyorum, yani Sarashina-senpai kahramanı gördükten sonra hemen fikrini değiştirmiş, evet…
+
+[s117.6]
+EN: No one would dare to commit a crime under such circumstances. On the other hand, Maria's appearance was not as flashy as Alisa's in terms of color and tended to attract people who were brash or the like. (And as a result of being attracted to her... the wrists of such people get messed up, huh.) After guessing the gene
+TR: Böyle bir ortamda kimse suç işlemeye cesaret edemezdi. Öte yandan, Maria'nın görünüşü renk açısından Alisa'nınki kadar gösterişli değildi ve daha çok küstah ya da ona benzer tipleri kendine çekiyordu. (Ve ona ilgi duymalarının sonucu olarak... bu tür insanların bilekleri mahvoluyor, ha.) Genel durumu tahmin ettikten sonra, titreyerek bakışlarını koridorun diğer tarafındaki Chisaki'ye çevirdi ve sormaya devam etti.
+
+[s129.4]
+EN: Alisa released Maria's arm that was curled around her with an exasperated expression, and quickly moved away from her sister. Masachika's gaze involuntarily fell on a certain part of Maria that bounced while swinging wide. 'What to do again, right. Thanks to the strap in the center of her swimsuit, I can clearly see th
+TR: Alisa, kendisine sarılmış olan Maria'nın kolunu sinirli bir ifadeyle bıraktı ve hızla kız kardeşinden uzaklaştı. Masachika'nın bakışları, geniş bir yay çizerek sallanırken zıplayan Maria'nın belirli bir bölgesine istem dışı olarak takıldı. ‘Yine ne yapacağım, değil mi. Mayosunun ortasındaki askı sayesinde, o dolgun ve dik vadiyi net bir şekilde görebiliyorum... ya da.' Beyninde böyle bir mantık yürütüyordu, ama hemen
+
+[s138.13]
+EN: The water depth around here is only knee-deep at most, but if you lie down forcefully, you can still drown. Hastily lifting his upper body with his hands at the bottom of the water, Masachika exhaled through his nose and glanced at Yuki who was clinging to his neck.
+TR: Buralardaki su derinliği en fazla diz boyu kadar, ama kendinizi kuvvetle suya yatırırsanız yine de boğulabilirsiniz. Masachika, su dibindeyken elleriyle üst vücudunu aceleyle yukarı kaldırdı, burnundan nefes verdi ve boynuna sarılmış olan Yuki'ye bir göz attı.
+
+[s147.4]
+EN: Masachika immediately turned his gaze to the sea when he heard the cry in his ears. Then, sure enough, there it was, floating in the water, and Masachika tensed his body... but if you looked carefully, it didn't seem to be swimming on its own. Instead, it was just bobbing along with the flow of the waves...
+TR: Masachika, kulaklarında yankılanan çığlığı duyar duymaz hemen bakışlarını denize çevirdi. Ve nitekim, işte oradaydı, suda süzülüyordu; Masachika vücudunu gerdi... ama dikkatli bakıldığında, kendi başına yüzüyor gibi görünmüyordu. Aksine, sadece dalgaların akışına kapılıp sallanıyordu...
+
+[s157.3]
+EN: Masachika was slightly touched by Alisa, who nodded in a slightly strange, but at the same time natural-looking manner. Her classmate who was known as the school's "Loner Princess" and a stubborn person, referred to the two students as "friends" without hesitation. Alisa, who used to be a prude, now had someone she cou
+TR: Masachika, biraz tuhaf ama aynı zamanda doğal görünen bir şekilde başını sallayan Alisa'dan hafifçe etkilendi. Okulun "Yalnız Prensesi" olarak bilinen ve inatçı bir kişilik olan sınıf arkadaşı, tereddüt etmeden bu iki öğrenciyi "arkadaş" olarak nitelendirdi. Eskiden çok çekingen olan Alisa'nın artık tereddüt etmeden arkadaş diyebileceği biri vardı.
+
+[s162.2]
+EN: Sensing danger, Masachika quickly extended his left hand, wrapped his arm around Arisa's stomach, and tried to restrain her from behind. Although he had just been told not to touch her, Masachika had no time to worry about that. But here he made some miscalculations. First, since they were both wearing swimsuits, his l
+TR: Tehlikeyi sezen Masachika, hızla sol elini uzattı, kolunu Arisa'nın beline doladı ve onu arkadan tutmaya çalıştı. Ona dokunmaması söylense de, Masachika bunu dert edecek vakti yoktu. Ancak burada bazı hesap hataları yaptı. İlk olarak, ikisi de mayo giyiyordu, bu yüzden Arisa'nın vücudunu tutan sol eli hiçbir şeye tutunamadı.
+
+[s168.1]
+EN: Alisa finally stood up and looked back at Masachika, who was curled up like a
+TR: Alisa sonunda ayağa kalktı ve bir gibi kıvrılmış olan Masachika'ya dönüp baktı
+
+[s177.0]
+EN: Almost involuntarily remembering what happened back then, Masachika quickly turned his thoughts away. However, it was too late, and her younger sister, who was overly sensitive to her brother's thoughts, muttered a "Hmm~?" and looked at Masachika with a suspicious look.
+TR: O zamanlar olanları neredeyse istem dışı bir şekilde hatırlayan Masachika, düşüncelerini hızla başka yöne çevirdi. Ancak artık çok geçti; ağabeyinin düşüncelerine aşırı duyarlı olan kız kardeşi, "Hmm~?" diye mırıldandı ve Masachika'ya şüpheli bir bakış attı.
+
+[s184.2]
+EN: (Hmm?) She then looked up from the plastic bag Alisa was playing with and stopped abruptly in the middle of the street. Masachika then furrowing his brows, he looked again a second time, a third time... and let her gaze wander in another direction. Then, he shouted out loudly in his heart. (This girl, why isn't he wear
+TR: (Hmm?) Ardından, Alisa'nın oynadığı plastik torbadan başını kaldırdı ve sokağın ortasında aniden durdu. Masachika kaşlarını çatarak bir kez daha, sonra üçüncü kez baktı… ve bakışlarını başka bir yöne çevirdi. Sonra, içinden yüksek sesle haykırdı. (Bu kız, neden iç çamaşırı giymiyorrrrrrr~~~!!?) Bir bakışta, kız kardeşinin bilmeden dilini çıkaran yüzünün görüntüsü gözünün önüne geldi. Elinde hiçbir kanıt olmamasına ra
+
+[s190.3]
+EN: Alisa finally replied to Maria's question, probably because she thought that Masachika would be subjected to an unreasonable lecture that made no sense if left unchecked.
+TR: Alisa, Maria'nın sorusuna nihayet cevap verdi; muhtemelen, buna bir son verilmezse Masachika'nın mantıksız ve anlamsız bir azarlamaya maruz kalacağını düşündüğü için.
+
+[s200.4]
+EN: "Because it's fate... I believe that we will definitely meet." Her words sounded like a prayer. The calm part of Masachika just clucked his tongue as he thought 'What a marvelous flower garden... No, it's more like a shoujo manga brain, huh'. But... in the face of Maria's expression that resembled that of a pious saint
+TR: Çünkü bu kader... Kesinlikle karşılaşacağımıza inanıyorum." Sözleri adeta bir dua gibiydi. Masachika'nın sakin tarafı ise "Ne muhteşem bir çiçek bahçesi... Hayır, daha çok bir shoujo manga karakterinin zihni gibi, ha' diye düşündü. Ama... dindar bir azizeyi andıran Maria'nın ifadesi karşısında, onunla alay edecek havada değildi.
+
+[s206.2]
+EN: Masachika's eyes widened at the sudden hug. However, Maria quickly broke away and smiled happily at Masachika. He didn't understand the reason behind her smile, but ...... at the sight of her innocent face, somehow Masachika already didn't care about the details and naturally smiled along.
+TR: Masachika, ani kucaklaşma karşısında gözlerini kocaman açtı. Ancak Maria hemen ondan ayrıldı ve Masachika'ya mutlu bir gülümsemeyle baktı. Masachika, bu gülümsemenin ardındaki sebebi anlamamıştı, ama…… onun masum yüzünü görünce, nedense ayrıntılar artık umurunda değildi ve o da doğal bir şekilde gülümsedi.
+
+[s213.10]
+EN: As Masachika's words became stuttered upon noticing her gaze, Maria immediately placed her hand over her mouth after her body had stood still for a moment. As you might have imagined, the stain on Masachika's pajamas was the saliva that Maria had drooled when she slept three times. Probably because she found a trace of
+TR: Masachika, Maria'nın bakışını fark edince sözleri kekelemeye başlayınca, Maria bir anlığına donakaldıktan sonra hemen elini ağzına götürdü. Tahmin edebileceğiniz gibi, Masachika'nın pijamalarındaki leke, Maria'nın uyurken üç kez salyasını akıtmasından kaynaklanıyordu. Muhtemelen ağzının kenarında salya izi fark ettiği için, Maria'nın zaten kızarmış olan yüzü daha da kızardı.
+
+[s222.10]
+EN: The six of them, except for Chisaki, turned at the sound, and at the same time saw the tip of the plastic bottle with its cap bouncing off the back of the sofa and then falling onto the chair.
+TR: Chisaki hariç altı kişi, o sese doğru başlarını çevirdiler ve aynı anda, kapağı takılı plastik şişenin ucunun kanepenin arkasına çarptıktan sonra sandalyeye düştüğünü gördüler.
+
+[s229.6]
+EN: Arisa responded casually to Masachika's praise and turned away, but her ears flushed slightly. In response to that Masachika and Maria both looked at her with a smile, and Alisa, who seemed to be unable to bear the embarrassment, hurriedly returned the lottery chopsticks while trying to ignore their gazes. After that, 
+TR: Arisa, Masachika'nın övgüsüne kayıtsız bir şekilde karşılık verdi ve yüzünü başka yöne çevirdi, ancak kulakları hafifçe kızardı. Bunun üzerine Masachika ve Maria ikisi de ona gülümseyerek baktılar; utancına dayanamayan Arisa ise onların bakışlarını görmezden gelmeye çalışarak aceleyle çekiliş çubuklarını geri verdi. Bundan sonra oyun birkaç tur daha devam etti ve ortam iyice kızıştığında... Kral olan Chisaki, o ana k
+
+[s235.10]
+EN: When Masachika made that joke, Alisa also chuckled. And then, Yuki suddenly appeared behind them. To the two people who turned around and wondered what she wanted ...... Yuki then said to them with a grinning slyly, taking off her graceful female guise.
+TR: Masachika o şakayı yaptığında Alisa da kıkırdadı. Ve sonra, Yuki aniden arkalarında belirdi. Arkasını dönüp ne istediğini merak eden ikiliye…… Yuki, zarif kadın kılığını bir kenara bırakarak, sinsi bir sırıtışla onlara şöyle dedi.
+
+[s247.2]
+EN: Maria put her hand on her cheek with a smile, and Alisa raised her eyebrows as if confused about how to respond. However, the compliment was no mere lipservice, but rather his honest feelings. Yukata and cotton candy. Even with just those two combinations, it could produce a beautiful picture. So much so that he couldn
+TR: Maria gülümseyerek elini yanağına koydu; Alisa ise nasıl tepki vereceğini bilememiş gibi kaşlarını kaldırdı. Ancak bu iltifat sadece laf olsun diye söylenmiş bir şey değildi; tam tersine, onun içten duygularının bir yansımasıydı. Yukata ve pamuk şeker. Sadece bu iki şeyin birleşimi bile nefes kesici bir manzara yaratabilirdi. Öyle ki, kamerasını kurup deklanşöre basmadan duramadı.
+
+[s256.4]
+EN: (When we went out together...? In front of my house, meaning in the hallway of the apartment? Did something happen?) As Masachika traced his memories while casting his eyes everywhere, Alisa said irritably, "Mouuu, geez!" and poked Masachika's cheek with her index finger.
+TR: (Ne zaman birlikte dışarı çıkmıştık...? Evimin önünde mi, yani apartmanın koridorunda mı? Bir şey mi oldu?) Masachika her yere göz gezdirerek anılarını canlandırmaya çalışırken, Alisa sinirli bir şekilde "Mouuu, hayret!" dedi ve işaret parmağıyla Masachika'nın yanağına hafifçe dokundu.
+
+[s265.2]
+EN: Yuki's surprised voice sounded behind him, but he ran without looking back. Leaving the five of them behind, Masachika and Alisa ran towards the torii gate. Masachika continued to walk through the crowd while being careful not to trip Alisa. As they passed the portable shrine (mikoshi) and saw the torii gate, they hear
+TR: Arkasından Yuki'nin şaşkın sesi duyuldu, ama o arkasına bakmadan koşmaya devam etti. Beş kişiyi geride bırakarak, Masachika ve Alisa torii kapısına doğru koştular. Masachika, Alisa'nın ayağı takılmasın diye dikkat ederken kalabalığın içinden ilerlemeye devam etti. Taşınabilir tapınağı (mikoshi) geçip torii kapısını gördüklerinde, yüksek bir patlama sesi duydular... ve karanlık gece gökyüzünde devasa havai fişekler be
+
+[s274.0]
+EN: eyes that stared straight at him. Thanks to the disappointment of his mother, his frozen heart began to melt. He felt that he could do anything for her. (This road... Oh yeah, I was attacked by a dog on this road...) Masachika reminisced about the past with a calm and serene feeling. The days he spent with that girl we
+TR: gözleri doğrudan ona bakıyordu. Annesinin hayal kırıklığı sayesinde, donmuş kalbi erimeye başladı. Onun için her şeyi yapabileceğini hissetti. (Bu yol... Ah evet, bu yolda bir köpeğin saldırısına uğramıştım...) Masachika, sakin ve huzurlu bir duyguyla geçmişi yad etti. O kızla geçirdiği günler hâlâ güzel ve parlak anılar olarak hafızasında yer ediyordu... ama kalbi o parlaklıktan dolayı incinmiyordu. Artık bir kayıp 
+
+[s277.3]
+EN: On the day of their separation, Masachika saw his younger sister standing next to his mother. Finally, he realized her stupid misunderstanding. The one who threw everything away was Masachika, but why did he feel as if he was the one being thrown away. He left the Suou residence with an empty feeling, as if a cold wind
+TR: Ayrıldıkları gün, Masachika küçük kız kardeşini annesinin yanında dururken gördü. Sonunda, kız kardeşinin aptalca bir yanlış anlama içinde olduğunu fark etti. Her şeyi bir kenara atan Masachika'ydı, ama neden sanki bir kenara atılan kendisiymiş gibi hissediyordu? Sanki göğsünden soğuk bir rüzgâr esip geçmiş ve neşenin izini bile bırakmamış gibi, içi boş bir hisle Suou malikanesinden ayrıldı. Yanında, babası tüm bu sü
+
+[s280.7]
+EN: If he chose the path on the right, it would lead to the exit of the park. If he chooses the path on the left, it would lead to a square ...... with lots of playground equipment, where he spent most of his time with the girl. Masachika hesitated a little ...... and slowly stepped onto the path on the left. Masachika him
+TR: Sağdaki yolu seçerse, bu yol parkın çıkışına çıkacaktı. Soldaki yolu seçerse, bu yol bir meydana çıkacaktı…… orada pek çok oyun aletinin bulunduğu ve kızla zamanının çoğunu geçirdiği yere. Masachika biraz tereddüt etti… ve yavaşça soldaki yola adım attı. Masachika bunun nedenini kendisi de tam olarak bilmiyordu. Belki de buraya bir daha gelmek zorunda kalmamak için parkın her yerini keşfetmeye karar vermişti...
