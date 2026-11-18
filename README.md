@@ -33,6 +33,19 @@ scripts/merge.js        iki motoru birleştirir + sözlük/noktalama düzeltmesi
 scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
 ```
 
+### Çeviri metinleri (analiz için başlangıç noktası)
+
+| Dosya | İçerik |
+|---|---|
+| `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.045 paragraf |
+| `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.281 paragraf |
+| `data/source.json`, `data45/source.json` | İngilizce kaynak katmanı |
+| `data/chapters.json`, `data45/chapters.json` | Bölüm başlıkları + sayfa aralıkları |
+| `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
+| `scripts/qc/verify.js` | imla/noktalama denetimi (`ALYA_TR_FILE` ile dosya seçilir) |
+
+Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, kaynak tonu korunur (küfür yumuşatılmaz), özel adlar tutarlı (Masachika, Kuze, Alisa/Alya, Maria/Masha), kıvrık tırnak, çevirmen notu/İngilizce kalıntı yok.
+
 ## Özellikler
 
 - Koyu / açık tema (t), sistem temasına göre başlar

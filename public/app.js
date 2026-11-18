@@ -111,7 +111,18 @@
     });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
+    markTocRead();
     render();
+  }
+
+  // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
+  function markTocRead() {
+    const max = LS.get('max:' + state.vol, state.page);
+    for (const li of $('tocList').children) {
+      const i = Number(li.dataset.idx);
+      const end = chapterRange(i)[1];
+      li.classList.toggle('is-read', max >= end);
+    }
   }
   /* ---------------- metin temizliği ---------------- */
   function cleanHeading(paras, ch) {
@@ -260,9 +271,16 @@
     h1.textContent = ch.title;
     const meta = document.createElement('p');
     meta.className = 'ch-meta';
+    const pages = endPage - startPage + 1;
+    let words = 0;
+    for (let n = startPage; n <= endPage; n++) {
+      const pg = state.book.pages[n - 1];
+      if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
+    }
+    const mins = Math.max(1, Math.round(words / 240));
     meta.textContent =
-      (startPage === endPage ? 'Sayfa ' : 'Sayfa ') + startPage + (startPage === endPage ? '' : '–' + endPage) +
-      ' · ' + (endPage - startPage + 1) + ' sayfa';
+      'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
+      ' · ' + pages + ' sayfa · ~' + mins + ' dk';
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
@@ -338,6 +356,9 @@
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
+    const prevMax2 = LS.get('max:' + state.vol, 0);
+    if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    markTocRead();
     LS.set('mode', state.mode);
 
     // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
@@ -388,6 +409,11 @@
       state.page = seen;
       LS.set('page', seen);
       LS.set('page:' + state.vol, seen);
+      const prevMax = LS.get('max:' + state.vol, 0);
+      if (seen > prevMax) {
+        LS.set('max:' + state.vol, seen);
+        markTocRead();
+      }
     }
   }
 

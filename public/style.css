@@ -203,6 +203,17 @@ body {
 .toc-list li.is-current button {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
+.toc-list li.is-read .ch-label {
+  color: var(--muted);
+}
+.toc-list li.is-read .ch-label::after {
+  content: ' · okundu';
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+.toc-list li.is-read .ch-title {
+  color: var(--fg-soft);
+}
 
 .select {
   appearance: none;
@@ -293,11 +304,15 @@ main {
   font-weight: 600;
   margin: 0 0 1.6rem;
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .reader p {
   font-family: Georgia, 'Noto Serif', 'Times New Roman', serif;
   font-size: var(--reader-size);
+  text-wrap: pretty;
+  orphans: 2;
+  widows: 2;
   line-height: 1.78;
   margin: 0 0 1.05em;
   color: var(--fg);
@@ -620,8 +635,8 @@ figure.page-img.zoom img {
 }
 
 .ch-end {
-  margin: 2.6rem 0 0;
-  padding-top: 1.4rem;
+  margin: 2.8rem 0 0;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--line);
   text-align: center;
 }
