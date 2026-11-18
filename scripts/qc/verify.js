@@ -9,6 +9,9 @@ const paras = [];
 for (const [p, arr] of Object.entries(f)) arr.forEach((t, i) => paras.push({ p, i, t }));
 
 const count = (re) => paras.reduce((a, x) => a + (x.t.match(re) || []).length, 0);
+// Türkçe harfler için Unicode sınır: \b "ı, ş, ğ" yanında çalışmaz
+const W = (s, flags = 'g') => new RegExp('(?<!\\p{L})' + s + '(?!\\p{L})', 'u' + flags);
+const countW = (s, flags = 'g') => count(W(s, flags));
 const rows = [];
 const row = (label, n, note = '') => rows.push([label, n, note]);
 
@@ -24,13 +27,13 @@ for (const x of paras) {
 row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
 row('  ', unbalP, 'dengesiz parantez');
 
-row('2. doğal ifade', count(/\bAncak\b/g), '"Ancak"');
-row('  ', count(/\bAyrıca\b/g), '"Ayrıca"');
-row('  ', count(/\bsöz konusu\b/g), '"söz konusu"');
-row('  ', count(/\bdiye söyledi\b/g), '"diye söyledi"');
+row('2. doğal ifade', countW('Ancak'), '"Ancak"');
+row('  ', countW('Ayrıca'), '"Ayrıca"');
+row('  ', countW('söz konusu'), '"söz konusu"');
+row('  ', countW('diye söyledi'), '"diye söyledi"');
 
-row('3. tekrar', count(/\bardından\b/gi), '"ardından"');
-row('  ', count(/\bbir şekilde\b/gi), '"bir şekilde"');
+row('3. tekrar', countW('ardından', 'gi'), '"ardından"');
+row('  ', countW('bir şekilde', 'gi'), '"bir şekilde"');
 let worst = 0;
 let worstWord = '';
 for (const x of paras) {
@@ -43,12 +46,12 @@ row('  ', worst, 'tek paragrafta en çok yinelenen kelime: ' + worstWord);
 
 row('4. fiil/zarf', count(/maktadır|mektedir/g), '"-maktadır"');
 row('  ', count(/mıştır|miştir/g), '"-mıştır"');
-row('  ', count(/\bdeğildir\b/g), '"değildir"');
-row('  ', count(/\bolmuştur\b/g), '"olmuştur"');
-row('  ', count(/\bbulunmaktadır\b/g), '"bulunmaktadır"');
+row('  ', countW('değildir'), '"değildir"');
+row('  ', countW('olmuştur'), '"olmuştur"');
+row('  ', countW('bulunmaktadır'), '"bulunmaktadır"');
 
-row('5. gramer', count(/\b(herşey|birşey|herkez|yanlız|bir çok)\b/gi), 'bitişik/imla hatası');
-row('  ', count(/\b([\p{L}]{3,})\s+\1\b/giu), 'ikiz kelime');
+row('5. gramer', count(W('(herşey|birşey|herkez|yanlız|bir çok)', 'gi')), 'bitişik/imla hatası');
+row('  ', count(W('([\\p{L}]{3,})\\s+\\1', 'gi')), 'ikiz kelime');
 
 const w = 26;
 for (const [label, n, note] of rows) console.log(String(n).padStart(6), (label + ' ' + note).padEnd(60));

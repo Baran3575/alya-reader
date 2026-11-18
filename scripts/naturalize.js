@@ -5,7 +5,9 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const FILE = path.join(ROOT, 'data/paragraphs_final.json');
+const FILE = process.argv[2] && !process.argv[2].startsWith('--')
+  ? path.resolve(process.argv[2])
+  : path.join(ROOT, 'data/paragraphs_final.json');
 const dry = process.argv.includes('--dry');
 
 // 1) sözcük/ifade düzeyi: resmî -> günlük/edebî
@@ -46,6 +48,30 @@ const MECH = [
   [/\boldukça fazla\b/gi, 'epey'],
 ];
 
+// 2b) bağlamsal zarf kuralları: "X bir şekilde" -> Türkçe zarf;
+// algı kalıplarının sadeleştirilmesi. Yalnızca tek anlamlı kalıplar.
+const CONTEXT = [
+  [/\bçok hızlı bir şekilde\b/gi, 'hızla'],
+  [/\bhızlı bir şekilde\b/gi, 'hızlıca'],
+  [/\byavaş bir şekilde\b/gi, 'yavaşça'],
+  [/\bsessiz bir şekilde\b/gi, 'sessizce'],
+  [/\bnazik bir şekilde\b/gi, 'nazikçe'],
+  [/\bsakin bir şekilde\b/gi, 'sakince'],
+  [/\bkolay bir şekilde\b/gi, 'kolayca'],
+  [/\bkesin bir şekilde\b/gi, 'kesinlikle'],
+  [/\bbelirgin bir şekilde\b/gi, 'belirgin biçimde'],
+  [/\bfarklı bir şekilde\b/gi, 'başka türlü'],
+  [/\bbenzer bir şekilde\b/gi, 'benzer biçimde'],
+  [/\bbu şekilde\b/gi, 'böyle'],
+  [/\bo şekilde\b/gi, 'öyle'],
+  [/\bfarkında olmadan\b/gi, 'istem dışı'],
+  [/\bfark etmeden\b/gi, 'istemeden'],
+  [/\bgörünüyordu\b/gi, 'görünüyordu'],
+];
+
+// zaman bağlaçlarını sırayla çeşitlendir (aşırı "ardından" yığılmasını kırar)
+const CONNECTORS = ['Sonra', 'Derken', 'Peşinden', 'Ardından'];
+
 // çevirmen notları: (TN: ...) -> (ÇN: ...)
 function notes(t) {
   return t.replace(/\((TN|ÇN|TL note|Translator'?s? note)\s*:/gi, '(ÇN:');
@@ -63,10 +89,25 @@ function typography(t) {
     .trim();
 }
 
+const contextOnly = process.argv.includes('--context-only');
+let connectorTurn = 0;
+
+function context(t) {
+  let s = t;
+  for (const [re, to] of CONTEXT) s = s.replace(re, to);
+  // cümle başındaki "Ardından" → dönüşümlü bağlaç
+  s = s.replace(/(^|[.!?…]\s+)Ardından\b/g, (m, pre) => {
+    const pick = CONNECTORS[connectorTurn++ % CONNECTORS.length];
+    return pre + pick;
+  });
+  return s;
+}
+
 function naturalize(text) {
   let t = text;
-  for (const [re, to] of LEX) t = t.replace(re, to);
-  for (const [re, to] of MECH) t = t.replace(re, to);
+  if (!contextOnly) for (const [re, to] of LEX) t = t.replace(re, to);
+  if (!contextOnly) for (const [re, to] of MECH) t = t.replace(re, to);
+  t = context(t);
   t = notes(t);
   t = typography(t);
   // paragraf başı küçük harf (makine çevirisi artığı) düzeltilir
