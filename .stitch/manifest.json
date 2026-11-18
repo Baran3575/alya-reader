@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "workspaceId": "be3feea7-1391-424b-aa60-7c1a8b7dd17d",
+  "repo": {
+    "url": "",
+    "owner": "",
+    "name": ""
+  },
+  "stitch": {
+    "projectId": "8448801512199693267",
+    "projectName": "[Stitch] - ",
+    "referenceScreen": {
+      "id": "primary",
+      "route": "/",
+      "title": "Primary Application Canvas",
+      "deviceType": "DESKTOP",
+      "extractedAt": "2026-11-18T12:57:34.661Z"
+    }
+  }
+}

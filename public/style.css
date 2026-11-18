@@ -306,6 +306,58 @@ main {
 
 .reader p.dialog {
   color: var(--fg);
+  /* asılı açılış tırnağı: tırnak sol marja taşar, satır başları hizalı kalır */
+  text-indent: -0.42em;
+  hanging-punctuation: first allow-end;
+}
+
+/* ---------- görsel yakınlaştırma ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background: rgba(8, 7, 6, 0.94);
+  cursor: zoom-out;
+  animation: lb-in 0.18s ease;
+}
+.lightbox[hidden] {
+  display: none;
+}
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+.lb-close {
+  position: absolute;
+  top: max(0.6rem, env(safe-area-inset-top));
+  right: 0.6rem;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: transparent;
+  color: #f2eee7;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+@keyframes lb-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.001s !important;
+    animation-duration: 0.001s !important;
+  }
 }
 
 .page-foot {
@@ -380,6 +432,8 @@ figure.page-img.zoom img {
 }
 
 .nav-btn {
+  min-width: 44px;
+  min-height: 44px;
   border: 1px solid var(--line);
   background: var(--bg-soft);
   color: var(--fg);

@@ -150,8 +150,27 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => fig.classList.toggle('zoom'));
+    fig.addEventListener('click', () => openLightbox(p.img, 'Sayfa ' + p.n));
     return fig;
+  }
+
+  function openLightbox(src, alt) {
+    const lb = $('lightbox');
+    if (!lb) return;
+    const im = lb.querySelector('img');
+    im.src = src;
+    im.alt = alt || '';
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const lb = $('lightbox');
+    if (!lb || lb.hidden) return false;
+    lb.hidden = true;
+    lb.querySelector('img').removeAttribute('src');
+    document.body.style.overflow = '';
+    return true;
   }
 
   /* ---------------- çizim (tek orijinal sayfa) ---------------- */
@@ -463,8 +482,14 @@
     goChapter(1 < chapters().length ? 1 : 0);
   });
 
+  const lbEl = $('lightbox');
+  if (lbEl) lbEl.addEventListener('click', closeLightbox);
+
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') return toggleToc(false);
+    if (e.key === 'Escape') {
+      if (closeLightbox()) return;
+      return toggleToc(false);
+    }
     if (e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
