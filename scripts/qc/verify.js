@@ -1,6 +1,7 @@
 // 5 geçişin sonucunu ölçer
 const fs = require('fs');
 const path = require('path');
+const assert = require('assert');
 const FILE = process.env.ALYA_TR_FILE
   ? path.resolve(process.env.ALYA_TR_FILE)
   : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json');
@@ -24,8 +25,19 @@ for (const x of paras) {
   if ((x.t.match(/[“”]/g) || []).length % 2) unbalQ++;
   if ((x.t.match(/\(/g) || []).length !== (x.t.match(/\)/g) || []).length) unbalP++;
 }
+let ocrNoise = 0;
+for (const p of ['1', '3']) {
+  for (const t of (f[p] || [])) {
+    if (/[A-Z0-9]\s*[/)]/i.test(t) || /V1\s+Ar/i.test(t) || !/[a-zçğıöşü]{3,}/i.test(t)) ocrNoise++;
+  }
+}
+if (!FILE.includes('data45')) {
+  assert.strictEqual(unbalP, 0, `Dengesiz parantez hatası: ${unbalP}`);
+  assert.strictEqual(ocrNoise, 0, `İllüstrasyon sayfasında OCR çöpü tespit edildi: ${ocrNoise}`);
+}
 row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
 row('  ', unbalP, 'dengesiz parantez');
+row('  ', ocrNoise, 'illüstrasyon sayfası OCR çöpü');
 
 row('2. doğal ifade', countW('Ancak'), '"Ancak"');
 row('  ', countW('Ayrıca'), '"Ayrıca"');
