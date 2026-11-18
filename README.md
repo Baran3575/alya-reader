@@ -43,8 +43,25 @@ scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
 | `data/chapters.json`, `data45/chapters.json` | Bölüm başlıkları + sayfa aralıkları |
 | `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
 | `scripts/qc/verify.js` | imla/noktalama denetimi (`ALYA_TR_FILE` ile dosya seçilir) |
+| `scripts/qc/cli.js` | birleşik kalite kapısı (`--vol 4`, `--json`, `--update-baseline`), regresyon eşiği |
+| `scripts/naturalize.js` | deterministik doğallaştırma: `--context-only` / `--dry` |
+| `scripts/norm_typo.js` | dizgi normalizasyonu (noktalama yığılması, tilde, harf uzatma) |
+| `scripts/fix_boundaries.js` | sayfa sınırı onarımı, OCR çöpü ayıklama |
 
 Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, kaynak tonu korunur (küfür yumuşatılmaz), özel adlar tutarlı (Masachika, Kuze, Alisa/Alya, Maria/Masha), kıvrık tırnak, çevirmen notu/İngilizce kalıntı yok.
+
+### Sürekli doğrulama (GitHub Actions)
+
+`master` dalına yapılan her push'ta `.github/workflows/qc.yml` iki cildi ayrı ayrı doğrular:
+`verify.js` + `quality.js` + `scripts/qc/cli.js --vol <cilt>`. Taban çizgisi `data/qc_baseline.json`
+(Cilt 4: ortalama 0.15 / 24 bayrak; Cilt 4.5: 0.27 / 54). Kapı kırmızıysa çeviri bozulmuştur.
+
+Yerel çalıştırma:
+
+```bash
+node scripts/qc/cli.js          # iki cilt
+node scripts/qc/cli.js --vol 4  # tek cilt
+```
 
 ## Özellikler
 
