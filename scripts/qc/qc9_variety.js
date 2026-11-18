@@ -9,17 +9,17 @@ for (const pg of Object.keys(data)) {
   data[pg] = data[pg].map((t) => {
     let out = t;
     // "Ardından" / "ardından": her ikincisini çeşitlendir
-    out = out.replace(/(^|[.!?…]\s+|,\s+)Ardından\b/g, (m, pre) => {
+    out = out.replace(/(^|[.!?…]\s+|,\s+)Ardından(?!\p{L})/gu, (m, pre) => {
       st.ard++;
       return st.ard % 2 ? pre + (st.ard % 4 === 1 ? 'Sonra' : 'Peşinden') : m;
     });
-    out = out.replace(/([a-zçğıöşü]+)\s+ardından\b/gu, (m, w) => {
+    out = out.replace(/([a-zçğıöşü]+)\s+ardından(?!\p{L})/gu, (m, w) => {
       st.ard++;
       return st.ard % 2 ? w + ' sonra' : m;
     });
     // "bir şekilde": ikinci ve sonraki kullanımları at (aynı paragrafta)
     let c = 0;
-    out = out.replace(/\s*\bbir şekilde\b(?=\s)/g, (m) => {
+    out = out.replace(/\s*(?<!\p{L})bir şekilde(?!\p{L})(?=\s)/gu, (m) => {
       c++;
       if (c === 1) return m;
       st.sek++;
@@ -32,7 +32,7 @@ for (const pg of Object.keys(data)) {
     });
     // "gerçekten" yükü: cümlede ikinci geçişi ve fiil öncesi dolguları at
     let g = 0;
-    out = out.replace(/\bgerçekten\s+(?=(olmaz|yok|güzel|çok|mi|mu|mı|mü))/g, (m) => {
+    out = out.replace(/(?<!\p{L})gerçekten\s+(?=(olmaz|yok|güzel|çok|mi|mu|mı|mü))/gu, (m) => {
       g++;
       if (g > 1) { st.ger++; return ''; }
       return m;
