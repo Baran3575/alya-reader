@@ -66,7 +66,7 @@ const CANONICAL_CHARACTERS = [
 
 const KNOWN_SPLIT_QUOTES = {
   '4': new Set(['31.1', '36.0', '54.13', '55.14', '115.14', '172.9', '175.14', '190.13', '254.14']),
-  '4.5': new Set(['25.7', '197.4']),
+  '4.5': new Set(['197.4']),
 };
 
 const AUDITED_TARGETS = {
