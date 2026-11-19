@@ -140,7 +140,7 @@ function findEnglishResidueDetails(data) {
 }
 
 function findTranslatorNotesDetails(data) {
-  const re = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+  const re = /(?<!\p{L})TN\s*:/gu;
   const matches = [];
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
@@ -280,6 +280,8 @@ function main() {
 
     // 2. Sıfır Tolerans Doğrulama Kontrolleri
     for (const row of verifyData.rows) {
+      // "ÇN:" bilinçli çevirmen notlarıdır; yalnızca İngilizce "TN:" kusur sayılır.
+      if (row[2].includes('(ÇN)')) continue;
       if (ZERO_TOLERANCE.some((z) => row[2].includes(z)) && row[1] > 0) {
         let details = [];
         if (row[2].includes('İngilizce kalıntı')) {

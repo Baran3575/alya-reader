@@ -3,7 +3,9 @@ const fs = require('fs');
 const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+// Yalnızca İngilizce kısaltma (TN:) kusur sayılır; Türkçe "ÇN:" notları meşrudur.
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
+const CN_RE = /(?<!\p{L})ÇN\s*:/gu;
 const FAN_URL_RE = /(?:https?\s*:\s*\/\s*\/|discord\s*\.\s*gg\b|(?:glucosetl|novelupdates|lightnovelreader|jnovels|mp4directs|goldenagato|zerobooks)\b|[a-z0-9-]+\s*\.\s*wordpress\s*\.\s*com\b|\b[a-z0-9-]{3,}\.(?:com|org|net|gg|me)(?:\/|\b))/giu;
 const CORNER_QUOTE_RE = /[『』「」]/g;
 const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
@@ -119,6 +121,7 @@ function runVerify(filePath) {
   const countOcrNoise = paras.filter((x) => isOcrNoise(x.t)).length;
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
   row('  ', count(TN_RE), 'çevirmen notu');
+  row('  ', count(CN_RE), 'çevirmen notu (ÇN)');
   row('  ', count(FAN_URL_RE), 'hayran bağlantısı/Discord');
   row('  ', countOcrNoise, 'OCR gürültüsü');
 
