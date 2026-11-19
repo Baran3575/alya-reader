@@ -13,7 +13,10 @@ node scripts/qc/argo.js --vol 4 --page 216   # tek sayfa dökümü (EN argo + TR
 node scripts/qc/argo.js --check    # kapı: yumuşatma varsa çıkış kodu 1
 ```
 
-`npm test` içinde `--check` çalışır; yumuşatılmış sayfa sayısı **0** olmalıdır.
+`npm test` içinde `--check` çalışır. Kapı **ağır hakaret** (bastard/bitch/fuck/cunt/
+asshole/slut/whore/dick/prick) açığına bakar ve **0** olmalıdır. `shit/crap/bullshit/
+damn/hell` gibi hafif küfürler yalnızca **not** olarak listelenir: "What the hell" →
+"Bu da ne…", "crap" → "Hay aksi" gibi doğal karşılıklar yumuşatma sayılmaz.
 
 ## Eşleştirme
 
@@ -37,7 +40,9 @@ node scripts/qc/argo.js --check    # kapı: yumuşatma varsa çıkış kodu 1
 | cunt | orospu · orospu çocuğu (ağır hakaret) |
 | bullshit | boktan bahane · palavra · zırva · saçmalık |
 | shit / crap | bok · kahretsin · zırva |
-| damn fucking … | kahrolası siktiriboktan … · lanet olası … |
+| damn fucking … | senin o Allah’ın belası … · lanet olası … (ton uyumu: ağır + dublaj dili karıştırılmaz) |
+| cheat / deceiver | sahtekâr · düzenbaz · aldatıcı (ilişki bağlamında) |
+| victim mentality | mağdur edebiyatı · kurban psikolojisi |
 
 Kural: **sertlik korunur, doğallık bozulmaz**. Aynı sayfada aynı küfür hep aynı
 sözcükle karşılanmaz; konuşanın tonuna ve cümlenin ritmine göre seçilir. Denetim

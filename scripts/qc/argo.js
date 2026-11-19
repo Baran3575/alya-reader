@@ -19,12 +19,17 @@ const MAP = {
   '12': ['data12/source.json', 'data12/paragraphs_final.json'],
 };
 
-// EN: sert argo. TR: kabul edilen sert karşılıklar.
-const EN_STRONG = [
+// Ağır hakaretler: bunlar yumuşatılırsa kapı düşer.
+const EN_HARD = [
   'bastard', 'bastards', 'bitch', 'bitches', 'fuck', 'fucking', 'fucked', 'motherfucker',
-  'shit', 'shitty', 'bullshit', 'asshole', 'dick', 'dumbass', 'prick', 'slut', 'sluts', 'whore',
-  'son of a bitch', 'jackass', 'piss', 'crap',
+  'cunt', 'asshole', 'dick', 'dumbass', 'prick', 'slut', 'sluts', 'whore',
+  'son of a bitch', 'jackass',
 ];
+// Hafif küfür/argo: rapor edilir, kapıyı düşürmez (crap -> "hay aksi" doğaldır).
+const EN_MILD = ['shit', 'shitty', 'bullshit', 'crap', 'piss', 'damn', 'damned', 'hell'];
+const EN_STRONG = EN_HARD.concat(EN_MILD);
+// Hafif küfür için kabul edilen doğal karşılıklar.
+const TR_MILD = ['saçmalık', 'saçma', 'hay aksi', 'tüh', 'zırva', 'palavra', 'berbat', 'boş laf', 'edebiyat'];
 const TR_STRONG = [
   'piç', 'orospu', 'sürtük', 'kaltak', 'şıllık', 'fahişe', 'kahpe', 'şerefsiz',
   'sik', 'siktir', 'sikeyim', 'siktiğimin', 'sikindirik', 'sikik', 'amına', 'amk', 'bok', 'boktan', 'boku',
@@ -33,6 +38,7 @@ const TR_STRONG = [
   'lanet', 'kahretsin', 'cehennem', 'sikerim', 'pezevenk', 'kaltağın',
   'lan', 'ulan', 'sıçtık', 'sıçtım', 'zırva', 'palavra', 'hay',
   'kahrolası', 'lanet olası', 'siktiriboktan', 'sahtekâr', 'düpedüz',
+  'Allah’ın belası', "Allah'ın belası", 'düzenbaz', 'adi', 'bela',
 ];
 // Yumuşatma işaretleri: argo yerine geçmiş zayıf sözcükler.
 const TR_WEAK = [
@@ -91,17 +97,24 @@ for (const [vol, [sf, tf]] of Object.entries(MAP)) {
     if (!enS.n) continue;
     const trS = count(trText, TR_STRONG, true);
     const trW = count(trText, TR_WEAK, true);
-    const deficit = enS.n - trS.n;
+    const enH = count(en, EN_HARD);
+    const trM = count(trText, TR_MILD, true);
+    // Ağır hakaret açığı kapıyı düşürür; hafif küfür açığı yalnızca raporlanır.
+    const hardDef = enH.n ? Math.max(0, enH.n - trS.n) : 0;
+    const mildDef = Math.max(0, (enS.n - enH.n) - trS.n - trM.n);
+    const deficit = hardDef + mildDef;
     if (deficit <= 0) continue;
     rows.push({
       vol,
       page,
-      enN: enS.n,
-      enHits: enS.hits.join(' '),
+      enN: enH.n || enS.n,
+      hard: enH.n,
+      enHits: (enH.n ? enH.hits : enS.hits).join(' '),
       trN: trS.n,
       trW: trW.hits.join(' '),
       deficit,
-      enDlg: dialogues(en).filter((d) => new RegExp(EN_STRONG.join('|'), 'iu').test(d)),
+      hardDef,
+      enDlg: dialogues(en).filter((d) => new RegExp((enH.n ? EN_HARD : EN_STRONG).join('|'), 'iu').test(d)),
       trDlg: dialogues(trText),
     });
   }
@@ -133,16 +146,18 @@ if (pageArg) {
 }
 
 const total = rows.reduce((a, b) => a + b.deficit, 0);
+const hardCount = rows.filter((r) => r.hardDef > 0).length;
+const hardRows = rows.filter((r) => r.hardDef > 0);
 if (args.includes('--check')) {
-  if (rows.length) {
-    console.error(`✗ Argo sadakati: ${rows.length} sayfada küfür/argo yumuşatılmış`);
-    for (const r of rows.slice(0, 10)) console.error(`   C${r.vol} s.${r.page} EN ${r.enN} -> TR ${r.trN}`);
+  if (hardRows.length) {
+    console.error(`✗ Argo sadakati: ${hardRows.length} sayfada ağır hakaret yumuşatılmış`);
+    for (const r of hardRows.slice(0, 10)) console.error(`   C${r.vol} s.${r.page} EN ${r.enN} -> TR ${r.trN}`);
     process.exit(1);
   }
   console.log('✓ Argo sadakati: yumuşatılmış sayfa yok');
   process.exit(0);
 }
-console.log(`Yumuşatılmış sayfa: ${rows.length} · eksik sertlik: ${total}`);
+console.log(`Ağır hakaret açığı: ${hardCount} sayfa · hafif küfür notu: ${rows.length - hardCount} sayfa · toplam eksiklik: ${total}`);
 for (const r of rows.sort((a, b) => b.deficit - a.deficit).slice(0, topN)) {
   console.log(`  C${r.vol} s.${r.page}  EN ${r.enN} (${r.enHits}) -> TR ${r.trN}${r.trW ? ' · zayıf: ' + r.trW : ''}`);
 }
