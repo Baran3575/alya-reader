@@ -66,8 +66,6 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
   ]),
   '4.5': new Set([
     '175.4',
-    '197.4',
-    '237.4',
     '237.5',
     '239.5',
     '323.0',
@@ -79,7 +77,7 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
 
 const LEGACY_MID_PAGE_QUOTES = {
   '4': new Set(['31.1']),
-  '4.5': new Set(['175.4', '237.4', '237.5', '239.5', '323.1', '337.4', '337.5']),
+  '4.5': new Set(['175.4', '237.5', '239.5', '323.1', '337.4', '337.5']),
 };
 
 const ZERO_TOLERANCE = [

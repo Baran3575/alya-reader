@@ -39,7 +39,20 @@ function splitSentences(t) {
 }
 
 function balance(t) {
-  return (t.match(/“/g) || []).length === (t.match(/”/g) || []).length;
+  let depth = 0;
+  let braces = 0;
+  for (let i = 0; i < t.length; i++) {
+    if (t[i] === QUOTE_OPEN) depth++;
+    else if (t[i] === QUOTE_CLOSE) {
+      depth--;
+      if (depth < 0) return false;
+    } else if (t[i] === '{') braces++;
+    else if (t[i] === '}') {
+      braces--;
+      if (braces < 0) return false;
+    }
+  }
+  return depth === 0 && braces === 0;
 }
 
 function splitParagraph(t) {
@@ -47,28 +60,36 @@ function splitParagraph(t) {
   if (!balance(t)) return [t];
   const out = [];
 
-  // 1/2: tırnak sınırlarında böl
+  // 1/2: tırnak sınırlarında böl (yalnızca dengeli dış tırnak sınırlarında)
   let buf = '';
+  let depth = 0;
   for (let i = 0; i < t.length; i++) {
     const ch = t[i];
     buf += ch;
-    if (ch === QUOTE_OPEN && buf.length > 1) {
-      const before = buf.slice(0, -1).trimEnd();
-      if (/[.!?…]$/u.test(before)) {
-        out.push(before);
-        buf = QUOTE_OPEN;
+    if (ch === QUOTE_OPEN) {
+      if (depth === 0 && buf.length > 1 && t[i + 1] && !/\s/u.test(t[i + 1])) {
+        const before = buf.slice(0, -1).trimEnd();
+        if (/[.!?…]$/u.test(before) && balance(before)) {
+          out.push(before);
+          buf = QUOTE_OPEN;
+        }
       }
+      depth++;
     } else if (ch === QUOTE_CLOSE) {
-      const rest = t.slice(i + 1);
-      const nextNonSpace = rest.replace(/^\s+/, '');
-      if (/^[A-ZÇĞİÖŞÜ]/u.test(nextNonSpace)) {
-        out.push(buf.trim());
-        buf = '';
-        while (t[i + 1] === ' ') i++;
+      depth = Math.max(0, depth - 1);
+      if (depth === 0) {
+        const rest = t.slice(i + 1);
+        const nextNonSpace = rest.replace(/^\s+/, '');
+        if (/^[A-ZÇĞİÖŞÜ]/u.test(nextNonSpace) && balance(buf.trim())) {
+          out.push(buf.trim());
+          buf = '';
+          while (t[i + 1] === ' ') i++;
+        }
       }
     }
   }
   if (buf.trim()) out.push(buf.trim());
+  if (!out.every(balance)) return [t];
 
   // 3: aşırı uzun anlatım paragraflarını 2'şer cümleye indir
   if (noSentence) return out;

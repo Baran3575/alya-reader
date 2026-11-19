@@ -399,11 +399,15 @@ function testPipelineStitcherAndRestoredPassages() {
   assert.deepStrictEqual(tr45['7'], [], 'Vol 4.5 p.7 spam page must be empty');
   assert.deepStrictEqual(tr45['347'], [], 'Vol 4.5 p.347 recruitment page must be empty');
   assert.strictEqual(tr45['12'][2], '“!?”', 'Vol 4.5 12.2 reaction must remain intact');
-  assert(tr45['159'][4].endsWith('Ah, kusura bakma.”'), 'Vol 4.5 159.4 cut-off sentence must be completed');
-  assert(tr45['228'][1].includes('arkadan sarıldı') && tr45['228'][2].includes('Şuna bir bak'), 'Vol 4.5 p.228 omitted lines must be restored');
-  assert(tr45['295'][4].includes('Tonkatsu mu? Bu yemek mi?'), 'Vol 4.5 295.4 omitted tonkatsu line must be restored');
-  assert(tr45['329'][3] && tr45['329'][3].length > 80, 'Vol 4.5 329.3 empty slot must be restored');
-  assert(tr45['330'][3] && tr45['330'][3].length > 80, 'Vol 4.5 330.3 empty slot must be restored');
+  assert(tr45['159'].some((p) => p.endsWith('Ah, kusura bakma.”')), 'Vol 4.5 p.159 cut-off sentence must be completed');
+  assert(
+    tr45['228'].some((p) => p.includes('arkadan sarıldı')) &&
+      tr45['228'].some((p) => p.includes('Şuna bir bak')),
+    'Vol 4.5 p.228 omitted lines must be restored'
+  );
+  assert(tr45['295'].some((p) => p.includes('Tonkatsu mu? Bu yemek mi?')), 'Vol 4.5 p.295 omitted tonkatsu line must be restored');
+  assert(tr45['329'].some((p) => p.includes('ablasıyla aynı yatağı paylaşmış')), 'Vol 4.5 p.329 empty slot must be restored');
+  assert(tr45['330'].some((p) => p.includes('baş başa kalmaya hiç fırsat')), 'Vol 4.5 p.330 empty slot must be restored');
   assert(tr45['338'][0] && tr45['338'][0].length > 80, 'Vol 4.5 338.0 empty slot must be restored');
 
   // Verify manifest + chunked volume metadata marks credit/recruitment pages skip:true, art:false and caps V4.5 Ch 13 at p.346
