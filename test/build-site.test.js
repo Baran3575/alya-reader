@@ -392,6 +392,7 @@ async function testReadBookStaticFallbackOn404() {
   windowObj.localStorage = context.localStorage;
   windowObj.navigator = context.navigator;
   windowObj.location = context.location;
+  context.requestAnimationFrame = windowObj.requestAnimationFrame;
 
   vm.runInNewContext(appCode, context);
   await new Promise((r) => setTimeout(r, 30));
@@ -405,12 +406,170 @@ async function testReadBookStaticFallbackOn404() {
   console.log('  ✓ readBook guards manifest-only bundle, checks res.ok, and loads ./books/4.json cleanly on HTTP 404');
 }
 
+async function testCrossVolumeChapterSwitchAndPageModeSync() {
+  console.log('Testing #libView cross-volume chapter switch (>60ms chunk fetch) and Orijinal mode nav sync...');
+  const appCode = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
+
+  function makeElement() {
+    const listeners = {};
+    const el = {
+      dataset: {},
+      style: { setProperty() {} },
+      classList: { toggle() {}, add() {}, remove() {} },
+      children: [],
+      hidden: true,
+      textContent: '',
+      value: '1',
+      max: '1',
+      disabled: false,
+      offsetWidth: 320,
+      offsetHeight: 44,
+      _innerHTML: '',
+      get innerHTML() { return this._innerHTML; },
+      set innerHTML(v) {
+        this._innerHTML = String(v);
+        if (v === '') this.children = [];
+      },
+      append(...nodes) { this.children.push(...nodes); },
+      appendChild(node) { this.children.push(node); return node; },
+      addEventListener(type, fn) { listeners[type] = fn; },
+      click() { if (listeners.click) listeners.click({ preventDefault() {} }); },
+      setAttribute() {},
+      removeAttribute() {},
+      querySelector() { return makeElement(); },
+      querySelectorAll() { return []; },
+      contains() { return false; },
+      getBoundingClientRect() { return { top: 0, height: 100 }; },
+      scrollIntoView() {},
+    };
+    return el;
+  }
+
+  const elements = new Map();
+  const getEl = (id) => {
+    if (!elements.has(id)) elements.set(id, makeElement());
+    return elements.get(id);
+  };
+
+  const book4 = {
+    title: 'Alya Bazen Duygularını Rusça Saklar',
+    volume: 'Cilt 4',
+    total: 3,
+    chapters: [{ page: 1, label: 'Başlangıç', title: 'Kapak' }],
+    pages: [
+      { n: 1, img: 'pages/001.webp', tr: ['Bir'], en: ['One'], art: false },
+      { n: 2, img: 'pages/002.webp', tr: ['İki'], en: ['Two'], art: false },
+      { n: 3, img: 'pages/003.webp', tr: ['Üç'], en: ['Three'], art: false },
+    ],
+  };
+  const book95 = {
+    title: 'Alya Bazen Duygularını Rusça Saklar',
+    volume: 'Cilt 9.5',
+    total: 4,
+    chapters: [
+      { page: 1, label: 'İllüstrasyonlar', title: 'İllüstrasyonlar' },
+      { page: 2, label: 'Kısa Hikâye 1', title: 'Kedi Kafe' },
+      { page: 3, label: 'Kısa Hikâye 2', title: 'Havuz' },
+    ],
+    pages: [
+      { n: 1, img: 'pages95/001.webp', tr: ['G1'], en: ['E1'], art: false },
+      { n: 2, img: 'pages95/002.webp', tr: ['G2'], en: ['E2'], art: false },
+      { n: 3, img: 'pages95/003.webp', tr: ['Havuz sahnesi.'], en: ['Pool scene.'], art: false },
+      { n: 4, img: 'pages95/004.webp', tr: ['G4'], en: ['E4'], art: false },
+    ],
+  };
+
+  const storage = new Map();
+  const windowObj = {
+    ALYA_BUNDLE: {
+      vols: {
+        '4': { label: 'Cilt 4', total: 3, chapters: book4.chapters, artCount: 0 },
+        '9.5': { label: 'Cilt 9.5', total: 4, chapters: book95.chapters, artCount: 0 },
+      },
+    },
+    ALYA_ART: {},
+    ALYA_BUNDLE_VERSION: 'testver2',
+    innerHeight: 800,
+    scrollY: 0,
+    matchMedia: () => ({ matches: false }),
+    addEventListener() {},
+    scrollTo() {},
+    requestAnimationFrame: (cb) => { cb(); return 1; },
+  };
+
+  const context = {
+    window: windowObj,
+    document: {
+      title: '',
+      body: makeElement(),
+      documentElement: makeElement(),
+      getElementById: getEl,
+      querySelector: () => makeElement(),
+      querySelectorAll: () => [],
+      createElement: () => makeElement(),
+      createTextNode: (t) => ({ textContent: String(t) }),
+      createDocumentFragment: () => makeElement(),
+      addEventListener() {},
+    },
+    localStorage: {
+      getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+      setItem: (k, v) => storage.set(k, String(v)),
+    },
+    navigator: { onLine: true },
+    location: { protocol: 'https:', search: '' },
+    URLSearchParams,
+    Image: function Image() {},
+    encodeURIComponent,
+    setTimeout,
+    fetch: async (url) => {
+      if (url === './books/v4.json') {
+        return { ok: true, status: 200, async json() { return book4; } };
+      }
+      if (url === './books/v9.5.json') {
+        // Simulate 90ms GitHub Pages chunk download (> old 60ms timer)
+        await new Promise((r) => setTimeout(r, 90));
+        return { ok: true, status: 200, async json() { return book95; } };
+      }
+      return { ok: false, status: 404, async json() { throw new Error('unexpected 404'); } };
+    },
+  };
+  windowObj.fetch = context.fetch;
+  windowObj.localStorage = context.localStorage;
+  windowObj.navigator = context.navigator;
+  windowObj.location = context.location;
+  context.requestAnimationFrame = windowObj.requestAnimationFrame;
+
+  vm.runInNewContext(appCode, context);
+  await new Promise((r) => setTimeout(r, 25));
+
+  // Open #volBtn -> click Cilt 9.5 card -> click Kısa Hikâye 2 (index 2, > book4's single chapter)
+  getEl('volBtn').click();
+  const vol95Card = getEl('libList').children.find((c) => c.innerHTML.includes('Cilt 9.5'));
+  assert(vol95Card, 'Library must render Cilt 9.5 card');
+  vol95Card.click();
+  const ch2Row = getEl('libList').children[2];
+  assert(ch2Row, 'Library must render Kısa Hikâye 2 row');
+  ch2Row.children[0].click();
+
+  await new Promise((r) => setTimeout(r, 140));
+  assert.strictEqual(getEl('volLabel').textContent, 'Cilt 9.5', 'Top picker must show Cilt 9.5');
+  assert.strictEqual(getEl('chLabel').textContent, 'Kısa Hikâye 2 · Havuz', 'Cross-volume chapter click must land on Kısa Hikâye 2 even after 90ms chunk fetch');
+
+  // Switch to Orijinal mode on page 3 of 4 -> both prevBtn and nextBtn must be enabled
+  getEl('modePage').click();
+  assert.strictEqual(getEl('prevBtn').disabled, false, 'prevBtn must be enabled on page 3/4 in Orijinal mode');
+  assert.strictEqual(getEl('nextBtn').disabled, false, 'nextBtn must be enabled on page 3/4 in Orijinal mode');
+  assert.strictEqual(getEl('navPages').textContent, 's. 3 / 4', 'navPages must show page position in Orijinal mode');
+  console.log('  ✓ Cross-volume chapter switch awaits chunk fetch and Orijinal mode syncs navigation buttons');
+}
+
 async function main() {
   console.log('=== Starting Site Build & Pages Deployment Verification Tests ===\n');
   testCleanCheckoutBuildPreservesArtAndExcludesBackups();
   testDynamicVolumeScalingAndHashRotation();
   await testServiceWorkerSubpathResolutionAndCacheCleanup();
   await testReadBookStaticFallbackOn404();
+  await testCrossVolumeChapterSwitchAndPageModeSync();
   console.log('\n=== All Site Build & Pages Tests Passed Successfully! ===');
 }
 

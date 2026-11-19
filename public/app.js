@@ -99,13 +99,16 @@
   };
 
   /* ---------------- cilt ---------------- */
-  function switchVolume(v) {
-    if (v === state.vol) return;
+  function switchVolume(v, targetPage) {
+    if (v === state.vol) {
+      if (targetPage > 0) goPage(targetPage);
+      return Promise.resolve();
+    }
     LS.set('page:' + state.vol, state.page);
     state.vol = v;
     LS.set('vol', v);
-    state.page = LS.get('page:' + v, 1);
-    load().catch((err) => {
+    state.page = targetPage > 0 ? targetPage : LS.get('page:' + v, 1);
+    return load().catch((err) => {
       reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
@@ -226,13 +229,13 @@
         (title && title !== label ? '<span class="lib-sub">' + title + '</span>' : '') +
         (range ? '<span class="lib-meta">' + range + '</span>' : '');
       main.addEventListener('click', () => {
+        hideLibrary();
         if (volumeKey !== String(state.vol)) {
-          switchVolume(volumeKey);
-          setTimeout(() => goChapter(i), 60);
+          const targetPage = c && c.page ? c.page : 1;
+          switchVolume(volumeKey, targetPage).then(() => goChapter(i));
         } else {
           goChapter(i);
         }
-        hideLibrary();
       });
 
       const check = document.createElement('button');
@@ -643,6 +646,13 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
+    syncPickers();
+    $('pageRange').value = idx + 1;
+    $('navChapter').textContent = ch.label;
+    $('navPages').textContent = 's. ' + n + ' / ' + state.book.total;
+    $('prevBtn').disabled = n <= 1;
+    $('nextBtn').disabled = n >= state.book.total;
+    syncModeButtons();
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
     paintProgress();
