@@ -100,7 +100,7 @@ function testIntentionalTranslatorNote() {
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
     const data = JSON.parse(orig);
-    data['14'][0] += ' (ÇN: Burası çevirmen notudur.)';
+    data['14'][0] += ' (TN: This is a leftover translator note.)';
     fs.writeFileSync(v4Path, JSON.stringify(data));
 
     const res = runCLI(['--volume', '4', '--strict'], false);
@@ -136,7 +136,7 @@ function testPatchValidationAndRegression() {
 
     // 3. Regressing patch (increases defect score)
     const regressingData = JSON.parse(orig);
-    regressingData['14.0'] = '“Çift nokta.. ve İngilizce that vardır.” (ÇN: not)';
+    regressingData['14.0'] = '“Çift nokta.. ve İngilizce that vardır.” (TN: not)';
     fs.writeFileSync(patchesPath, JSON.stringify(regressingData));
 
     const res3 = runCLI(['--volume', '4', '--strict'], false);

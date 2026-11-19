@@ -22,7 +22,7 @@ const NEG_TR =
   /(?<!\p{L})(değil|değildi|değildir|yok|yoktu|yoktur|asla|hiç|hiçbir|hiçbiri|kimse|ne\s+[\p{L}\s]{1,30}\s+ne\s+de|olmaz|olmuyor|olmadan|olmadığı|olmayacak|edemez|yapamaz|bilemez)(?!\p{L})|(?:ma|me|mı|mi|mu|mü)(?:dı|di|du|dü|mış|miş|muş|müş|yacak|yecek|yor|yordu|mak|mek|dan|den|madan|meden)(?!\p{L})|(?:amaz|emez|maz|mez|madı|medi|madım|medim|madın|medin|madık|medik|madınız|mediniz|sız|siz|suz|süz|sızca|sizce)(?!\p{L})/iu;
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
 
 const TR_NUMBER_WORDS = {
   '0': ['sıfır'],
@@ -107,7 +107,7 @@ function isPreservedHandPage(vol, pgNum, key, curatedPatches, qualityHandPages) 
     }
   }
   if (vol === '4.5') {
-    if (pgNum >= 9 && pgNum <= 79) return true;
+    if (pgNum >= 9 && pgNum <= 120) return true;
   }
   if (curatedPatches && Object.prototype.hasOwnProperty.call(curatedPatches, key)) return true;
   return false;

@@ -12,7 +12,7 @@ const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc/qc6_typography');
 const ROOT = path.join(__dirname, '..');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
 const CORNER_QUOTE_RE = /[『』「」]/;
 const CYRILLIC_RE = /\p{Script=Cyrillic}/u;
 

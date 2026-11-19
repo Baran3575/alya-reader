@@ -4,7 +4,9 @@ const path = require('path');
 const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc6_typography');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+// Yalnızca İngilizce kısaltma (TN:) kusur sayılır; Türkçe "ÇN:" notları meşrudur.
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
+const CN_RE = /(?<!\p{L})ÇN\s*:/gu;
 const YYOR_RE = /\p{L}yyor/giu;
 const CORNER_QUOTE_RE = /[『』「」]/g;
 const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
@@ -55,7 +57,7 @@ function hasInvertedCurlyQuotes(t) {
   if (/(?:^|[\s(\[{])”/u.test(t)) return true;
   // Kapanış tırnağından hemen sonra boşluksuz harf geliyorsa yalnızca geçerli bitişik Türkçe eklerine izin ver
   const afterClose = [...t.matchAll(/”([\p{L}\p{N}]+)/gu)];
-  const validAttached = /^(?:nın|nin|nun|nün|ın|in|un|ün|yı|yi|yu|yü|nı|ni|nu|nü|ndan|nden|dan|den|tan|ten|ndaki|ndeki|daki|deki|nda|nde|da|de|ta|te|dı|di|du|dü|tı|ti|tu|tü|ydı|ydi|ydu|ydü|ymış|ymiş|ymuş|ymüş|mış|miş|muş|müş|yla|yle|la|le|ca|ce|ça|çe|ları|leri|ların|lerin|lara|lere|lardan|lerden|lık|lik|luk|lük|a|e|ı|i|u|ü|na|ya|ye)$/u;
+  const validAttached = /^(?:nınki|ninki|nunki|nünki|ınki|inki|unki|ünki|kiler|kileri|kilere|kilerden|ki|nın|nin|nun|nün|ın|in|un|ün|yı|yi|yu|yü|nı|ni|nu|nü|ndan|nden|dan|den|tan|ten|ndaki|ndeki|daki|deki|nda|nde|da|de|ta|te|dı|di|du|dü|tı|ti|tu|tü|ydı|ydi|ydu|ydü|ymış|ymiş|ymuş|ymüş|mış|miş|muş|müş|yla|yle|la|le|ca|ce|ça|çe|ları|leri|ların|lerin|lara|lere|lardan|lerden|lık|lik|luk|lük|a|e|ı|i|u|ü|na|ya|ye)$/u;
   for (const m of afterClose) {
     if (!validAttached.test(m[1])) return true;
   }
@@ -173,6 +175,7 @@ function runVerify(filePath) {
   }, 0);
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
   row('  ', count(TN_RE), 'çevirmen notu');
+  row('  ', count(CN_RE), 'çevirmen notu (ÇN)');
 
   return { rows, paras, pageCount: Object.keys(f).length };
 }

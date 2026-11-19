@@ -25,7 +25,7 @@ const SIGNS = [
   ['kalıp: bölüm başlığı çevirisi', /(?:(?<!\p{L})(?:Bölüm\s+\d+|Chapter\s+\d+)\s*[:–—-]\s*[^\n]*(?:tarafından|nitelendirilmek)|(?<!\p{L})olarak\s+nitelendirilmek(?!\p{L}))/giu, 3],
   ['edilgen zinciri', /(?:ildi|ıldı|uldu|üldü)(?!\p{L})[^.!?]{0,120}?(?:ildi|ıldı|uldu|üldü)(?!\p{L})/gu, 2],
   ['İngilizce kalıntı', /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui, 3],
-  ['çevirmen notu', /(?<!\p{L})(?:ÇN|TN)\s*:/gu, 5],
+  ['çevirmen notu', /(?<!\p{L})TN\s*:/gu, 5],
   ['düz tırnak', /["']/g, 2],
   ['çift boşluk', / {2,}/g, 1],
   ['nokta tekrarı', /([!?.])\1{1,}/g, 2],
