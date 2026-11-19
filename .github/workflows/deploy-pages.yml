@@ -1,0 +1,71 @@
+name: Deploy Reader to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Verify Static Reader (Vols 4–12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Full Test & Strict QC Gate Across All Volumes
+        run: npm test
+
+      - name: Build Static GitHub Pages Bundle
+        run: npm run build:site
+
+      - name: Verify Static Pages Artifact
+        run: |
+          test -f dist/index.html
+          test -f dist/.nojekyll
+          test -f dist/books/index.json
+          test -f dist/books/4.json
+          test -f dist/books/4.5.json
+          test -f dist/books/5.json
+          test -f dist/books/6.json
+          test -f dist/books/12.json
+          test -f dist/pages/004.webp
+          test -f dist/pages45/004.webp
+          test -f dist/pages5/001.webp
+          test -f dist/pages6/001.webp
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

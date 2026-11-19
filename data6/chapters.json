@@ -1,17 +1,118 @@
 {
-  "Prologue": "Benim Büyücüm",
-  "Chapter 1": "Bunlar Kendini Fazla Kaptırmış",
-  "Chapter 2": "Bir Otaku’nun Romantizmi",
-  "Chapter 3": "Bunu Münazaradan Daha Ciddiye Aldım",
-  "Chapter 4": "Açıkçası Kalbim Epey Sarsıldı",
-  "Chapter 5": "Bir Bakıma Daha İyiyim",
-  "Chapter 6": "Dövüş Gücü Önemlidir, Değil mi?",
-  "Chapter 7": "Şiddet Her Şeyi Çözer",
-  "Chapter 8": "Eğilmiyorsa Kırmaktan Başka Çare Yok",
-  "Chapter 9": "Sözümü Tutacağım",
-  "Chapter 10": "Ona Teşekkür Edip Veda Etmek İstiyorum",
-  "Epilogue": "Şimdi, Yalnızca Şu Anda",
-  "Bookwalker SS": "Yırtmaç-Senpai’nin Doğduğu Gün",
-  "Afterword": "Yazarın Sonsözü",
-  "Afterword SS": "Yuri Dünyayı Kurtarır"
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "8": "Benim Büyücüm",
+    "12": "Bunlar Kendini Fazla Kaptırmış",
+    "33": "Bir Otaku’nun Romantizmi",
+    "59": "Bunu Münazaradan Daha Ciddiye Aldım",
+    "81": "Açıkçası Kalbim Epey Sarsıldı",
+    "101": "Bir Bakıma Daha İyiyim",
+    "125": "Dövüş Gücü Önemlidir, Değil mi?",
+    "155": "Şiddet Her Şeyi Çözer",
+    "185": "Eğilmiyorsa Kırmaktan Başka Çare Yok",
+    "200": "Sözümü Tutacağım",
+    "219": "Ona Teşekkür Edip Veda Etmek İstiyorum",
+    "239": "Şimdi, Yalnızca Şu Anda",
+    "251": "Yırtmaç-Senpai’nin Doğduğu Gün",
+    "257": "Yazarın Sonsözü",
+    "259": "Yuri Dünyayı Kurtarır"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Benim Büyücüm",
+      "enTitle": "My Wizard",
+      "startPage": 8
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Bunlar Kendini Fazla Kaptırmış",
+      "enTitle": "These Guys Are Way Too Into This",
+      "startPage": 12
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bir Otaku’nun Romantizmi",
+      "enTitle": "An Otaku’s Romance",
+      "startPage": 33
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Bunu Münazaradan Daha Ciddiye Aldım",
+      "enTitle": "I Took It More Seriously Than The Debate",
+      "startPage": 59
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Açıkçası Kalbim Epey Sarsıldı",
+      "enTitle": "Honestly, My Heart Wavered Quite A Bit",
+      "startPage": 81
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Bir Bakıma Daha İyiyim",
+      "enTitle": "I’m Feeling Better, In A Way",
+      "startPage": 101
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Dövüş Gücü Önemlidir, Değil mi?",
+      "enTitle": "Combat Strength Is Important, Right?",
+      "startPage": 125
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Şiddet Her Şeyi Çözer",
+      "enTitle": "Violence Solves Everything",
+      "startPage": 155
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Eğilmiyorsa Kırmaktan Başka Çare Yok",
+      "enTitle": "If It Doesn’t Yield, Then There’s No Choice But To Break It",
+      "startPage": 185
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Sözümü Tutacağım",
+      "enTitle": "I’ll Keep My Word",
+      "startPage": 200
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "Ona Teşekkür Edip Veda Etmek İstiyorum",
+      "enTitle": "I Want To Thank Her And Say Goodbye",
+      "startPage": 219
+    },
+    {
+      "label": "Epilog",
+      "title": "Şimdi, Yalnızca Şu Anda",
+      "enTitle": "Now, Only At This Moment",
+      "startPage": 239
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Yırtmaç-Senpai’nin Doğduğu Gün",
+      "enTitle": "The Day Slit-Paisen Was Born",
+      "startPage": 251
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Yazarın Sonsözü",
+      "enTitle": "Afterword",
+      "startPage": 257
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Yuri Dünyayı Kurtarır",
+      "enTitle": "Yuri Saves The World",
+      "startPage": 259
+    }
+  ]
 }

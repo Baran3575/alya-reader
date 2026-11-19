@@ -24,15 +24,46 @@ const TR_CHAPTER = {
   prologue: 'Önsöz',
   epilogue: 'Sonsöz',
   afterword: 'Sonsöz',
+  interlude: 'Ara Bölüm',
   'author’s note': 'Yazarın Notu',
   "author's note": 'Yazarın Notu',
-  'bookwalker ss': 'Ek Öykü',
-  'afterword ss': 'Ek Öykü',
+  'bookwalker ss': 'Ek Hikâye',
+  'afterword ss': 'Ek Hikâye',
 };
+
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => {
+    if (k === '4') {
+      return [
+        '4',
+        {
+          key: '4',
+          dataDir: 'data',
+          imgPrefix: '/pages/',
+          volume: 'Cilt 4',
+          titlesFile: path.join(ROOT, 'data/chapters.json'),
+        },
+      ];
+    }
+    const suffix = k.replace('.', '');
+    return [
+      k,
+      {
+        key: k,
+        dataDir: `data${suffix}`,
+        imgPrefix: `/pages${suffix}/`,
+        volume: `Cilt ${k}`,
+        titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
+      },
+    ];
+  })
+);
 
 function matchChapterHeading(first) {
   const m = first.match(
-    /^(Prologue|Epilogue|Afterword\s+SS|Afterword|Bookwalker\s+SS|Author[’']s\s+Note|Chapter\s+(\d+))(?:\s*[:–—-]\s*(.*)|\s*$)/i
+    /^(Prologue|Epilogue|Afterword\s+SS|Afterword|Bookwalker\s+SS|Author[’']s\s+Note|Interlude|Chapter\s+(\d+))(?:\s*[:–—-]\s*(.*)|\s*$)/i
   );
   if (!m) return null;
   if (m[2]) {
@@ -50,6 +81,7 @@ function matchChapterHeading(first) {
   else if (low === 'afterword') key = 'Afterword';
   else if (low === 'afterword ss') key = 'Afterword SS';
   else if (low === 'bookwalker ss') key = 'Bookwalker SS';
+  else if (low === 'interlude') key = 'Interlude';
   else if (low === "author's note" || low === 'author’s note') key = 'Author’s Note';
   const label = TR_CHAPTER[low] || raw;
   return { key, label, rest: (m[3] || '').trim() };
@@ -59,26 +91,53 @@ function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
   const imgPrefix = opt.imgPrefix || '/pages/';
   const volume = opt.volume || 'Cilt 4';
-  const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
+  const titlesFile = opt.titlesFile || path.join(ROOT, dataDir, 'chapters.json');
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
   const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
 
+  let titlesMeta = {};
+  try {
+    titlesMeta = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
+  } catch {}
+
+  const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
+
   const pages = source.map((p) => {
     const key = String(p.page);
-    const trParas = Array.isArray(tr[key]) ? tr[key] : [];
+    const isPending = Boolean(p.pending);
+    const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = String(p.text || '')
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
 
-    // OCR'ı bozuk sayfaları (kapak, görsel sayfalar) metin saymayalım
+    const fileName = String(p.page).padStart(3, '0') + '.webp';
+    const imgUrl = imgPrefix + fileName;
+
+    if (hasStructuredChapters) {
+      const relDiskPath = path.join(PUB, imgUrl.replace(/^\/+/, ''));
+      const hasDiskImg = fs.existsSync(relDiskPath);
+      const cleanLen = String(p.text || '').replace(/\s+/g, ' ').trim().length;
+      const art = !isPending && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
+      const item = {
+        n: p.page,
+        img: imgUrl,
+        tr: isPending ? [] : trParas,
+        en: isPending ? [] : enParas,
+        art,
+        hasImg: hasDiskImg,
+      };
+      if (isPending) item.pending = true;
+      return item;
+    }
+
+    // Geriye dönük Cilt 4 / Cilt 4.5 davranışı
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar (kısa dipnot/jenerik sayfaları hariç)
     const cleanText = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
@@ -91,38 +150,45 @@ function buildBook(opt = {}) {
 
     return {
       n: p.page,
-      img: imgPrefix + String(p.page).padStart(3, '0') + '.webp',
-      tr: usable ? trParas.filter(Boolean) : [],
+      img: imgUrl,
+      tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
     };
   });
 
-  // bölümleri ingilizce başlıklardan bul, Türkçe adları chapters.json'dan al
-  let titles = {};
-  try {
-    titles = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
-  } catch {}
-  const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
-  for (const p of pages) {
-    const first = (p.en[0] || '').replace(/\s+/g, ' ');
-    const hit = matchChapterHeading(first);
-    if (!hit) continue;
-    const title = titles[hit.key] || hit.rest.slice(0, 70) || hit.label;
-    chapters.push({ page: p.n, label: hit.label, title });
+  let chapters = [];
+  if (hasStructuredChapters) {
+    chapters = titlesMeta.chapters.map((c) => {
+      const entry = {
+        page: c.startPage || c.page || 1,
+        label: c.label || 'Bölüm',
+        title: c.title || c.enTitle || '',
+      };
+      if (c.pending) {
+        entry.pending = true;
+        entry.statusNote = c.statusNote || 'Kaynak çeviri henüz tamamlanmadı ([Translation In Progress]).';
+      }
+      return entry;
+    });
+    if (chapters.length === 0 || chapters[0].page > 1) {
+      chapters.unshift({ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' });
+    }
+  } else {
+    chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
+    for (const p of pages) {
+      const first = (p.en[0] || '').replace(/\s+/g, ' ');
+      const hit = matchChapterHeading(first);
+      if (!hit) continue;
+      if (hit.rest || titlesMeta[hit.key]) {
+        const title = titlesMeta[hit.key] || hit.rest.slice(0, 70) || hit.label;
+        chapters.push({ page: p.n, label: hit.label, title });
+      }
+    }
   }
 
   return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
 }
-
-const VOLUME_ORDER = ['4', '4.5', '5', '6'];
-
-const VOLUMES = {
-  '4': { dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
-  '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
-  '5': { dataDir: 'data5', imgPrefix: '/pages5/', volume: 'Cilt 5', titlesFile: path.join(ROOT, 'data5/chapters.json') },
-  '6': { dataDir: 'data6', imgPrefix: '/pages6/', volume: 'Cilt 6', titlesFile: path.join(ROOT, 'data6/chapters.json') },
-};
 
 function packBook(key) {
   const b = buildBook(VOLUMES[key]);
@@ -132,11 +198,10 @@ function packBook(key) {
 
 const BOOKS = {};
 function getBook(key) {
-  if (!BOOKS[key]) BOOKS[key] = packBook(key);
-  return BOOKS[key];
+  const k = VOLUMES[key] ? key : '4';
+  if (!BOOKS[k]) BOOKS[k] = packBook(k);
+  return BOOKS[k];
 }
-
-const book = getBook('4').book;
 
 function send(req, res, status, type, body, extra = {}) {
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache', ...extra };
@@ -179,20 +244,60 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/book') {
     const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
-    const loaded = getBook(vKey);
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = acceptsGzip ? loaded.gzip : loaded.json;
-    const headers = {
-      'Content-Type': MIME['.json'],
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    };
-    if (acceptsGzip) {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Vary'] = 'Accept-Encoding';
+    try {
+      const loaded = getBook(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
+      );
     }
-    res.writeHead(200, headers);
-    return res.end(req.method === 'HEAD' ? undefined : body);
+  }
+
+  // Statik cilt dizini manifesti (/books/index.json)
+  if (pathname === '/books/index.json') {
+    const volumes = [];
+    for (const k of VOLUME_KEYS) {
+      try {
+        const b = getBook(k).book;
+        volumes.push({
+          id: k,
+          short: k,
+          label: b.volume,
+          total: b.total,
+          chapters: b.chapters.length,
+          hasPending: b.chapters.some((c) => c.pending),
+          file: `books/${k}.json`,
+        });
+      } catch {}
+    }
+    const body = Buffer.from(JSON.stringify({ version: 'dev', volumes }));
+    return send(req, res, 200, MIME['.json'], body);
+  }
+
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
+    try {
+      const loaded = getBook(bookJsonMatch[1]);
+      return send(req, res, 200, MIME['.json'], loaded.json);
+    } catch {}
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -215,18 +320,18 @@ const server = http.createServer((req, res) => {
 function start() {
   server.listen(PORT, () => {
     console.log('Okuyucu hazır:  http://localhost:' + PORT);
-    for (const k of VOLUME_ORDER) {
+    for (const k of VOLUME_KEYS) {
+      const label = ('Cilt ' + k).padEnd(13);
       try {
         const b = getBook(k).book;
-        console.log(b.volume.padEnd(13) + ':', b.total, 'sayfa |', b.chapters.length, 'bölüm');
+        console.log(`${label}: ${b.total} sayfa | ${b.chapters.length} bölüm`);
       } catch {
-        console.log(('Cilt ' + k).padEnd(13) + ': henüz hazır değil');
+        console.log(`${label}: henüz hazır değil`);
       }
     }
-    console.log('Çeviri       : data/, data45/, data5/, data6/ (paragraphs_final.json)');
   });
 }
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start, VOLUMES, VOLUME_ORDER };
+module.exports = { VOLUMES, VOLUME_KEYS, VOLUME_ORDER: VOLUME_KEYS, buildBook, getBook, start };

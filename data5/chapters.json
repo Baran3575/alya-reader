@@ -1,16 +1,111 @@
 {
-  "Prologue": "Karşılaşma",
-  "Chapter 1": "Kavuşma ve Veda",
-  "Chapter 2": "Rüya Olması Gerçek Olduğu Anlamına Gelmez…",
-  "Chapter 3": "Bir Yandan Ne Yapacaktı?",
-  "Chapter 4": "Bir Erkeğin Kızarmasına Kimin İhtiyacı Var?",
-  "Chapter 5": "Rus Usulü Dere ya da Kısaca Açığa Çıkan Aşk",
-  "Chapter 6": "Bunda Gerçekten Suçum Olmadığını Düşünüyorum",
-  "Chapter 7": "Özür Dilerim, Suçluyum",
-  "Chapter 8": "İşte Bu Yüzden Erkekler Kızarır…",
-  "Chapter 9": "Bu Çocuklar Fazla Güçlü Değil mi?",
-  "Chapter 10": "İrade ve Gurur",
-  "Chapter 11": "Kazanan…",
-  "Epilogue": "Sonsöz",
-  "Author’s Note": "Yazarın Notu"
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "5": "Karşılaşma",
+    "16": "Kavuşma ve Veda",
+    "31": "Rüya Olması Gerçek Olduğu Anlamına Gelmez…",
+    "53": "Bir Yandan Ne Yapacaktı?",
+    "77": "Bir Erkeğin Kızarmasına Kimin İhtiyacı Var?",
+    "100": "Rus Usulü Dere ya da Kısaca Açığa Çıkan Aşk",
+    "122": "Bunda Gerçekten Suçum Olmadığını Düşünüyorum",
+    "147": "Özür Dilerim, Suçluyum",
+    "171": "İşte Bu Yüzden Erkekler Kızarır…",
+    "187": "Bu Çocuklar Fazla Güçlü Değil mi?",
+    "205": "İrade ve Gurur",
+    "228": "Kazanan…",
+    "243": "Sonsöz",
+    "250": "Yazarın Notu"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Karşılaşma",
+      "enTitle": "Encounter",
+      "startPage": 5
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Kavuşma ve Veda",
+      "enTitle": "Reunion And Farewell",
+      "startPage": 16
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Rüya Olması Gerçek Olduğu Anlamına Gelmez…",
+      "enTitle": "Just Because It’s A Dream Doesn’t Mean It’s Real…",
+      "startPage": 31
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Bir Yandan Ne Yapacaktı?",
+      "enTitle": "What Was He Going To Do On The Side?",
+      "startPage": 53
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Bir Erkeğin Kızarmasına Kimin İhtiyacı Var?",
+      "enTitle": "Who Needs A Man’s Blush?",
+      "startPage": 77
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Rus Usulü Dere ya da Kısaca Açığa Çıkan Aşk",
+      "enTitle": "Russian Dere, or Exposed Love For Short",
+      "startPage": 100
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Bunda Gerçekten Suçum Olmadığını Düşünüyorum",
+      "enTitle": "I Really Think I’m Not Guilty of This",
+      "startPage": 122
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Özür Dilerim, Suçluyum",
+      "enTitle": "I’m Sorry, I’m Guilty",
+      "startPage": 147
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "İşte Bu Yüzden Erkekler Kızarır…",
+      "enTitle": "That’s Why Men Blush…",
+      "startPage": 171
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Bu Çocuklar Fazla Güçlü Değil mi?",
+      "enTitle": "Aren’t These Guys Too Strong?",
+      "startPage": 187
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "İrade ve Gurur",
+      "enTitle": "Willpower and Pride",
+      "startPage": 205
+    },
+    {
+      "label": "Bölüm 11",
+      "title": "Kazanan…",
+      "enTitle": "The Winner Is…",
+      "startPage": 228
+    },
+    {
+      "label": "Epilog",
+      "title": "Sonsöz",
+      "enTitle": "Epilogue",
+      "startPage": 243
+    },
+    {
+      "label": "Yazarın Notu",
+      "title": "Yazarın Notu",
+      "enTitle": "Author’s Note",
+      "startPage": 250
+    }
+  ]
 }

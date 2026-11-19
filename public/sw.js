@@ -1,6 +1,6 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + cilt bazlı kitap verisi.
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + cilt bazlı kitap verisi.
 // Hem kök dizinde (/) hem de GitHub Pages alt-dizininde (/alya-reader/) çalışır.
-const VERSION = 'alya-v4';
+const VERSION = 'alya-v5';
 const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle-art.js', 'books/index.json'];
 
 function scopeUrl(rel) {
@@ -40,10 +40,10 @@ self.addEventListener('fetch', (e) => {
   const rel = relativeToScope(url);
   if (rel === null) return;
 
-  // görseller ve büyük statik veri dosyaları: önce önbellek, sonra ağ (books/index.json hariç)
+  // görseller (Cilt 4–12 pages*/) ve cilt paketleri (books/index.json hariç): önce önbellek, sonra ağ
   const cacheFirst =
-    /^pages(?:45|5|6)?\//.test(rel) ||
-    (/^books\/.+\.json$/.test(rel) && rel !== 'books/index.json') ||
+    /^pages\d*\//.test(rel) ||
+    (/^books\/[0-9.]+\.json$/.test(rel) && rel !== 'books/index.json') ||
     rel === 'api/book' ||
     rel === 'bundle.js' ||
     rel === 'bundle-art.js';

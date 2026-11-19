@@ -6,7 +6,7 @@ const assert = require('assert');
 
 const ROOT = path.join(__dirname, '..');
 const CLI = path.join(ROOT, 'scripts', 'qc', 'cli.js');
-const PATCH_SCRIPT = path.join(ROOT, 'scripts', 'patch.js');
+const { VOLUME_KEYS } = require('../scripts/lib/volumes');
 
 function runCLI(args = [], expectSuccess = true) {
   try {
@@ -28,26 +28,26 @@ function runCLI(args = [], expectSuccess = true) {
 }
 
 function testCleanPass() {
-  console.log('Testing clean pass for Vol 4, Vol 4.5, Vol 5, and Vol 6...');
+  console.log('Testing clean pass for Volumes 4 through 12...');
   for (const vol of ['4', '4.5', '5', '6']) {
     const res = runCLI(['--volume', vol, '--strict', '--check-regression'], true);
     assert(res.out.includes('✓ Tüm eşikler içinde'), `Vol ${vol} should pass clean`);
   }
 
   const all = runCLI(['--strict'], true);
-  for (const label of ['Cilt 4', 'Cilt 4.5', 'Cilt 5', 'Cilt 6']) {
-    assert(all.out.includes(label), `${label} should run in default matrix`);
+  for (const vol of VOLUME_KEYS) {
+    assert(all.out.includes(`Cilt ${vol}`), `Cilt ${vol} should run in default matrix`);
   }
 
   const { getBook } = require('../server');
-  for (const vol of ['4', '4.5', '5', '6']) {
+  for (const vol of VOLUME_KEYS) {
     const { book } = getBook(vol);
     assert(book.total > 0, `Vol ${vol} must have total > 0`);
     const nonEmpty = book.pages.filter((p) => Array.isArray(p.tr) && p.tr.length > 0).length;
     assert(nonEmpty > 0, `Vol ${vol} must have non-empty Turkish pages`);
     assert(book.chapters.length >= 2, `Vol ${vol} must have detected chapters`);
   }
-  console.log('  ✓ Clean passes and book builds verified for all 4 volumes');
+  console.log('  ✓ Clean passes and book builds verified for all 11 volumes');
 }
 
 function testTurkishDotlessCharacters() {
@@ -56,7 +56,6 @@ function testTurkishDotlessCharacters() {
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
     const data = JSON.parse(orig);
-    // Append Turkish words with dotless characters to a paragraph
     data['14'][0] += ' Bu durum eski günleri andıran bir hava yarattı ve çift boşandı.';
     fs.writeFileSync(v4Path, JSON.stringify(data));
 
@@ -127,7 +126,6 @@ function testPatchValidationAndRegression() {
   const patchesPath = path.join(ROOT, 'scripts', 'patches.json');
   const orig = fs.readFileSync(patchesPath, 'utf8');
   try {
-    // 1. Invalid key format
     const badKeyData = JSON.parse(orig);
     badKeyData['invalid_key_format'] = 'Metin';
     fs.writeFileSync(patchesPath, JSON.stringify(badKeyData));
@@ -136,7 +134,6 @@ function testPatchValidationAndRegression() {
     assert.strictEqual(res1.code, 1, 'Invalid patch key must fail CLI');
     assert(res1.out.includes('yama'), 'Must mention patch failure');
 
-    // 2. Non-existent target paragraph
     const nonExistentData = JSON.parse(orig);
     nonExistentData['999.999'] = 'Metin';
     fs.writeFileSync(patchesPath, JSON.stringify(nonExistentData));
@@ -144,7 +141,6 @@ function testPatchValidationAndRegression() {
     const res2 = runCLI(['--volume', '4', '--strict'], false);
     assert.strictEqual(res2.code, 1, 'Non-existent patch target must fail CLI');
 
-    // 3. Regressing patch (increases defect score)
     const regressingData = JSON.parse(orig);
     regressingData['14.0'] = '“Çift nokta.. ve İngilizce that vardır.” (ÇN: not)';
     fs.writeFileSync(patchesPath, JSON.stringify(regressingData));
@@ -163,7 +159,6 @@ function testScoreRegressionGate() {
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
     const data = JSON.parse(orig);
-    // Add multiple defective sentences to push average score above baseline
     for (let p = 14; p < 80; p++) {
       if (data[String(p)]) {
         data[String(p)].forEach((t, i) => {
