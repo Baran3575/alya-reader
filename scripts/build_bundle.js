@@ -36,6 +36,8 @@ for (const k of VOLUME_KEYS) {
     imgPrefix: cfg.imgPrefix,
     volume: cfg.label,
     titlesFile: cfg.titlesFile,
+    flip: cfg.flip,
+    source: cfg.source,
   });
 
   // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan

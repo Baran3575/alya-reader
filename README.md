@@ -95,3 +95,15 @@ node scripts/qc/clean.js --vol 4 --bolum 8
 ```
 
 Ayrıntı: `docs/chapters.md`
+
+## Orijinal (EN) görünüm: OCR yok
+
+Orijinal görünümde **OCR metni gösterilmez**; kaynak ne ise o gösterilir:
+
+- Sayfa taraması olan ciltler (4 ve 4.5) → sayfanın görüntüsü (`public/pages*/NNN.webp`).
+- Taraması olmayan ciltler (5–10) → çevrimiçi FlipHTML5 flipbook gömülür.
+- Ne tarama ne flipbook olan ciltler (9.5, 11, 12) → bilgi kartı; 9.5 için kaynak
+  sayfa bağlantısı verilir.
+
+Cilt sırası sabittir: `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`
+(`public/app.js` içindeki `VOL_ORDER`; 4.5 dörtten, 9.5 dokuzdan hemen sonra gelir).

@@ -123,10 +123,10 @@
   window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
 
   /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
-  const volTitle = {
-    '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
-    '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
-  };
+  // Sıra açıkça yazılır: 4.5 -> 4'ten, 9.5 -> 9'dan hemen sonra gelir.
+  const VOL_ORDER = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+  const volTitle = {};
+  for (const k of VOL_ORDER) volTitle[k] = 'Cilt ' + k;
 
   function readSet(vol) {
     const v = LS.get('read:' + vol, []);
@@ -180,7 +180,7 @@
     libList.innerHTML = '';
     if (libKind === 'vol') {
       $('libTitle').textContent = 'Ciltler';
-      for (const key of Object.keys(volTitle)) {
+      for (const key of VOL_ORDER) {
         const total = (window.ALYA_BUNDLE?.vols?.[key]?.chapters || []).length;
         const read = readCount(key).length;
         const card = document.createElement('button');
@@ -550,6 +550,61 @@
   }
 
   /* ---------------- çizim (tek orijinal sayfa) ---------------- */
+  /* Orijinal görünüm: OCR metni yok — tarama varsa görüntü, yoksa flipbook. */
+  function scanAvailable() {
+    if (!state.book) return false;
+    if (typeof state.book.scan === 'boolean') return state.book.scan;
+    return state.vol === '4' || state.vol === '4.5';
+  }
+
+  function sourceFlip(url, n) {
+    const box = document.createElement('div');
+    box.className = 'orig-flip';
+
+    const note = document.createElement('p');
+    note.className = 'orig-flip-note';
+    note.textContent =
+      'Bu cilt için sayfa taraması yok. Orijinal, çevrimiçi flipbook üzerinden açılıyor (sayfa ' + n + ').';
+
+    const frame = document.createElement('iframe');
+    frame.className = 'orig-frame';
+    frame.src = url;
+    frame.loading = 'lazy';
+    frame.referrerPolicy = 'no-referrer';
+    frame.setAttribute('allowfullscreen', '');
+
+    const link = document.createElement('a');
+    link.className = 'orig-flip-link';
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = 'Yeni sekmede aç ↗';
+
+    box.append(note, frame, link);
+    return box;
+  }
+
+  function noScanCard(n) {
+    const box = document.createElement('div');
+    box.className = 'orig-missing';
+    const h = document.createElement('p');
+    h.className = 'orig-missing-title';
+    h.textContent = 'Sayfa ' + n + ' taraması yok';
+    const t = document.createElement('p');
+    t.textContent = 'Bu cilt için görüntü kaynağı bulunmuyor. Çeviri görünümüne geçebilirsin (v).';
+    box.append(h, t);
+    if (state.book.source) {
+      const link = document.createElement('a');
+      link.className = 'orig-flip-link';
+      link.href = state.book.source;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = 'Kaynağı aç ↗';
+      box.appendChild(link);
+    }
+    return box;
+  }
+
   function renderPage() {
     const n = Math.min(Math.max(1, state.page), state.book.total);
     const p = state.book.pages[n - 1];
@@ -580,24 +635,13 @@
     if (ch.pending || (p && p.pending)) {
       sec.appendChild(createPendingNotice(ch));
     } else if (p) {
-      const hasFullScan = p.art || hasEmbeddedArt(p) || state.vol === '4' || state.vol === '4.5';
-      if (hasFullScan) {
+      const hasImg = p.art || hasEmbeddedArt(p) || scanAvailable();
+      if (hasImg) {
         sec.appendChild(figureFor(p, false));
-      } else if (p.en && p.en.length) {
-        const proseWrap = document.createElement('div');
-        proseWrap.className = 'orig-prose';
-        for (const line of p.en) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          proseWrap.appendChild(el);
-        }
-        sec.appendChild(proseWrap);
-      } else if (p.tr && p.tr.length) {
-        for (const line of p.tr) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          sec.appendChild(el);
-        }
+      } else if (state.book.flip) {
+        sec.appendChild(sourceFlip(state.book.flip, n));
+      } else {
+        sec.appendChild(noScanCard(n));
       }
     }
     reader.appendChild(sec);
@@ -688,7 +732,7 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true || (p.tr.length === 0 && (state.vol === '4' || state.vol === '4.5' || hasEmbeddedArt(p)));
+        const isIllustration = p.art === true || (p.tr.length === 0 && (scanAvailable() || hasEmbeddedArt(p)));
         if (isIllustration) {
           sec.classList.add('pg-art');
           if (p.tr.length) sec.classList.add('has-text');

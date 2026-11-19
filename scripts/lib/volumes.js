@@ -5,6 +5,26 @@ const ROOT = path.join(__dirname, '..', '..');
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
+// Taraması olmayan ciltler için kaynak sayfa (Orijinal görünümde bağlantı olarak verilir)
+const SOURCE_URLS = {
+  '9.5': 'https://glucosetl.xyz/translations/roshidere/behind-the-scenes',
+};
+
+// Kaynak çevrimiçi flipbook (tarama yoksa Orijinal görünümde gömülür)
+const FLIP_URLS = {
+  "4": null,
+  "4.5": null,
+  "5": "https://online.fliphtml5.com/hlsms/zusi/",
+  "6": "https://online.fliphtml5.com/hlsms/mfba/",
+  "7": "https://online.fliphtml5.com/utpiy/ekus/",
+  "8": "https://online.fliphtml5.com/utpiy/tlew/",
+  "9": "https://online.fliphtml5.com/utpiy/ctbm/",
+  "9.5": null,
+  "10": "https://online.fliphtml5.com/dzxyw/fhfj/",
+  "11": null,
+  "12": null
+};
+
 function makeVolume(key) {
   if (key === '4') {
     return {
@@ -20,6 +40,8 @@ function makeVolume(key) {
       bilingualFile: path.join(ROOT, 'data', 'bilingual.json'),
       finalFile: path.join(ROOT, 'data', 'paragraphs_final.json'),
       finalRel: 'data/paragraphs_final.json',
+      flip: FLIP_URLS['4'] || null,
+      source: SOURCE_URLS['4'] || null,
       maxAvgStrict: 0.20,
     };
   }
@@ -39,6 +61,8 @@ function makeVolume(key) {
     bilingualFile: path.join(ROOT, dataDir, 'bilingual.json'),
     finalFile: path.join(ROOT, dataDir, 'paragraphs_final.json'),
     finalRel: `${dataDir}/paragraphs_final.json`,
+    flip: FLIP_URLS[key] || null,
+    source: SOURCE_URLS[key] || null,
     maxAvgStrict: 0.20,
   };
 }

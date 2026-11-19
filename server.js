@@ -155,7 +155,21 @@ function buildBook(opt = {}) {
     }
   }
 
-  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
+  // Tarama (sayfa görüntüsü) bütün sayfalar için var mı?
+  const scan = pages.length > 0 && pages.every((p) => fs.existsSync(path.join(PUB, String(p.img || '').replace(/^\/+/, ''))));
+  const flip = opt.flip || null;
+  const sourceUrl = opt.source || null;
+
+  return {
+    title: 'Alya Bazen Duygularını Rusça Saklar',
+    volume,
+    total: pages.length,
+    chapters,
+    pages,
+    scan,
+    flip,
+    source: sourceUrl,
+  };
 }
 
 function packBook(key) {
