@@ -497,6 +497,11 @@ async function testCrossVolumeChapterSwitchAndPageModeSync() {
     requestAnimationFrame: (cb) => { cb(); return 1; },
   };
 
+  let releaseV95Chunk;
+  const v95ChunkGate = new Promise((r) => {
+    releaseV95Chunk = r;
+  });
+
   const context = {
     window: windowObj,
     document: {
@@ -526,8 +531,7 @@ async function testCrossVolumeChapterSwitchAndPageModeSync() {
         return { ok: true, status: 200, async json() { return book4; } };
       }
       if (url === './books/v9.5.json') {
-        // Simulate 90ms GitHub Pages chunk download (> old 60ms timer)
-        await new Promise((r) => setTimeout(r, 90));
+        await v95ChunkGate;
         return { ok: true, status: 200, async json() { return book95; } };
       }
       return { ok: false, status: 404, async json() { throw new Error('unexpected 404'); } };
@@ -539,8 +543,12 @@ async function testCrossVolumeChapterSwitchAndPageModeSync() {
   windowObj.location = context.location;
   context.requestAnimationFrame = windowObj.requestAnimationFrame;
 
+  const flushAsync = async () => {
+    for (let i = 0; i < 12; i++) await Promise.resolve();
+  };
+
   vm.runInNewContext(appCode, context);
-  await new Promise((r) => setTimeout(r, 25));
+  await flushAsync();
 
   // Open #volBtn -> click Cilt 9.5 card -> click Kısa Hikâye 2 (index 2, > book4's single chapter)
   getEl('volBtn').click();
@@ -551,9 +559,13 @@ async function testCrossVolumeChapterSwitchAndPageModeSync() {
   assert(ch2Row, 'Library must render Kısa Hikâye 2 row');
   ch2Row.children[0].click();
 
-  await new Promise((r) => setTimeout(r, 140));
+  // Hold chunk response past the old 60ms timer window, then release deterministically
+  await new Promise((r) => setTimeout(r, 75));
+  releaseV95Chunk();
+  await flushAsync();
+
   assert.strictEqual(getEl('volLabel').textContent, 'Cilt 9.5', 'Top picker must show Cilt 9.5');
-  assert.strictEqual(getEl('chLabel').textContent, 'Kısa Hikâye 2 · Havuz', 'Cross-volume chapter click must land on Kısa Hikâye 2 even after 90ms chunk fetch');
+  assert.strictEqual(getEl('chLabel').textContent, 'Kısa Hikâye 2 · Havuz', 'Cross-volume chapter click must land on Kısa Hikâye 2 even after delayed chunk fetch');
 
   // Switch to Orijinal mode on page 3 of 4 -> both prevBtn and nextBtn must be enabled
   getEl('modePage').click();

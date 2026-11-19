@@ -17,8 +17,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -41,7 +41,9 @@ jobs:
         run: node scripts/qc/cli.js --strict --check-regression
 
       - name: Stage clean dist/ directory
-        run: npm run build:site
+        run: |
+          git checkout -- public/bundle.js public/bundle-art.js
+          npm run build:site
 
       - name: Verify staged dist/ artifact
         run: |
