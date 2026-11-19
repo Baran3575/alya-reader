@@ -66,7 +66,20 @@ function classifyEpubHeading(rawHeading, docTitle, href) {
 function isBoilerplateParagraph(text) {
   const t = String(text || '').trim();
   if (!t) return true;
-  if (/^(?:Translated by|Proofread by|Edited by|Cover art by|Glucose Translations|join our discord|https?:\/\/)/i.test(t) && t.length < 350) {
+  if (
+    /^(?:Translated by|Translation\s*(?:&|,|:)|Proofread(?:ing)?(?:\s+by|\s*:)|Edited by|Editing(?:\s*&|\s*:)|Cover art by|Glucose Translations|join our discord|https?:\/\/)/i.test(
+      t
+    ) &&
+    t.length < 500
+  ) {
+    return true;
+  }
+  if (
+    /(?:do\s+not\s+reprint\s+or\s+resell\s+our\s+volumes|do\s+not\s+reupload\s+our\s+(?:translations|chapters)|literally\s+doxx\s+you|Goldenagato|mp4directs|jnovels|zerobooks)/i.test(
+      t
+    ) &&
+    t.length < 1200
+  ) {
     return true;
   }
   return false;
@@ -201,5 +214,6 @@ async function ingestEpub11(volCfg, opts = {}) {
 module.exports = {
   V11_FOLDER_ID,
   V11_EPUB_FILE_ID,
+  isBoilerplateParagraph,
   ingestEpub11,
 };

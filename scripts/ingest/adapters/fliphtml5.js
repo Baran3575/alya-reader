@@ -177,10 +177,20 @@ function isCreditsOrTocPage(rawText) {
   if (/Glucose Translations/i.test(t) && t.replace(/Glucose\s+Translations\s*\d*/gi, '').trim().length < 220) {
     return true;
   }
-  if (/(?:Translated by|Proofread by|Edited by|Cover art by|All rights reserved|KADOKAWA CORPORATION)/i.test(t) && t.length < 900) {
+  if (
+    /(?:Translated by|Translation\s*(?:&|,|:)|Proofread(?:ing)?(?:\s+by|\s*:)|Edited by|Editing(?:\s*&|\s*:)|Cover art by|All rights reserved|KADOKAWA CORPORATION)/i.test(
+      t
+    ) &&
+    t.length < 1200
+  ) {
     return true;
   }
-  if (/join\s+our\s+discord|ko-fi\.com|glucosetl\.xyz|wordpress\.com/i.test(t) && t.length < 700) {
+  if (
+    /(?:join\s+our\s+discord|our\s+discord|roshidere\s+discord|ko-fi(?:\.com|\s+links?)|glucosetl\.xyz|wordpress\.com|do\s+not\s+reprint\s+or\s+resell\s+our\s+volumes|do\s+not\s+reupload\s+our\s+(?:translations|chapters)|literally\s+doxx\s+you)/i.test(
+      t
+    ) &&
+    t.length < 1200
+  ) {
     return true;
   }
   return false;
@@ -197,8 +207,10 @@ function cleanFlipPageText(rawText) {
   const cleaned = [];
   for (let i = 0; i < lines.length; i++) {
     let ln = lines[i];
-    // Sayfa üst/alt numarası veya "Glucose Translations 35" altbilgisi
+    // Sayfa üst/alt numarası, site damgası veya "Glucose Translations 35" altbilgisi
     if (/^(?:Page\s+)?\d{1,3}$/i.test(ln) && (i === 0 || i === lines.length - 1)) continue;
+    if (/^(?:Page\s+\d+\s*\|\s*.*|.*\|\s*Page\s+\d+)$/i.test(ln) && (i === 0 || i === lines.length - 1)) continue;
+    if (/(?:Goldenagato|mp4directs|jnovels|zerobooks)/i.test(ln) && ln.length < 160) continue;
     if (/^Glucose\s+Translations(?:\s+\d+)?$/i.test(ln)) continue;
     ln = ln.replace(/\s*Glucose\s+Translations(?:\s+\d+)?\s*$/i, '').trim();
     if (!ln) continue;
@@ -680,5 +692,7 @@ module.exports = {
   isSkippedSourceUrl,
   normalizeFlipBookUrl,
   parseSearchConfigJs,
+  isCreditsOrTocPage,
+  cleanFlipPageText,
   ingestFlipVolume,
 };

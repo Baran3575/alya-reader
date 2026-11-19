@@ -358,6 +358,42 @@ function testFrontmatterAndFanUrlLeaks() {
   const v95 = runCLI(['--volume', '9.5', '--strict', '--check-regression'], true);
   assert(v95.out.includes('OCR gürültüsü            0'), 'Vol 9.5 must have zero OCR noise');
 
+  // Verify ingestion-stage frontmatter / header-footer gates in fliphtml5.js and epub11.js
+  const { isCreditsOrTocPage, cleanFlipPageText } = require('../scripts/ingest/adapters/fliphtml5');
+  const { isBoilerplateParagraph } = require('../scripts/ingest/adapters/epub11');
+  const expectedCreditPages = {
+    data5: new Set(),
+    data6: new Set([6]),
+    data7: new Set([5]),
+    data8: new Set([6]),
+    data9: new Set([7]),
+    data10: new Set([6, 7, 249]),
+  };
+  for (const [dir, creditSet] of Object.entries(expectedCreditPages)) {
+    const src = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'source.json'), 'utf8'));
+    for (const pg of src) {
+      if (!String(pg.text || '').trim()) continue;
+      if (creditSet.has(pg.page)) {
+        assert.strictEqual(isCreditsOrTocPage(pg.text), true, `${dir} p.${pg.page} fan credit/backmatter must be caught at ingest`);
+        assert.strictEqual(cleanFlipPageText(pg.text), '', `${dir} p.${pg.page} cleanFlipPageText must return empty`);
+      } else {
+        assert.strictEqual(isCreditsOrTocPage(pg.text), false, `${dir} p.${pg.page} story page must not be false-positively dropped`);
+      }
+    }
+  }
+  const sampleProse =
+    '“Good morning, Masachika-kun.” Alya greeted him from the window seat with her usual composed expression, though the tips of her silver hair caught the morning light as she quietly turned the next page of her notebook and waited for his reply in the empty classroom.';
+  const sampleHeaderFooterPage = [
+    'Page 14 | Alya Sometimes Hides Her Feelings in Russian',
+    'Goldenagato | https://mp4directs.com',
+    sampleProse,
+    'Glucose Translations 14',
+    '14',
+  ].join('\n');
+  assert.strictEqual(cleanFlipPageText(sampleHeaderFooterPage), sampleProse);
+  assert.strictEqual(isBoilerplateParagraph('Do not reupload our chapters behind ad-link shorteners or ko-fi links.'), true);
+  assert.strictEqual(isBoilerplateParagraph('“Good morning, Masachika-kun.”'), false);
+
   try {
     // 1. Intentional fan URL / Discord leak
     const leakUrl = JSON.parse(orig45);
