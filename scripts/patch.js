@@ -1,15 +1,14 @@
 // Elle düzeltmeler: patches.json { "sayfa.index": "yeni metin" }
 // Kullanım:
-//   node scripts/patch.js                        # mevcut tüm cilt yamalarını doğrula ve uygula
-//   node scripts/patch.js --dry-run              # regresyon ve şema önizlemesi (yazma)
-//   node scripts/patch.js --volume <cilt> [--dry-run]
+//   node scripts/patch.js [--volume <v>]             # yamaları doğrula ve uygula
+//   node scripts/patch.js [--volume <v>] --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
 const fs = require('fs');
 const path = require('path');
 const { score } = require('./qc/quality');
-const { getVolume, getActiveVolumeList } = require('./volumes');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
 const { hasUnbalancedDelim } = require('./qc/verify');
 
-const DEFAULT_ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '..');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
@@ -109,89 +108,56 @@ function validatePatches(patches, data) {
   };
 }
 
-function parseExplicitVolume(args) {
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i];
-    if ((a === '--volume' || a === '--vol' || a === '-v') && args[i + 1]) {
-      return String(args[i + 1]).trim();
-    }
-    if (a.startsWith('--volume=')) return a.slice('--volume='.length).trim();
-    if (a.startsWith('--vol=')) return a.slice('--vol='.length).trim();
-  }
-  return null;
-}
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry-run') || args.includes('--dry');
+  const volKey = parseVolumeArg(args, '4');
+  const volCfg = resolveVolume(volKey);
 
-function runVolumePatch(cfg, { dryRun = false, explicitVolume = false } = {}) {
-  const targetFile = cfg.absTrFile;
-  const patchFile = cfg.absPatchesFile;
+  if (!volCfg) {
+    console.error(`Hata: Bilinmeyen cilt "${volKey}"`);
+    process.exit(1);
+  }
+
+  const targetFile = volCfg.finalFile;
+  const patchFileName = volCfg.key === '4' ? 'patches.json' : `patches${volCfg.slug}.json`;
+  const patchFile = path.join(__dirname, patchFileName);
 
   if (!fs.existsSync(targetFile)) {
-    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${cfg.trFile}`);
-    return false;
+    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${volCfg.finalRel}`);
+    process.exit(1);
   }
 
   if (!fs.existsSync(patchFile)) {
-    if (dryRun || !explicitVolume) {
-      console.log(`✓ ${cfg.label}: yama dosyası yok (${cfg.patchesFile}), atlandı.`);
-      return true;
+    if (volCfg.key === '4') {
+      console.error(`Hata: Yama dosyası bulunamadı: ${patchFile}`);
+      process.exit(1);
     }
-    console.error(`Hata: Yama dosyası bulunamadı: ${cfg.patchesFile}`);
-    return false;
+    console.log(`✓ Cilt ${volCfg.key}: ${patchFileName} bulunmuyor (uygulanacak el yaması yok).`);
+    process.exit(0);
   }
 
   const fin = JSON.parse(fs.readFileSync(targetFile, 'utf8'));
   const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));
+
   const result = validatePatches(patches, fin, { dryRun });
 
   if (!result.ok) {
-    console.error(`\n✗ ${cfg.label} (${cfg.patchesFile}) yama doğrulama başarısız oldu (${result.errors.length} hata):`);
+    console.error(`\n✗ Yama doğrulama başarısız oldu (${result.errors.length} hata):`);
     result.errors.forEach((err) => console.error('  - ' + err));
-    return false;
+    process.exit(1);
   }
 
   if (dryRun) {
-    console.log(`✓ ${cfg.label} önizleme başarılı: ${result.count} yama doğrulandı (${cfg.patchesFile}).`);
+    console.log(`✓ Önizleme başarılı (Cilt ${volCfg.key}): ${result.count} yama doğrulandı.`);
     console.log(`  Sıfır regresyon, tüm yama anahtarları geçerli. Toplam puan değişimi: ${result.scoreDiffSum}`);
   } else {
     for (const item of result.applied) {
       fin[item.pg][item.idx] = item.text;
     }
     fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
-    console.log(`✓ ${cfg.label}: ${result.applied.length} yama başarıyla uygulandı (${cfg.trFile}).`);
+    console.log(`✓ Cilt ${volCfg.key}: ${result.applied.length} yama başarıyla uygulandı.`);
   }
-  return true;
 }
 
-if (require.main === module) {
-  const args = process.argv.slice(2);
-  const dryRun = args.includes('--dry-run') || args.includes('--dry');
-  const rootIdx = args.indexOf('--root');
-  const rootDir = rootIdx > -1 && args[rootIdx + 1] ? path.resolve(args[rootIdx + 1]) : DEFAULT_ROOT;
-  const vol = parseExplicitVolume(args);
-
-  if (vol !== null) {
-    const cfg = getVolume(vol, rootDir);
-    if (!cfg) {
-      console.error(`Hata: Bilinmeyen cilt: ${vol}`);
-      process.exit(1);
-    }
-    const ok = runVolumePatch(cfg, { dryRun, explicitVolume: true });
-    process.exit(ok ? 0 : 1);
-  }
-
-  const targets = getActiveVolumeList(rootDir).filter((v) => fs.existsSync(v.absPatchesFile));
-  if (targets.length === 0) {
-    console.log('✓ Uygulanacak yama dosyası bulunamadı.');
-    process.exit(0);
-  }
-
-  let allOk = true;
-  for (const cfg of targets) {
-    if (!runVolumePatch(cfg, { dryRun, explicitVolume: false })) {
-      allOk = false;
-    }
-  }
-  process.exit(allOk ? 0 : 1);
-}
-
-module.exports = { validatePatches, runVolumePatch };
+module.exports = { validatePatches };

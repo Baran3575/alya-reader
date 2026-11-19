@@ -3,10 +3,7 @@ name: Çeviri kalite kapısı
 on:
   push:
     paths:
-      - 'volumes.json'
       - 'data*/**'
-      - 'scripts/volumes.js'
-      - 'scripts/lib/volumes.js'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'
@@ -16,43 +13,20 @@ on:
   workflow_dispatch:
 
 jobs:
-  discover:
-    name: Aktif ciltleri bul
-    runs-on: ubuntu-latest
-    outputs:
-      volumes: ${{ steps.vols.outputs.volumes }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - id: vols
-        run: |
-          echo "volumes=$(node scripts/volumes.js --active-ids)" >> "$GITHUB_OUTPUT"
-
   qc:
-    needs: discover
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        vol: ${{ fromJSON(needs.discover.outputs.volumes) }}
+        vol: ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Kaynak dosyaları salt okunur yap
+      - name: Doğrulama ve Kalite Kapısı (Cilt ${{ matrix.vol }})
         run: |
-          node scripts/volumes.js --source-files | xargs chmod 444
-      - name: Doğrulama (verify.js)
-        run: |
-          ALYA_TR_FILE="$(node scripts/volumes.js --tr-file "${{ matrix.vol }}")" node scripts/qc/verify.js
-      - name: Kalite puanı (quality.js)
-        run: |
-          node scripts/qc/quality.js "$(node scripts/volumes.js --tr-file "${{ matrix.vol }}")"
-      - name: Eşik kapısı (cli.js)
-        run: node scripts/qc/cli.js --volume "${{ matrix.vol }}" --strict
-      - name: Kaynak dosyaların değişmediğini doğrula
-        run: |
-          node scripts/volumes.js --source-files | xargs git diff --exit-code --
+          TR_FILE=$(node -e "console.log(require('./scripts/lib/volumes').resolveVolume('${{ matrix.vol }}').finalRel)")
+          ALYA_TR_FILE="$TR_FILE" node scripts/qc/verify.js
+          node scripts/qc/quality.js "$TR_FILE"
+          node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict

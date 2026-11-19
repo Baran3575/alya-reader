@@ -142,13 +142,11 @@ function testAllVolumesCanonicalArtifactsAndServer() {
     assert.strictEqual(book.total, src.length, `Book page count mismatch for Vol ${k}`);
     assert.ok(book.chapters.length >= 4, `Expected chapters in Vol ${k}`);
 
-    if (k !== '4' && k !== '4.5') {
-      const artPages = book.pages.filter((p) => p.art);
-      assert.ok(artPages.length >= 5, `Expected clean WebP illustrations for Vol ${k}, got ${artPages.length}`);
-      for (const p of artPages) {
-        const diskFile = path.join(ROOT, 'public', p.img.replace(/^\/+/, ''));
-        assert.ok(fs.existsSync(diskFile), `Missing WebP illustration file on disk: ${diskFile}`);
-      }
+    const artPages = book.pages.filter((p) => p.art);
+    assert.ok(artPages.length >= 5, `Expected clean WebP illustrations for Vol ${k}, got ${artPages.length}`);
+    for (const p of artPages) {
+      const diskFile = path.join(ROOT, 'public', p.img.replace(/^\/+/, ''));
+      assert.ok(fs.existsSync(diskFile), `Missing WebP illustration file on disk: ${diskFile}`);
     }
   }
   console.log('   ✓ All 11 volumes verified across source.json, chapters.json, WebP assets, and server.js');

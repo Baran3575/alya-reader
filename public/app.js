@@ -64,6 +64,7 @@
 
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
+  const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
 
   const LS = {
     get(k, d) {
@@ -81,40 +82,10 @@
     },
   };
 
-  /* Eski büyük kitap önbelleklerini (alya4:book:<v>, alya4:bookver:<v>) temizle */
-  function purgeLegacyBookStorage() {
-    try {
-      const staleKeys = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('alya4:book')) staleKeys.push(key);
-      }
-      for (const key of staleKeys) localStorage.removeItem(key);
-    } catch {}
-  }
-  purgeLegacyBookStorage();
-
-  // URL sorgusu (?vol=9.5 veya ?v=12, ?page=10) ile doğrudan cilt/sayfa açma desteği
-  function parseQuery(search) {
-    const out = {};
-    const q = String(search || '').replace(/^\?/, '');
-    if (!q) return out;
-    for (const part of q.split('&')) {
-      if (!part) continue;
-      const eq = part.indexOf('=');
-      const k = decodeURIComponent(eq >= 0 ? part.slice(0, eq) : part);
-      const v = eq >= 0 ? decodeURIComponent(part.slice(eq + 1)) : '';
-      if (!(k in out)) out[k] = v;
-    }
-    return out;
-  }
-  const rawSearch =
-    (typeof window !== 'undefined' && window.location && window.location.search) ||
-    (typeof location !== 'undefined' && location.search) ||
-    '';
-  const urlParams = parseQuery(rawSearch);
-  const initialUrlVol = urlParams.vol || urlParams.v || null;
-  const initialUrlPage = Number(urlParams.page || urlParams.p || 0);
+  // URL sorgusu (?vol=9.5 veya #vol=12) ile doğrudan cilt açma desteği
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialUrlVol = urlParams.get('vol') || urlParams.get('v');
+  const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
@@ -122,90 +93,20 @@
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: String(initialUrlVol || LS.get('vol', '4')),
-    manifest: null,
+    vol: initialUrlVol || LS.get('vol', '4'),
     book: null,
     chapter: 0,
   };
 
-  const memoryBooks = new Map();
-  const memoryEn = new Map();
-  const enInFlight = new Map();
-
   /* ---------------- cilt ---------------- */
-  const defaultVolOrder = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
-  const volTitle = {
-    '4': 'Cilt 4',
-    '4.5': 'Cilt 4.5',
-    '5': 'Cilt 5',
-    '6': 'Cilt 6',
-    '7': 'Cilt 7',
-    '8': 'Cilt 8',
-    '9': 'Cilt 9',
-    '9.5': 'Cilt 9.5',
-    '10': 'Cilt 10',
-    '11': 'Cilt 11',
-    '12': 'Cilt 12',
-  };
-
-  function getVolOrder() {
-    if (state.manifest && Array.isArray(state.manifest.order) && state.manifest.order.length > 0) {
-      return state.manifest.order;
-    }
-    return defaultVolOrder;
-  }
-
-  function getVolLabel(key) {
-    const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[key];
-    return (meta && meta.label) || volTitle[key] || 'Cilt ' + key;
-  }
-
-  function volSlug(v) {
-    const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[v];
-    if (meta && meta.slug) return meta.slug;
-    return String(v).replace(/\./g, '-');
-  }
-
-  function syncVolSelect() {
-    const sel = $('volSelect');
-    if (!sel) return;
-    if (state.manifest && Array.isArray(state.manifest.order) && state.manifest.order.length > 0) {
-      sel.innerHTML = '';
-      for (const id of state.manifest.order) {
-        const meta = state.manifest.volumes && state.manifest.volumes[id];
-        if (!meta) continue;
-        const opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = meta.label || 'Cilt ' + id;
-        sel.appendChild(opt);
-      }
-    }
-    sel.value = state.vol;
-  }
-
-  function switchVolume(v, targetPage) {
-    const nextVol = String(v);
-    if (nextVol === state.vol && targetPage === undefined) return;
+  function switchVolume(v) {
+    if (v === state.vol) return;
     LS.set('page:' + state.vol, state.page);
-    state.vol = nextVol;
-    LS.set('vol', nextVol);
-    if (targetPage !== undefined && targetPage > 0) {
-      state.page = targetPage;
-      LS.set('page:' + nextVol, targetPage);
-    } else {
-      state.page = LS.get('page:' + nextVol, 1);
-    }
+    state.vol = v;
+    LS.set('vol', v);
+    state.page = LS.get('page:' + v, 1);
     load().catch((err) => {
-      reader.innerHTML = '<p class="empty-note">Cilt ' + nextVol + ' yüklenemedi: ' + err.message + '</p>';
-    });
-  }
-
-  const volSelectEl = $('volSelect');
-  if (volSelectEl) {
-    volSelectEl.addEventListener('change', (e) => {
-      const nextVol = String(e.target.value);
-      switchVolume(nextVol);
-      if (libOpen) showLibrary('ch', nextVol);
+      reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
 
@@ -216,11 +117,14 @@
     if (h > 20) document.documentElement.style.setProperty('--bar-h', h + 'px');
   }
   window.addEventListener('resize', measureChrome);
-  window.addEventListener('orientationchange', () => {
-    if (typeof setTimeout === 'function') setTimeout(measureChrome, 120);
-  });
+  window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
 
   /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
+  const volTitle = {
+    '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
+    '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
+  };
+
   function readSet(vol) {
     const v = LS.get('read:' + vol, []);
     return Array.isArray(v) ? v : [];
@@ -244,15 +148,6 @@
   let libKind = 'vol';
   let libVol = String(state.vol);
   let libOpen = false;
-  let libBuildSeq = 0;
-
-  function chapterRangeFor(book, i) {
-    const list = (book && book.chapters) || [];
-    if (!list[i]) return [1, 1];
-    const start = list[i].page;
-    const next = list[i + 1];
-    return [start, next ? next.page - 1 : book.total];
-  }
 
   function showLibrary(kind, volumeKey) {
     libKind = kind;
@@ -260,143 +155,84 @@
     libOpen = true;
     libView.hidden = false;
     readerEl.hidden = true;
-    $('volBtn')?.setAttribute('aria-expanded', String(kind === 'vol'));
-    $('chBtn')?.setAttribute('aria-expanded', String(kind === 'ch'));
+    $('volBtn').setAttribute('aria-expanded', 'true');
+    $('chBtn').setAttribute('aria-expanded', 'true');
     $('libActions').hidden = kind !== 'ch';
-    $('libBack').hidden = kind !== 'ch';
-    buildList(libVol);
+    $('libBack').hidden = !(kind === 'ch' && volumeKey);
+    buildList(volumeKey);
     window.scrollTo(0, 0);
     measureChrome();
   }
 
   function hideLibrary() {
-    if (!libOpen && libView && libView.hidden) return;
     libOpen = false;
-    if (libView) libView.hidden = true;
-    if (readerEl) readerEl.hidden = false;
-    $('volBtn')?.setAttribute('aria-expanded', 'false');
-    $('chBtn')?.setAttribute('aria-expanded', 'false');
+    libView.hidden = true;
+    readerEl.hidden = false;
+    $('volBtn').setAttribute('aria-expanded', 'false');
+    $('chBtn').setAttribute('aria-expanded', 'false');
     measureChrome();
   }
 
   function buildList(volumeKey) {
-    const seq = ++libBuildSeq;
     libList.innerHTML = '';
     if (libKind === 'vol') {
       $('libTitle').textContent = 'Ciltler';
-      for (const key of getVolOrder()) {
-        const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[key];
-        const cached = memoryBooks.get(key);
-        const total =
-          (meta && typeof meta.chapters === 'number' ? meta.chapters : 0) ||
-          (cached && cached.chapters ? cached.chapters.length : 0);
+      for (const key of Object.keys(volTitle)) {
+        const total = (window.ALYA_BUNDLE?.vols?.[key]?.chapters || []).length;
         const read = readCount(key).length;
         const card = document.createElement('button');
         card.type = 'button';
         card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
-
-        const num = document.createElement('span');
-        num.className = 'lib-num';
-        num.textContent = key;
-
-        const info = document.createElement('span');
-        info.className = 'lib-info';
-        const name = document.createElement('span');
-        name.className = 'lib-name';
-        name.textContent = getVolLabel(key);
-        const sub = document.createElement('span');
-        sub.className = 'lib-meta';
-        sub.textContent = total + ' bölüm · ' + read + '/' + total + ' okundu';
-        info.append(name, sub);
-
-        const go = document.createElement('span');
-        go.className = 'lib-go';
-        go.setAttribute('aria-hidden', 'true');
-        go.textContent = '›';
-
-        card.append(num, info, go);
+        card.innerHTML =
+          '<span class="lib-num">' + key + '</span>' +
+          '<span class="lib-info">' +
+          '<span class="lib-name">Cilt ' + key + '</span>' +
+          '<span class="lib-meta">' + total + ' bölüm · ' + read + '/' + total + ' okundu</span>' +
+          '</span>' +
+          '<span class="lib-go" aria-hidden="true">›</span>';
         card.addEventListener('click', () => showLibrary('ch', key));
         libList.appendChild(card);
       }
       return;
     }
 
-    const vKey = String(volumeKey || state.vol);
-    $('libTitle').textContent = getVolLabel(vKey);
-    if (vKey === String(state.vol) && state.book) {
-      chListFor(vKey, state.book);
-      return;
-    }
-    const cachedBook = memoryBooks.get(vKey);
-    if (cachedBook) {
-      chListFor(vKey, cachedBook);
-      return;
-    }
-    const loadingNote = document.createElement('p');
-    loadingNote.className = 'empty-note';
-    loadingNote.textContent = getVolLabel(vKey) + ' bölümleri yükleniyor…';
-    libList.appendChild(loadingNote);
-    readBook(vKey)
-      .then((book) => {
-        if (seq !== libBuildSeq || !libOpen || libKind !== 'ch') return;
-        chListFor(vKey, book);
-      })
-      .catch((err) => {
-        if (seq !== libBuildSeq || !libOpen || libKind !== 'ch') return;
-        libList.innerHTML = '';
-        const errEl = document.createElement('p');
-        errEl.className = 'empty-note';
-        errEl.textContent = getVolLabel(vKey) + ' yüklenemedi: ' + err.message;
-        libList.appendChild(errEl);
-      });
+    $('libTitle').textContent = 'Cilt ' + volumeKey;
+    const list = (volumeKey === String(state.vol) ? chapters() : (window.ALYA_BUNDLE?.vols?.[volumeKey]?.chapters || []));
+    chListFor(volumeKey, list);
   }
 
-  function chListFor(volumeKey, book) {
+  function chListFor(volumeKey, list) {
     libList.innerHTML = '';
-    const list = (book && book.chapters) || [];
     list.forEach((c, i) => {
       const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
       const title = c.title || '';
       const read = isRead(volumeKey, i);
-      const range = c.page
-        ? (() => {
-            const [st, en] = chapterRangeFor(book, i);
-            return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
-          })()
-        : '';
+      const range =
+        volumeKey === String(state.vol) && c.page
+          ? (() => {
+              const [st, en] = chapterRange(i);
+              return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+            })()
+          : '';
       const row = document.createElement('div');
-      row.className =
-        'lib-row' +
-        (read ? ' is-read' : '') +
-        (c.pending ? ' is-pending' : '') +
+      row.className = 'lib-row' + (read ? ' is-read' : '') +
         (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
 
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'lib-main';
-      const nameEl = document.createElement('span');
-      nameEl.className = 'lib-name';
-      nameEl.textContent = label;
-      main.appendChild(nameEl);
-      if (title && title !== label) {
-        const subEl = document.createElement('span');
-        subEl.className = 'lib-sub';
-        subEl.textContent = title;
-        main.appendChild(subEl);
-      }
-      if (range) {
-        const metaEl = document.createElement('span');
-        metaEl.className = 'lib-meta';
-        metaEl.textContent = range;
-        main.appendChild(metaEl);
-      }
+      main.innerHTML =
+        '<span class="lib-name">' + label + '</span>' +
+        (title && title !== label ? '<span class="lib-sub">' + title + '</span>' : '') +
+        (range ? '<span class="lib-meta">' + range + '</span>' : '');
       main.addEventListener('click', () => {
-        hideLibrary();
         if (volumeKey !== String(state.vol)) {
-          switchVolume(volumeKey, c.page || 1);
+          switchVolume(volumeKey);
+          setTimeout(() => goChapter(i), 60);
         } else {
           goChapter(i);
         }
+        hideLibrary();
       });
 
       const check = document.createElement('button');
@@ -419,43 +255,49 @@
     });
   }
 
-  $('volBtn')?.addEventListener('click', () => {
-    if (libOpen && libKind === 'vol') hideLibrary();
+  $('volBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
     else showLibrary('vol');
   });
-  $('chBtn')?.addEventListener('click', () => {
+  $('chBtn').addEventListener('click', () => {
     if (libOpen) hideLibrary();
     else showLibrary('ch', String(state.vol));
   });
-  $('libBack')?.addEventListener('click', () => showLibrary('vol'));
-  $('libClose')?.addEventListener('click', hideLibrary);
-  $('markAllBtn')?.addEventListener('click', () => {
-    const applyMarkAll = (book) => {
-      ((book && book.chapters) || []).forEach((c, i) => {
-        if (!c.pending) setRead(libVol, i, true);
-      });
-      buildList(libVol);
-      markTocRead();
-    };
-    if (libVol === String(state.vol) && state.book) {
-      applyMarkAll(state.book);
-    } else {
-      readBook(libVol).then(applyMarkAll).catch(() => {});
+  $('libBack').addEventListener('click', () => showLibrary('vol'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && libOpen) {
+      if (libKind === 'ch') showLibrary('vol');
+      else hideLibrary();
     }
   });
-  $('clearAllBtn')?.addEventListener('click', () => {
+  $('markAllBtn').addEventListener('click', () => {
+    if (libVol === String(state.vol)) {
+      chapters().forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    } else {
+      (window.ALYA_BUNDLE?.vols?.[libVol]?.chapters || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    }
+    buildList(libVol);
+    markTocRead();
+  });
+  $('clearAllBtn').addEventListener('click', () => {
     LS.set('read:' + libVol, []);
     buildList(libVol);
     markTocRead();
   });
 
+  function volTotal(key) {
+    const m = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[key];
+    return m ? { total: m.chapters ? m.chapters.length : 0 } : { total: 0 };
+  }
+
   function syncPickers() {
-    if ($('volLabel')) $('volLabel').textContent = getVolLabel(String(state.vol));
-    if ($('volSelect')) $('volSelect').value = String(state.vol);
-    const ch = state.book ? chapters()[state.chapter] : null;
-    if ($('chLabel')) {
-      $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
-    }
+    $('volLabel').textContent = volTitle[String(state.vol)] || 'Cilt ' + state.vol;
+    const ch = chapters()[state.chapter];
+    $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
   }
 
   /* ---------------- tema / yazı boyutu ---------------- */
@@ -480,130 +322,111 @@
     });
     return idx;
   };
-  const chapterRange = (i) => chapterRangeFor(state.book, i);
+  const chapterRange = (i) => {
+    const start = chapters()[i].page;
+    const next = chapters()[i + 1];
+    return [start, next ? next.page - 1 : state.book.total];
+  };
 
   /* ---------------- veri ---------------- */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
   function imgSrc(p, vol) {
-    const v = vol || state.vol;
     const key = String(p.n).padStart(3, '0');
-    const rawImg = String(p.img || '').replace(/^\/+/, '');
-    if (rawImg.startsWith('art/')) return rawImg;
-    if (rawImg && !rawImg.startsWith('pages/') && !rawImg.startsWith('pages45/')) return rawImg;
-    if (p.art) return 'art/vol-' + volSlug(v) + '/' + key + '.webp';
-    return rawImg;
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    if (pack && pack[key]) return pack[key];
+    return String(p.img || '').replace(/^\/+/, '');
   }
 
-  async function readManifest() {
-    if (state.manifest) return state.manifest;
-    try {
-      const res = await fetch('bundles/manifest.json');
-      if (res.ok) {
-        state.manifest = await res.json();
-        return state.manifest;
-      }
-    } catch {}
-    try {
-      const res = await fetch('api/volumes');
-      if (res.ok) {
-        state.manifest = await res.json();
-        return state.manifest;
-      }
-    } catch {}
-    return null;
+  function hasEmbeddedArt(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    return Boolean(pack && pack[key]);
   }
+
+  /* illüstrasyonlar cilt başına parça hâlinde; ilk kullanımda yüklenir */
+  const artLoading = new Map();
+  function ensureArt(v) {
+    if (v !== '4' && v !== '4.5') return Promise.resolve();
+    const b = memBooks.get(v) || (String(state.vol) === String(v) ? state.book : null);
+    if (b && b.pages && b.pages.some((p) => p.art && /^art\//.test(p.img || ''))) return Promise.resolve();
+    window.ALYA_ART = window.ALYA_ART || {};
+    if (window.ALYA_ART[v] && Object.keys(window.ALYA_ART[v]).length) return Promise.resolve();
+    if (artLoading.has(v)) return artLoading.get(v);
+    const p = fetch('books/art-' + encodeURIComponent(v) + '.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((pack) => {
+        if (pack) window.ALYA_ART[v] = pack;
+      })
+      .catch(() => {})
+      .finally(() => artLoading.delete(v));
+    artLoading.set(v, p);
+    return p;
+  }
+
+  /* veri kaynakları: önbellek -> cilt parçası -> gömülü paket -> sunucu API */
+  function bundleBook(v) {
+    const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
+    return b || null;
+  }
+
+  function cachedBook(v) {
+    const ver = window.ALYA_BUNDLE_VERSION || 'dev';
+    const hit = LS.get('bookver:' + v, null);
+    if (!hit || hit !== ver) return null;
+    return LS.get('book:' + v, null);
+  }
+
+  const memBooks = new Map();
 
   async function readBook(v) {
-    const key = String(v);
-    if (memoryBooks.has(key)) return memoryBooks.get(key);
+    if (memBooks.has(v)) return memBooks.get(v);
 
-    const manifest = await readManifest();
-    const meta = manifest && manifest.volumes && manifest.volumes[key];
-    if (meta) {
-      const slug = meta.slug || volSlug(key);
-      const query = meta.hash ? '?v=' + encodeURIComponent(meta.hash) : '';
-      try {
-        const res = await fetch('bundles/vol-' + slug + '.json' + query);
-        if (res.ok) {
-          const book = await res.json();
-          memoryBooks.set(key, book);
-          return book;
-        }
-      } catch {}
+    const cached = cachedBook(v);
+    if (cached) {
+      memBooks.set(v, cached);
+      return cached;
     }
 
-    const res = await fetch('api/book?v=' + encodeURIComponent(key));
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const book = await res.json();
-    memoryBooks.set(key, book);
+    // 1) cilt parçası (ilk yüklemede yalnızca açılan cilt iner)
+    let book = null;
+    try {
+      const res = await fetch('books/v' + encodeURIComponent(v) + '.json');
+      if (res.ok) book = await res.json();
+    } catch {}
+
+    // 2) gömülü tam paket (çevrimdışı / file:// yedeği)
+    if (!book) book = bundleBook(v);
+
+    // 3) sunucu API
+    if (!book) {
+      try {
+        const res = await fetch('api/book?v=' + encodeURIComponent(v));
+        if (res.ok) book = await res.json();
+      } catch {}
+    }
+    if (!book) throw new Error('Cilt ' + v + ' yüklenemedi');
+
+    memBooks.set(v, book);
+    try {
+      LS.set('book:' + v, book);
+      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
+    } catch (e) {}
     return book;
   }
 
-  async function readBookEn(v) {
-    const key = String(v);
-    if (memoryEn.has(key)) return memoryEn.get(key);
-    if (enInFlight.has(key)) return enInFlight.get(key);
-
-    const task = (async () => {
-      const manifest = await readManifest();
-      const meta = manifest && manifest.volumes && manifest.volumes[key];
-      const slug = (meta && meta.slug) || volSlug(key);
-      const enRel = (meta && meta.enFile) || 'bundles/bundle-en-' + slug + '.json';
-      const query = meta && meta.enHash ? '?v=' + encodeURIComponent(meta.enHash) : '';
-      try {
-        const res = await fetch(enRel + query);
-        if (res.ok) {
-          const payload = await res.json();
-          const pages = (payload && payload.pages) || payload || {};
-          memoryEn.set(key, pages);
-          return pages;
-        }
-      } catch {}
-
-      const res = await fetch('api/book-en?v=' + encodeURIComponent(key));
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const payload = await res.json();
-      const pages = (payload && payload.pages) || payload || {};
-      memoryEn.set(key, pages);
-      return pages;
-    })().finally(() => {
-      enInFlight.delete(key);
-    });
-
-    enInFlight.set(key, task);
-    return task;
-  }
-
-  function getPageEn(vol, p) {
-    if (!p) return [];
-    if (Array.isArray(p.en) && p.en.length > 0) return p.en;
-    const enPages = memoryEn.get(String(vol));
-    if (enPages && Array.isArray(enPages[String(p.n)])) {
-      return enPages[String(p.n)];
-    }
-    return [];
-  }
-
-  let loadSeq = 0;
-
   async function load() {
-    const seq = ++loadSeq;
-    const manifest = await readManifest();
-    if (seq !== loadSeq) return;
-    if (manifest && manifest.volumes && !manifest.volumes[state.vol]) {
-      state.vol = manifest.defaultVolume || (manifest.order && manifest.order[0]) || '4';
-      LS.set('vol', state.vol);
-    }
-    syncVolSelect();
-
-    const targetVol = state.vol;
-    const book = await readBook(targetVol);
-    if (seq !== loadSeq || targetVol !== state.vol) return;
-    state.book = book;
+    state.book = await readBook(state.vol);
+    await ensureArt(state.vol);
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
-    if ($('volSelect')) $('volSelect').value = state.vol;
+    if ($('volLabel')) $('volLabel').textContent = state.book.volume;
+    volButtons.forEach((btn) => {
+      const active = btn.dataset.vol === state.vol;
+      btn.classList.toggle('is-on', active);
+      btn.setAttribute('aria-current', active ? 'true' : 'false');
+    });
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
@@ -629,7 +452,7 @@
       pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
-        hideLibrary();
+        toggleToc(false);
         goChapter(i);
       });
       li.appendChild(btn);
@@ -643,7 +466,7 @@
     render();
   }
 
-  // içindekilerde okunmuş bölümleri işaretle (elle okundu seti bazlı)
+  // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
   function markTocRead() {
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
@@ -657,25 +480,16 @@
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading =
-      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye|Yan\s*Hik[aâ]ye|Kısa\s*Hik[aâ]ye|Bonus\s*(?:SS|Hik[aâ]ye)|Anekdot|Ara\s*Bölüm|Epilog|Prolog|Başlangıç|Prologue|Epilogue|Afterword|Side\s*Story|Anecdote|Interlude|Chapter)\b/i.test(
-        t
-      );
+    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Ara Bölüm|Kısa Hikâye|Başlangıç)\b/.test(t);
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
-    } else {
-      const i = ch.title ? t.indexOf(ch.title) : -1;
+    } else if (ch.title) {
+      const i = t.indexOf(ch.title);
       if (i >= 0) {
-        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”–—-]+/, '');
+        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”]+/, '');
         if (rest.length > 40) out[0] = rest;
         else out.shift();
-      } else if (
-        /^(?:\d+\.\s*)?(?:Bölüm(?:\s+\d+)?|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye(?:\s+\d+)?|Yan\s*Hik[aâ]ye(?:\s+\d+)?|Kısa\s*Hik[aâ]ye(?:\s+\d+)?|Bonus\s*SS(?:\s+\d+)?|Anekdot(?:\s+\d+)?|Ara\s*Bölüm(?:\s+\d+)?|Epilog|Prolog|Prologue|Epilogue|Afterword|Side\s*Story(?:\s+\d+)?|Anecdote(?:\s+\d+)?|Interlude(?:\s+\d+)?)$/i.test(
-          t.trim()
-        )
-      ) {
-        out.shift();
       }
     }
     return out;
@@ -736,85 +550,7 @@
   }
 
   /* ---------------- çizim (tek orijinal sayfa) ---------------- */
-  let pageRenderSeq = 0;
-
-  function appendOrigProse(container, lines) {
-    const proseWrap = document.createElement('div');
-    proseWrap.className = 'orig-prose';
-    for (const line of lines) {
-      const el = document.createElement('p');
-      el.textContent = line;
-      proseWrap.appendChild(el);
-    }
-    container.appendChild(proseWrap);
-  }
-
-  function populateOriginalText(sec, vol, p, seq) {
-    const immediateEn = getPageEn(vol, p);
-    if (immediateEn.length > 0) {
-      appendOrigProse(sec, immediateEn);
-      return;
-    }
-    if (memoryEn.has(String(vol))) {
-      if (p.tr && p.tr.length) {
-        for (const line of p.tr) {
-          sec.appendChild(renderParagraph(line));
-        }
-      }
-      return;
-    }
-
-    const loadingNote = document.createElement('p');
-    loadingNote.className = 'empty-note';
-    loadingNote.textContent = 'Orijinal metin yükleniyor…';
-    sec.appendChild(loadingNote);
-
-    readBookEn(vol)
-      .then(() => {
-        if (
-          seq !== pageRenderSeq ||
-          state.mode !== 'page' ||
-          String(state.vol) !== String(vol) ||
-          sec.isConnected === false
-        ) {
-          return;
-        }
-        sec.innerHTML = '';
-        const loadedEn = getPageEn(vol, p);
-        if (loadedEn.length > 0) {
-          appendOrigProse(sec, loadedEn);
-        } else if (p.tr && p.tr.length) {
-          for (const line of p.tr) {
-            sec.appendChild(renderParagraph(line));
-          }
-        }
-      })
-      .catch(() => {
-        if (
-          seq !== pageRenderSeq ||
-          state.mode !== 'page' ||
-          String(state.vol) !== String(vol) ||
-          sec.isConnected === false
-        ) {
-          return;
-        }
-        sec.innerHTML = '';
-        if (p.tr && p.tr.length) {
-          for (const line of p.tr) {
-            sec.appendChild(renderParagraph(line));
-          }
-        } else {
-          const errEl = document.createElement('p');
-          errEl.className = 'empty-note';
-          errEl.textContent = 'Orijinal metin şu an yüklenemedi.';
-          sec.appendChild(errEl);
-        }
-      });
-  }
-
   function renderPage() {
-    const seq = ++pageRenderSeq;
-    const currentVol = String(state.vol);
     const n = Math.min(Math.max(1, state.page), state.book.total);
     const p = state.book.pages[n - 1];
     const idx = chapterIndex(n);
@@ -844,25 +580,24 @@
     if (ch.pending || (p && p.pending)) {
       sec.appendChild(createPendingNotice(ch));
     } else if (p) {
-      const hasFullScan = p.art === true || Boolean(state.book.fullScans);
+      const hasFullScan = p.art || hasEmbeddedArt(p) || ((state.vol === '4' || state.vol === '4.5') && Boolean(p.img));
       if (hasFullScan) {
-        const fig = figureFor(p, false);
-        if (!p.art) {
-          const im = fig.querySelector('img');
-          if (im && typeof im.addEventListener === 'function') {
-            im.addEventListener(
-              'error',
-              () => {
-                fig.remove();
-                populateOriginalText(sec, currentVol, p, seq);
-              },
-              { once: true }
-            );
-          }
+        sec.appendChild(figureFor(p, false));
+      } else if (p.en && p.en.length) {
+        const proseWrap = document.createElement('div');
+        proseWrap.className = 'orig-prose';
+        for (const line of p.en) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          proseWrap.appendChild(el);
         }
-        sec.appendChild(fig);
-      } else {
-        populateOriginalText(sec, currentVol, p, seq);
+        sec.appendChild(proseWrap);
+      } else if (p.tr && p.tr.length) {
+        for (const line of p.tr) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          sec.appendChild(el);
+        }
       }
     }
     reader.appendChild(sec);
@@ -887,18 +622,8 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
-    syncPickers();
-    $('navChapter').textContent = ch.label;
-    $('navPages').textContent = 's. ' + n + ' / ' + state.book.total;
-    $('prevBtn').disabled = n <= 1;
-    $('nextBtn').disabled = n >= state.book.total;
-    $('modeText').classList.toggle('is-on', state.mode === 'text');
-    $('modePage').classList.toggle('is-on', state.mode === 'page');
-    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
-
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
-    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -963,7 +688,8 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true;
+        const isIllustration =
+          p.art === true || (p.tr.length === 0 && (hasEmbeddedArt(p) || ((state.vol === '4' || state.vol === '4.5') && Boolean(p.img))));
         if (isIllustration) {
           sec.classList.add('pg-art');
           if (p.tr.length) sec.classList.add('has-text');
@@ -979,7 +705,7 @@
           if (!t) continue;
           sec.appendChild(renderParagraph(t));
         }
-        frag.appendChild(sec);
+        if (sec.childNodes.length) frag.appendChild(sec);
       }
       reader.appendChild(frag);
     }
@@ -1123,7 +849,6 @@
   /* ---------------- gezinme ---------------- */
   function goChapter(i, anchorPage) {
     if (!state.book) return;
-    hideLibrary();
     const max = chapters().length - 1;
     const idx = Math.min(Math.max(0, i), max);
     state.page = chapters()[idx].page;
@@ -1133,21 +858,14 @@
       if (el) el.scrollIntoView({ block: 'start' });
     }
   }
-  const next = () => {
-    hideLibrary();
-    return state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1);
-  };
-  const prev = () => {
-    hideLibrary();
-    return state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1);
-  };
+  const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
+  const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);
   $('nextBtn').addEventListener('click', next);
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
   $('modeBtn').addEventListener('click', () => {
-    hideLibrary();
     state.mode = state.mode === 'text' ? 'page' : 'text';
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
@@ -1158,19 +876,20 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
   function switchMode(mode) {
-    hideLibrary();
     if (state.mode === mode) return;
     state.mode = mode;
     syncModeButtons();
     render();
-    const rEl = $('reader');
-    rEl.classList.remove('is-switching');
-    void rEl.offsetWidth;
-    rEl.classList.add('is-switching');
+    const readerEl = $('reader');
+    readerEl.classList.remove('is-switching');
+    void readerEl.offsetWidth;
+    readerEl.classList.add('is-switching');
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
   $('modeText').addEventListener('click', () => switchMode('text'));
   $('modePage').addEventListener('click', () => switchMode('page'));
+
+  function toggleToc() {} // sade arayüzde ayrı panel yok (bölüm seçici <select>)
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -1198,11 +917,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
-      if (libOpen) {
-        if (libKind === 'ch') showLibrary('vol');
-        else hideLibrary();
-      }
-      return;
+      return toggleToc(false);
     }
     if (e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();

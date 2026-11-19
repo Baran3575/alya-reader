@@ -1,7 +1,6 @@
 // 5 geçişin sonucunu ölçer
 const fs = require('fs');
 const path = require('path');
-const { getVolume } = require('../volumes');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
@@ -26,12 +25,7 @@ function hasUnbalancedDelim(str, open, close) {
 }
 
 function runVerify(filePath) {
-  const FILE = filePath
-    ? path.resolve(filePath)
-    : process.env.ALYA_TR_FILE
-      ? path.resolve(process.env.ALYA_TR_FILE)
-      : (getVolume(process.env.ALYA_VOLUME || '4') || {}).absTrFile ||
-        path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json');
+  const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
   const f = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   const paras = [];
   for (const [p, arr] of Object.entries(f)) arr.forEach((t, i) => paras.push({ p, i, t }));

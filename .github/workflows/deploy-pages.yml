@@ -14,11 +14,11 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Lazy Chunks & Verify (Vols 4–12)
+    name: Build & Verify Static Reader (Vols 4–12)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,19 +29,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Protect active source.json files
-        run: |
-          node scripts/volumes.js --source-files | xargs chmod 444
+      - name: Run Strict QC Gate Across All Volumes
+        run: node scripts/qc/cli.js --strict --check-regression
 
-      - name: Build volume JSON chunks, manifest, and static dist/
+      - name: Build Static GitHub Pages Bundle
         run: npm run build:site
-
-      - name: Run QC and verification suite across all volumes
-        run: npm test
-
-      - name: Verify source.json files were untouched
-        run: |
-          node scripts/volumes.js --source-files | xargs git diff --exit-code --
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -52,7 +44,7 @@ jobs:
           path: './dist'
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     environment:

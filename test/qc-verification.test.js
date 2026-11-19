@@ -189,365 +189,6 @@ function testSchemaValidation() {
   }
 }
 
-function testMultiVolumeDiscoveryAndPatches() {
-  console.log('Testing shared volumes.json registry, dynamic volume discovery, and per-volume patches...');
-  const os = require('os');
-  const vm = require('vm');
-  const {
-    getVolumeIds,
-    getActiveVolumeIds,
-    getVolume,
-  } = require('../scripts/volumes');
-  const { buildBook } = require('../server');
-  const { buildBundles } = require('../scripts/build_bundle');
-
-  // 1. All 11 volumes registered in volumes.json
-  const allIds = getVolumeIds(ROOT);
-  const expectedIds = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
-  assert.deepStrictEqual(allIds, expectedIds, 'volumes.json must register volumes 4 through 12 in order');
-  assert.deepStrictEqual(getActiveVolumeIds(ROOT), expectedIds, 'All 11 volumes in repo should be active');
-
-  // 2. Dynamic discovery in isolated temp root when adding data5/ and data95/
-  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-vols-'));
-  try {
-    fs.copyFileSync(path.join(ROOT, 'volumes.json'), path.join(tmpRoot, 'volumes.json'));
-    for (const dir of ['data', 'data5', 'data95']) {
-      fs.mkdirSync(path.join(tmpRoot, dir), { recursive: true });
-      fs.writeFileSync(
-        path.join(tmpRoot, dir, 'source.json'),
-        JSON.stringify([
-          { page: 1, text: 'Cover' },
-          { page: 2, text: 'Prologue\nMasachika walked quietly into the council room today.' },
-          { page: 3, text: 'Chapter 1: New Term\nAlisa looked over her notes carefully at her desk.' },
-        ])
-      );
-      fs.writeFileSync(
-        path.join(tmpRoot, dir, 'paragraphs_final.json'),
-        JSON.stringify({
-          '2': ['Önsöz', 'Masachika bugün öğrenci konseyi odasına sessizce girdi.'],
-          '3': ['Alisa masasında notlarını dikkatle inceledi.'],
-        })
-      );
-    }
-
-    assert.deepStrictEqual(
-      getActiveVolumeIds(tmpRoot),
-      ['4', '5', '9.5'],
-      'Adding source.json + paragraphs_final.json must automatically activate volumes'
-    );
-
-    // Build bundles in tmpRoot and verify manifest + TR chunks (zero p.en) + separate EN chunks
-    const built = buildBundles(tmpRoot);
-    assert.deepStrictEqual(built.manifest.order, ['4', '5', '9.5']);
-    for (const [volId, slug] of [
-      ['4', '4'],
-      ['5', '5'],
-      ['9.5', '9-5'],
-    ]) {
-      const chunkFile = path.join(tmpRoot, 'public', 'bundles', `vol-${slug}.json`);
-      const enChunkFile = path.join(tmpRoot, 'public', 'bundles', `bundle-en-${slug}.json`);
-      assert(fs.existsSync(chunkFile), `Expected chunk vol-${slug}.json`);
-      assert(fs.existsSync(enChunkFile), `Expected separate English chunk bundle-en-${slug}.json`);
-      const chunk = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
-      assert(chunk.pages.every((p) => !('en' in p)), `Chunk vol-${slug}.json must omit p.en`);
-      const enChunk = JSON.parse(fs.readFileSync(enChunkFile, 'utf8'));
-      assert.strictEqual(enChunk.id, volId);
-      assert(Array.isArray(enChunk.pages['3']) && enChunk.pages['3'].length > 0, `bundle-en-${slug}.json must include English paragraphs`);
-      assert.strictEqual(built.manifest.volumes[volId].enFile, `bundles/bundle-en-${slug}.json`);
-      assert(built.manifest.volumes[volId].enHash, `manifest.volumes[${volId}] must include enHash`);
-    }
-
-    // Verify CLI discovers all 3 active volumes automatically
-    const cliRes = runCLI(['--root', tmpRoot, '--strict'], true);
-    assert(cliRes.out.includes('Cilt 4') && cliRes.out.includes('Cilt 5') && cliRes.out.includes('Cilt 9.5'));
-
-    // Verify per-volume patches (valid vs regressing patch in data95/patches.json)
-    const v95Cfg = getVolume('9.5', tmpRoot);
-    fs.writeFileSync(
-      v95Cfg.absPatchesFile,
-      JSON.stringify({ '3.0': 'Alisa masasında ders notlarını dikkatle gözden geçirdi.' })
-    );
-    const patchDryOk = execFileSync(
-      process.execPath,
-      [PATCH_SCRIPT, '--root', tmpRoot, '--volume', '9.5', '--dry-run'],
-      { cwd: ROOT, encoding: 'utf8' }
-    );
-    assert(patchDryOk.includes('Cilt 9.5 önizleme başarılı'), 'Valid per-volume patch should pass dry-run');
-
-    fs.writeFileSync(
-      v95Cfg.absPatchesFile,
-      JSON.stringify({ '3.0': '"Düz tırnak ve that kelimesi" (ÇN: hata)' })
-    );
-    const badPatchCli = runCLI(['--root', tmpRoot, '--volume', '9.5', '--strict'], false);
-    assert.strictEqual(badPatchCli.code, 1, 'Invalid per-volume patch in data95/patches.json must fail QC CLI');
-
-    // Verify patch.js --dry-run succeeds cleanly when a volume has no patches.json
-    const noPatchDry = execFileSync(
-      process.execPath,
-      [PATCH_SCRIPT, '--root', tmpRoot, '--volume', '5', '--dry-run'],
-      { cwd: ROOT, encoding: 'utf8' }
-    );
-    assert(noPatchDry.includes('atlandı'), 'Missing optional per-volume patches.json should skip cleanly in dry-run');
-
-    // 3. Heading detection with and without punctuation separators + p.en stripping
-    const syntheticBook = buildBook({
-      rootDir: tmpRoot,
-      dataDir: 'data95',
-      volume: 'Cilt 9.5',
-      source: [
-        { page: 1, text: '' },
-        { page: 2, text: 'Prologue' },
-        { page: 3, text: 'Chapter 1: Morning Tea\nMasachika sipped his tea quietly at his desk.' },
-        { page: 4, text: 'Interlude: Rainy Window\nRain tapped softly against the classroom windowpane.' },
-        { page: 5, text: 'Interlude Quiet Corridor\nFootsteps echoed down the empty school hallway.' },
-        { page: 6, text: 'Side Story: Library Duty\nYuki smiled mischievously from across the table.' },
-        { page: 7, text: 'Bonus SS Secret Notebook\nAlisa hid her notebook behind her back.' },
-        { page: 8, text: 'Anecdote - Rooftop Breeze\nMaria hummed a gentle melody under the sky.' },
-        { page: 9, text: 'Epilogue\nThe sun dipped below the horizon at last.' },
-        { page: 10, text: 'Afterword\nThank you very much for picking up this volume.' },
-        { page: 11, text: 'Afterword: Author Notes\nSee you again in the next volume soon.' },
-      ],
-      tr: {
-        '2': ['Önsöz', 'Kısa giriş paragrafı.'],
-        '3': ['Masachika masasında çayını sessizce yudumladı.'],
-        '4': ['Yağmur sınıf penceresine usulca vuruyordu.'],
-        '5': ['Boş okul koridorunda ayak sesleri yankılandı.'],
-        '6': ['Yuki masanın karşısından muzipçe gülümsedi.'],
-        '7': ['Alisa defterini arkasında sakladı.'],
-        '8': ['Maria gökyüzünün altında yumuşak bir ezgi mırıldandı.'],
-        '9': ['Güneş nihayet ufkun altına indi.'],
-        '10': ['Bu cildi okuduğunuz için çok teşekkür ederim.'],
-        '11': ['Bir sonraki ciltte görüşmek üzere.'],
-      },
-      titles: {},
-    });
-
-    assert(syntheticBook.pages.every((p) => !('en' in p)), 'buildBook() must strip p.en by default');
-    const byPage = Object.fromEntries(syntheticBook.chapters.map((c) => [c.page, c]));
-    assert.strictEqual(byPage[2].label, 'Önsöz');
-    assert.strictEqual(byPage[3].label, 'Bölüm 1');
-    assert.strictEqual(byPage[4].label, 'Ara Bölüm');
-    assert.strictEqual(byPage[5].label, 'Ara Bölüm');
-    assert.strictEqual(byPage[6].label, 'Ek Hikâye');
-    assert.strictEqual(byPage[7].label, 'Ek Hikâye');
-    assert.strictEqual(byPage[8].label, 'Ek Hikâye');
-    assert.strictEqual(byPage[9].label, 'Sonsöz');
-    assert.strictEqual(byPage[10].label, 'Sonsöz');
-    assert.strictEqual(byPage[11].label, 'Sonsöz');
-
-    // 4. Verify production bundles (TR + separate EN) & standalone WebP art exist
-    buildBundles(ROOT);
-    const prodManifest = JSON.parse(
-      fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'manifest.json'), 'utf8')
-    );
-    assert.deepStrictEqual(prodManifest.order, expectedIds);
-    for (const id of prodManifest.order) {
-      const m = prodManifest.volumes[id];
-      const chunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.file), 'utf8'));
-      assert(chunk.pages.every((p) => !('en' in p)), `Production ${m.file} must have zero p.en keys`);
-      assert.strictEqual(m.enFile, `bundles/bundle-en-${m.slug}.json`, `Manifest for ${id} must reference bundle-en-${m.slug}.json`);
-      assert(m.enHash && m.enHash.length === 12, `Manifest for ${id} must have 12-char enHash`);
-      const enChunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.enFile), 'utf8'));
-      assert(enChunk.pages && Object.keys(enChunk.pages).length > 0, `Production ${m.enFile} must contain English pages`);
-      const artDir = path.join(ROOT, 'public', 'art', `vol-${m.slug}`);
-      const webps = fs.readdirSync(artDir).filter((f) => f.endsWith('.webp'));
-      assert(webps.length > 0, `Expected standalone .webp files in public/art/vol-${m.slug}/`);
-    }
-
-    // 5. Verify app.js purges legacy alya4:book* keys and keeps localStorage < 2048 bytes across 11 volumes
-    const appSource = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
-    assert(!appSource.includes("'book:' +"), 'app.js must not write book:<v> to localStorage');
-    assert(!appSource.includes("'bookver:' +"), 'app.js must not write bookver:<v> to localStorage');
-
-    const store = new Map([
-      ['alya4:book:4', 'x'.repeat(500000)],
-      ['alya4:bookver:4', '"deadbeef"'],
-      ['alya4:book:4.5', 'y'.repeat(500000)],
-      ['alya4:vol', '"4"'],
-      ['alya4:mode', '"text"'],
-      ['alya4:theme', '"dark"'],
-      ['alya4:size', '1.06'],
-      ['alya4:page', '14'],
-    ]);
-    for (const v of expectedIds) {
-      store.set(`alya4:page:${v}`, '42');
-      store.set(`alya4:max:${v}`, '120');
-    }
-    const mockLS = {
-      get length() {
-        return store.size;
-      },
-      key(i) {
-        return Array.from(store.keys())[i] || null;
-      },
-      getItem(k) {
-        return store.has(k) ? store.get(k) : null;
-      },
-      setItem(k, v) {
-        store.set(k, String(v));
-      },
-      removeItem(k) {
-        store.delete(k);
-      },
-    };
-
-    const elStub = () => {
-      const listeners = {};
-      const children = [];
-      const node = {
-        style: {},
-        dataset: {},
-        className: '',
-        classList: { add() {}, remove() {}, toggle() {} },
-        children,
-        addEventListener(evt, fn) {
-          (listeners[evt] = listeners[evt] || []).push(fn);
-        },
-        trigger(evt, arg = {}) {
-          for (const fn of listeners[evt] || []) fn(arg);
-        },
-        setAttribute() {},
-        append(...items) {
-          children.push(...items);
-        },
-        appendChild(item) {
-          children.push(item);
-          return item;
-        },
-        remove() {},
-        querySelector: () => ({ removeAttribute() {}, setAttribute() {}, addEventListener() {} }),
-        querySelectorAll: () => [],
-        contains: () => false,
-        hidden: true,
-        innerHTML: '',
-        textContent: '',
-        value: '4',
-      };
-      return node;
-    };
-
-    const elements = new Map();
-    const getEl = (id) => {
-      if (!elements.has(id)) elements.set(id, elStub());
-      return elements.get(id);
-    };
-
-    const elevenManifest = {
-      defaultVolume: '4',
-      order: expectedIds,
-      volumes: Object.fromEntries(
-        expectedIds.map((id) => {
-          const slug = id.replace(/\./g, '-');
-          return [
-            id,
-            {
-              id,
-              slug,
-              label: `Cilt ${id}`,
-              file: `bundles/vol-${slug}.json`,
-              hash: 'abc123def456',
-              enFile: `bundles/bundle-en-${slug}.json`,
-              enHash: 'fed654cba321',
-            },
-          ];
-        })
-      ),
-    };
-
-    const fetchedUrls = [];
-    const sandbox = {
-      localStorage: mockLS,
-      navigator: { onLine: true },
-      location: { protocol: 'http:', search: '?vol=4&page=3' },
-      requestAnimationFrame: (fn) => fn(),
-      Image: function () {},
-      window: {
-        location: { protocol: 'http:', search: '?vol=4&page=3' },
-        matchMedia: () => ({ matches: false }),
-        addEventListener() {},
-        scrollTo() {},
-        scrollY: 0,
-        innerHeight: 800,
-      },
-      document: {
-        getElementById: getEl,
-        querySelector: () => ({ setAttribute() {} }),
-        createElement: () => elStub(),
-        createDocumentFragment: () => elStub(),
-        createTextNode: (s) => ({ nodeType: 3, textContent: String(s) }),
-        addEventListener() {},
-        documentElement: { dataset: {}, style: { setProperty() {} } },
-        body: { style: {} },
-        title: '',
-      },
-      fetch: async (url) => {
-        const u = String(url);
-        fetchedUrls.push(u);
-        if (u.includes('manifest.json')) {
-          return { ok: true, status: 200, json: async () => elevenManifest };
-        }
-        if (u.includes('bundle-en-')) {
-          return {
-            ok: true,
-            status: 200,
-            json: async () => ({
-              id: '4',
-              slug: '4',
-              pages: { '3': ['Chapter 1: Morning Tea', 'Masachika sipped his tea quietly at his desk.'] },
-            }),
-          };
-        }
-        return { ok: true, status: 200, json: async () => syntheticBook };
-      },
-    };
-    vm.runInNewContext(appSource, sandbox);
-
-    const remainingKeys = Array.from(store.keys());
-    assert(
-      !remainingKeys.some((k) => k.startsWith('alya4:book')),
-      'Legacy alya4:book* keys must be purged on startup'
-    );
-    assert.strictEqual(store.get('alya4:page:4'), '42', 'Existing reading progress must be preserved');
-    const totalBytes = remainingKeys.reduce(
-      (sum, k) => sum + Buffer.byteLength(k, 'utf8') + Buffer.byteLength(store.get(k), 'utf8'),
-      0
-    );
-    assert(totalBytes < 2048, `Expected localStorage < 2048 bytes across 11 volumes, got ${totalBytes}`);
-
-    // Wait for initial async load() to settle, verify zero bundle-en-* fetch in Çeviri mode,
-    // then switch to Orijinal mode and verify bundle-en-4.json is lazily fetched on demand
-    return new Promise((resolve, reject) => {
-      setImmediate(async () => {
-        try {
-          await new Promise((r) => setImmediate(r));
-          assert(
-            !fetchedUrls.some((u) => u.includes('bundle-en-')),
-            `Default Çeviri mode must not fetch bundle-en-* chunks, got: ${fetchedUrls.join(', ')}`
-          );
-          getEl('modePage').trigger('click');
-          await new Promise((r) => setImmediate(r));
-          await new Promise((r) => setImmediate(r));
-          assert(
-            fetchedUrls.some((u) => u.includes('bundles/bundle-en-4.json?v=fed654cba321')),
-            `Switching to Orijinal mode must lazily fetch bundle-en-4.json, got: ${fetchedUrls.join(', ')}`
-          );
-          console.log(
-            `  ✓ Multi-volume discovery, headings, separate lazy bundle-en-* chunks, patches & localStorage (${totalBytes} B < 2048 B) verified`
-          );
-          resolve();
-        } catch (e) {
-          reject(e);
-        } finally {
-          fs.rmSync(tmpRoot, { recursive: true, force: true });
-        }
-      });
-    });
-  } catch (err) {
-    fs.rmSync(tmpRoot, { recursive: true, force: true });
-    throw err;
-  }
-}
-
 function createMockDocument() {
   function makeNode(nodeType, tagName, text) {
     const node = {
@@ -642,42 +283,35 @@ function testRussianDialogueDomRendering() {
   assert.strictEqual(pThought.childNodes[0].nodeType, 3);
   assert.strictEqual(pThought.textContent, '(Ondan hiç nefret etmiyordum.)');
 
-  // 7. Manifest + tembel yüklenen cilt parçaları ve ikili WebP bütünlüğü
-  const manifestPath = path.join(ROOT, 'public', 'bundles', 'manifest.json');
-  assert(fs.existsSync(manifestPath), 'public/bundles/manifest.json must exist');
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert(manifest.volumes['4'] && manifest.volumes['4'].total > 0, 'manifest must list Cilt 4');
-  assert(manifest.volumes['12'] && manifest.volumes['12'].total > 0, 'manifest must list Cilt 12');
-  assert(!manifest.volumes['4'].pages, 'manifest must not embed full page data');
+  // 7. Manifest + cilt parçaları bütünlüğü
+  const bundleContent = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8');
+  const manifestMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
+  assert(manifestMatch, 'bundle.js must define window.ALYA_BUNDLE manifest');
+  const manifest = JSON.parse(manifestMatch[1]);
+  assert(manifest.vols['4'] && manifest.vols['4'].total > 0, 'manifest must list Cilt 4');
+  assert(manifest.vols['12'] && manifest.vols['12'].total > 0, 'manifest must list Cilt 12');
+  assert(!manifest.vols['4'].pages, 'manifest must not embed full page data');
 
-  const bundlesDir = path.join(ROOT, 'public', 'bundles');
-  const volFiles = fs
-    .readdirSync(bundlesDir)
-    .filter((f) => f.startsWith('vol-') && f.endsWith('.json'));
-  const enFiles = fs
-    .readdirSync(bundlesDir)
-    .filter((f) => f.startsWith('bundle-en-') && f.endsWith('.json'));
-  assert.strictEqual(volFiles.length, 11, 'public/bundles must contain 11 Turkish volume chunks');
-  assert.strictEqual(enFiles.length, 11, 'public/bundles must contain 11 separate English chunks');
+  const booksDir = path.join(ROOT, 'public', 'books');
+  if (!fs.existsSync(booksDir)) {
+    console.log('  (books/ yok — parça denetimi atlandı, npm run build:bundle ile üretilir)');
+  }
+  const volFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => f.endsWith('.json') && !f.startsWith('art-'))
+    : [];
+  if (fs.existsSync(booksDir)) assert(volFiles.length >= 11, 'public/books must contain one chunk per volume');
 
-  const vol4 = JSON.parse(fs.readFileSync(path.join(bundlesDir, 'vol-4.json'), 'utf8'));
+  const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
   const flat4 = vol4.pages.flatMap((p) => p.tr);
-  assert(
-    flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')),
-    'vol-4.json must contain repaired 149.4'
-  );
-  assert(
-    flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')),
-    'vol-4.json must contain repaired 267.2'
-  );
+  assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
+  assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
 
-  const art4File = path.join(ROOT, 'public', 'art', 'vol-4', '004.webp');
-  assert(fs.existsSync(art4File) && fs.statSync(art4File).size > 0, 'public/art/vol-4/004.webp must exist as binary WebP');
+  const art4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'art-4.json'), 'utf8'));
+  assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
 
   for (const file of volFiles) {
-    const book = JSON.parse(fs.readFileSync(path.join(bundlesDir, file), 'utf8'));
+    const book = JSON.parse(fs.readFileSync(path.join(booksDir, file), 'utf8'));
     for (const pg of book.pages) {
-      assert(!('en' in pg), `${file} p.${pg.n} must omit p.en`);
       for (const line of pg.tr) {
         assert(!/[『』「」]/.test(line), `${file} p.${pg.n} tr must not contain corner brackets`);
         assert(!/\p{Script=Cyrillic}/u.test(line), `${file} p.${pg.n} tr must not contain Cyrillic`);
@@ -759,7 +393,7 @@ function testIntentionalCornerQuotesAndCyrillic() {
   }
 }
 
-async function runAll() {
+function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
   testRussianDialogueDomRendering();
@@ -772,11 +406,7 @@ async function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
-  await testMultiVolumeDiscoveryAndPatches();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 
-runAll().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+runAll();

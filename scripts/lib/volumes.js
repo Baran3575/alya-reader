@@ -1,35 +1,49 @@
 // Tüm ciltler (4 – 12, 4.5 ve 9.5 dahil) için ortak dizin ve üstveri kaydı.
-// Tek doğruluk kaynağı olarak kök volumes.json manifestini (scripts/volumes.js üzerinden) kullanır.
 const path = require('path');
-const { DEFAULT_ROOT, loadManifest } = require('../volumes');
 
-const ROOT = DEFAULT_ROOT;
-const manifest = loadManifest(ROOT);
+const ROOT = path.join(__dirname, '..', '..');
 
-const VOLUME_KEYS = manifest.list.map((v) => v.id);
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-function toLegacyEntry(v) {
-  const legacySlug = v.id === '4' ? '' : v.id.replace(/\./g, '');
-  const relImgPrefix = v.imgPrefix.replace(/^\/+/, '');
+function makeVolume(key) {
+  if (key === '4') {
+    return {
+      key: '4',
+      slug: '',
+      dataDir: 'data',
+      imgDir: 'public/pages',
+      imgPrefix: '/pages/',
+      relImgPrefix: 'pages/',
+      label: 'Cilt 4',
+      titlesFile: path.join(ROOT, 'data', 'chapters.json'),
+      sourceFile: path.join(ROOT, 'data', 'source.json'),
+      bilingualFile: path.join(ROOT, 'data', 'bilingual.json'),
+      finalFile: path.join(ROOT, 'data', 'paragraphs_final.json'),
+      finalRel: 'data/paragraphs_final.json',
+      maxAvgStrict: 0.20,
+    };
+  }
+  const suffix = key.replace('.', '');
+  const dataDir = `data${suffix}`;
+  const imgDir = `public/pages${suffix}`;
   return {
-    key: v.id,
-    slug: legacySlug,
-    bundleSlug: v.slug,
-    dataDir: v.dataDir,
-    imgDir: v.pagesRelDir,
-    imgPrefix: v.imgPrefix,
-    relImgPrefix,
-    label: v.label,
-    titlesFile: v.absTitlesFile,
-    sourceFile: v.absSourceFile,
-    bilingualFile: path.join(ROOT, v.dataDir, 'bilingual.json'),
-    finalFile: v.absTrFile,
-    finalRel: v.trFile,
-    maxAvgStrict: v.maxAvgStrict,
+    key,
+    slug: suffix,
+    dataDir,
+    imgDir,
+    imgPrefix: `/pages${suffix}/`,
+    relImgPrefix: `pages${suffix}/`,
+    label: `Cilt ${key}`,
+    titlesFile: path.join(ROOT, dataDir, 'chapters.json'),
+    sourceFile: path.join(ROOT, dataDir, 'source.json'),
+    bilingualFile: path.join(ROOT, dataDir, 'bilingual.json'),
+    finalFile: path.join(ROOT, dataDir, 'paragraphs_final.json'),
+    finalRel: `${dataDir}/paragraphs_final.json`,
+    maxAvgStrict: 0.20,
   };
 }
 
-const VOLUMES = Object.fromEntries(manifest.list.map((v) => [v.id, toLegacyEntry(v)]));
+const VOLUMES = Object.fromEntries(VOLUME_KEYS.map((k) => [k, makeVolume(k)]));
 
 function resolveVolume(volKey) {
   const k = String(volKey || '4').trim();

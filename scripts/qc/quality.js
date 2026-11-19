@@ -106,15 +106,7 @@ function evaluateData(data, top = 25) {
 }
 
 if (require.main === module) {
-  const { getVolume } = require('../volumes');
-  const volIdx = process.argv.indexOf('--volume') > -1 ? process.argv.indexOf('--volume') : process.argv.indexOf('--vol');
-  const volCfg = volIdx > -1 && process.argv[volIdx + 1] ? getVolume(process.argv[volIdx + 1]) : getVolume('4');
-  const TR =
-    process.argv[2] && !process.argv[2].startsWith('--')
-      ? process.argv[2]
-      : volCfg
-        ? volCfg.trFile
-        : 'data/paragraphs_final.json';
+  const TR = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'data/paragraphs_final.json';
   const topArg = process.argv.indexOf('--top');
   const TOP = topArg > -1 ? Number(process.argv[topArg + 1]) : 25;
 

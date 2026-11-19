@@ -11,19 +11,9 @@
   <div class="progress"><span id="progressBar"></span></div>
 
   <header class="bar">
-    <select id="volSelect" class="select vol-select" aria-label="Cilt seçimi">
-      <option value="4">Cilt 4</option>
-      <option value="4.5">Cilt 4.5</option>
-      <option value="5">Cilt 5</option>
-      <option value="6">Cilt 6</option>
-      <option value="7">Cilt 7</option>
-      <option value="8">Cilt 8</option>
-      <option value="9">Cilt 9</option>
-      <option value="9.5">Cilt 9.5</option>
-      <option value="10">Cilt 10</option>
-      <option value="11">Cilt 11</option>
-      <option value="12">Cilt 12</option>
-    </select>
+    <button class="pick" id="volBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
+      <span id="volLabel">Cilt 4</span><i class="chev" aria-hidden="true"></i>
+    </button>
 
     <button class="pick pick-ch" id="chBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
       <span id="chLabel">Bölüm 1</span><i class="chev" aria-hidden="true"></i>
@@ -34,15 +24,15 @@
       <button id="modePage" class="seg-btn" type="button">Orijinal</button>
     </div>
 
-    <button class="icon" id="themeBtn" type="button" title="Tema (t)" aria-label="Tema değiştir">☾</button>
+    <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
   </header>
+
 
   <main id="main">
     <section class="lib" id="libView" hidden aria-label="Cilt ve bölüm listesi">
       <div class="lib-head">
-        <button class="lib-back" id="libBack" type="button">‹ Ciltler</button>
+        <button class="lib-back" id="libBack" type="button">‹ Geri</button>
         <h2 class="lib-title" id="libTitle">Ciltler</h2>
-        <button class="mini lib-close" id="libClose" type="button" aria-label="Listeyi kapat">Kapat</button>
       </div>
       <div class="lib-actions" id="libActions" hidden>
         <button class="mini" id="markAllBtn" type="button">Hepsini okundu say</button>
@@ -73,9 +63,6 @@
 
   <!-- eski arayüz uyumluluğu (gizli) -->
   <div class="legacy" hidden>
-    <button id="volBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
-      <span id="volLabel">Cilt 4</span>
-    </button>
     <ul id="tocList"></ul>
     <span id="tocLabel"></span>
     <span id="navCount"></span>
@@ -89,6 +76,7 @@
     <div id="tocPanel"></div>
   </div>
 
-  <script src="app.js" defer></script>
+  <script src="bundle.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

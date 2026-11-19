@@ -7,7 +7,6 @@
     "start": "node server.js",
     "ingest": "node scripts/ingest/cli.js",
     "translate": "node scripts/translate_llm.js",
-    "build": "node scripts/build_bundle.js",
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
     "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node scripts/qc/cli.js --strict --check-regression",
