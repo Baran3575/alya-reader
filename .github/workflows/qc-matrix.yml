@@ -8,7 +8,10 @@ on:
     paths:
       - 'data/**'
       - 'data45/**'
+      - 'public/**'
       - 'scripts/**'
+      - 'server.js'
+      - 'test/**'
       - '.github/workflows/**'
       - 'package.json'
   pull_request:
@@ -42,6 +45,10 @@ jobs:
       - name: Dry-run patch regression test (Volume 4)
         if: matrix.volume == '4'
         run: node scripts/patch.js --dry-run
+
+      - name: Verify lazy volume chunks and Service Worker cache (Volume 4)
+        if: matrix.volume == '4'
+        run: node test/bundle-lazy-cache.test.js
 
       - name: Run Unified QC CLI (${{ matrix.volume }})
         run: node scripts/qc/cli.js --volume ${{ matrix.volume }} --strict --check-regression

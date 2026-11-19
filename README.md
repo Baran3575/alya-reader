@@ -69,20 +69,22 @@ node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
 
 ### Sunucusuz (çevrimdışı) okuma
 
-`scripts/build_bundle.js` iki cildin Türkçe + İngilizce metnini ve **illüstrasyon görsellerini**
-tarayıcı paketine gömer:
+`scripts/build_bundle.js` her cildin Türkçe metnini ve **illüstrasyon görsellerini**
+tembel (lazy) paketler hâlinde üretir (`p.en` kaynak dizileri ayıklanır):
 
 | Dosya | İçerik | Boyut |
 |---|---|---|
-| `public/bundle.js` | `window.ALYA_BUNDLE` — iki cildin sayfa/paragraf/EN verisi + bölüm listesi | ~1,5 MB |
-| `public/bundle-art.js` | `window.ALYA_ART` — 31 illüstrasyon, `data:image/webp;base64` olarak gömülü | ~4,0 MB |
+| `public/bundles/manifest.js` | `window.ALYA_MANIFEST` — cilt listesi, sayfa/bölüm sayıları ve sürüm özetleri | < 1 KB |
+| `public/bundles/book-<cilt>.json` | İlgili cildin Türkçe paragraf + bölüm verisi (`fetch` ve `CacheStorage` için) | ~410–425 KB |
+| `public/bundles/book-<cilt>.js` | `file://` üzerinden doğrudan açılışlar için betik yedeği | ~410–425 KB |
+| `public/bundles/art/<cilt>/<sayfa>.webp` | 31 illüstrasyon görseli, kaydırma sırasında istek üzerine yüklenir | ~3,0 MB (toplam) |
 
-Okuyucu veriyi şu sırayla bulur: **localStorage** (`alya4:book:<cilt>`) → gömülü paket → `/api/book`.
-Yani ilk açılıştan sonra sunucu kapalı olsa da, hatta `index.html` doğrudan `file://` ile açılsa da okuma sürer.
-`public/sw.js` service worker'ı kabuğu, sayfa görsellerini ve `/api/book` yanıtlarını Cache Storage'a yazar.
+Okuyucu aktif cildi şu sırayla çözer: **bellek içi `Map`** → **`CacheStorage` / `bundles/book-<cilt>.json`** → **`bundles/book-<cilt>.js` (`file://` yedeği)** → `api/book`.
+`window.localStorage` yalnızca hafif okuma konumu ve arayüz ayarlarını (`page`, `page:<cilt>`, `max:<cilt>`, `vol`, `mode`, `theme`, `size`) saklar.
+`public/sw.js` service worker'ı kabuğu, `bundles/` paketlerini ve `.webp` görsellerini `self.registration.scope` altında (hem kök dizinde hem GitHub Pages `/<repo>/` alt yollarında) `CacheStorage`'a yazar.
 
 ```bash
-node scripts/build_bundle.js   # metin/EN/görsel değişince yeniden üret
+node scripts/build_bundle.js   # metin/bölüm/görsel değişince yeniden üret
 ```
 
 ## Özellikler

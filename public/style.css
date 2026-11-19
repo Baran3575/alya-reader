@@ -565,15 +565,25 @@ input[type='range']::-moz-range-thumb {
   }
 }
 /* cilt seçici */
+.seg-vol {
+  max-width: min(42vw, 22rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.seg-vol::-webkit-scrollbar {
+  display: none;
+}
 .seg-vol .seg-btn {
   padding: 0.32rem 0.52rem;
   font-size: 0.74rem;
   min-width: 2.05rem;
   text-align: center;
+  flex-shrink: 0;
 }
 @media (max-width: 640px) {
   .seg.seg-vol {
     display: inline-flex;
+    max-width: 38vw;
   }
   .seg-vol .seg-btn {
     padding: 0.3rem 0.45rem;
@@ -602,6 +612,11 @@ input[type='range']::-moz-range-thumb {
 
 .pg-art {
   margin: 1.4rem 0 1.9rem;
+}
+
+.pg-art figure.page-img:not(.is-loaded) {
+  min-height: min(72vh, 560px);
+  justify-content: center;
 }
 
 figure.page-img {

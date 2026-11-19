@@ -24,9 +24,12 @@ const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
-  const imgPrefix = opt.imgPrefix || '/pages/';
+  const volKey = String(opt.volKey || (/45$/.test(dataDir) ? '4.5' : '4'));
+  const relImgPrefix = String(opt.imgPrefix || 'pages/').replace(/^\/+/, '');
+  const artRelDir = String(opt.artPrefix || 'bundles/art/' + volKey + '/').replace(/^\/+/, '');
   const volume = opt.volume || 'Cilt 4';
   const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
+  const fullScans = fs.existsSync(path.join(PUB, relImgPrefix, '001.webp'));
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
@@ -34,6 +37,7 @@ function buildBook(opt = {}) {
 
   const pages = source.map((p) => {
     const key = String(p.page);
+    const nnn = String(p.page).padStart(3, '0');
     const trParas = Array.isArray(tr[key]) ? tr[key] : [];
     const enParas = String(p.text || '')
       .split('\n')
@@ -52,10 +56,12 @@ function buildBook(opt = {}) {
       .replace(/\s+/g, ' ')
       .trim().length;
     const art = p.page > 3 && cleanLen < 220;
+    const artFile = path.join(PUB, artRelDir, nnn + '.webp');
+    const img = art && fs.existsSync(artFile) ? artRelDir + nnn + '.webp' : relImgPrefix + nnn + '.webp';
 
     return {
       n: p.page,
-      img: imgPrefix + String(p.page).padStart(3, '0') + '.webp',
+      img,
       tr: usable ? trParas.filter(Boolean) : [],
       en: usable ? enParas : [],
       art,
@@ -80,12 +86,30 @@ function buildBook(opt = {}) {
     chapters.push({ page: p.n, label, title });
   }
 
-  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
+  for (const p of pages) {
+    delete p.en;
+  }
+
+  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, fullScans, chapters, pages };
 }
 
 const VOLUMES = {
-  '4': { dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
-  '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
+  '4': {
+    volKey: '4',
+    dataDir: 'data',
+    imgPrefix: 'pages/',
+    artPrefix: 'bundles/art/4/',
+    volume: 'Cilt 4',
+    titlesFile: path.join(ROOT, 'data/chapters.json'),
+  },
+  '4.5': {
+    volKey: '4.5',
+    dataDir: 'data45',
+    imgPrefix: 'pages45/',
+    artPrefix: 'bundles/art/4.5/',
+    volume: 'Cilt 4.5',
+    titlesFile: path.join(ROOT, 'data45/chapters.json'),
+  },
 };
 
 function packBook(key) {
@@ -169,7 +193,9 @@ const server = http.createServer((req, res) => {
     if (err) return send(req, res, 404, 'text/plain; charset=utf-8', Buffer.from('Bulunamadı'));
     const ext = path.extname(filePath).toLowerCase();
     const type = MIME[ext] || 'application/octet-stream';
-    const cache = ext === '.webp' || ext === '.jpg' || ext === '.png'
+    const isImmutableImg = ext === '.webp' || ext === '.jpg' || ext === '.png';
+    const isVersionedChunk = pathname.startsWith('/bundles/book-') && Boolean(query.get('v'));
+    const cache = isImmutableImg || isVersionedChunk
       ? 'public, max-age=31536000, immutable'
       : 'no-cache';
     send(req, res, 200, type, data, { 'Cache-Control': cache });
@@ -192,4 +218,4 @@ server.listen(PORT, () => {
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { buildBook, getBook, start, VOLUMES };

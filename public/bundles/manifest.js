@@ -1,0 +1,2 @@
+/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */
+window.ALYA_MANIFEST={"version":"6e22bac644a2","defaultVol":"4","volumes":{"4":{"volume":"Cilt 4","total":282,"chapters":13,"fullScans":false,"hash":"ac01bdc290df","json":"bundles/book-4.json","js":"bundles/book-4.js"},"4.5":{"volume":"Cilt 4.5","total":347,"chapters":14,"fullScans":false,"hash":"39043ac08058","json":"bundles/book-4.5.json","js":"bundles/book-4.5.js"}}};
