@@ -65,9 +65,9 @@
  "4.5": {
   "avg": 0.08,
   "flagged": 11,
-  "paragraphs": 2591,
+  "paragraphs": 2602,
   "usablePages": 332,
-  "negMismatches": 14
+  "negMismatches": 12
  },
  "9.5": {
   "avg": 0.04,

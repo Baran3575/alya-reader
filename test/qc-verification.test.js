@@ -100,7 +100,7 @@ function testIntentionalTranslatorNote() {
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
     const data = JSON.parse(orig);
-    data['14'][0] += ' (ÇN: Burası çevirmen notudur.)';
+    data['14'][0] += ' (TN: This is a leftover translator note.)';
     fs.writeFileSync(v4Path, JSON.stringify(data));
 
     const res = runCLI(['--volume', '4', '--strict'], false);

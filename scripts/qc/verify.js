@@ -3,7 +3,9 @@ const fs = require('fs');
 const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+// Yalnızca İngilizce kısaltma (TN:) kusur sayılır; Türkçe "ÇN:" notları meşrudur.
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
+const CN_RE = /(?<!\p{L})ÇN\s*:/gu;
 const CORNER_QUOTE_RE = /[『』「」]/g;
 const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
 
@@ -91,6 +93,7 @@ function runVerify(filePath) {
   }, 0);
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
   row('  ', count(TN_RE), 'çevirmen notu');
+  row('  ', count(CN_RE), 'çevirmen notu (ÇN)');
 
   return { rows, paras, pageCount: Object.keys(f).length };
 }
