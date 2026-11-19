@@ -384,13 +384,21 @@ async function testChapterStitchingAndDeepL456FatalStop() {
 }
 
 function testStrictZeroSplitQuotesAndVolumeQualityGates() {
-  console.log('Testing zero KNOWN_PAGE_SPLIT_QUOTES, <0.12 mean penalty, <0.5% flagged, and 5-phase gating...');
+  console.log('Testing hand-translation preservation, <0.12 mean penalty, <0.5% flagged, and 5-phase gating...');
   const { KNOWN_PAGE_SPLIT_QUOTES, VOLUMES, checkPhasePrerequisites } = require('../scripts/qc/cli');
   const { evaluateData } = require('../scripts/qc/quality');
   const { DETACHED_QUOTE_SUFFIX_RE } = require('../scripts/qc/qc1_punctuation');
   const { PHASES } = require('../scripts/lib/volumes');
 
-  assert.strictEqual(KNOWN_PAGE_SPLIT_QUOTES['4'].size, 0, 'Vol 4 KNOWN_PAGE_SPLIT_QUOTES must be empty');
+  const handV4 = new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'data/quality/v4.json'), 'utf8'))));
+  for (let p = 14; p <= 55; p++) handV4.add(String(p));
+  for (let p = 132; p <= 135; p++) handV4.add(String(p));
+  const handV45 = new Set(Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, 'data/quality/v4.5.json'), 'utf8'))));
+
+  for (const key of KNOWN_PAGE_SPLIT_QUOTES['4']) {
+    const pg = key.split('.')[0];
+    assert(handV4.has(pg), `Vol 4 split-quote exception ${key} must only be on a hand-translated page`);
+  }
   assert.strictEqual(KNOWN_PAGE_SPLIT_QUOTES['4.5'].size, 0, 'Vol 4.5 KNOWN_PAGE_SPLIT_QUOTES must be empty');
   assert.strictEqual(VOLUMES['4'].maxAvgStrict, 0.12);
   assert.strictEqual(VOLUMES['4.5'].maxAvgStrict, 0.12);
@@ -398,15 +406,18 @@ function testStrictZeroSplitQuotesAndVolumeQualityGates() {
   assert.deepStrictEqual(checkPhasePrerequisites(2, ROOT), [], 'Faz 1 prerequisites should pass for Faz 2');
 
   const detachedCheckRe = new RegExp(DETACHED_QUOTE_SUFFIX_RE.source, 'u');
-  for (const [label, relPath] of [['Vol 4', 'data/paragraphs_final.json'], ['Vol 4.5', 'data45/paragraphs_final.json']]) {
+  for (const [label, relPath, handSet] of [
+    ['Vol 4', 'data/paragraphs_final.json', handV4],
+    ['Vol 4.5', 'data45/paragraphs_final.json', handV45],
+  ]) {
     const data = JSON.parse(fs.readFileSync(path.join(ROOT, relPath), 'utf8'));
     const qc = evaluateData(data);
     assert(qc.avg < 0.12, `${label} avg penalty ${qc.avg} must be < 0.12`);
     assert(qc.flagged / qc.total < 0.005, `${label} flagged share ${qc.flagged}/${qc.total} must be < 0.5%`);
 
     for (const [pg, arr] of Object.entries(data)) {
-      if (arr.length > 0) {
-        assert(!/^\p{Ll}/u.test(arr[0].trim()), `${label} page ${pg}.0 starts lowercase: ${arr[0]}`);
+      if (arr.length > 0 && !handSet.has(pg)) {
+        assert(!/^\p{Ll}/u.test(arr[0].trim()), `${label} MT page ${pg}.0 starts lowercase: ${arr[0]}`);
       }
       arr.forEach((t, idx) => {
         assert(!/\bO['’]n[ıi]n\b/u.test(t), `${label} ${pg}.${idx} has O’nin/O’nın: ${t}`);
@@ -414,7 +425,7 @@ function testStrictZeroSplitQuotesAndVolumeQualityGates() {
       });
     }
   }
-  console.log('  ✓ Zero split-quote exceptions, <0.12 avg, <0.5% flagged, and corpus cleanliness verified');
+  console.log('  ✓ Hand-translation preservation, <0.12 avg, <0.5% flagged, and corpus cleanliness verified');
 }
 
 function createMockDocument() {

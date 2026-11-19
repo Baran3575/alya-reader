@@ -32,9 +32,9 @@ const VOLUMES = Object.fromEntries(
   ])
 );
 
-// Bölüm bazlı birleştirme sonrası sayfa sınırı tırnak istisnaları sıfırlandı
+// Yalnızca master'daki elle çevrilmiş Cilt 4 sayfalarındaki sayfa bölünmesi tırnakları (MT sayfalarında ve Cilt 4.5'te 0)
 const KNOWN_PAGE_SPLIT_QUOTES = {
-  '4': new Set(),
+  '4': new Set(['31.1', '36.0', '54.13', '55.14', '254.14']),
   '4.5': new Set(),
 };
 

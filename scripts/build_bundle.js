@@ -13,12 +13,14 @@ const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 
 function loadExistingArtBundle() {
   const out = {};
+  let index = {};
   if (fs.existsSync(ART_OUT)) {
     try {
       const code = fs.readFileSync(ART_OUT, 'utf8');
       const sandbox = { window: {} };
       vm.runInNewContext(code, sandbox, { timeout: 2000 });
       Object.assign(out, sandbox.window.ALYA_ART || {});
+      index = { ...(sandbox.window.ALYA_ART_INDEX || {}) };
     } catch {}
   }
   for (const k of ['4', '4.5']) {
@@ -30,10 +32,10 @@ function loadExistingArtBundle() {
       } catch {}
     }
   }
-  return out;
+  return { art: out, index };
 }
 
-const existingArt = loadExistingArtBundle();
+const { art: existingArt, index: existingArtIndex } = loadExistingArtBundle();
 const vols = {};
 const art = {};
 
@@ -97,9 +99,12 @@ const body =
 
 fs.writeFileSync(OUT, body);
 
+const artIndexObj = Object.fromEntries(
+  Object.entries(art).map(([k, v]) => [k, Math.max(Object.keys(v).length, existingArtIndex[k] || 0)])
+);
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
-  'window.ALYA_ART_INDEX=' + JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) + ';\n';
+  'window.ALYA_ART_INDEX=' + JSON.stringify(artIndexObj) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
 
 console.log(
