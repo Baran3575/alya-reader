@@ -4,9 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const IN = path.join(ROOT, 'data/bilingual.json');
-const OUT = path.join(ROOT, 'data/paragraphs_final.json');
-const GLOSSARY_FILE = path.join(ROOT, 'data/glossary.json');
+const { resolveVolumePaths, isUsableSourcePage, isTocSourcePage, SKIP_PAGE_RE } = require('./translate3');
 
 const EN_LEFTOVER = /\b(the|and|you|your|was|were|with|that|this|have|has|she|her|his|they|their|from|what|would|could|just|because|about|there|then|when|which|into|been|being|are|but|for|him|how|does|did|of|on|to|so|if|we|my|me|or|an)\b/gi;
 
@@ -32,10 +30,12 @@ const DEFAULT_GLOSSARY = {
   'Onii-chan': 'Onii-chan',
 };
 
-function loadGlossary() {
-  if (fs.existsSync(GLOSSARY_FILE)) {
+const GLOSSARY_FILE = path.join(ROOT, 'data/glossary.json');
+
+function loadGlossary(glossaryFile = GLOSSARY_FILE) {
+  if (fs.existsSync(glossaryFile)) {
     try {
-      return { ...DEFAULT_GLOSSARY, ...JSON.parse(fs.readFileSync(GLOSSARY_FILE, 'utf8')) };
+      return { ...DEFAULT_GLOSSARY, ...JSON.parse(fs.readFileSync(glossaryFile, 'utf8')) };
     } catch {}
   }
   return DEFAULT_GLOSSARY;
@@ -98,26 +98,118 @@ function preferGoogle(d, g) {
   return ld >= 2 && lg === 0;
 }
 
-const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
-const glossary = loadGlossary();
-const out = {};
-let pickedD = 0;
-let pickedG = 0;
+const { splitLeadingSentence, capitalizeTurkishStart } = require('./fix_boundaries');
 
-for (const [page, paras] of Object.entries(data)) {
-  if (!Array.isArray(paras)) continue;
-  out[page] = paras.map((p) => {
-    const d = (p && p.d) || '';
-    const g = (p && p.g) || '';
-    let chosen = d;
-    if (!d) chosen = g;
-    else if (g && preferGoogle(d, g)) chosen = g;
-    if (chosen === d && d) pickedD++;
-    else if (chosen === g && g) pickedG++;
-    return polish(chosen, glossary);
-  });
+function stitchMergedPages(out, sourcePages = null) {
+  const skipSet = new Set();
+  const tocSet = new Set();
+  const enSplitAfter = new Set();
+
+  if (Array.isArray(sourcePages)) {
+    const usableOrder = [];
+    for (const p of sourcePages) {
+      const k = String(p.page);
+      if (SKIP_PAGE_RE.test(String(p.text || ''))) {
+        skipSet.add(k);
+        out[k] = [];
+        continue;
+      }
+      if (isTocSourcePage(p)) {
+        tocSet.add(k);
+        continue;
+      }
+      if (isUsableSourcePage(p)) {
+        usableOrder.push(p);
+      }
+    }
+    for (let i = 0; i < usableOrder.length - 1; i++) {
+      const cur = usableOrder[i];
+      const cleaned = String(cur.text || '')
+        .replace(/Page\s+\d+/gi, '')
+        .replace(/(Goldenagato|mp4directs|jnovels|zerobooks).*$/gim, '')
+        .trim();
+      if (cleaned && !/[.!?"”'\u2019…~)\]»*}◇]$/.test(cleaned)) {
+        enSplitAfter.add(String(cur.page));
+      }
+    }
+  }
+
+  const pageKeys = Object.keys(out)
+    .filter((k) => /^\d+$/.test(k) && !skipSet.has(k) && !tocSet.has(k) && Array.isArray(out[k]) && out[k].length > 0)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map(String);
+
+  for (let i = 0; i < pageKeys.length - 1; i++) {
+    const pk = pageKeys[i];
+    const nk = pageKeys[i + 1];
+    const curArr = out[pk];
+    const nextArr = out[nk];
+    if (!curArr || !curArr.length || !nextArr || !nextArr.length) continue;
+    if (/^İçindekiler\b/i.test(curArr[0] || '')) continue;
+
+    const lastIdx = curArr.length - 1;
+    const lastPara = curArr[lastIdx].trim();
+    const firstNext = nextArr[0].trim();
+
+    const opensP = (lastPara.match(/\(/g) || []).length > (lastPara.match(/\)/g) || []).length;
+    const opensQ = (lastPara.match(/[“”"]/g) || []).length % 2 !== 0;
+    const lacksEnd = !ENDS.test(lastPara);
+    const nextLower = /^[a-zçğıöşü,;:\])]/.test(firstNext);
+
+    if (lacksEnd || opensP || opensQ || nextLower || (enSplitAfter.has(pk) && nextLower)) {
+      const [head, tail] = splitLeadingSentence(firstNext, { needCloseParen: opensP, needCloseQuote: opensQ });
+      const base = nextLower && /\.\s*$/.test(lastPara) ? lastPara.replace(/\.\s*$/, '') : lastPara;
+      curArr[lastIdx] = (base + (base.endsWith('-') ? '' : ' ') + head).replace(/\s{2,}/g, ' ').trim();
+      if (tail) {
+        nextArr[0] = capitalizeTurkishStart(tail);
+      } else {
+        nextArr.shift();
+      }
+    }
+  }
+  return out;
 }
 
-fs.writeFileSync(OUT, JSON.stringify(out));
-const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya: data/paragraphs_final.json');
+function mergeBilingual(data, glossary = loadGlossary(), sourcePages = null) {
+  const out = {};
+  let pickedD = 0;
+  let pickedG = 0;
+
+  for (const [page, paras] of Object.entries(data)) {
+    if (!Array.isArray(paras)) continue;
+    out[page] = paras
+      .map((p) => {
+        const d = (p && p.d) || '';
+        const g = (p && p.g) || '';
+        let chosen = d;
+        if (!d) chosen = g;
+        else if (g && preferGoogle(d, g)) chosen = g;
+        if (chosen === d && d) pickedD++;
+        else if (chosen === g && g) pickedG++;
+        return polish(chosen, glossary);
+      })
+      .filter(Boolean);
+  }
+
+  stitchMergedPages(out, sourcePages);
+  return { out, pickedD, pickedG };
+}
+
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
+  const vol = vIdx > -1 && args[vIdx + 1] ? args[vIdx + 1] : '4';
+  const { src: SRC, out: IN, fin: OUT, dir } = resolveVolumePaths(vol);
+
+  const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
+  const sourcePages = fs.existsSync(SRC) ? JSON.parse(fs.readFileSync(SRC, 'utf8')) : null;
+  const glossary = loadGlossary();
+  const { out, pickedD, pickedG } = mergeBilingual(data, glossary, sourcePages);
+
+  fs.writeFileSync(OUT, JSON.stringify(out));
+  const total = Object.values(out).reduce((a, b) => a + b.length, 0);
+  console.log(`paragraf: ${total} | DeepL: ${pickedD} | Google: ${pickedG} | dosya: ${dir}/paragraphs_final.json`);
+}
+
+module.exports = { loadGlossary, polish, preferGoogle, stitchMergedPages, mergeBilingual };

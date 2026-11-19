@@ -21,12 +21,14 @@ const MIME = {
 };
 
 const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
+const SKIP_CREDIT_RE =
+  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
   const imgPrefix = opt.imgPrefix || '/pages/';
   const volume = opt.volume || 'Cilt 4';
-  const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
+  const titlesFile = opt.titlesFile || path.join(ROOT, dataDir, 'chapters.json');
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
@@ -34,31 +36,36 @@ function buildBook(opt = {}) {
 
   const pages = source.map((p) => {
     const key = String(p.page);
+    const rawText = String(p.text || '');
     const trParas = Array.isArray(tr[key]) ? tr[key] : [];
-    const enParas = String(p.text || '')
+    const enParas = rawText
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
 
+    // Fan çevirmeni kredi / Discord duyuru sayfalarını metin akışında atla
+    const skip = SKIP_CREDIT_RE.test(rawText);
+
     // OCR'ı bozuk sayfaları (kapak, görsel sayfalar) metin saymayalım
-    const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+    const words = rawText.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
-    const cleanLen = String(p.text || '')
+    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar (atlanan kredi sayfaları hariç)
+    const cleanLen = rawText
       .replace(/Page\s+\d+/gi, '')
-      .replace(/Goldenagato.*$/gim, '')
+      .replace(/(Goldenagato|mp4directs|jnovels|zerobooks).*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
+    const art = !skip && p.page > 3 && cleanLen < 220;
 
     return {
       n: p.page,
       img: imgPrefix + String(p.page).padStart(3, '0') + '.webp',
-      tr: usable ? trParas.filter(Boolean) : [],
-      en: usable ? enParas : [],
+      tr: usable && !skip ? trParas.filter(Boolean) : [],
+      en: usable && !skip ? enParas : [],
       art,
+      skip,
     };
   });
 
@@ -69,6 +76,7 @@ function buildBook(opt = {}) {
   } catch {}
   const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
   for (const p of pages) {
+    if (p.skip) continue;
     const first = (p.en[0] || '').replace(/\s+/g, ' ');
     const m = first.match(/^(Prologue|Epilogue|Chapter\s+(\d+))\s*[:–—-]/i);
     if (!m) continue;
@@ -78,6 +86,14 @@ function buildBook(opt = {}) {
     const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
     const title = titles[key] || rest.slice(0, 70);
     chapters.push({ page: p.n, label, title });
+  }
+
+  for (let i = 0; i < chapters.length; i++) {
+    const start = chapters[i].page;
+    const next = chapters[i + 1];
+    let end = next ? next.page - 1 : pages.length;
+    while (end > start && pages[end - 1] && pages[end - 1].skip) end--;
+    chapters[i].endPage = end;
   }
 
   return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };

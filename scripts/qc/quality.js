@@ -21,6 +21,7 @@ const SIGNS = [
   ['edilgen zinciri', /(?:ildi|ıldı|uldu|üldü)(?!\p{L})[^.!?]{0,120}?(?:ildi|ıldı|uldu|üldü)(?!\p{L})/gu, 2],
   ['İngilizce kalıntı', /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui, 3],
   ['çevirmen notu', /(?<!\p{L})(?:ÇN|TN)\s*:/gu, 5],
+  ['fan-TL spam', /(?:glucosetl|discord\s*\.\s*gg|novelupdates|lightnovelreader|Goldenagato|mp4directs|zerobooks)/gi, 5],
   ['düz tırnak', /["']/g, 2],
   ['çift boşluk', / {2,}/g, 1],
   ['nokta tekrarı', /([!?.])\1{1,}/g, 2],
@@ -42,7 +43,7 @@ function score(p, i, x) {
   for (const [name, re, w] of SIGNS) {
     let target = x;
     if (name === 'İngilizce kalıntı') {
-      target = x.replace(/https?:\s*\/\/[^\n]+/gi, '');
+      target = x.replace(/https?:\s*\/\/\S+/gi, '');
     }
     const m = target.match(re);
     if (m) {
@@ -90,7 +91,8 @@ function score(p, i, x) {
     s += 2;
     notes.push('kelime tekrarı: ' + worst[0] + '×' + worst[1]);
   }
-  return { key: p + '.' + i, page: +p, idx: i, score: s, notes, words: words.length, text: x };
+  const normScore = words.length > 0 ? Number((s / Math.max(words.length, 5)).toFixed(4)) : x.trim() ? 0 : 1;
+  return { key: p + '.' + i, page: +p, idx: i, score: s, normScore, notes, words: words.length, text: x };
 }
 
 function evaluateData(data, top = 25) {

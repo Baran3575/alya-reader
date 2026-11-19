@@ -4,6 +4,8 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const URL_TOKEN_RE = /https?:\s*\/\/\S+/gi;
+const FAN_TL_SPAM_RE = /(?:glucosetl|discord\s*\.\s*gg|novelupdates|lightnovelreader|Goldenagato|mp4directs|zerobooks)/gi;
 
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
@@ -59,11 +61,12 @@ function runVerify(filePath) {
   row('  ', count(W('([\\p{L}]{3,})\\s+\\1', 'gi')), 'ikiz kelime');
 
   const countEnResidue = paras.reduce((a, x) => {
-    const clean = x.t.replace(/https?:\s*\/\/[^\n]+/gi, '');
+    const clean = x.t.replace(URL_TOKEN_RE, '');
     return a + (clean.match(EN_RESIDUE_RE) || []).length;
   }, 0);
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
   row('  ', count(TN_RE), 'çevirmen notu');
+  row('  ', count(FAN_TL_SPAM_RE), 'fan-TL spam (glucosetl/discord.gg/novelupdates/lightnovelreader/Goldenagato/mp4directs/zerobooks)');
 
   return { rows, paras, pageCount: Object.keys(f).length };
 }
@@ -74,4 +77,4 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify };
+module.exports = { runVerify, URL_TOKEN_RE, FAN_TL_SPAM_RE };

@@ -25,14 +25,28 @@ for (const [k, book] of Object.entries(vols)) {
 
 // illüstrasyon sayfalarının görselleri de gömülür (data URI) — sunucusuz inline okuma için
 const IMG_DIRS = { '4': 'public/pages/', '4.5': 'public/pages45/' };
+const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+let prevArt = {};
+if (fs.existsSync(ART_OUT)) {
+  try {
+    const prevRaw = fs.readFileSync(ART_OUT, 'utf8');
+    const m = prevRaw.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+    if (m) prevArt = JSON.parse(m[1]);
+  } catch {}
+}
 const art = { '4': {}, '4.5': {} };
 for (const [k, book] of Object.entries(vols)) {
+  if (!art[k]) art[k] = {};
   for (const p of book.pages) {
-    if (!p.art) continue;
-    const f = path.join(ROOT, IMG_DIRS[k], String(p.n).padStart(3, '0') + '.webp');
-    if (!fs.existsSync(f)) continue;
-    const b64 = fs.readFileSync(f).toString('base64');
-    art[k][String(p.n).padStart(3, '0')] = 'data:image/webp;base64,' + b64;
+    if (!p.art || p.skip) continue;
+    const pad = String(p.n).padStart(3, '0');
+    const f = path.join(ROOT, IMG_DIRS[k] || `public/pages${k.replace(/\./g, '')}/`, pad + '.webp');
+    if (fs.existsSync(f)) {
+      const b64 = fs.readFileSync(f).toString('base64');
+      art[k][pad] = 'data:image/webp;base64,' + b64;
+    } else if (prevArt[k] && prevArt[k][pad]) {
+      art[k][pad] = prevArt[k][pad];
+    }
   }
 }
 

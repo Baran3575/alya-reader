@@ -1,4 +1,4 @@
-// Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
+// Birleşik kalite kapısı: şema doğrulama + kaynak sadakati + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
 //   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
 //   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
@@ -10,30 +10,54 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify } = require('./verify');
+const { runVerify, URL_TOKEN_RE, FAN_TL_SPAM_RE } = require('./verify');
 const { evaluateData, score } = require('./quality');
+const { checkCoverageGates } = require('./fidelity');
 const { validatePatches } = require('../patch');
 
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
 const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '4': {
+    tr: 'data/paragraphs_final.json',
+    src: 'data/source.json',
+    bil: 'data/bilingual.json',
+    label: 'Cilt 4',
+    maxAvgStrict: 0.20,
+  },
+  '4.5': {
+    tr: 'data45/paragraphs_final.json',
+    src: 'data45/source.json',
+    bil: 'data45/bilingual.json',
+    label: 'Cilt 4.5',
+    maxAvgStrict: 0.28,
+  },
 };
 
+function resolveVolumeConfig(vol) {
+  const v = String(vol);
+  if (VOLUMES[v]) return VOLUMES[v];
+  if (/^\d+(?:\.\d+)?$/.test(v)) {
+    const dir = v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
+    if (fs.existsSync(path.join(ROOT, dir))) {
+      return {
+        tr: `${dir}/paragraphs_final.json`,
+        src: `${dir}/source.json`,
+        bil: `${dir}/bilingual.json`,
+        label: `Cilt ${v}`,
+        maxAvgStrict: 0.28,
+      };
+    }
+  }
+  return null;
+}
+
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
+// Yalnızca sayfa başı (idx === 0) veya sayfa sonu (idx === page.length - 1) izinli; sayfa ortası (0 < idx < page.length - 1) yasaktır.
 const KNOWN_PAGE_SPLIT_QUOTES = {
-  '4': new Set([
-    '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
-    '173.4', '175.14', '190.13', '196.13', '197.7', '217.8', '233.6', '234.6',
-    '235.1', '254.14',
-  ]),
-  '4.5': new Set([
-    '12.2', '25.7', '32.5', '33.2', '47.3', '50.3', '67.4', '122.0',
-    '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
-    '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
-  ]),
+  '4': new Set([]),
+  '4.5': new Set([]),
 };
 
 const ZERO_TOLERANCE = [
@@ -45,6 +69,14 @@ const ZERO_TOLERANCE = [
   'boş paragraf',
   'İngilizce kalıntı',
   'çevirmen notu',
+  'fan-TL spam',
+  'glucosetl',
+  'discord.gg',
+  'novelupdates',
+  'lightnovelreader',
+  'Goldenagato',
+  'mp4directs',
+  'zerobooks',
 ];
 
 function parseArgs() {
@@ -97,8 +129,40 @@ function validateSchema(filePath) {
   return { ok: errors.length === 0, errors, data };
 }
 
-function findUnclosedQuotes(data, vol) {
-  const known = KNOWN_PAGE_SPLIT_QUOTES[vol] || new Set();
+function getKnownSplitQuotesSet(vol) {
+  if (process.env.ALYA_KNOWN_SPLIT_QUOTES) {
+    try {
+      const parsed = JSON.parse(process.env.ALYA_KNOWN_SPLIT_QUOTES);
+      if (parsed && Array.isArray(parsed[vol])) return new Set(parsed[vol].map(String));
+    } catch {}
+  }
+  return KNOWN_PAGE_SPLIT_QUOTES[vol] || new Set();
+}
+
+function auditKnownPageSplitQuotes(data, vol, customKnownSet = null) {
+  const known = customKnownSet || getKnownSplitQuotesSet(vol);
+  const violations = [];
+  for (const key of known) {
+    if (!/^\d+\.\d+$/.test(String(key))) {
+      violations.push(`geçersiz anahtar biçimi: "${key}"`);
+      continue;
+    }
+    const [pg, idxStr] = String(key).split('.');
+    const idx = Number(idxStr);
+    const page = data[pg];
+    if (!Array.isArray(page) || idx < 0 || idx >= page.length) {
+      violations.push(`mevcut olmayan paragraf istisnası: "${key}"`);
+      continue;
+    }
+    if (idx > 0 && idx < page.length - 1) {
+      violations.push(`sayfa ortası tırnak istisnası yasak: "${key}" (indeks ${idx}, sayfa uzunluğu ${page.length})`);
+    }
+  }
+  return violations;
+}
+
+function findUnclosedQuotes(data, vol, customKnownSet = null) {
+  const known = customKnownSet || getKnownSplitQuotesSet(vol);
   const unclosed = [];
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
@@ -117,7 +181,7 @@ function findEnglishResidueDetails(data) {
   const matches = [];
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
-      const clean = text.replace(/https?:\s*\/\/[^\n]+/gi, '');
+      const clean = text.replace(URL_TOKEN_RE, '');
       const m = clean.match(re);
       if (m && m.length > 0) {
         matches.push({ key: `${pg}.${i}`, words: m, text: text.slice(0, 100) });
@@ -134,6 +198,19 @@ function findTranslatorNotesDetails(data) {
     arr.forEach((text, i) => {
       if (re.test(text)) {
         matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findFanTlSpamDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(FAN_TL_SPAM_RE);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, domains: m, text: text.slice(0, 100) });
       }
     });
   }
@@ -181,7 +258,7 @@ function main() {
   const violations = [];
 
   for (const vol of selected) {
-    const cfg = VOLUMES[vol];
+    const cfg = resolveVolumeConfig(vol);
     if (!cfg) {
       violations.push({ vol, fails: [{ label: 'bilinmeyen cilt', value: vol }] });
       continue;
@@ -215,6 +292,11 @@ function main() {
     const q = evaluateData(data);
     const base = baseline[vol] || {};
 
+    const srcAbs = cfg.src ? path.resolve(ROOT, cfg.src) : null;
+    const bilAbs = cfg.bil ? path.resolve(ROOT, cfg.bil) : null;
+    const srcData = srcAbs && fs.existsSync(srcAbs) ? JSON.parse(fs.readFileSync(srcAbs, 'utf8')) : null;
+    const bilData = bilAbs && fs.existsSync(bilAbs) ? JSON.parse(fs.readFileSync(bilAbs, 'utf8')) : null;
+
     const hardFails = [];
 
     // 2. Sıfır Tolerans Doğrulama Kontrolleri
@@ -225,12 +307,23 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('fan-TL spam')) {
+          details = findFanTlSpamDetails(data);
         }
         hardFails.push({ label: row[2], value: row[1], details });
       }
     }
 
-    // 3. Kapanmamış tırnak denetimi (bilinen sayfa sınırları harici)
+    // 3. KNOWN_PAGE_SPLIT_QUOTES denetimi (sayfa ortası tırnak istisnası yasak) ve kapanmamış tırnaklar
+    const quoteWhitelistViolations = auditKnownPageSplitQuotes(data, vol);
+    if (quoteWhitelistViolations.length > 0) {
+      hardFails.push({
+        label: 'sayfa ortası tırnak istisnası (KNOWN_PAGE_SPLIT_QUOTES)',
+        value: quoteWhitelistViolations.length,
+        details: quoteWhitelistViolations,
+      });
+    }
+
     const unclosedQuotes = findUnclosedQuotes(data, vol);
     if (unclosedQuotes.length > 0) {
       hardFails.push({
@@ -240,13 +333,60 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
+    // 4. Deterministik Kaynak Sadakati ve Sayfa Sınırı Kapıları (source.json + bilingual.json)
+    if (srcData) {
+      const cov = checkCoverageGates({ src: srcData, tr: data, bil: bilData });
+      if (cov.emptyBilingual.length > 0) {
+        hardFails.push({
+          label: 'boş bilingual çeviri yuvası ({g:"", d:""})',
+          value: cov.emptyBilingual.length,
+          details: cov.emptyBilingual,
+        });
+      }
+      if (cov.emptyUsablePages.length > 0) {
+        hardFails.push({
+          label: 'eksik sayfa çevirisi (0 paragraf)',
+          value: cov.emptyUsablePages.length,
+          details: cov.emptyUsablePages,
+        });
+      }
+      if (cov.pageRatioViolations.length > 0) {
+        hardFails.push({
+          label: 'sayfa EN-TR kelime oranı sınırı ihlali',
+          value: cov.pageRatioViolations.length,
+          details: cov.pageRatioViolations,
+        });
+      }
+      if (cov.pageParaViolations.length > 0) {
+        hardFails.push({
+          label: 'sayfa paragraf sayısı sınırı ihlali',
+          value: cov.pageParaViolations.length,
+          details: cov.pageParaViolations,
+        });
+      }
+      if (cov.windowViolations.length > 0) {
+        hardFails.push({
+          label: 'iki sayfa penceresi EN-TR kapsam ihlali',
+          value: cov.windowViolations.length,
+          details: cov.windowViolations,
+        });
+      }
+      if (cov.splitBoundaryViolations.length > 0) {
+        hardFails.push({
+          label: 'sayfa sınırı yarım cümle / küçük harf başlangıcı',
+          value: cov.splitBoundaryViolations.length,
+          details: cov.splitBoundaryViolations,
+        });
+      }
+    }
+
+    // 5. Yama Doğrulama ve Regresyon (Cilt 4 için)
     if (vol === '4') {
       const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
       if (fs.existsSync(patchesFile)) {
         try {
           const patches = JSON.parse(fs.readFileSync(patchesFile, 'utf8'));
-          const patchRes = validatePatches(patches, data, { dryRun: true });
+          const patchRes = validatePatches(patches, data, { dryRun: true, source: srcData });
           if (!patchRes.ok) {
             hardFails.push({
               label: 'geçersiz yama formatı / regresyonu',
@@ -260,9 +400,8 @@ function main() {
       }
     }
 
-    // 5. Kalite Puanı Eşik ve Regresyon Kapısı
+    // 6. Kalite Puanı Eşik ve Regresyon Kapısı
     if (strict) {
-      // Strict Mod Gating (Requirement 3: average score below 0.20 for Vol 4)
       if (cfg.maxAvgStrict !== undefined && q.avg > cfg.maxAvgStrict) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
@@ -333,7 +472,6 @@ function main() {
 
   const markdownSummary = generateMarkdownSummary(result, violations, { strict, checkRegression });
 
-  // GitHub Actions Step Summary desteği
   if (process.env.GITHUB_STEP_SUMMARY) {
     try {
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary + '\n\n');
@@ -377,6 +515,7 @@ function main() {
         'düz tırnak',
         'İngilizce kalıntı',
         'çevirmen notu',
+        'fan-TL spam',
       ];
       for (const k of displayKeys) {
         const row = r.verify.find((x) => x.label.includes(k));
@@ -409,9 +548,15 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
+  ZERO_TOLERANCE,
+  resolveVolumeConfig,
   validateSchema,
+  auditKnownPageSplitQuotes,
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findFanTlSpamDetails,
   generateMarkdownSummary,
 };

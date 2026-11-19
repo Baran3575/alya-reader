@@ -64,9 +64,12 @@
     return idx;
   };
   const chapterRange = (i) => {
-    const start = chapters()[i].page;
+    const ch = chapters()[i];
+    const start = ch.page;
     const next = chapters()[i + 1];
-    return [start, next ? next.page - 1 : state.book.total];
+    let end = ch.endPage || (next ? next.page - 1 : state.book.total);
+    while (end > start && state.book.pages[end - 1]?.skip) end--;
+    return [start, end];
   };
 
   /* ---------------- veri ---------------- */
@@ -309,12 +312,15 @@
     h1.textContent = ch.title;
     const meta = document.createElement('p');
     meta.className = 'ch-meta';
-    const pages = endPage - startPage + 1;
+    let shownPages = 0;
     let words = 0;
     for (let n = startPage; n <= endPage; n++) {
       const pg = state.book.pages[n - 1];
-      if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
+      if (!pg || pg.skip) continue;
+      shownPages++;
+      if (pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
+    const pages = shownPages || endPage - startPage + 1;
     const mins = Math.max(1, Math.round(words / 240));
     meta.textContent =
       'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
@@ -325,7 +331,7 @@
     const frag = document.createDocumentFragment();
     for (let n = startPage; n <= endPage; n++) {
       const p = state.book.pages[n - 1];
-      if (!p) continue;
+      if (!p || (state.mode !== 'page' && p.skip)) continue;
       const sec = document.createElement('section');
       sec.className = 'pg';
       sec.dataset.page = p.n;
@@ -336,7 +342,7 @@
         continue;
       }
 
-      const isIllustration = p.tr.length === 0 || p.art === true;
+      const isIllustration = (!p.skip && p.tr.length === 0) || p.art === true;
       if (isIllustration) {
         sec.classList.add('pg-art');
         if (p.tr.length) sec.classList.add('has-text');
@@ -400,7 +406,13 @@
     LS.set('mode', state.mode);
 
     // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
-    const anchorPt = targetPage > startPage ? reader.querySelector('.pg[data-page="' + targetPage + '"]') : null;
+    let anchorPt = null;
+    if (targetPage > startPage) {
+      anchorPt =
+        reader.querySelector('.pg[data-page="' + targetPage + '"]') ||
+        reader.querySelector('.pg[data-page="' + (targetPage + 1) + '"]') ||
+        reader.querySelector('.pg[data-page="' + (targetPage - 1) + '"]');
+    }
     if (anchorPt) requestAnimationFrame(() => anchorPt.scrollIntoView({ block: 'start' }));
     else window.scrollTo({ top: 0, behavior: 'auto' });
     scheduleProgress();
@@ -474,13 +486,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && !p.skip && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
     if (nxt) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && !p.skip && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
