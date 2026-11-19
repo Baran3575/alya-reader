@@ -225,7 +225,9 @@ function refineLiteraryTurkish(rawText, glossary, { preserveOddQuotes = false } 
   if (preserveOddQuotes) {
     // Sayfa bölünmesi olan mevcut Cilt 4.5 satırlarında tek tırnak sayısını koru
     let s = t
-      .replace(/['\u2018\u02bc`]/g, '\u2019')
+      .replace(/(?<=[\p{L}\p{N}])['\u2018\u02bc`](?=[\p{L}\p{N}])/gu, '\u2019')
+      .replace(/(^|[\s(\[\u201c"«—–-])'(?=\S)/g, '$1\u2018')
+      .replace(/['\u02bc`]/g, '\u2019')
       .replace(/"/g, '\u201c');
     for (const [from, to] of Object.entries(glossary)) {
       if (from === to || from.startsWith('_')) continue;

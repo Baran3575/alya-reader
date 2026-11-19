@@ -49,7 +49,9 @@ function loadGlossary(glossaryFile = GLOSSARY_FILE) {
 
 function balanceCurlyQuotes(text) {
   let t = String(text || '')
-    .replace(/['\u2018\u02bc`]/g, '\u2019')
+    .replace(/(?<=[\p{L}\p{N}])['\u2018\u02bc`](?=[\p{L}\p{N}])/gu, '\u2019')
+    .replace(/(^|[\s(\[\u201c"«—–-])'(?=\S)/g, '$1\u2018')
+    .replace(/['\u02bc`]/g, '\u2019')
     .replace(/[\u201e\u00ab]/g, '\u201c')
     .replace(/\u00bb/g, '\u201d');
 
