@@ -1,12 +1,13 @@
 [
   {
-    "page": 87,
-    "find": "“Hehe, bununla “Beraber banyo yaptık!” klişesine cevap veremezsin.",
-    "replace": "“Hehe, artık ‘Beraber banyo yaptık!’ çocukluk hikâyesi klişesine ‘O zaman biz çocuktuk!’ diye cevap veremezsin, anii-ja.”"
+    "page": 175,
+    "find": "Masachika, öfkeyle kaşlarını kaldıran Alisa’ya mazeret uydururken şaka yollu olarak bunu söyledikten hemen sonra…",
+    "replace": "Masachika, öfkeyle kaşlarını kaldıran Alisa’ya mazeret uydururken şaka yollu bunu söyledikten hemen sonra… birkaç metre ötedeki koridorun köşesinden bir el uzandı."
   },
+  { "page": 175, "find": "“…", "replace": "“…”" },
   {
-    "page": 87,
-    "find": "“O zaman biz çocuktuk!” ile çocukluk hikâyesi tekniği. artık anii-ja.”",
-    "replace": null
+    "page": 175,
+    "find": "Ve sonunda, duvara tutunan elin arkasından bir siluet belirdi. Üzerinde yeşil kurdeleli bir Seirei Gakuen üniforması var",
+    "replace": "Ve sonunda, duvara tutunan elin arkasından bir siluet belirdi. Yeşil kurdeleli bir Seirei Gakuen üniforması giyiyordu. Siyah saçları beline kadar uzuyordu. Ve o siyah saçların arasından… kan içinde bir kızın yüzü göründü."
   }
 ]

@@ -9,11 +9,11 @@ Puan: metin kalitesi göstergelerinin ağırlıklı toplamı (düşük = daha te
 | 4 | Önsöz — Unutmak İstediğim Geçmiş | 1079 | 5.1 | 2 | senin/benim/onun: 8, bir şey: 3, gerçekten: 2, cümle başı Ama: 1 | s.16(4), s.17(4), s.18(4), s.15(2) |
 | 4 | Bölüm 1 — Karın fetişi diye bir şey duymadım hiç | 4244 | 6.9 | 3 | senin/benim/onun: 18, bir şey: 15, cümle başı Ama: 11, gerçekten: 7 | s.31(6), s.38(6), s.22(5), s.25(4) |
 | 4 | Bölüm 2 — Otaku'lar gerçekten sinir bozucu | 4242 | 7.3 | 5 | sadece: 10, cümle başı Ama: 8, bir şey: 7, gerçekten: 6 | s.50(8), s.57(8), s.68(6), s.56(5) |
-| 4 | Bölüm 3 — Ha? Gerçekten mi? | 5774 | 8.1 | 1 | senin/benim/onun: 18, bir şey: 16, sadece: 14, olduğunu: 14 | s.90(16), s.80(15), s.76(9), s.84(9) |
+| 4 | Bölüm 3 — Ha? Gerçekten mi? | 5693 | 7.9 | 1 | senin/benim/onun: 17, bir şey: 16, sadece: 15, gerçekten: 14 | s.76(9), s.91(8), s.93(7), s.72(6) |
 | 4 | Bölüm 4 — Hayır, durum öyle değil | 3025 | 6.9 | 2 | cümle başı Ama: 14, gerçekten: 10, bir şey: 6, sadece: 5 | s.110(6), s.117(6), s.105(4), s.107(4) |
 | 4 | Bölüm 5 — O sumo değil | 5408 | 7.4 | 6 | sadece: 13, bir şey: 12, cümle başı Ama: 9, senin/benim/onun: 9 | s.146(9), s.149(9), s.127(3), s.139(3) |
-| 4 | Bölüm 6 — Bir kaplumbağa olmak istiyorum | 3868 | 7.7 | 0 | sadece: 16, senin/benim/onun: 15, bir şey: 14, gerçekten: 8 | s.170(13), s.156(10), s.166(8), s.163(7) |
-| 4 | Bölüm 7 — Sanki Süzülüyor Gibi | 4391 | 8.1 | 0 | bir şey: 15, sadece: 13, gerçekten: 11, cümle başı Ve: 7 | s.182(14), s.186(13), s.184(9), s.180(8) |
+| 4 | Bölüm 6 — Bir kaplumbağa olmak istiyorum | 3828 | 7.6 | 0 | sadece: 15, bir şey: 14, senin/benim/onun: 14, gerçekten: 8 | s.166(8), s.163(7), s.167(7), s.152(5) |
+| 4 | Bölüm 7 — Sanki Süzülüyor Gibi | 4349 | 8.0 | 0 | bir şey: 15, sadece: 13, gerçekten: 11, cümle başı Ve: 6 | s.184(9), s.180(8), s.173(6), s.187(6) |
 | 4 | Bölüm 8 — Deliryum sırasında beklenmedik sürprizler mi? | 4060 | 7.3 | 2 | bir şey: 13, cümle başı Ama: 13, olduğunu: 10, senin/benim/onun: 9 | s.211(11), s.205(6), s.212(5), s.213(5) |
 | 4 | Bölüm 9 — Senin tarafından zorba olarak nitelendirilmek istemiyorum | 3626 | 7.3 | 1 | senin/benim/onun: 13, cümle başı Ama: 11, bir şey: 7, olduğunu: 5 | s.233(10), s.232(7), s.230(4), s.223(3) |
 | 4 | Bölüm 10 — Sevgi Duyguları | 5581 | 7.6 | 3 | cümle başı Ama: 24, bir şey: 14, senin/benim/onun: 12, sadece: 9 | s.265(9), s.264(7), s.269(5), s.270(5) |
@@ -127,7 +127,7 @@ Puan: metin kalitesi göstergelerinin ağırlıklı toplamı (düşük = daha te
 | 4.5 | Bölüm 4 — Brocon ve Siscon | 2877 | 7.4 | 4 | bir şey: 14, cümle başı Ama: 10, gerçekten: 9, sadece: 9 | s.85(9), s.84(2), s.86(2), s.100(2) |
 | 4.5 | Bölüm 5 — İdeal ve Gerçek | 2865 | 7.4 | 5 | sadece: 11, gerçekten: 10, bir şey: 9, cümle başı Ama: 9 | s.122(6), s.106(2), s.110(2), s.117(2) |
 | 4.5 | Bölüm 6 — Depolar ve Kilitli Odalar | 3262 | 7.5 | 6 | bir şey: 15, cümle başı Ama: 11, sadece: 9, gerçekten: 7 | s.151(10), s.135(3), s.148(3), s.133(2) |
-| 4.5 | Bölüm 7 — Takımyıldızlar ve Diz Çöküş | 4120 | 8.7 | 1 | sadece: 13, gerçekten: 11, bir şey: 9, senin/benim/onun: 9 | s.175(15), s.178(8), s.159(7), s.162(7) |
+| 4.5 | Bölüm 7 — Takımyıldızlar ve Diz Çöküş | 4142 | 8.6 | 1 | sadece: 13, gerçekten: 11, bir şey: 9, senin/benim/onun: 9 | s.175(14), s.178(8), s.159(7), s.162(7) |
 | 4.5 | Bölüm 8 — Güzel Kız ve İçine Kapanık Oğlan | 4120 | 8.0 | 1 | senin/benim/onun: 17, sadece: 12, gerçekten: 7, cümle başı Ama: 5 | s.184(10), s.205(10), s.186(8), s.199(7) |
 | 4.5 | Bölüm 9 — Merhametli ve Ore-sama | 4665 | 7.3 | 1 | senin/benim/onun: 14, tarafından: 10, bir şey: 7, gerçekten: 7 | s.239(17), s.231(13), s.235(11), s.237(6) |
 | 4.5 | Bölüm 10 — Sakarlık ve Mağaza Çalışanları | 3644 | 8.2 | 1 | bir şey: 9, sadece: 8, gerçekten: 7, cümle başı Ama: 7 | s.247(9), s.252(7), s.257(7), s.246(3) |
