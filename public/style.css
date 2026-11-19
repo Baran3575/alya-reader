@@ -641,7 +641,7 @@ figure.page-img {
 }
 
 figure.page-img img {
-  cursor: zoom-out;
+  cursor: zoom-in;
   box-shadow: 0 6px 26px rgba(0, 0, 0, 0.28);
 }
 
@@ -795,7 +795,7 @@ figure.page-img.zoom img {
   font: inherit;
   font-size: 0.9rem;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.42rem 0.9rem;

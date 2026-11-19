@@ -32,13 +32,16 @@
     },
   };
 
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlVol = urlParams.get('v');
+  const urlPage = Number(urlParams.get('p'));
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
-    page: LS.get('page', 1),
+    page: Number.isFinite(urlPage) && urlPage >= 1 ? urlPage : LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: String(LS.get('vol', '4')),
+    vol: urlVol ? String(urlVol) : String(LS.get('vol', '4')),
     catalog: Array.isArray(window.ALYA_CATALOG) ? window.ALYA_CATALOG : [],
     book: null,
     chapter: 0,
@@ -301,13 +304,13 @@
     const t = out[0];
     const q = t.indexOf('“');
     const looksHeading =
-      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Sonsöz Notu|Yazarın Notu|Yazarın Sonsözü|Yan Hikâye|Özel Ek|Ek Hikâye|Anekdot|Ara Bölüm|Epilog|Prolog|Başlangıç|Kitap Yürüyücüsü|Bookwalker)\b/i.test(
+      /^(?:\d+\.\s*)?(Bölüm|Giriş|Önsöz|Sonsöz|Son\s+Söz|Sonsöz\s+Notu|Sonsöz\s+SS|Yazarın\s+Notu|Yazarın\s+Sonsözü|Yan\s+Hik[aâ]ye|Kısa\s+Hik[aâ]ye|Özel\s+Ek|Ek\s+Hik[aâ]ye|Anekdot|Ara\s+Bölüm|Epilog|Prolog|Başlangıç|Kitap\s+Yürüyücüsü|Bookwalker)(?![\p{L}])/iu.test(
         t
       );
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
-    } else if (t.length < 95 && !/[.!?]$/.test(t)) {
+    } else if (t.length < 110 && !t.includes('“') && !/\.$/.test(t)) {
       out.shift();
     } else {
       const i = t.indexOf(ch.title);
