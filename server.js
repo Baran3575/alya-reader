@@ -283,7 +283,7 @@ const server = http.createServer((req, res) => {
           total: b.total,
           chapters: b.chapters.length,
           hasPending: b.chapters.some((c) => c.pending),
-          file: `books/${k}.json`,
+          file: `books/v${k}.json`,
         });
       } catch {}
     }

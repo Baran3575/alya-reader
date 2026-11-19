@@ -1,7 +1,7 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + cilt bazlı kitap/sanat verisi.
 // Hem kök dizinde (/) hem de GitHub Pages alt-dizininde (/alya-reader/) çalışır.
 const VERSION = 'alya-v6';
-const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle.js', 'books/index.json'];
+const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle.js'];
 
 function scopeUrl(rel) {
   return new URL(rel, self.registration.scope).href;

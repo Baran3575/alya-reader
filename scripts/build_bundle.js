@@ -1,5 +1,5 @@
 // Tarayıcıya gömülecek veri manifesti ve cilt parçaları: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
-// public/bundle.js (hafif manifest), public/bundle-art.js ve public/books/{v<k>,<k>,art-<k>,index}.json üretir.
+// public/bundle.js (hafif manifest), public/bundle-art.js ve public/books/{v<k>,art-<k>}.json üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
