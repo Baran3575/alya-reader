@@ -34,7 +34,7 @@ const NAMERE = new RegExp(`\\b(${NAMES.join('|')})(?![A-Za-zÇĞİÖŞÜçğıö
 
 // Kural tanımları: [ad, regex, ağırlık, açıklama]
 const RULES = [
-  ['birleşik yazım', /\b(birşey|birşeyler|herşey|hiçbirşey|yanlız|herkez|birçok|birdaha|farketmez|suçüstü|bir an önce)\b/giu, 3],
+  ['birleşik yazım', /\b(birşey|birşeyler|herşey|hiçbirşey|yanlız|herkez|birdaha|farketmez|suçüstü|bir an önce)\b/giu, 3],
   ['"bir çok/her şey" ayrık', /\b(bir çok|hiç bir|bir kaç)\b/giu, 2],
   ['yanlış özel ad yazımı', /\b(Arisa|Alissa|Maşaçika|Masaçika|Çisaki|Şisaki|Toya|Kuze-kun’a|Masachikaya)\b/gu, 3],
   ['özel ad eki kesme yok', new RegExp(`\\b(${NAMES.join('|')})(ya|ye|yı|yi|da|de|dan|den|nın|nin|nun|nün|lar|ler|la|le|sı|si)\\b`, 'gu'), 3],
@@ -42,7 +42,6 @@ const RULES = [
   ['çift noktalama', /([,;:])\1|(?<!\.)\.\.(?!\.)|[!?]\s*[.,]|,\s*[!?]/gu, 3],
   ['sondaki nokta eksik', null, 0],
   ['tire aralığı tutarsız', /(?<=\S)—(?=\S)|(?<=\s)—|—(?=\s)/gu, 0],
-  ['"diye" öncesi virgül yok', /[”"]\s*diye/gu, 3],
   ['tırnak bitişikliği', /[”“]{2}/gu, 3],
   ['üç nokta karışık', /\.\s*…|…\s*\.|\.\.\./gu, 3],
   ['parantez dengesiz', null, 5],
@@ -66,7 +65,7 @@ const RULES = [
   ['"hem…hem…hem"', /\bhem\b[^.!?…]{0,60}\bhem\b[^.!?…]{0,60}\bhem\b/gu, 3],
   // yalnızca iyelik ekiyle birlikte kullanılan (çift işaretli) zamirler
   ['gereksiz iyelik', /\b(senin|benim|onun)\s+[\wçğıöşü]+(?:sı|si|su|sü|ı|i|u|ü)\b/giu, 1],
-  ['ardışık aynı kelime', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(?!hadi hadi|uzun uzun|sessiz sessiz|evet evet|vay vay|peki peki|tek tek|tir tir|yavaş yavaş|azar azar|birer birer|için için|kendi kendine|bacak bacak|göz göz|diş diş|yüz yüz|el ele|diz dize|omuz omuza|sırt sırta)([A-Za-zÇĞİÖŞÜçğıöşü]{5,})\s+\1(?![A-Za-zÇĞİÖŞÜçğıöşü])/giu, 4],
+  ['ardışık aynı kelime', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(?!hadi hadi|uzun uzun|sessiz sessiz|evet evet|vay vay|peki peki|hayır hayır|evet evet|tek tek|tir tir|yavaş yavaş|azar azar|birer birer|için için|kendi kendine|bacak bacak|göz göz|diş diş|yüz yüz|el ele|diz dize|omuz omuza|sırt sırta)([A-Za-zÇĞİÖŞÜçğıöşü]{5,})\s+\1(?![A-Za-zÇĞİÖŞÜçğıöşü])/giu, 4],
   ['İngilizce kalıntı', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(the|and|with|that|you|from|about|because|something|really)(?![A-Za-zÇĞİÖŞÜçğıöşü])/gu, 8],
   ['Kiril', /[\u0400-\u04FF]/gu, 8],
   ['Japonca köşe tırnak', /[『』「」]/gu, 5],
@@ -74,6 +73,31 @@ const RULES = [
   ['çift boşluk', /[^\s] {2,}[^\s]/gu, 4],
   ['noktalama öncesi boşluk', /\s+[,.!?;:]/gu, 4],
 ];
+
+// Bu kurallar yalnızca anlatım (narration) metninde aranır; repliklerde doğaldır.
+const NARR_ONLY = new Set([
+  'cümle başı "Ve"',
+  'cümle başı "Ama/Fakat"',
+  '"gerçekten"',
+  '"sadece"',
+  '"bir şekilde"',
+  '"yani"',
+  '"işte"',
+  '"kendi"',
+  '"bu yüzden"',
+  '"ayrıca"',
+  '"hem…hem…hem"',
+  'aşırı "ve" (cümlede 4+)',
+  'gereksiz iyelik',
+]);
+
+// Replik dışı paragrafların birleşimi.
+function narrText(arr) {
+  return arr
+    .filter((t) => !String(t).startsWith('ÇN:'))
+    .filter((t) => !/^\s*[“"]/.test(String(t)))
+    .join('\n');
+}
 
 function words(t) {
   return t.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w));
@@ -164,10 +188,12 @@ for (const vol of Object.keys(BOOKS)) {
       totalSents += sents.length;
       dlgLines += arr.filter((t) => /^\s*[“"]/.test(String(t))).length;
 
+      const narr = narrText(arr);
       let pageScore = 0;
       for (const [name, re, weight] of RULES) {
         if (!re) continue;
-        const hits = text.match(new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g'));
+        const hay = NARR_ONLY.has(name) ? narr : text;
+        const hits = hay.match(new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g'));
         if (!hits) continue;
         const rec = stats.get(name) || { n: 0, ex: [] };
         rec.n += hits.length;

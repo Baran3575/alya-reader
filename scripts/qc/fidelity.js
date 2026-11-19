@@ -50,6 +50,23 @@ function unwrapEN(t) {
     .trim();
 }
 
+// OCR çöp satırlarını (sembol yığını, yarım kelimeler) ayıklar.
+function cleanLines(t) {
+  return String(t)
+    .split(/\n+/)
+    .filter((line) => {
+      const toks = line.split(/\s+/).filter(Boolean);
+      if (toks.length < 4) return false;
+      const letters = (line.match(/[\p{L}]/gu) || []).length;
+      const symbols = (line.match(/[^\p{L}\p{N}\s.,!?;:'"’”‘“(){}\[\]\/~—-]/gu) || []).length;
+      if (letters / line.length < 0.55) return false;
+      if (symbols / line.length > 0.15) return false;
+      const short = toks.filter((w) => w.length <= 2).length / toks.length;
+      return short < 0.4;
+    })
+    .join('\n');
+}
+
 function trText(page) {
   const e = page;
   const arr = Array.isArray(e) ? e : (e && (e.p || e.paragraphs)) || [];
@@ -60,24 +77,62 @@ function words(t) {
   return t.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
+// En dış (depth 1) tırnak yayılımlarını sayar; iç içe alıntılar tek sayılır.
+function spanCount(text, open = '“', close = '”') {
+  let depth = 0;
+  let count = 0;
+  for (const ch of String(text)) {
+    if (ch === open) {
+      if (open === close) {
+        // aynı karakter: çift/tek olarak ilerle
+        depth = depth ? 0 : 1;
+        if (depth === 1) count++;
+        continue;
+      }
+      if (depth === 0) count++;
+      depth++;
+    } else if (ch === close && depth > 0) {
+      depth--;
+    }
+  }
+  return count;
+}
+
 function scorePage(enRaw, trRaw) {
-  const en = unwrapEN(enRaw).replace(/\(TN:[\s\S]*?\)/giu, ' ');
+  // Çevirmen notları (kapansın ya da kapanmasın) sadakat hesabına girmez.
+  const en = unwrapEN(enRaw)
+    .replace(/\(TN:[\s\S]*?\)/giu, ' ')
+    .replace(/\(TN:[\s\S]*$/giu, ' ');
   const tr = trRaw.replace(/\{[^}]*\}/gu, (m) => m);
   const notes = [];
 
-  // Diyalog sayısı: eşleşmiş tırnak çiftleri (düz, süslü, Japon köşeli).
-  const enPairs = en.match(/(“[^”]{1,300}”|"[^"]{1,300}"|『[^』]{1,300}』)/gu) || [];
-  const enDlg = enPairs.length;
-  const trPairs = tr.match(/“[^”]{1,300}”/gu) || [];
-  const trDlg = trPairs.length;
-  const dlgDelta = Math.abs(enDlg - trDlg);
+  // Diyalog sayısı: açılan tırnak sayısı. OCR bozuk kapanışlar ve iç içe
+  // geçen başlıklar yüzünden ±2 tolerans uygulanır.
+  // OCR'da tekrarlanan tırnak dizileri (“““““) tek tırnak sayılır.
+  const enQ = en.replace(/[\u201c\u201d"\u2018\u2019]{2,}/gu, (m) => m[0]);
+  const trQ = tr.replace(/[\u201c\u201d]{2,}/gu, (m) => m[0]);
+  const singles = (t) => (t.match(/\u2018/gu) || []).length;
+  const enDlg = Math.max(
+    (enQ.match(/\u201c/gu) || []).length + singles(enQ),
+    Math.round((enQ.match(/"/gu) || []).length / 2) + singles(enQ),
+    (enQ.match(/『/gu) || []).length,
+    (enQ.match(/「/gu) || []).length
+  );
+  // TR'de iç içe alıntılar tek tırnakla verildiği için onlar da sayılır.
+  const trDlg =
+    (trQ.match(/\u201c/gu) || []).length + (trQ.match(/\u2018/gu) || []).length;
+  const dlgDelta = Math.max(0, Math.abs(enDlg - trDlg) - 2);
 
   const enRu = Math.max(
     (en.match(/\{[^}]{1,200}\}/gu) || []).length,
-    (en.match(/【[^】]{1,200}】/gu) || []).length
+    (en.match(/【[^】]{1,200}】/gu) || []).length,
+    (en.match(/\{/gu) || []).length,
+    // Kaynakta süslü parantez yoksa Kiril alfabesindeki uzun bloklar sayılır.
+    (en.match(/[\u0400-\u04FF][\u0400-\u04FF\s,.!?\u2026-]{7,}/gu) || []).length
   );
   const trRu = (tr.match(/\{[^}]{1,200}\}/gu) || []).length;
-  const ruDelta = Math.abs(enRu - trRu);
+  // Fazla Rusça blok kusur değil (ev stili); yalnızca eksik olan cezalanır.
+  const ruDelta = Math.max(0, enRu - trRu);
 
   const enNames = NAMES.filter((n) => new RegExp(`\\b${n}`, 'u').test(en));
   const missingNames = enNames.filter((n) => {
@@ -85,13 +140,18 @@ function scorePage(enRaw, trRaw) {
     return !forms.some((f) => new RegExp(f, 'u').test(tr));
   });
 
-  const enNums = [...new Set((en.match(/\b\d{1,4}\b/g) || []))];
+  const enClean = cleanLines(en) || en;
+  // "Chapter 8" / "Page 74" gibi başlık sayıları metin içeriği sayılmaz.
+  const enBody = en.replace(/\b(?:Chapter|Page|Volume|Bölüm|Sayfa)\s+\d{1,4}/giu, ' ');
+  const enNums = [...new Set((enBody.match(/\b\d{1,4}\b/g) || []))].filter((n) =>
+    enClean.includes(n)
+  );
   const missingNums = enNums.filter((n) => !tr.includes(n));
 
-  const ew = words(en);
+  const ew = words(enClean);
   const tw = words(tr);
   // OCR çöpü: kaynak sayfa taranmış görsel artıkları içeriyorsa uzunluk oranı güvenilmez.
-  const tokens = en.split(/\s+/).filter(Boolean);
+  const tokens = enClean.split(/\s+/).filter(Boolean);
   const junk = tokens.filter((t) => t.length <= 2 && !/[\p{L}\p{N}]{2}/u.test(t)).length;
   const junkPage = tokens.length > 20 && junk / tokens.length > 0.2;
   let ratio = ew ? tw / ew : 1;

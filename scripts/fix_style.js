@@ -40,6 +40,7 @@ const FIXES = [
   [/\bhiç bir\b/gu, 'hiçbir'],
   [/\bherkez\b/gu, 'herkes'],
   [/\byanlız\b/gu, 'yalnız'],
+  [/\bhala\b/gu, 'hâlâ'],
   [/\bbirdaha\b/gu, 'bir daha'],
   [/\bfarketmez\b/gu, 'fark etmez'],
   [/\bfarkında\b/gu, 'farkında'],

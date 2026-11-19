@@ -40,6 +40,13 @@ for (const fix of fixes) {
     fail++;
     continue;
   }
+  if (Array.isArray(fix.insert)) {
+    const at = typeof fix.index === 'number' ? fix.index : arr.length;
+    arr.splice(at, 0, ...fix.insert);
+    ok++;
+    console.log(`✓ s.${page}[${at}] ${fix.insert.length} paragraf eklendi`);
+    continue;
+  }
   let hit = -1;
   if (typeof fix.index === 'number') {
     if (fix.index < arr.length && (!fix.find || String(arr[fix.index]).includes(fix.find))) hit = fix.index;

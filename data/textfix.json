@@ -1,9 +1,4 @@
 [
-  { "page": 42, "index": 0, "find": "yasaları", "replace": "“Uoooh~! Maa-chan mayoyla… Çok yaramaz!”" },
-  { "page": 42, "index": 1, "find": "Uoooh~! Maa-chan mayoyla", "replace": null },
-  { "page": 42, "index": 1, "find": "Beyefendi kıçım", "replace": "Beyefendi kıçım! O da arsız küçük bir sapık! Hem o “uoooh~!” da ne? O yüce ve kudretli ifadeyle bir de kızarma! Bu iğrenç!" },
-  { "page": 42, "index": 2, "find": "Gençliğinin", "replace": "Gençliğinin o kadar da saf olmayan hâline hançerler fırlatan Masachika, tam o sırada birdenbire ortaya çıkan küçük şeytan Yuki’yi fark etti." },
-  { "page": 42, "index": 5, "find": "ruhunun derinliklerinden", "replace": "Masachika, ruhunun derinliklerinden dönmeden önce küçük şeytan Yuki’yi uçurmak için bir aparkat atarak çığlık attı." },
-  { "page": 42, "index": 6, "find": "İçsel keşfinin", "replace": "İçsel keşfinin ne kadar işe yaramaz olduğuna içinden dilini şaklatarak, isteksizce her zamanki hâliyle iki kız kardeşin karşısına dikildi." },
-  { "page": 42, "index": 8, "find": "Uuuu", "replace": "“Uoooh~”" }
+  { "page": 240, "index": 6, "find": "vermişti… Ve bunu görünce,", "replace": "vermişti… Bunu görünce," },
+  { "page": 240, "index": 0, "find": "sinir bozucu buluyordu… Ve farkına bile varmadan bunları yapmıştı.", "replace": "sinir bozucu buluyordu… Farkına bile varmadan bunları yapmıştı." }
 ]
