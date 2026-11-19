@@ -27,49 +27,41 @@ const TR_CHAPTER = {
   interlude: 'Ara Bölüm',
 };
 
-function loadVolumesList() {
-  const manifestPath = path.join(ROOT, 'data', 'volumes.json');
-  const entries = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  const list = [];
-  for (const entry of entries) {
-    if (!entry.enabled) continue;
-    const id = String(entry.id);
-    list.push({
-      ...entry,
-      id,
-      key: id,
-      volume: entry.label,
-      embedArt: Boolean(entry.embedArt),
-      titlesFile: path.join(ROOT, entry.chaptersFile),
-    });
-  }
-  return list;
-}
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-function loadVolumes() {
-  const map = {};
-  for (const cfg of loadVolumesList()) {
-    map[cfg.id] = cfg;
-  }
-  return map;
-}
-
-const VOLUMES = loadVolumes();
-const VOLUME_KEYS = loadVolumesList().map((v) => v.id);
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => {
+    if (k === '4') {
+      return [
+        '4',
+        {
+          key: '4',
+          dataDir: 'data',
+          imgPrefix: '/pages/',
+          volume: 'Cilt 4',
+          titlesFile: path.join(ROOT, 'data/chapters.json'),
+        },
+      ];
+    }
+    const suffix = k.replace('.', '');
+    return [
+      k,
+      {
+        key: k,
+        dataDir: `data${suffix}`,
+        imgPrefix: `/pages${suffix}/`,
+        volume: `Cilt ${k}`,
+        titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
+      },
+    ];
+  })
+);
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
-  const matchedCfg = Object.values(VOLUMES).find((v) => v.dataDir === dataDir);
-  const id = String(opt.id || opt.key || (matchedCfg ? matchedCfg.id : ''));
-  const imgPrefix = opt.imgPrefix || (matchedCfg ? matchedCfg.imgPrefix : '/pages/');
-  const volume = opt.volume || opt.label || (matchedCfg ? matchedCfg.label : 'Cilt ' + id);
-  const subtitle = opt.subtitle !== undefined ? opt.subtitle : matchedCfg ? matchedCfg.subtitle || '' : '';
-  const embedArt = opt.embedArt !== undefined ? Boolean(opt.embedArt) : matchedCfg ? Boolean(matchedCfg.embedArt) : false;
-  const status = opt.status || (matchedCfg ? matchedCfg.status || 'complete' : 'complete');
-  const statusNote = opt.statusNote !== undefined ? opt.statusNote : matchedCfg ? matchedCfg.statusNote || '' : '';
-  const titlesFile =
-    opt.titlesFile ||
-    (opt.chaptersFile ? path.join(ROOT, opt.chaptersFile) : path.join(ROOT, dataDir, 'chapters.json'));
+  const imgPrefix = opt.imgPrefix || '/pages/';
+  const volume = opt.volume || 'Cilt 4';
+  const titlesFile = opt.titlesFile || path.join(ROOT, dataDir, 'chapters.json');
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
@@ -110,7 +102,7 @@ function buildBook(opt = {}) {
       return item;
     }
 
-    // OCR tabanlı ciltler (kapak ve tam sayfa illüstrasyon tespiti)
+    // Geriye dönük Cilt 4 / Cilt 4.5 davranışı
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
@@ -163,57 +155,20 @@ function buildBook(opt = {}) {
     }
   }
 
-  return {
-    id,
-    title: 'Alya Bazen Duygularını Rusça Saklar',
-    volume,
-    subtitle,
-    embedArt,
-    status,
-    statusNote,
-    total: pages.length,
-    chapters,
-    pages,
-  };
+  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
 }
 
-function packBook(cfg) {
-  const b = buildBook(cfg);
+function packBook(key) {
+  const b = buildBook(VOLUMES[key]);
   const json = Buffer.from(JSON.stringify(b));
   return { book: b, json, gzip: zlib.gzipSync(json) };
 }
 
 const BOOKS = {};
-function getBook(key, volMap = VOLUMES) {
-  const cfg = volMap[key];
-  if (!cfg) throw new Error('Bilinmeyen cilt: ' + key);
-  if (!BOOKS[key]) BOOKS[key] = packBook(cfg);
-  return BOOKS[key];
-}
-
-function buildVolumesSummary() {
-  const ordered = loadVolumesList();
-  const active = loadVolumes();
-  return ordered.map((cfg) => {
-    let total = 0;
-    let chapterCount = 0;
-    try {
-      const b = getBook(cfg.id, active).book;
-      total = b.total;
-      chapterCount = b.chapters.length;
-    } catch {}
-    return {
-      id: cfg.id,
-      label: cfg.label,
-      subtitle: cfg.subtitle || '',
-      imgPrefix: cfg.imgPrefix,
-      embedArt: Boolean(cfg.embedArt),
-      status: cfg.status || 'complete',
-      statusNote: cfg.statusNote || '',
-      total,
-      chapterCount,
-    };
-  });
+function getBook(key) {
+  const k = VOLUMES[key] ? key : '4';
+  if (!BOOKS[k]) BOOKS[k] = packBook(k);
+  return BOOKS[k];
 }
 
 function send(req, res, status, type, body, extra = {}) {
@@ -255,52 +210,41 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  if (pathname === '/api/volumes') {
-    const body = Buffer.from(JSON.stringify(buildVolumesSummary()));
-    return send(req, res, 200, MIME['.json'], body);
-  }
-
   if (pathname === '/api/book') {
-    const ordered = loadVolumesList();
-    const active = loadVolumes();
-    const reqVol = query.get('v');
-    const vKey = reqVol && active[reqVol] ? reqVol : ordered[0] ? ordered[0].id : '';
-    if (!vKey) {
-      return send(req, res, 404, MIME['.json'], Buffer.from('{"error":"etkin cilt yok"}'));
-    }
-    let loaded;
+    const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
     try {
-      loaded = getBook(vKey, active);
+      const loaded = getBook(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
     } catch (e) {
-      const msg = JSON.stringify({ error: 'Cilt verisi henüz hazır değil: ' + vKey + ' (' + e.message + ')' });
-      return send(req, res, 404, MIME['.json'], Buffer.from(msg));
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
+      );
     }
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = acceptsGzip ? loaded.gzip : loaded.json;
-    const headers = {
-      'Content-Type': MIME['.json'],
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    };
-    if (acceptsGzip) {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Vary'] = 'Accept-Encoding';
-    }
-    res.writeHead(200, headers);
-    return res.end(req.method === 'HEAD' ? undefined : body);
   }
 
-  // Statik JSON uç noktası (/books/<v>.json ve /books/v<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
-  if (bookJsonMatch) {
-    const active = loadVolumes();
-    const bKey = bookJsonMatch[1];
-    if (active[bKey]) {
-      try {
-        const loaded = getBook(bKey, active);
-        return send(req, res, 200, MIME['.json'], loaded.json);
-      } catch {}
-    }
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
+    try {
+      const loaded = getBook(bookJsonMatch[1]);
+      return send(req, res, 200, MIME['.json'], loaded.json);
+    } catch {}
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -322,28 +266,19 @@ const server = http.createServer((req, res) => {
 
 function start() {
   server.listen(PORT, () => {
-    const ordered = loadVolumesList();
-    const active = loadVolumes();
     console.log('Okuyucu hazır:  http://localhost:' + PORT);
-    for (const cfg of ordered) {
-      const id = cfg.id;
+    for (const k of VOLUME_KEYS) {
+      const label = ('Cilt ' + k).padEnd(13);
       try {
-        const b = getBook(id, active).book;
-        const noteSuffix = b.statusNote ? ' — ' + b.statusNote : '';
-        console.log(
-          `${b.volume.padEnd(13)}: [#${b.id}] ${b.total} sayfa | ${b.chapters.length} bölüm (${b.status}${noteSuffix})`
-        );
+        const b = getBook(k).book;
+        console.log(`${label}: ${b.total} sayfa | ${b.chapters.length} bölüm`);
       } catch {
-        console.log(`${cfg.label.padEnd(13)}: [#${id}] henüz hazır değil (${cfg.status || 'complete'})`);
+        console.log(`${label}: henüz hazır değil`);
       }
     }
-    const trFiles = ordered
-      .map((v) => `${v.dataDir}/paragraphs_final.json`)
-      .join(', ');
-    console.log('Çeviri       : ' + trFiles);
   });
 }
 
 if (require.main === module) start();
 
-module.exports = { VOLUMES, VOLUME_KEYS, buildBook, getBook, loadVolumes, buildVolumesSummary, server, start };
+module.exports = { VOLUMES, VOLUME_KEYS, buildBook, getBook, start };

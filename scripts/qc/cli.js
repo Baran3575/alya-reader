@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Tüm etkin ciltler (data/volumes.json)
-//   node scripts/qc/cli.js --volume <cilt>         # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= maxAvgStrict, hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -13,19 +13,17 @@ const path = require('path');
 const { runVerify, hasUnbalancedDelim } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
-const { ROOT, VOLUME_KEYS, ENABLED_VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
 const VOLUMES = Object.fromEntries(
-  Object.entries(REGISTRY).map(([id, cfg]) => [
-    id,
+  VOLUME_KEYS.map((k) => [
+    k,
     {
-      tr: cfg.finalRel,
-      label: cfg.label,
-      maxAvgStrict: cfg.maxAvgStrict,
-      patchesFile: cfg.patchesFile || '',
-      enabled: Boolean(cfg.enabled),
+      tr: REGISTRY[k].finalRel,
+      label: REGISTRY[k].label,
+      maxAvgStrict: 0.20,
     },
   ])
 );
@@ -66,7 +64,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = [...ENABLED_VOLUME_KEYS];
+  let selected = [...VOLUME_KEYS];
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -186,11 +184,7 @@ function generateMarkdownSummary(result, violations, options) {
   lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Durum |');
   lines.push('|---|---|---|---|---|---|');
 
-  const orderedKeys = [
-    ...VOLUME_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(result, k)),
-    ...Object.keys(result).filter((k) => !VOLUME_KEYS.includes(k)),
-  ];
-  for (const vol of orderedKeys) {
+  for (const vol of Object.keys(result)) {
     const r = result[vol];
     const status = r.fails.length === 0 ? '✓ Başarılı' : `✗ Başarısız (${r.fails.length} ihlal)`;
     const baseAvg = r.baseline && r.baseline.avg !== undefined ? r.baseline.avg.toFixed(2) : '-';
@@ -289,9 +283,9 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (tanımlı patchesFile varsa)
-    if (cfg.patchesFile) {
-      const patchesFile = path.resolve(ROOT, cfg.patchesFile);
+    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için)
+    if (vol === '4') {
+      const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
       if (fs.existsSync(patchesFile)) {
         try {
           const patches = JSON.parse(fs.readFileSync(patchesFile, 'utf8'));
@@ -405,11 +399,7 @@ function main() {
       )
     );
   } else {
-    const orderedVols = [
-      ...VOLUME_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(result, k)),
-      ...Object.keys(result).filter((k) => !VOLUME_KEYS.includes(k)),
-    ];
-    for (const vol of orderedVols) {
+    for (const vol of Object.keys(result)) {
       const r = result[vol];
       console.log('\n== ' + r.label + ' (' + r.file + ')');
       console.log(

@@ -2,13 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 const ROOT = path.join(__dirname, '..', '..');
-const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'volumes.json'), 'utf8'));
-const vol = String(process.argv[2] || (manifest.find((v) => v.enabled) || manifest[0]).id);
-const cfg = manifest.find((v) => String(v.id) === vol);
-if (!cfg) throw new Error('Bilinmeyen cilt: ' + vol);
-const src = JSON.parse(fs.readFileSync(path.join(ROOT, cfg.dataDir, 'source.json'), 'utf8'));
-const tr = JSON.parse(fs.readFileSync(path.join(ROOT, cfg.dataDir, 'paragraphs_final.json'), 'utf8'));
-const bt = JSON.parse(fs.readFileSync(path.join(ROOT, cfg.dataDir, 'back_en.json'), 'utf8'));
+const vol = process.argv[2] || '4';
+const P = (a, b) => (vol === '4' ? a : b);
+const src = JSON.parse(fs.readFileSync(path.join(ROOT, P('data/source.json', 'data45/source.json')), 'utf8'));
+const tr = JSON.parse(fs.readFileSync(path.join(ROOT, P('data/paragraphs_final.json', 'data45/paragraphs_final.json')), 'utf8'));
+const bt = JSON.parse(fs.readFileSync(path.join(ROOT, P('data/back_en.json', 'data45/back_en.json')), 'utf8'));
 
 const STOP = new Set(('a an the and or but if then than that this these those of to in on at for with from by as is are was were be been being have has had do does did not no nor so such it its he she they we you i me him her them us my your his their our what which who whom when where why how all any both each few more most other some own same too very can will just should now also into over under about after before between during through out up down again further once here there').split(' '));
 const stem = (w) => w.replace(/(ing|ed|es|s|ly)$/, '').slice(0, 6);
@@ -52,7 +50,6 @@ rows.slice(0, 20).forEach((r) => {
   out.push('  TR: ' + r.t.slice(0, 150));
   if (r.extra.length) out.push('  kaynakta olmayan: ' + r.extra.join(', '));
 });
-const outPath = path.join(cfg.dataDir, 'bt_score.txt');
-fs.writeFileSync(path.join(ROOT, outPath), out.join('\n'));
+fs.writeFileSync(path.join(ROOT, P('data/bt_score.txt', 'data45/bt_score.txt')), out.join('\n'));
 console.log(out.slice(0, 12).join('\n'));
-console.log('\nrapor: ' + outPath);
+console.log('\nrapor: data/bt_score.txt');

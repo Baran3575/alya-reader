@@ -3,9 +3,12 @@
 //   node scripts/patch.js [--volume <v>]             # yamaları doğrula ve uygula
 //   node scripts/patch.js [--volume <v>] --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
 const fs = require('fs');
+const path = require('path');
 const { score } = require('./qc/quality');
 const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
 const { hasUnbalancedDelim } = require('./qc/verify');
+
+const ROOT = path.join(__dirname, '..');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
@@ -108,7 +111,7 @@ function validatePatches(patches, data) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run') || args.includes('--dry');
-  const volKey = parseVolumeArg(args);
+  const volKey = parseVolumeArg(args, '4');
   const volCfg = resolveVolume(volKey);
 
   if (!volCfg) {
@@ -117,15 +120,20 @@ if (require.main === module) {
   }
 
   const targetFile = volCfg.finalFile;
-  const patchFile = volCfg.patchesAbsFile;
+  const patchFileName = volCfg.key === '4' ? 'patches.json' : `patches${volCfg.slug}.json`;
+  const patchFile = path.join(__dirname, patchFileName);
 
   if (!fs.existsSync(targetFile)) {
     console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${volCfg.finalRel}`);
     process.exit(1);
   }
 
-  if (!patchFile || !fs.existsSync(patchFile)) {
-    console.log(`✓ ${volCfg.label}: ${volCfg.patchesFile || 'yama dosyası'} bulunmuyor (uygulanacak el yaması yok).`);
+  if (!fs.existsSync(patchFile)) {
+    if (volCfg.key === '4') {
+      console.error(`Hata: Yama dosyası bulunamadı: ${patchFile}`);
+      process.exit(1);
+    }
+    console.log(`✓ Cilt ${volCfg.key}: ${patchFileName} bulunmuyor (uygulanacak el yaması yok).`);
     process.exit(0);
   }
 
@@ -141,14 +149,14 @@ if (require.main === module) {
   }
 
   if (dryRun) {
-    console.log(`✓ Önizleme başarılı (${volCfg.label}): ${result.count} yama doğrulandı.`);
+    console.log(`✓ Önizleme başarılı (Cilt ${volCfg.key}): ${result.count} yama doğrulandı.`);
     console.log(`  Sıfır regresyon, tüm yama anahtarları geçerli. Toplam puan değişimi: ${result.scoreDiffSum}`);
   } else {
     for (const item of result.applied) {
       fin[item.pg][item.idx] = item.text;
     }
     fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
-    console.log(`✓ ${volCfg.label}: ${result.applied.length} yama başarıyla uygulandı.`);
+    console.log(`✓ Cilt ${volCfg.key}: ${result.applied.length} yama başarıyla uygulandı.`);
   }
 }
 

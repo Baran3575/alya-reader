@@ -1,0 +1,32 @@
+name: Çeviri kalite kapısı
+
+on:
+  push:
+    paths:
+      - 'data*/**'
+      - 'scripts/qc/**'
+      - 'scripts/naturalize.js'
+      - 'scripts/norm_typo.js'
+      - 'scripts/fix_boundaries.js'
+      - '.github/workflows/qc.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  qc:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vol: ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Doğrulama ve Kalite Kapısı (Cilt ${{ matrix.vol }})
+        run: |
+          TR_FILE=$(node -e "console.log(require('./scripts/lib/volumes').resolveVolume('${{ matrix.vol }}').finalRel)")
+          ALYA_TR_FILE="$TR_FILE" node scripts/qc/verify.js
+          node scripts/qc/quality.js "$TR_FILE"
+          node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict

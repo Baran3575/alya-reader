@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // GitHub Pages statik site derleyicisi -> dist/
-// public/ içeriğini, izlenen WebP görsellerini ve books/<vol>.json statik kitap paketlerini dist/ dizinine üretir.
+// public/ içeriğini, pages5..pages12 görsellerini ve books/<vol>.json statik kitap paketlerini dist/ dizinine üretir.
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { buildBook, buildVolumesSummary } = require('../server');
-const { ROOT, ENABLED_VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
+const { buildBook } = require('../server');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const DIST = path.join(ROOT, 'dist');
 const PUB = path.join(ROOT, 'public');
@@ -21,28 +21,27 @@ fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
 // 3) Statik /books/<vol>.json dosyalarını üret ve görsel bütünlüğünü doğrula
 const booksDir = path.join(DIST, 'books');
 fs.mkdirSync(booksDir, { recursive: true });
-fs.writeFileSync(path.join(booksDir, 'volumes.json'), JSON.stringify(buildVolumesSummary()));
 
 let builtCount = 0;
 let missingAssets = 0;
 
-for (const k of ENABLED_VOLUME_KEYS) {
+for (const k of VOLUME_KEYS) {
   const cfg = VOLUMES[k];
   if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
 
   const book = buildBook({
-    ...cfg,
-    id: cfg.id,
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
     volume: cfg.label,
     titlesFile: cfg.titlesFile,
   });
 
   for (const p of book.pages) {
     p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
-    if (p.art && !cfg.embedArt) {
+    if (p.art && k !== '4' && k !== '4.5') {
       const assetPath = path.join(DIST, p.img);
       if (!fs.existsSync(assetPath)) {
-        console.error(`✗ Eksik illüstrasyon dosyası (${cfg.label}): ${p.img}`);
+        console.error(`✗ Eksik illüstrasyon dosyası (Cilt ${k}): ${p.img}`);
         missingAssets++;
       }
     }

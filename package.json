@@ -9,8 +9,8 @@
     "translate": "node scripts/translate_llm.js",
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
-    "test": "node test/qc-verification.test.js && node test/volume-manifest.test.js && node test/ingest-and-pipeline.test.js && node scripts/qc/cli.js --strict --check-regression",
-    "test:suite": "node test/qc-verification.test.js && node test/volume-manifest.test.js && node test/ingest-and-pipeline.test.js",
+    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",
     "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",
@@ -22,7 +22,9 @@
     "en:qc": "node scripts/qc/en_quality.js",
     "en:fix": "node scripts/fix_en_ocr.js",
     "en:ads": "node scripts/qc/en_ads.js",
-    "pretest": "node scripts/build_bundle.js"
+    "pretest": "node scripts/build_bundle.js",
+    "fix:quality": "node scripts/fix_quality.js",
+    "fix:quality:dry": "node scripts/fix_quality.js --dry"
   },
   "keywords": [
     "alya",

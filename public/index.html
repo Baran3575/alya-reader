@@ -11,12 +11,12 @@
   <div class="progress"><span id="progressBar"></span></div>
 
   <header class="bar">
-    <button class="pick" id="volBtn" type="button" title="Cilt seçimi" aria-haspopup="dialog" aria-controls="libView" aria-expanded="false">
-      <span id="volLabel">Cilt</span><i class="chev" aria-hidden="true"></i>
+    <button class="pick" id="volBtn" type="button" title="Cilt seçimi" aria-controls="libView" aria-expanded="false">
+      <span id="volLabel">Cilt 4</span><i class="chev" aria-hidden="true"></i>
     </button>
 
-    <button class="pick pick-ch" id="chBtn" type="button" title="Bölüm seçimi" aria-haspopup="dialog" aria-controls="libView" aria-expanded="false">
-      <span id="chLabel">Bölüm</span><i class="chev" aria-hidden="true"></i>
+    <button class="pick pick-ch" id="chBtn" type="button" title="Bölüm seçimi" aria-controls="libView" aria-expanded="false">
+      <span id="chLabel">Bölüm 1</span><i class="chev" aria-hidden="true"></i>
     </button>
 
     <div class="seg seg-mode" role="group" aria-label="Görünüm">
@@ -28,12 +28,14 @@
   </header>
 
   <main id="main">
-    <section class="lib" id="libView" hidden aria-label="Cilt ve bölüm listesi">
+    <section class="lib" id="libView" hidden aria-label="Cilt ve bölüm çekmecesi">
       <div class="lib-head">
-        <button class="lib-back" id="libBack" type="button">‹ Geri</button>
+        <button class="lib-back" id="libBack" type="button">‹ Ciltler</button>
         <h2 class="lib-title" id="libTitle">Ciltler</h2>
+        <button class="lib-close" id="libClose" type="button" title="Okumaya dön (Esc)" aria-label="Kapat">✕</button>
       </div>
       <div class="lib-actions" id="libActions" hidden>
+        <button class="mini" id="openVolBtn" type="button" hidden>Bu cilde geç</button>
         <button class="mini" id="markAllBtn" type="button">Hepsini okundu say</button>
         <button class="mini" id="clearAllBtn" type="button">İşaretleri temizle</button>
       </div>
@@ -47,8 +49,8 @@
     <button class="nav-btn" id="prevBtn" type="button" title="Önceki (←)">‹</button>
     <div class="nav-mid">
       <div class="nav-ch">
-        <span class="nav-ch-name" id="navChapter">Bölüm</span>
-        <span class="nav-ch-pages" id="navPages">s. 1</span>
+        <span class="nav-ch-name" id="navChapter">Bölüm 1</span>
+        <span class="nav-ch-pages" id="navPages">s. 1–8</span>
       </div>
       <input id="pageRange" type="range" min="1" max="13" value="1" aria-label="Bölüm" />
     </div>

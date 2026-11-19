@@ -1,52 +1,56 @@
-// Tüm ciltler için tek kaynak data/volumes.json üstveri ve yol çözücüsü.
-const fs = require('fs');
+// Tüm ciltler (4 – 12, 4.5 ve 9.5 dahil) için ortak dizin ve üstveri kaydı.
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..', '..');
-const MANIFEST_PATH = path.join(ROOT, 'data', 'volumes.json');
-const MANIFEST = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
 
-const VOLUME_KEYS = MANIFEST.map((entry) => String(entry.id));
-const ENABLED_VOLUME_KEYS = MANIFEST.filter((entry) => entry.enabled).map((entry) => String(entry.id));
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-function buildVolumeRecord(entry) {
-  const key = String(entry.id);
-  const dataDir = entry.dataDir;
-  const slug = dataDir.slice(4);
-  const imgPrefix = entry.imgPrefix;
-  const relImgPrefix = imgPrefix.replace(/^\/+/, '');
-  const imgDir = 'public/' + relImgPrefix.replace(/\/+$/, '');
-
+function makeVolume(key) {
+  if (key === '4') {
+    return {
+      key: '4',
+      slug: '',
+      dataDir: 'data',
+      imgDir: 'public/pages',
+      imgPrefix: '/pages/',
+      relImgPrefix: 'pages/',
+      label: 'Cilt 4',
+      titlesFile: path.join(ROOT, 'data', 'chapters.json'),
+      sourceFile: path.join(ROOT, 'data', 'source.json'),
+      bilingualFile: path.join(ROOT, 'data', 'bilingual.json'),
+      finalFile: path.join(ROOT, 'data', 'paragraphs_final.json'),
+      finalRel: 'data/paragraphs_final.json',
+      maxAvgStrict: 0.20,
+    };
+  }
+  const suffix = key.replace('.', '');
+  const dataDir = `data${suffix}`;
+  const imgDir = `public/pages${suffix}`;
   return {
-    ...entry,
-    id: key,
     key,
-    slug,
+    slug: suffix,
     dataDir,
     imgDir,
-    imgPrefix,
-    relImgPrefix,
-    label: entry.label,
-    titlesFile: path.join(ROOT, entry.chaptersFile),
+    imgPrefix: `/pages${suffix}/`,
+    relImgPrefix: `pages${suffix}/`,
+    label: `Cilt ${key}`,
+    titlesFile: path.join(ROOT, dataDir, 'chapters.json'),
     sourceFile: path.join(ROOT, dataDir, 'source.json'),
     bilingualFile: path.join(ROOT, dataDir, 'bilingual.json'),
     finalFile: path.join(ROOT, dataDir, 'paragraphs_final.json'),
     finalRel: `${dataDir}/paragraphs_final.json`,
-    patchesAbsFile: entry.patchesFile ? path.join(ROOT, entry.patchesFile) : '',
-    maxAvgStrict: entry.maxAvgStrict,
-    embedArt: Boolean(entry.embedArt),
+    maxAvgStrict: 0.20,
   };
 }
 
-const VOLUMES = Object.fromEntries(MANIFEST.map((entry) => [String(entry.id), buildVolumeRecord(entry)]));
+const VOLUMES = Object.fromEntries(VOLUME_KEYS.map((k) => [k, makeVolume(k)]));
 
 function resolveVolume(volKey) {
-  const defaultId = ENABLED_VOLUME_KEYS[0] || VOLUME_KEYS[0] || '';
-  const k = String(volKey || defaultId).trim();
+  const k = String(volKey || '4').trim();
   return VOLUMES[k] || null;
 }
 
-function parseVolumeArg(argv = process.argv.slice(2), defaultVol = ENABLED_VOLUME_KEYS[0] || VOLUME_KEYS[0] || '') {
+function parseVolumeArg(argv = process.argv.slice(2), defaultVol = '4') {
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if ((a === '--volume' || a === '--vol' || a === '-v') && argv[i + 1]) {
@@ -60,9 +64,7 @@ function parseVolumeArg(argv = process.argv.slice(2), defaultVol = ENABLED_VOLUM
 
 module.exports = {
   ROOT,
-  MANIFEST,
   VOLUME_KEYS,
-  ENABLED_VOLUME_KEYS,
   VOLUMES,
   resolveVolume,
   parseVolumeArg,
