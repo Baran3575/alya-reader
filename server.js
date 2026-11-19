@@ -128,8 +128,10 @@ function buildBook(opt = {}) {
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
     const artFile = path.join(PUB, artRelDir, nnn + '.webp');
+    const scanFile = path.join(PUB, relImgPrefix, nnn + '.webp');
+    const hasArtImg = fs.existsSync(artFile) || fs.existsSync(scanFile);
+    const art = p.page > 3 && cleanLen < 220 && hasArtImg;
     const img = art && fs.existsSync(artFile) ? artRelDir + nnn + '.webp' : relImgPrefix + nnn + '.webp';
 
     return {

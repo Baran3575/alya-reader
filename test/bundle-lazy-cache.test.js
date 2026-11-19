@@ -629,6 +629,19 @@ async function testAppMultiVolumeLazyEnAndFileFallback() {
     'Header volume buttons must preserve chronological reading order (including 4.5 and 9.5)',
   );
 
+  // Verify in-page #libView volume cards & chapter rows work without extra network fetches
+  const fetchCountBeforeLib = httpEnv.fetchCalls.length;
+  httpEnv.elements.get('volBtn').click();
+  assert.strictEqual(httpEnv.elements.get('libView').hidden, false, 'volBtn must open #libView');
+  const libCards = httpEnv.elements.get('libList').children;
+  assert.strictEqual(libCards.length, VOLUME_KEYS.length, '#libList must render all 11 volume cards');
+  assert.deepStrictEqual(
+    libCards.map((c) => c.dataset.vol),
+    VOLUME_KEYS,
+    '#libList volume cards must follow chronological order',
+  );
+  assert.strictEqual(httpEnv.fetchCalls.length, fetchCountBeforeLib, 'Opening #libView must not fetch extra chunks');
+
   // Switch across all 11 volumes in Çeviri mode
   for (const v of volNames) {
     const btnId = 'vol' + v.replace(/[^a-zA-Z0-9]/g, '');

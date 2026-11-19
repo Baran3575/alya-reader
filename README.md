@@ -22,13 +22,13 @@ npm run build:site      # dist/ altında statik site (.nojekyll + bundles/* + pa
 
 | Üretilen Dosya | İçerik | Boyut |
 |---|---|---|
-| `public/bundles/manifest.js` | `window.ALYA_MANIFEST` — 11 cildin sayfa/bölüm sayıları ve içerik özetleri | ~2,6 KB |
+| `public/bundles/manifest.js` | `window.ALYA_MANIFEST` — 11 cildin sayfa/bölüm dizini (`toc`) ve içerik özetleri | ~9 KB (`< 10 KB`) |
 | `public/bundles/book-<cilt>.json` (ve `.js`) | İlgili cildin Türkçe paragraf + bölüm verisi (`p.en` hariç; `fetch` + `CacheStorage` ve `file://` yedeği) | ~100–430 KB / cilt |
 | `public/bundles/bundle-en-<cilt>.json` (ve `.js`) | **"Orijinal"** görünümü için sayfa bazlı İngilizce kaynak metin (yalnızca Orijinal moduna geçildiğinde yüklenir) | ~90–430 KB / cilt |
 | `public/bundles/art/{4,4.5}/*.webp` & `public/pages5..12/*.webp` | İllüstrasyon görselleri, kaydırma sırasında `IntersectionObserver` ile istek üzerine yüklenir | WebP ikili varlıklar |
 
 - Okuyucu aktif cildi **bellek içi `Map`** → **`CacheStorage` (`alya-v4`) / `bundles/book-<cilt>.json`** → **`bundles/book-<cilt>.js` (`file://` yedeği)** → `api/book` sırasıyla çözer; **"Orijinal"** modunda ise `bundles/bundle-en-<cilt>.json` parçasını yalnızca ihtiyaç duyulduğunda tembel olarak indirip önbelleğe alır.
-- `window.localStorage` yalnızca hafif okuma konumu ve arayüz ayarlarını (`page`, `page:<cilt>`, `max:<cilt>`, `vol`, `mode`, `theme`, `size`, toplam `< 5 KB`) saklar; eski `alya4:book:*` kayıtları açılışta otomatik temizlenir.
+- `window.localStorage` yalnızca hafif okuma konumu, okundu işaretleri ve arayüz ayarlarını (`page`, `page:<cilt>`, `max:<cilt>`, `read:<cilt>`, `vol`, `mode`, `theme`, `size`, toplam `< 5 KB`) saklar; eski `alya4:book:*` kayıtları açılışta otomatik temizlenir.
 - `public/sw.js` service worker’ı kabuğu, `bundles/` paketlerini ve `.webp` görsellerini `self.registration.scope` altında (hem kök dizinde hem GitHub Pages `/<repo>/` alt yollarında) `CacheStorage`’a yazar.
 
 ## Modüler İçe Aktarma ve Edebî Çeviri Hattı
@@ -68,3 +68,10 @@ npm test                                               # tüm birim/entegrasyon 
 node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sıkı kalite ve regresyon kontrolü
 node scripts/patch.js --dry-run                        # el yaması şema ve regresyon doğrulaması
 ```
+
+### Arayüz
+
+- Üst çubuk tek satır: **Cilt 4** · bölüm adı · Çeviri/Orijinal · tema. Yazı boyutu düğmeleri kaldırıldı, metin sabit boyutta.
+- Cilt ya da bölüm düğmesine dokununca alttan liste açılır: ciltlerde bölüm/okundu sayısı, bölümlerde **bölüm adı + sayfa aralığı**.
+- Okundu sistemi elle: her bölüm satırındaki ✓ ile işaretlenir (`alya4:read:<cilt>`), "Hepsini okundu say" / "İşaretleri temizle" düğmeleri vardır. Otomatik işaretleme yok.
+- Alt çubuk: ‹ › düğmeleri, bölüm adı, sayfa aralığı, kaydırıcı. Görsele dokununca tam ekran.

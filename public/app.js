@@ -8,6 +8,8 @@
     const el = d.createElement('p');
     if (/^[“"—–{-]/.test(t)) {
       el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    } else if (/^[(\[]/.test(t)) {
+      el.className = 'thought';
     }
     let pos = 0;
     while (pos < t.length) {
@@ -36,6 +38,7 @@
         pos = close + 1;
         continue;
       }
+      el.appendChild(d.createTextNode('{'));
       const span = d.createElement('span');
       span.className = 'ru-dialog';
       span.appendChild(d.createTextNode(inner));
@@ -45,6 +48,7 @@
         span.title = roma;
       }
       el.appendChild(span);
+      el.appendChild(d.createTextNode('}'));
       pos = close + 1;
     }
     return el;
@@ -122,18 +126,79 @@
   }
 
   /* ---------------- cilt ---------------- */
-  function switchVolume(v) {
-    if (v === state.vol) return;
+  function switchVolume(v, targetPage) {
+    const key = String(v);
+    if (key === String(state.vol)) {
+      if (targetPage && targetPage > 0) goPage(targetPage);
+      return Promise.resolve();
+    }
     LS.set('page:' + state.vol, state.page);
-    state.vol = v;
-    LS.set('vol', v);
-    state.page = LS.get('page:' + v, 1);
-    load().catch((err) => {
+    state.vol = key;
+    LS.set('vol', key);
+    state.page = targetPage && targetPage > 0 ? targetPage : LS.get('page:' + key, 1);
+    return load().catch((err) => {
       const p = document.createElement('p');
       p.className = 'empty-note';
-      p.textContent = 'Cilt ' + v + ' yüklenemedi: ' + err.message;
+      p.textContent = 'Cilt ' + key + ' yüklenemedi: ' + err.message;
       reader.replaceChildren(p);
     });
+  }
+
+  function measureChrome() {
+    const bar = document.querySelector('.bar');
+    if (!bar) return;
+    const h = bar.offsetHeight;
+    if (h > 20) document.documentElement.style.setProperty('--bar-h', h + 'px');
+  }
+  window.addEventListener('resize', measureChrome);
+  window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
+
+  /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
+  const volTitle = {
+    '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
+    '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
+  };
+
+  function orderedVolumeKeys() {
+    const m = manifest();
+    const vols = m.volumes || {};
+    if (Array.isArray(m.order) && m.order.length > 0) {
+      return m.order.filter((k) => Boolean(vols[k]));
+    }
+    const keys = Object.keys(vols);
+    if (keys.length > 0) return keys.sort((a, b) => parseFloat(a) - parseFloat(b));
+    return Object.keys(volTitle);
+  }
+
+  function getVolChapters(volKey) {
+    const k = String(volKey);
+    if (state.book && String(state.vol) === k && Array.isArray(state.book.chapters)) {
+      return state.book.chapters;
+    }
+    if (bookCache.has(k) && Array.isArray(bookCache.get(k).chapters)) {
+      return bookCache.get(k).chapters;
+    }
+    const entry = manifest().volumes && manifest().volumes[k];
+    if (entry && Array.isArray(entry.toc)) {
+      return entry.toc.map((row) => {
+        const label = typeof row[1] === 'number' ? 'Bölüm ' + row[1] : String(row[1] || '');
+        return {
+          page: row[0],
+          label,
+          title: row[2] || '',
+          ...(row[3] ? { pending: true } : {}),
+        };
+      });
+    }
+    return [];
+  }
+
+  function getVolTotalPages(volKey) {
+    const k = String(volKey);
+    if (state.book && String(state.vol) === k) return state.book.total;
+    if (bookCache.has(k)) return bookCache.get(k).total;
+    const entry = manifest().volumes && manifest().volumes[k];
+    return (entry && entry.total) || 0;
   }
 
   function getVolContainer() {
@@ -143,21 +208,17 @@
   function initVolumeButtons() {
     const seg = getVolContainer();
     if (!seg) return;
-    const m = manifest();
-    const vols = m.volumes || {};
-    const keys =
-      Array.isArray(m.order) && m.order.length > 0
-        ? m.order.filter((k) => Boolean(vols[k]))
-        : Object.keys(vols).sort((a, b) => parseFloat(a) - parseFloat(b));
+    const vols = manifest().volumes || {};
+    const keys = orderedVolumeKeys();
     if (keys.length > 0) {
       seg.innerHTML = '';
       for (const k of keys) {
         const btn = document.createElement('button');
         btn.id = 'vol' + k.replace(/[^a-zA-Z0-9]/g, '');
         btn.dataset.vol = k;
-        btn.className = 'seg-btn' + (k === state.vol ? ' is-on' : '');
+        btn.className = 'seg-btn' + (k === String(state.vol) ? ' is-on' : '');
         btn.type = 'button';
-        btn.title = (vols[k] && vols[k].volume) || 'Cilt ' + k;
+        btn.title = (vols[k] && vols[k].volume) || volTitle[k] || 'Cilt ' + k;
         btn.textContent = k;
         btn.addEventListener('click', () => switchVolume(k));
         seg.appendChild(btn);
@@ -169,6 +230,201 @@
     });
   }
   initVolumeButtons();
+
+  function readSet(vol) {
+    const v = LS.get('read:' + vol, []);
+    return Array.isArray(v) ? v : [];
+  }
+  function isRead(vol, i) {
+    return readSet(vol).includes(i);
+  }
+  function setRead(vol, i, on) {
+    const set = new Set(readSet(vol));
+    if (on) set.add(i);
+    else set.delete(i);
+    LS.set('read:' + vol, [...set].sort((x, y) => x - y));
+  }
+  function readCount(vol) {
+    return readSet(vol);
+  }
+
+  const libView = $('libView');
+  const libList = $('libList');
+  const readerEl = $('reader');
+  let libKind = 'vol';
+  let libVol = String(state.vol);
+  let libOpen = false;
+
+  function showLibrary(kind, volumeKey) {
+    libKind = kind;
+    libVol = String(volumeKey || state.vol);
+    libOpen = true;
+    libView.hidden = false;
+    readerEl.hidden = true;
+    $('volBtn').setAttribute('aria-expanded', 'true');
+    $('chBtn').setAttribute('aria-expanded', 'true');
+    $('libActions').hidden = kind !== 'ch';
+    $('libBack').hidden = !(kind === 'ch' && volumeKey);
+    buildList(libVol);
+    window.scrollTo(0, 0);
+    measureChrome();
+  }
+
+  function hideLibrary() {
+    libOpen = false;
+    libView.hidden = true;
+    readerEl.hidden = false;
+    $('volBtn').setAttribute('aria-expanded', 'false');
+    $('chBtn').setAttribute('aria-expanded', 'false');
+    measureChrome();
+  }
+
+  function buildList(volumeKey) {
+    libList.innerHTML = '';
+    if (libKind === 'vol') {
+      $('libTitle').textContent = 'Ciltler';
+      for (const key of orderedVolumeKeys()) {
+        const chs = getVolChapters(key);
+        const entry = manifest().volumes && manifest().volumes[key];
+        const total = chs.length || (entry && entry.chapters) || 0;
+        const read = readCount(key).length;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.vol = key;
+        card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
+        const numSpan = document.createElement('span');
+        numSpan.className = 'lib-num';
+        numSpan.textContent = key;
+        const infoSpan = document.createElement('span');
+        infoSpan.className = 'lib-info';
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'lib-name';
+        nameSpan.textContent = (entry && entry.volume) || volTitle[key] || 'Cilt ' + key;
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'lib-meta';
+        metaSpan.textContent = total + ' bölüm · ' + read + '/' + total + ' okundu';
+        infoSpan.append(nameSpan, metaSpan);
+        const goSpan = document.createElement('span');
+        goSpan.className = 'lib-go';
+        goSpan.setAttribute('aria-hidden', 'true');
+        goSpan.textContent = '›';
+        card.append(numSpan, infoSpan, goSpan);
+        card.addEventListener('click', () => showLibrary('ch', key));
+        libList.appendChild(card);
+      }
+      return;
+    }
+
+    const vk = String(volumeKey || state.vol);
+    $('libTitle').textContent = volTitle[vk] || 'Cilt ' + vk;
+    const list = getVolChapters(vk);
+    if (list.length === 0 && !bookCache.has(vk)) {
+      readBook(vk)
+        .then(() => {
+          if (libOpen && libKind === 'ch' && libVol === vk) chListFor(vk, getVolChapters(vk));
+        })
+        .catch(() => {});
+      return;
+    }
+    chListFor(vk, list);
+  }
+
+  function chListFor(volumeKey, list) {
+    libList.innerHTML = '';
+    const volTotalPages = getVolTotalPages(volumeKey);
+    list.forEach((c, i) => {
+      const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
+      const title = c.title || '';
+      const read = isRead(volumeKey, i);
+      const range = c.page
+        ? (() => {
+            const st = c.page;
+            const nxt = list[i + 1];
+            const en = nxt ? nxt.page - 1 : volTotalPages || st;
+            return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+          })()
+        : '';
+      const row = document.createElement('div');
+      row.className =
+        'lib-row' +
+        (read ? ' is-read' : '') +
+        (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'lib-main';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'lib-name';
+      nameSpan.textContent = label;
+      main.appendChild(nameSpan);
+      if (title && title !== label) {
+        const subSpan = document.createElement('span');
+        subSpan.className = 'lib-sub';
+        subSpan.textContent = title;
+        main.appendChild(subSpan);
+      }
+      if (range) {
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'lib-meta';
+        metaSpan.textContent = range;
+        main.appendChild(metaSpan);
+      }
+      main.addEventListener('click', () => {
+        hideLibrary();
+        if (volumeKey !== String(state.vol)) {
+          switchVolume(volumeKey, c.page);
+        } else {
+          goChapter(i);
+        }
+      });
+
+      const check = document.createElement('button');
+      check.type = 'button';
+      check.className = 'lib-check' + (read ? ' is-on' : '');
+      check.setAttribute('aria-pressed', String(read));
+      check.setAttribute('aria-label', label + ' okundu');
+      check.textContent = '✓';
+      check.addEventListener('click', () => {
+        const next = !isRead(volumeKey, i);
+        setRead(volumeKey, i, next);
+        check.classList.toggle('is-on', next);
+        check.setAttribute('aria-pressed', String(next));
+        row.classList.toggle('is-read', next);
+        markTocRead();
+      });
+
+      row.append(main, check);
+      libList.appendChild(row);
+    });
+  }
+
+  $('volBtn').addEventListener('click', () => {
+    if (libOpen && libKind === 'vol') hideLibrary();
+    else showLibrary('vol');
+  });
+  $('chBtn').addEventListener('click', () => {
+    if (libOpen && libKind === 'ch' && libVol === String(state.vol)) hideLibrary();
+    else showLibrary('ch', String(state.vol));
+  });
+  $('libBack').addEventListener('click', () => showLibrary('vol'));
+  $('markAllBtn').addEventListener('click', () => {
+    getVolChapters(libVol).forEach((c, i) => {
+      if (!c.pending) setRead(libVol, i, true);
+    });
+    buildList(libVol);
+    markTocRead();
+  });
+  $('clearAllBtn').addEventListener('click', () => {
+    LS.set('read:' + libVol, []);
+    buildList(libVol);
+    markTocRead();
+  });
+
+  function syncPickers() {
+    $('volLabel').textContent = (state.book && state.book.volume) || volTitle[String(state.vol)] || 'Cilt ' + state.vol;
+    const ch = state.book ? chapters()[state.chapter] : null;
+    $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -287,20 +543,21 @@
 
   /* veri kaynakları: bellek içi Map -> CacheStorage / tembel JSON paketi -> file:// JS yedeği -> sunucu */
   async function readBook(v) {
-    if (bookCache.has(v)) return bookCache.get(v);
-    if (window.ALYA_CHUNKS && window.ALYA_CHUNKS[v]) {
-      const preloaded = window.ALYA_CHUNKS[v];
-      delete window.ALYA_CHUNKS[v];
-      bookCache.set(v, preloaded);
-      if (enCache.has(v)) hydrateBookEn(v, enCache.get(v));
+    const key = String(v);
+    if (bookCache.has(key)) return bookCache.get(key);
+    if (window.ALYA_CHUNKS && window.ALYA_CHUNKS[key]) {
+      const preloaded = window.ALYA_CHUNKS[key];
+      delete window.ALYA_CHUNKS[key];
+      bookCache.set(key, preloaded);
+      if (enCache.has(key)) hydrateBookEn(key, enCache.get(key));
       return preloaded;
     }
-    if (inflightBooks.has(v)) return inflightBooks.get(v);
+    if (inflightBooks.has(key)) return inflightBooks.get(key);
 
     const task = (async () => {
-      const entry = (manifest().volumes && manifest().volumes[v]) || null;
-      const jsonRel = (entry && entry.json) || 'bundles/book-' + v + '.json';
-      const jsRel = (entry && entry.js) || 'bundles/book-' + v + '.js';
+      const entry = (manifest().volumes && manifest().volumes[key]) || null;
+      const jsonRel = (entry && entry.json) || 'bundles/book-' + key + '.json';
+      const jsRel = (entry && entry.js) || 'bundles/book-' + key + '.js';
       const versionedJson = entry && entry.hash ? jsonRel + '?v=' + encodeURIComponent(entry.hash) : jsonRel;
 
       let book = null;
@@ -308,49 +565,50 @@
         book = await fetchJsonCached(versionedJson);
       } catch {
         try {
-          book = await loadChunkScript('ALYA_CHUNKS', v, jsRel);
+          book = await loadChunkScript('ALYA_CHUNKS', key, jsRel);
         } catch (scriptErr) {
           if (location.protocol.startsWith('http')) {
-            book = await fetchJsonCached('api/book?v=' + encodeURIComponent(v));
+            book = await fetchJsonCached('api/book?v=' + encodeURIComponent(key));
           } else {
             throw scriptErr;
           }
         }
       }
-      bookCache.set(v, book);
-      if (enCache.has(v)) hydrateBookEn(v, enCache.get(v));
+      bookCache.set(key, book);
+      if (enCache.has(key)) hydrateBookEn(key, enCache.get(key));
       return book;
     })();
 
-    inflightBooks.set(v, task);
+    inflightBooks.set(key, task);
     try {
       return await task;
     } finally {
-      inflightBooks.delete(v);
+      inflightBooks.delete(key);
     }
   }
 
   /* "Orijinal" modu İngilizce metin parçası: yalnızca ihtiyaç duyulduğunda tembel yüklenir */
   async function readBookEn(v) {
-    if (enCache.has(v)) {
-      const cached = enCache.get(v);
-      hydrateBookEn(v, cached);
+    const key = String(v);
+    if (enCache.has(key)) {
+      const cached = enCache.get(key);
+      hydrateBookEn(key, cached);
       return cached;
     }
-    if (window.ALYA_EN_CHUNKS && window.ALYA_EN_CHUNKS[v]) {
-      const preloaded = window.ALYA_EN_CHUNKS[v];
-      delete window.ALYA_EN_CHUNKS[v];
-      enCache.set(v, preloaded);
-      enFailed.delete(v);
-      hydrateBookEn(v, preloaded);
+    if (window.ALYA_EN_CHUNKS && window.ALYA_EN_CHUNKS[key]) {
+      const preloaded = window.ALYA_EN_CHUNKS[key];
+      delete window.ALYA_EN_CHUNKS[key];
+      enCache.set(key, preloaded);
+      enFailed.delete(key);
+      hydrateBookEn(key, preloaded);
       return preloaded;
     }
-    if (inflightEn.has(v)) return inflightEn.get(v);
+    if (inflightEn.has(key)) return inflightEn.get(key);
 
     const task = (async () => {
-      const entry = (manifest().volumes && manifest().volumes[v]) || null;
-      const enJsonRel = (entry && entry.enJson) || 'bundles/bundle-en-' + v + '.json';
-      const enJsRel = (entry && entry.enJs) || 'bundles/bundle-en-' + v + '.js';
+      const entry = (manifest().volumes && manifest().volumes[key]) || null;
+      const enJsonRel = (entry && entry.enJson) || 'bundles/bundle-en-' + key + '.json';
+      const enJsRel = (entry && entry.enJs) || 'bundles/bundle-en-' + key + '.js';
       const versionedEnJson =
         entry && entry.enHash ? enJsonRel + '?v=' + encodeURIComponent(entry.enHash) : enJsonRel;
 
@@ -359,32 +617,32 @@
         enData = await fetchJsonCached(versionedEnJson);
       } catch {
         try {
-          enData = await loadChunkScript('ALYA_EN_CHUNKS', v, enJsRel);
+          enData = await loadChunkScript('ALYA_EN_CHUNKS', key, enJsRel);
         } catch (scriptErr) {
           if (location.protocol.startsWith('http')) {
-            enData = await fetchJsonCached('api/book-en?v=' + encodeURIComponent(v));
+            enData = await fetchJsonCached('api/book-en?v=' + encodeURIComponent(key));
           } else {
             throw scriptErr;
           }
         }
       }
-      enCache.set(v, enData);
-      enFailed.delete(v);
-      hydrateBookEn(v, enData);
+      enCache.set(key, enData);
+      enFailed.delete(key);
+      hydrateBookEn(key, enData);
       return enData;
     })();
 
-    inflightEn.set(v, task);
+    inflightEn.set(key, task);
     try {
       return await task;
     } finally {
-      inflightEn.delete(v);
+      inflightEn.delete(key);
     }
   }
 
   async function load() {
     const seq = ++loadSeq;
-    const targetVol = state.vol;
+    const targetVol = String(state.vol);
     const loadedBook = await readBook(targetVol);
     if (seq !== loadSeq) return;
     state.book = loadedBook;
@@ -392,19 +650,14 @@
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
+    if ($('volLabel')) $('volLabel').textContent = state.book.volume;
     const seg = getVolContainer();
     const btns = seg ? Array.from(seg.children) : Array.from(document.querySelectorAll('.seg-vol .seg-btn'));
     btns.forEach((btn) => {
       if (!btn || !btn.classList) return;
-      const on = btn.dataset && btn.dataset.vol === state.vol;
+      const on = btn.dataset && btn.dataset.vol === String(state.vol);
       btn.classList.toggle('is-on', Boolean(on));
-      if (on) {
-        if (seg && seg.scrollWidth > seg.clientWidth) {
-          seg.scrollLeft = btn.offsetLeft - seg.clientWidth / 2 + btn.offsetWidth / 2;
-        } else if (typeof btn.scrollIntoView === 'function') {
-          btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-        }
-      }
+      btn.setAttribute('aria-current', on ? 'true' : 'false');
     });
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
@@ -439,22 +692,17 @@
     });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
+    syncPickers();
     markTocRead();
+    measureChrome();
     render();
   }
 
   // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
   function markTocRead() {
-    const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
-      const ch = chapters()[i];
-      if (ch && ch.pending) {
-        li.classList.remove('is-read');
-        continue;
-      }
-      const end = chapterRange(i)[1];
-      li.classList.toggle('is-read', max >= end);
+      li.classList.toggle('is-read', isRead(String(state.vol), i));
     }
   }
 
@@ -674,6 +922,7 @@
     reader.appendChild(nav);
 
     $('pageRange').value = idx + 1;
+    syncPickers();
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = 's. ' + n + ' / ' + state.book.total;
     $('prevBtn').disabled = n <= 1;
@@ -797,6 +1046,7 @@
 
     // durum satırı
     $('pageRange').value = idx + 1;
+    syncPickers();
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = ch.pending
       ? 'beklemede'
@@ -812,6 +1062,7 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
 
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
+    if ($('navCount')) $('navCount').textContent = 's. ' + targetPage;
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
     if (!ch.pending) {
@@ -922,30 +1173,29 @@
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
   $('modeBtn').addEventListener('click', () => {
     state.mode = state.mode === 'text' ? 'page' : 'text';
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
   });
-  $('modeText').addEventListener('click', () => {
-    state.mode = 'text';
-    render();
-  });
-  $('modePage').addEventListener('click', () => {
-    state.mode = 'page';
-    render();
-  });
-
-  function toggleToc(open) {
-    const panel = $('tocPanel');
-    const nextOpen = open === undefined ? panel.hidden : open;
-    panel.hidden = !nextOpen;
-    $('tocBtn').setAttribute('aria-expanded', String(nextOpen));
+  function syncModeButtons() {
+    $('modeText').classList.toggle('is-on', state.mode === 'text');
+    $('modePage').classList.toggle('is-on', state.mode === 'page');
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
-  $('tocBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleToc();
-  });
-  document.addEventListener('click', (e) => {
-    if (!$('tocPanel').hidden && !$('tocPanel').contains(e.target)) toggleToc(false);
-  });
+  function switchMode(mode) {
+    if (state.mode === mode) return;
+    state.mode = mode;
+    syncModeButtons();
+    render();
+    const readerEl = $('reader');
+    readerEl.classList.remove('is-switching');
+    void readerEl.offsetWidth;
+    readerEl.classList.add('is-switching');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  $('modeText').addEventListener('click', () => switchMode('text'));
+  $('modePage').addEventListener('click', () => switchMode('page'));
+
+  function toggleToc() {} // sade arayüzde ayrı panel yok (bölüm seçici <select>)
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -973,9 +1223,15 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
+      if (libOpen) {
+        if (libKind === 'ch') showLibrary('vol');
+        else hideLibrary();
+        return;
+      }
       return toggleToc(false);
     }
-    if (e.target.matches('input, select, textarea')) return;
+    if (libOpen) return;
+    if (e.target && typeof e.target.matches === 'function' && e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
     else if (e.key === 't') $('themeBtn').click();

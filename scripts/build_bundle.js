@@ -131,7 +131,15 @@ for (const volKey of VOLUME_KEYS) {
     volume: book.volume,
     total: book.total,
     chapters: book.chapters.length,
-    fullScans: Boolean(book.fullScans),
+    toc: book.chapters.map((c) => {
+      const rawLabel = String(c.label || '');
+      const numMatch = rawLabel.match(/^Bölüm\s+(\d+)$/);
+      const shortLabel = numMatch ? Number(numMatch[1]) : rawLabel;
+      const ttl = c.title || '';
+      if (c.pending) return [c.page, shortLabel, ttl, 1];
+      return ttl ? [c.page, shortLabel, ttl] : [c.page, shortLabel];
+    }),
+    ...(book.fullScans ? { fullScans: true } : {}),
     hash: volHash,
     enHash,
     json: jsonRel,
@@ -171,9 +179,10 @@ const manifestBody =
 
 fs.writeFileSync(manifestPath, manifestBody);
 
-// Eski bloklayıcı tek parça paketleri kaldır
+// Eski bloklayıcı tek parça paketleri ve geçici books/ dizinini kaldır
 fs.rmSync(LEGACY_BUNDLE, { force: true });
 fs.rmSync(LEGACY_ART, { force: true });
+fs.rmSync(path.join(PUB, 'books'), { recursive: true, force: true });
 
 console.log(
   'manifest:',
