@@ -1,10 +1,13 @@
 // DeepL + Google çevirilerini birleştirir, terim/isim sözlüğü ve noktalama düzeltmesi yapar.
-// Çıktı: data/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
+// Çıktı: data<vol>/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
+// Kullanım: node scripts/merge.js [--volume <v>]
 const fs = require('fs');
 const path = require('path');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
+const { isUsableSourcePage, isTocSourcePage, SKIP_PAGE_RE } = require('./translate3');
+const { splitLeadingSentence, capitalizeTurkishStart } = require('./fix_boundaries');
 
-const ROOT = path.join(__dirname, '..');
-const { resolveVolumePaths, isUsableSourcePage, isTocSourcePage, SKIP_PAGE_RE } = require('./translate3');
+const GLOSSARY_FILE = path.join(ROOT, 'data/glossary.json');
 
 const EN_LEFTOVER = /\b(the|and|you|your|was|were|with|that|this|have|has|she|her|his|they|their|from|what|would|could|just|because|about|there|then|when|which|into|been|being|are|but|for|him|how|does|did|of|on|to|so|if|we|my|me|or|an)\b/gi;
 
@@ -30,23 +33,55 @@ const DEFAULT_GLOSSARY = {
   'Onii-chan': 'Onii-chan',
 };
 
-const GLOSSARY_FILE = path.join(ROOT, 'data/glossary.json');
-
 function loadGlossary(glossaryFile = GLOSSARY_FILE) {
   if (fs.existsSync(glossaryFile)) {
     try {
-      return { ...DEFAULT_GLOSSARY, ...JSON.parse(fs.readFileSync(glossaryFile, 'utf8')) };
+      const raw = JSON.parse(fs.readFileSync(glossaryFile, 'utf8'));
+      const clean = {};
+      for (const [k, v] of Object.entries(raw)) {
+        if (!k.startsWith('_') && typeof v === 'string') clean[k] = v;
+      }
+      return { ...DEFAULT_GLOSSARY, ...clean };
     } catch {}
   }
   return DEFAULT_GLOSSARY;
 }
 
-function polish(text, glossary) {
-  let t = text;
+function balanceCurlyQuotes(text) {
+  let t = String(text || '')
+    .replace(/['\u2018\u02bc`]/g, '\u2019')
+    .replace(/[\u201e\u00ab]/g, '\u201c')
+    .replace(/\u00bb/g, '\u201d');
+
+  const hasStraightDouble = t.includes('"');
+  const openCount = (t.match(/\u201c/g) || []).length;
+  const closeCount = (t.match(/\u201d/g) || []).length;
+
+  if (!hasStraightDouble && openCount === closeCount) {
+    return t;
+  }
+
+  // Sıralı çiftleme: tüm çift tırnakları (“ ” ") dengeli açılış/kapanış çiftlerine dönüştür
+  let open = true;
+  t = t.replace(/["\u201c\u201d]/g, () => {
+    const ch = open ? '\u201c' : '\u201d';
+    open = !open;
+    return ch;
+  });
+
+  // Tek sayıda çift tırnak kaldıysa paragraf sonunda kapat
+  if (!open) {
+    t = t.trimEnd() + '\u201d';
+  }
+  return t;
+}
+
+function polish(text, glossary = loadGlossary()) {
+  let t = String(text || '');
 
   // 1) isim / terim tutarlılığı (kelime sınırlarıyla)
   for (const [from, to] of Object.entries(glossary)) {
-    if (from === to) continue;
+    if (from === to || from.startsWith('_')) continue;
     const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
     t = t.replace(re, to);
   }
@@ -57,36 +92,31 @@ function polish(text, glossary) {
     if (t) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   }
 
-  // 3) noktalama / boşluk düzeltmeleri
+  // 3) noktalama / boşluk, Rusça fısıltı ayracı {...} ve kıvrık tırnak düzeltmeleri
   t = t
+    .replace(/\{\s+/g, '{')
+    .replace(/\s+\}/g, '}')
+    .replace(/(?<=[\p{L}\p{N},.;:!?…”])\{/gu, ' {')
+    .replace(/\}(?=[\p{L}\p{N}“])/gu, '} ')
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')
-    .replace(/…\./g, '…')
-    .replace(/\u2019/g, "'")
-    .replace(/[\u201c\u201d\u201e]/g, '"')
+    .replace(/\.{2,}/g, '…')
+    .replace(/…\.+/g, '…')
+    .replace(/([!?])\.+/g, '$1')
     .replace(/\u2013/g, '—')
     .replace(/\b(\d+)\.\s*Bölüm\b/g, 'Bölüm $1')
     .replace(/\b(\d+)\.\s*Kısım\b/g, 'Kısım $1')
-    .replace(/\.{4,}/g, '…')
     .replace(/\s+—\s+/g, ' — ')
     .replace(/\(\s+/g, '(')
     .replace(/\s+\)/g, ')')
     .trim();
 
+  t = balanceCurlyQuotes(t);
   return t.trim();
 }
 
-function score(text) {
-  if (!text) return -1;
-  const leftovers = (text.match(EN_LEFTOVER) || []).length;
-  const words = text.split(/\s+/).length;
-  return -leftovers / Math.max(words, 1);
-}
-
-// Cümle sonu var mı (kesilmiş metin tespiti için)
-const ENDS = /[.!?"”…~)\]»]$/;
-const endsOk = (t) => ENDS.test((t || '').trim());
+const ENDS = /[.!?"”'\u2019…~)\]»*}◇⋆]$/;
 
 // DeepL varsayılan; Google yalnızca DeepL belirgin şekilde kırpılmışsa/bozuksa devreye girer
 function preferGoogle(d, g) {
@@ -98,8 +128,6 @@ function preferGoogle(d, g) {
   return ld >= 2 && lg === 0;
 }
 
-const { splitLeadingSentence, capitalizeTurkishStart } = require('./fix_boundaries');
-
 function stitchMergedPages(out, sourcePages = null) {
   const skipSet = new Set();
   const tocSet = new Set();
@@ -109,7 +137,7 @@ function stitchMergedPages(out, sourcePages = null) {
     const usableOrder = [];
     for (const p of sourcePages) {
       const k = String(p.page);
-      if (SKIP_PAGE_RE.test(String(p.text || ''))) {
+      if ((p && p.pending) || SKIP_PAGE_RE.test(String(p.text || ''))) {
         skipSet.add(k);
         out[k] = [];
         continue;
@@ -128,7 +156,7 @@ function stitchMergedPages(out, sourcePages = null) {
         .replace(/Page\s+\d+/gi, '')
         .replace(/(Goldenagato|mp4directs|jnovels|zerobooks).*$/gim, '')
         .trim();
-      if (cleaned && !/[.!?"”'\u2019…~)\]»*}◇]$/.test(cleaned)) {
+      if (cleaned && !/[.!?"”'\u2019…~)\]»*}◇⋆]$/.test(cleaned)) {
         enSplitAfter.add(String(cur.page));
       }
     }
@@ -160,9 +188,9 @@ function stitchMergedPages(out, sourcePages = null) {
     if (lacksEnd || opensP || opensQ || nextLower || (enSplitAfter.has(pk) && nextLower)) {
       const [head, tail] = splitLeadingSentence(firstNext, { needCloseParen: opensP, needCloseQuote: opensQ });
       const base = nextLower && /\.\s*$/.test(lastPara) ? lastPara.replace(/\.\s*$/, '') : lastPara;
-      curArr[lastIdx] = (base + (base.endsWith('-') ? '' : ' ') + head).replace(/\s{2,}/g, ' ').trim();
+      curArr[lastIdx] = balanceCurlyQuotes((base + (base.endsWith('-') ? '' : ' ') + head).replace(/\s{2,}/g, ' ').trim());
       if (tail) {
-        nextArr[0] = capitalizeTurkishStart(tail);
+        nextArr[0] = balanceCurlyQuotes(capitalizeTurkishStart(tail));
       } else {
         nextArr.shift();
       }
@@ -197,19 +225,30 @@ function mergeBilingual(data, glossary = loadGlossary(), sourcePages = null) {
 }
 
 if (require.main === module) {
-  const args = process.argv.slice(2);
-  const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const vol = vIdx > -1 && args[vIdx + 1] ? args[vIdx + 1] : '4';
-  const { src: SRC, out: IN, fin: OUT, dir } = resolveVolumePaths(vol);
+  const volKey = parseVolumeArg(process.argv.slice(2), '4');
+  const volCfg = resolveVolume(volKey);
+  if (!volCfg) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
 
-  const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
-  const sourcePages = fs.existsSync(SRC) ? JSON.parse(fs.readFileSync(SRC, 'utf8')) : null;
+  const data = JSON.parse(fs.readFileSync(volCfg.bilingualFile, 'utf8'));
+  const sourcePages = fs.existsSync(volCfg.sourceFile)
+    ? JSON.parse(fs.readFileSync(volCfg.sourceFile, 'utf8'))
+    : null;
   const glossary = loadGlossary();
   const { out, pickedD, pickedG } = mergeBilingual(data, glossary, sourcePages);
 
-  fs.writeFileSync(OUT, JSON.stringify(out));
+  fs.writeFileSync(volCfg.finalFile, JSON.stringify(out));
   const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-  console.log(`paragraf: ${total} | DeepL: ${pickedD} | Google: ${pickedG} | dosya: ${dir}/paragraphs_final.json`);
+  console.log(`Cilt ${volCfg.key} | paragraf: ${total} | DeepL: ${pickedD} | Google: ${pickedG} | dosya: ${volCfg.finalRel}`);
 }
 
-module.exports = { loadGlossary, polish, preferGoogle, stitchMergedPages, mergeBilingual };
+module.exports = {
+  polish,
+  balanceCurlyQuotes,
+  loadGlossary,
+  preferGoogle,
+  stitchMergedPages,
+  mergeBilingual,
+};

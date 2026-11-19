@@ -1,11 +1,13 @@
 // Fan çevirmeni kredi/reklam sayfalarını temizler, içindekiler sayfasını chapters.json başlıklarıyla yeniden yazar.
 // Kullanım:
-//   node scripts/fix_frontmatter.js                 # Tanımlı tüm ciltler (4 ve 4.5)
+//   node scripts/fix_frontmatter.js                 # Kayıtlı tüm ciltler (4 – 12)
 //   node scripts/fix_frontmatter.js --volume 4.5    # Belirli cilt
 const fs = require('fs');
 const path = require('path');
+const { ROOT, VOLUME_KEYS, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
+const SKIP_CREDIT_RE =
+  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
 
 const VOLUME_FRONTMATTER = {
   '4': {
@@ -23,9 +25,10 @@ const VOLUME_FRONTMATTER = {
 };
 
 function resolveVolumeConfig(vol) {
-  const v = String(vol);
+  const v = String(vol).trim();
   if (VOLUME_FRONTMATTER[v]) return VOLUME_FRONTMATTER[v];
-  const dataDir = v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
+  const reg = resolveVolume(v);
+  const dataDir = reg ? reg.dataDir : v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
   return { dataDir, skipPages: [], tocPage: null, tocSuffix: [] };
 }
 
@@ -55,10 +58,8 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
   // source.json varsa kredi/reklam sayfalarını otomatik de yakala
   if (fs.existsSync(srcPath)) {
     const src = JSON.parse(fs.readFileSync(srcPath, 'utf8'));
-    const skipRe =
-      /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
     for (const p of src) {
-      if (skipRe.test(String(p.text || ''))) {
+      if (!p.pending && SKIP_CREDIT_RE.test(String(p.text || ''))) {
         skipSet.add(String(p.page));
       }
     }
@@ -91,7 +92,14 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
 
   if (tocPage && fs.existsSync(chaptersPath)) {
     const chapters = JSON.parse(fs.readFileSync(chaptersPath, 'utf8'));
-    const rows = Object.entries(chapters).map(([k, v]) => normalizeCurlyQuotes(`${LBL(k)}: ${v}`));
+    let rows = [];
+    if (Array.isArray(chapters.chapters)) {
+      rows = chapters.chapters
+        .filter((c) => c && !/^İllüstrasyon|^Başlangıç/i.test(c.label || ''))
+        .map((c) => normalizeCurlyQuotes(`${c.label}: ${c.title || c.enTitle || ''}`));
+    } else {
+      rows = Object.entries(chapters).map(([k, v]) => normalizeCurlyQuotes(`${LBL(k)}: ${v}`));
+    }
     fin[String(tocPage)] = ['İçindekiler', ...rows, ...(cfg.tocSuffix || [])];
   }
 
@@ -101,14 +109,16 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
 
 if (require.main === module) {
   const args = process.argv.slice(2);
-  const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const targets = volIdx > -1 && args[volIdx + 1] ? [String(args[volIdx + 1])] : Object.keys(VOLUME_FRONTMATTER);
+  const hasVolFlag = args.some((a) => a === '--volume' || a === '--vol' || a === '-v' || a.startsWith('--volume=') || a.startsWith('--vol='));
+  const targets = hasVolFlag ? [parseVolumeArg(args, '4')] : VOLUME_KEYS;
   for (const v of targets) {
     const res = fixFrontmatterForVolume(v);
-    if (res) {
-      console.log(`Cilt ${res.vol}: reklam/kredi sayfaları temizlendi [${res.skipped.join(', ')}], içindekiler güncellendi (s.${res.tocPage})`);
+    if (res && (res.skipped.length || res.tocPage)) {
+      console.log(
+        `Cilt ${res.vol}: reklam/kredi sayfaları temizlendi [${res.skipped.join(', ')}]${res.tocPage ? `, içindekiler güncellendi (s.${res.tocPage})` : ''}`
+      );
     }
   }
 }
 
-module.exports = { VOLUME_FRONTMATTER, resolveVolumeConfig, fixFrontmatterForVolume, normalizeCurlyQuotes };
+module.exports = { VOLUME_FRONTMATTER, SKIP_CREDIT_RE, resolveVolumeConfig, fixFrontmatterForVolume, normalizeCurlyQuotes };

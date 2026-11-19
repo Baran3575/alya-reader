@@ -20,9 +20,45 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
+const TR_CHAPTER = {
+  prologue: 'Önsöz',
+  epilogue: 'Sonsöz',
+  afterword: 'Sonsöz',
+  interlude: 'Ara Bölüm',
+};
+
 const SKIP_CREDIT_RE =
-  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
+  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
+
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => {
+    if (k === '4') {
+      return [
+        '4',
+        {
+          key: '4',
+          dataDir: 'data',
+          imgPrefix: '/pages/',
+          volume: 'Cilt 4',
+          titlesFile: path.join(ROOT, 'data/chapters.json'),
+        },
+      ];
+    }
+    const suffix = k.replace('.', '');
+    return [
+      k,
+      {
+        key: k,
+        dataDir: `data${suffix}`,
+        imgPrefix: `/pages${suffix}/`,
+        volume: `Cilt ${k}`,
+        titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
+      },
+    ];
+  })
+);
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
@@ -34,75 +70,116 @@ function buildBook(opt = {}) {
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
   const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
 
+  let titlesMeta = {};
+  try {
+    titlesMeta = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
+  } catch {}
+
+  const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
+
   const pages = source.map((p) => {
     const key = String(p.page);
     const rawText = String(p.text || '');
-    const trParas = Array.isArray(tr[key]) ? tr[key] : [];
+    const isPending = Boolean(p.pending);
+    const skip = !isPending && SKIP_CREDIT_RE.test(rawText);
+    const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = rawText
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
 
-    // Fan çevirmeni kredi / Discord duyuru sayfalarını metin akışında atla
-    const skip = SKIP_CREDIT_RE.test(rawText);
+    const fileName = String(p.page).padStart(3, '0') + '.webp';
+    const imgUrl = imgPrefix + fileName;
 
-    // OCR'ı bozuk sayfaları (kapak, görsel sayfalar) metin saymayalım
+    if (hasStructuredChapters) {
+      const relDiskPath = path.join(PUB, imgUrl.replace(/^\/+/, ''));
+      const hasDiskImg = fs.existsSync(relDiskPath);
+      const cleanLen = rawText.replace(/\s+/g, ' ').trim().length;
+      const art = !isPending && !skip && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
+      const item = {
+        n: p.page,
+        img: imgUrl,
+        tr: isPending || skip ? [] : trParas,
+        en: isPending || skip ? [] : enParas,
+        art,
+        skip,
+      };
+      if (isPending) item.pending = true;
+      return item;
+    }
+
+    // Geriye dönük Cilt 4 / Cilt 4.5 davranışı
     const words = rawText.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar (atlanan kredi sayfaları hariç)
+    const relDiskPath = path.join(PUB, imgUrl.replace(/^\/+/, ''));
+    const hasDiskImg = fs.existsSync(relDiskPath);
+
     const cleanLen = rawText
       .replace(/Page\s+\d+/gi, '')
       .replace(/(Goldenagato|mp4directs|jnovels|zerobooks).*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const art = !skip && p.page > 3 && cleanLen < 220;
+    const art = !skip && ((p.page > 3 && cleanLen < 220) || (p.page <= 3 && hasDiskImg));
 
-    return {
+    const item = {
       n: p.page,
-      img: imgPrefix + String(p.page).padStart(3, '0') + '.webp',
-      tr: usable && !skip ? trParas.filter(Boolean) : [],
+      img: imgUrl,
+      tr: usable && !skip ? trParas : [],
       en: usable && !skip ? enParas : [],
       art,
       skip,
     };
+    if (hasDiskImg) item.hasScan = true;
+    return item;
   });
 
-  // bölümleri ingilizce başlıklardan bul, Türkçe adları chapters.json'dan al
-  let titles = {};
-  try {
-    titles = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
-  } catch {}
-  const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
-  for (const p of pages) {
-    if (p.skip) continue;
-    const first = (p.en[0] || '').replace(/\s+/g, ' ');
-    const m = first.match(/^(Prologue|Epilogue|Chapter\s+(\d+))\s*[:–—-]/i);
-    if (!m) continue;
-    const isNum = !!m[2];
-    const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
-    const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
-    const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
-    const title = titles[key] || rest.slice(0, 70);
-    chapters.push({ page: p.n, label, title });
+  let chapters = [];
+  if (hasStructuredChapters) {
+    chapters = titlesMeta.chapters.map((c) => {
+      const entry = {
+        page: c.startPage || c.page || 1,
+        label: c.label || 'Bölüm',
+        title: c.title || c.enTitle || '',
+      };
+      if (c.pending) {
+        entry.pending = true;
+        entry.statusNote = c.statusNote || 'Kaynak çeviri henüz tamamlanmadı ([Translation In Progress]).';
+      }
+      return entry;
+    });
+    if (chapters.length === 0 || chapters[0].page > 1) {
+      chapters.unshift({ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' });
+    }
+  } else {
+    chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
+    for (const p of pages) {
+      if (p.skip) continue;
+      const first = (p.en[0] || '').replace(/\s+/g, ' ');
+      const m = first.match(/^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+(\d+))\s*[:–—-]/i);
+      if (!m) continue;
+      const isNum = !!m[2];
+      const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+      const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
+      const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
+      const title = titlesMeta[key] || rest.slice(0, 70);
+      chapters.push({ page: p.n, label, title });
+    }
   }
 
   for (let i = 0; i < chapters.length; i++) {
     const start = chapters[i].page;
     const next = chapters[i + 1];
     let end = next ? next.page - 1 : pages.length;
-    while (end > start && pages[end - 1] && pages[end - 1].skip) end--;
+    if (!chapters[i].pending) {
+      while (end > start && pages[end - 1] && pages[end - 1].skip) end--;
+    }
     chapters[i].endPage = end;
   }
 
   return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
 }
-
-const VOLUMES = {
-  '4': { dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
-  '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
-};
 
 function packBook(key) {
   const b = buildBook(VOLUMES[key]);
@@ -112,11 +189,10 @@ function packBook(key) {
 
 const BOOKS = {};
 function getBook(key) {
-  if (!BOOKS[key]) BOOKS[key] = packBook(key);
-  return BOOKS[key];
+  const k = VOLUMES[key] ? key : '4';
+  if (!BOOKS[k]) BOOKS[k] = packBook(k);
+  return BOOKS[k];
 }
-
-const book = getBook('4').book;
 
 function send(req, res, status, type, body, extra = {}) {
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache', ...extra };
@@ -159,20 +235,39 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/api/book') {
     const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
-    const loaded = getBook(vKey);
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = acceptsGzip ? loaded.gzip : loaded.json;
-    const headers = {
-      'Content-Type': MIME['.json'],
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    };
-    if (acceptsGzip) {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Vary'] = 'Accept-Encoding';
+    try {
+      const loaded = getBook(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
+      );
     }
-    res.writeHead(200, headers);
-    return res.end(req.method === 'HEAD' ? undefined : body);
+  }
+
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
+    try {
+      const loaded = getBook(bookJsonMatch[1]);
+      return send(req, res, 200, MIME['.json'], loaded.json);
+    } catch {}
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -193,19 +288,20 @@ const server = http.createServer((req, res) => {
 });
 
 function start() {
-server.listen(PORT, () => {
-  console.log('Okuyucu hazır:  http://localhost:' + PORT);
-  console.log('Cilt 4       :', book.total, 'sayfa |', book.chapters.length, 'bölüm');
-  try {
-    const b45 = getBook('4.5').book;
-    console.log('Cilt 4.5     :', b45.total, 'sayfa |', b45.chapters.length, 'bölüm');
-  } catch {
-    console.log('Cilt 4.5     : henüz hazır değil');
-  }
-  console.log('Çeviri       : DeepL + Google (data/paragraphs_final.json, data45/paragraphs_final.json)');
-});
+  server.listen(PORT, () => {
+    console.log('Okuyucu hazır:  http://localhost:' + PORT);
+    for (const k of VOLUME_KEYS) {
+      const label = ('Cilt ' + k).padEnd(13);
+      try {
+        const b = getBook(k).book;
+        console.log(`${label}: ${b.total} sayfa | ${b.chapters.length} bölüm`);
+      } catch {
+        console.log(`${label}: henüz hazır değil`);
+      }
+    }
+  });
 }
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { VOLUMES, VOLUME_KEYS, SKIP_CREDIT_RE, buildBook, getBook, start };

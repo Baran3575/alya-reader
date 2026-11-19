@@ -1,12 +1,32 @@
 // Sayfa sınırında bölünen parantezleri ve yarım kalan cümleleri başlangıç sayfasına birleştirir.
-// Kullanım: node scripts/fix_boundaries.js [dosya] [--volume <4|4.5>] [--dry]
+// Kullanım: node scripts/fix_boundaries.js [--volume <v>] [dosya] [--dry]
 const fs = require('fs');
 const path = require('path');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
 const opens = (t) => (String(t || '').match(/\(/g) || []).length;
 const closes = (t) => (String(t || '').match(/\)/g) || []).length;
 const curlyCount = (t) => (String(t || '').match(/[“”"]/g) || []).length;
-const TERMINAL_RE = /[.!?"”'\u2019…~)\]»*}◇]$/;
+const TERMINAL_RE = /[.!?"”'\u2019…~)\]»*}◇⋆]$/;
+
+function resolveTargetFile(args) {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--volume' || a === '--vol' || a === '-v') {
+      i++;
+      continue;
+    }
+    if (a.startsWith('--')) continue;
+    return path.resolve(a);
+  }
+  const volKey = parseVolumeArg(args, '4');
+  const vol = resolveVolume(volKey);
+  if (!vol) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
+  return vol.finalFile;
+}
 
 function isTocArray(arr) {
   return Array.isArray(arr) && arr.length > 0 && /^İçindekiler\b/i.test(String(arr[0] || '').trim());
@@ -103,7 +123,7 @@ function fixBoundaries(data) {
     if (unbalParen || unbalQuote || lacksPunct || nextStartsLower) {
       const [head, tail] = splitLeadingSentence(firstNext, {
         needCloseParen: unbalParen,
-        needCloseQuote: unbalQuote || (curlyCount(lastText) % 2 !== 0),
+        needCloseQuote: unbalQuote || curlyCount(lastText) % 2 !== 0,
       });
       const cleanedLast = nextStartsLower && /[.]\s*$/.test(lastText) ? lastText.replace(/\.\s*$/, '') : lastText;
       const sep = cleanedLast.endsWith('-') ? '' : ' ';
@@ -137,15 +157,7 @@ function fixBoundaries(data) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const dry = args.includes('--dry') || args.includes('--dry-run');
-  const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  let defaultFile = 'data/paragraphs_final.json';
-  if (volIdx > -1 && args[volIdx + 1]) {
-    const v = String(args[volIdx + 1]);
-    defaultFile = (v === '4' ? 'data' : 'data' + v.replace(/\./g, '')) + '/paragraphs_final.json';
-  }
-  const positional = args.find((a, idx) => !a.startsWith('--') && idx !== volIdx + 1);
-  const file = positional || defaultFile;
-  const abs = path.resolve(file);
+  const abs = resolveTargetFile(args);
   const data = JSON.parse(fs.readFileSync(abs, 'utf8'));
 
   const { report } = fixBoundaries(data);

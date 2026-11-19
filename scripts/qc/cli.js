@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + kaynak sadakati + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -11,32 +11,29 @@
 const fs = require('fs');
 const path = require('path');
 const { runVerify, URL_TOKEN_RE, FAN_TL_SPAM_RE } = require('./verify');
-const { evaluateData, score } = require('./quality');
+const { evaluateData } = require('./quality');
 const { checkCoverageGates } = require('./fidelity');
 const { validatePatches } = require('../patch');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
-const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
-const VOLUMES = {
-  '4': {
-    tr: 'data/paragraphs_final.json',
-    src: 'data/source.json',
-    bil: 'data/bilingual.json',
-    label: 'Cilt 4',
-    maxAvgStrict: 0.20,
-  },
-  '4.5': {
-    tr: 'data45/paragraphs_final.json',
-    src: 'data45/source.json',
-    bil: 'data45/bilingual.json',
-    label: 'Cilt 4.5',
-    maxAvgStrict: 0.28,
-  },
-};
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => [
+    k,
+    {
+      tr: REGISTRY[k].finalRel,
+      src: REGISTRY[k].sourceRel,
+      bil: REGISTRY[k].bilingualRel,
+      label: REGISTRY[k].label,
+      maxAvgStrict: REGISTRY[k].maxAvgStrict ?? 0.20,
+      stitchedBoundaries: Boolean(REGISTRY[k].stitchedBoundaries),
+    },
+  ])
+);
 
 function resolveVolumeConfig(vol) {
-  const v = String(vol);
+  const v = String(vol).trim();
   if (VOLUMES[v]) return VOLUMES[v];
   if (/^\d+(?:\.\d+)?$/.test(v)) {
     const dir = v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
@@ -46,7 +43,8 @@ function resolveVolumeConfig(vol) {
         src: `${dir}/source.json`,
         bil: `${dir}/bilingual.json`,
         label: `Cilt ${v}`,
-        maxAvgStrict: 0.28,
+        maxAvgStrict: 0.20,
+        stitchedBoundaries: false,
       };
     }
   }
@@ -86,11 +84,14 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = [...VOLUME_KEYS];
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
-    const val = String(args[volIdx + 1]);
+    const val = String(args[volIdx + 1]).trim();
     selected = [val];
+  } else {
+    const eqArg = args.find((a) => a.startsWith('--volume=') || a.startsWith('--vol='));
+    if (eqArg) selected = [eqArg.split('=')[1].trim()];
   }
 
   return { args, json, update, strict, checkRegression, selected };
@@ -335,7 +336,12 @@ function main() {
 
     // 4. Deterministik Kaynak Sadakati ve Sayfa Sınırı Kapıları (source.json + bilingual.json)
     if (srcData) {
-      const cov = checkCoverageGates({ src: srcData, tr: data, bil: bilData });
+      const cov = checkCoverageGates({
+        src: srcData,
+        tr: data,
+        bil: bilData,
+        bounds: { checkBoundaries: Boolean(cfg.stitchedBoundaries) },
+      });
       if (cov.emptyBilingual.length > 0) {
         hardFails.push({
           label: 'boş bilingual çeviri yuvası ({g:"", d:""})',

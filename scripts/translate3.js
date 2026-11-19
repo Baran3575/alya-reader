@@ -1,12 +1,21 @@
-// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data/bilingual.json
-// Kullanım: node scripts/translate3.js
+// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data<vol>/bilingual.json
+// Kullanım: node scripts/translate3.js [--volume <v>]
 const fs = require('fs');
 const path = require('path');
-
-const ROOT = path.join(__dirname, '..');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
 function resolveVolumePaths(vol = '4') {
-  const v = String(vol || '4');
+  const v = String(vol || '4').trim();
+  const reg = resolveVolume(v);
+  if (reg) {
+    return {
+      vol: reg.key,
+      dir: reg.dataDir,
+      src: reg.sourceFile,
+      out: reg.bilingualFile,
+      fin: reg.finalFile,
+    };
+  }
   const dir = v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
   return {
     vol: v,
@@ -17,20 +26,21 @@ function resolveVolumePaths(vol = '4') {
   };
 }
 
+const DEEPL_KEY_PATH = path.join(ROOT, '.deepl-key');
 const DEEPL_KEY =
-  process.env.DEEPL_KEY || (fs.existsSync(path.join(ROOT, '.deepl-key')) ? fs.readFileSync(path.join(ROOT, '.deepl-key'), 'utf8').trim() : '');
+  process.env.DEEPL_KEY || (fs.existsSync(DEEPL_KEY_PATH) ? fs.readFileSync(DEEPL_KEY_PATH, 'utf8').trim() : '');
 const G_URL = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=tr';
 const D_URL = 'https://api-free.deepl.com/v2/translate';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36';
 
 const NOISE =
-  /(?:https?:\s*\/\/\S*(?:glucosetl|novelupdates|lightnovelreader|mp4directs|jnovels|zerobooks)\S*|Goldenagato\s*\|\s*mp4directs\.com|Goldenagato|mp4directs(?:\.com)?|jnovels(?:\.com)?|zerobooks(?:\s+(?:Universal|USA\s+ONLY|IOS))?|glucosetl(?:\.wordpress\.com)?|discord\.gg\/\S+|novelupdates(?:\.com\S*)?|lightnovelreader(?:\.me\S*)?|Download all your Favorite(?: Light Novels)?|Stay up to date On Light Novels[^\n]*|Join our Discord and meet Thousands[^\n]*)/gi;
+  /(?:https?:\s*\/\/\S*(?:glucosetl|novelupdates|lightnovelreader|mp4directs|jnovels|zerobooks)\S*|Goldenagato\s*\|\s*mp4directs\.com|Goldenagato|mp4directs(?:\.com)?|jnovels(?:\.com)?|zerobooks(?:\s+(?:Universal|USA\s+ONLY|IOS))?|glucosetl(?:\.(?:wordpress\.com|xyz))?|discord\.gg\/\S+|novelupdates(?:\.com\S*)?|lightnovelreader(?:\.me\S*)?|Download all your Favorite(?: Light Novels)?|Stay up to date On Light Novels[^\n]*|Join our Discord and meet Thousands[^\n]*)/gi;
 
 const SKIP_PAGE_RE =
-  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
+  /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
 
-const TERMINAL_END_RE = /[.!?"”'\u2019…~)\]»*}◇]$/;
+const TERMINAL_END_RE = /[.!?"”'\u2019…~)\]»*}◇⋆]$/;
 const HONORIFIC_CONT_RE = /^(kun|chan|san|sama|senpai)\b/i;
 const NAME_TAIL_RE = /\b(Masachika|Alisa|Alya|Maria|Masha|Yuki|Ayano|Sayaka|Nonoa|Chisaki|Touya|Suou|Kujou|Sarashina|Kenzaki|Kimishima)$/;
 
@@ -44,6 +54,7 @@ function stripInlineNoise(line) {
 }
 
 function isUsableSourcePage(p) {
+  if (p && p.pending) return false;
   const text = String((p && p.text) || '');
   const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
@@ -155,7 +166,7 @@ function stitchPages(pages) {
 
   for (const p of pages) {
     const key = String(p.page);
-    if (SKIP_PAGE_RE.test(String(p.text || ''))) {
+    if ((p && p.pending) || SKIP_PAGE_RE.test(String(p.text || ''))) {
       perPage.set(key, []);
       continue;
     }
@@ -254,10 +265,13 @@ async function deepl(texts) {
 }
 
 async function runTranslate(volArg) {
-  const args = process.argv.slice(2);
-  const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const vol = volArg || (vIdx > -1 && args[vIdx + 1] ? args[vIdx + 1] : '4');
-  const { src: SRC, out: OUT } = resolveVolumePaths(vol);
+  const vol = volArg || parseVolumeArg(process.argv.slice(2), '4');
+  const volCfg = resolveVolume(vol);
+  if (!volCfg) {
+    console.error(`Bilinmeyen cilt: ${vol}`);
+    process.exit(1);
+  }
+  const { src: SRC, out: OUT } = resolveVolumePaths(volCfg.key);
 
   const pages = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   let done = {};
@@ -279,7 +293,7 @@ async function runTranslate(volArg) {
     }
     paras.forEach((t, i) => items.push({ key, i, t, n: paras.length }));
   }
-  console.log('çevrilecek paragraf:', items.length, '| DeepL anahtarı:', DEEPL_KEY ? 'var' : 'yok');
+  console.log(`Cilt ${volCfg.key} | çevrilecek paragraf: ${items.length} | DeepL anahtarı: ${DEEPL_KEY ? 'var' : 'yok'}`);
 
   const SIZE = 20;
   const batches = [];

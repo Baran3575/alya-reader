@@ -1,13 +1,12 @@
 // Elle düzeltmeler: patches.json { "sayfa.index": "yeni metin" }
 // Kullanım:
-//   node scripts/patch.js             # yamaları doğrula ve uygula
-//   node scripts/patch.js --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
+//   node scripts/patch.js [--volume <v>]             # yamaları doğrula ve uygula
+//   node scripts/patch.js [--volume <v>] --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
 const fs = require('fs');
 const path = require('path');
 const { score } = require('./qc/quality');
 const { words: countWords, cleanSourceProse, isUsablePage, isSkippedCreditPage, isTocPage } = require('./qc/fidelity');
-
-const ROOT = path.join(__dirname, '..');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
@@ -148,22 +147,31 @@ function validatePatches(patches, data, options = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run') || args.includes('--dry');
-  const vArg = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const vol = vArg > -1 ? String(args[vArg + 1]) : '4';
-  const dir = vol === '4' ? 'data' : 'data' + vol.replace(/\./g, '');
-  const targetRel = `${dir}/paragraphs_final.json`;
-  const targetFile = path.join(ROOT, targetRel);
-  const srcFile = path.join(ROOT, dir, 'source.json');
-  const patchFile = path.join(__dirname, 'patches.json');
+  const volKey = parseVolumeArg(args, '4');
+  const volCfg = resolveVolume(volKey);
+
+  if (!volCfg) {
+    console.error(`Hata: Bilinmeyen cilt "${volKey}"`);
+    process.exit(1);
+  }
+
+  const targetFile = volCfg.finalFile;
+  const srcFile = volCfg.sourceFile;
+  const patchFileName = volCfg.key === '4' ? 'patches.json' : `patches${volCfg.slug}.json`;
+  const patchFile = path.join(__dirname, patchFileName);
 
   if (!fs.existsSync(targetFile)) {
-    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${targetRel}`);
+    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${volCfg.finalRel}`);
     process.exit(1);
   }
 
   if (!fs.existsSync(patchFile)) {
-    console.error(`Hata: Yama dosyası bulunamadı: ${patchFile}`);
-    process.exit(1);
+    if (volCfg.key === '4') {
+      console.error(`Hata: Yama dosyası bulunamadı: ${patchFile}`);
+      process.exit(1);
+    }
+    console.log(`✓ Cilt ${volCfg.key}: ${patchFileName} bulunmuyor (uygulanacak el yaması yok).`);
+    process.exit(0);
   }
 
   const fin = JSON.parse(fs.readFileSync(targetFile, 'utf8'));
@@ -179,14 +187,14 @@ if (require.main === module) {
   }
 
   if (dryRun) {
-    console.log(`✓ Önizleme başarılı: ${result.count} yama doğrulandı.`);
+    console.log(`✓ Önizleme başarılı (Cilt ${volCfg.key}): ${result.count} yama doğrulandı.`);
     console.log(`  Sıfır regresyon, tüm yama anahtarları geçerli. Toplam puan değişimi: ${result.scoreDiffSum}`);
   } else {
     for (const item of result.applied) {
       fin[item.pg][item.idx] = item.text;
     }
     fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
-    console.log(`✓ ${result.applied.length} yama başarıyla uygulandı.`);
+    console.log(`✓ Cilt ${volCfg.key}: ${result.applied.length} yama başarıyla uygulandı.`);
   }
 }
 
