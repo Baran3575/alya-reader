@@ -76,6 +76,7 @@ if (fs.existsSync(fin95Path)) {
       .map((t) =>
         String(t)
           .replace(/^“\\\.\s*/u, '“…')
+          .replace(/^“\.\s+/u, '“…')
           .replace(/^“\\…/u, '“…')
           .replace(/:\s*a\s*=\s*Ye\s+çiğ\s*-\s*Y\s+N\\\\[\s\S]*$/u, '…')
       )
