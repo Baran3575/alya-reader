@@ -6,6 +6,8 @@ const {
   isSkippedCreditPage,
   isUsablePage,
   isTocPage,
+  isTranslatorNotePara,
+  stripInlineTrNotes,
   cleanSourceProse,
   resolveVolumeDir,
 } = require('./fidelity');
@@ -41,7 +43,11 @@ function evaluateEntityParity(src, tr) {
   for (const p of src) {
     if (isPendingPage(p) || isSkippedCreditPage(p) || !isUsablePage(p) || isTocPage(p)) continue;
     const en = cleanSourceProse(p.text || '');
-    const t = (tr[String(p.page)] || []).join(' ');
+    const t = (tr[String(p.page)] || [])
+      .filter((s) => !isTranslatorNotePara(s))
+      .map(stripInlineTrNotes)
+      .filter(Boolean)
+      .join(' ');
     if (!en.trim() || !t.trim()) continue;
 
     const missNums = nums(en).filter((n) => !t.includes(n));

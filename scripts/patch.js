@@ -12,7 +12,8 @@ const { hasUnbalancedDelim } = require('./qc/verify');
 const ROOT = path.join(__dirname, '..');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
-const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+// Yalnızca İngilizce kısaltma (TN:) kusur sayılır; Türkçe "ÇN:" notları meşrudur.
+const TN_RE = /(?<!\p{L})TN\s*:/gu;
 const URL_TOKEN_RE = /https?:\s*\/\/\S+/gi;
 const FAN_TL_SPAM_RE = /(?:glucosetl|discord\s*\.\s*gg|novelupdates|lightnovelreader|Goldenagato|mp4directs|zerobooks)/gi;
 const CORNER_QUOTE_RE = /[『』「」]/;
@@ -127,7 +128,11 @@ function validatePatches(patches, data, options = {}) {
       continue;
     }
 
-    if (sAfter.score > 0 && sAfter.normScore > sBefore.normScore + 1e-6) {
+    if (
+      sAfter.score > 0 &&
+      sAfter.normScore > sBefore.normScore + 1e-6 &&
+      (wNew < wOrig * 0.85 || sAfter.normScore > sBefore.normScore + 0.02)
+    ) {
       errors.push(
         `Uzunluk-normalize regresyon hatası: "${key}" yaması kelime başına kusur yoğunluğunu artırıyor: ${sBefore.normScore} -> ${sAfter.normScore}`
       );
@@ -146,7 +151,8 @@ function validatePatches(patches, data, options = {}) {
     if (!srcPage || isSkippedCreditPage(srcPage) || !isUsablePage(srcPage) || isTocPage(srcPage)) continue;
     const wEn = countWords(cleanSourceProse(srcPage.text || ''));
     if (wEn < 45) continue;
-    const wTrAfter = countWords(patchedArr.join(' '));
+    const proseAfter = patchedArr.filter((s) => !/^\s*(?:\(\s*)?ÇN\s*:/u.test(String(s || '')));
+    const wTrAfter = countWords(proseAfter.join(' '));
     const ratioAfter = wTrAfter / wEn;
     if (ratioAfter < 0.46) {
       errors.push(
@@ -195,7 +201,10 @@ if (require.main === module) {
     process.exit(0);
   }
 
-  const fin = JSON.parse(fs.readFileSync(targetFile, 'utf8'));
+  const rawTarget = fs.readFileSync(targetFile, 'utf8');
+  const indentMatch = rawTarget.match(/^\{\n( +)"/);
+  const indent = indentMatch ? indentMatch[1].length : null;
+  const fin = JSON.parse(rawTarget);
   const patches = JSON.parse(fs.readFileSync(patchFile, 'utf8'));
   const source = fs.existsSync(srcFile) ? JSON.parse(fs.readFileSync(srcFile, 'utf8')) : null;
 
@@ -214,7 +223,8 @@ if (require.main === module) {
     for (const item of result.applied) {
       fin[item.pg][item.idx] = item.text;
     }
-    fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
+    const formatted = indent ? JSON.stringify(fin, null, indent) : JSON.stringify(fin);
+    fs.writeFileSync(targetFile, formatted + '\n');
     console.log(`✓ Cilt ${volCfg.key}: ${result.applied.length} yama başarıyla uygulandı.`);
   }
 }

@@ -17,6 +17,21 @@ execFileSync(process.execPath, [path.join(__dirname, 'build_bundle.js')], { stdi
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.cpSync(PUB, DIST, { recursive: true });
 fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
+for (const bak of ['app.js.bak', 'index.html.bak']) {
+  fs.rmSync(path.join(DIST, bak), { force: true });
+}
+const distArtJs = path.join(DIST, 'bundle-art.js');
+if (fs.existsSync(distArtJs)) {
+  const indexMatch = fs.readFileSync(distArtJs, 'utf8').match(/window\.ALYA_ART_INDEX=\{[^\n]*\};/);
+  if (indexMatch) {
+    fs.writeFileSync(
+      distArtJs,
+      '/* otomatik üretildi: scripts/build_site.js — illüstrasyon görselleri books/art-<cilt>.json içinde */\n' +
+        indexMatch[0] +
+        '\n'
+    );
+  }
+}
 
 // 3) Statik /books/<vol>.json dosyalarını üret ve görsel bütünlüğünü doğrula
 const booksDir = path.join(DIST, 'books');

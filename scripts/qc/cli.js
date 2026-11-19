@@ -64,16 +64,11 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
     '115.14',
     '156.5',
     '172.9',
-    '173.4',
     '175.14',
     '190.13',
     '254.14',
   ]),
   '4.5': new Set([
-    '67.4',
-    '122.0',
-    '127.2',
-    '133.0',
     '175.4',
     '197.4',
     '237.4',
@@ -87,8 +82,8 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
 };
 
 const LEGACY_MID_PAGE_QUOTES = {
-  '4': new Set(['31.1', '156.5', '173.4']),
-  '4.5': new Set(['67.4', '127.2', '175.4', '237.4', '237.5', '239.5', '323.1', '337.4', '337.5']),
+  '4': new Set(['31.1', '156.5']),
+  '4.5': new Set(['175.4', '237.4', '237.5', '239.5', '323.1', '337.4', '337.5']),
 };
 
 const ZERO_TOLERANCE = [
@@ -199,7 +194,11 @@ function auditKnownPageSplitQuotes(data, vol, customKnownSet = null) {
       violations.push(`gereksiz (dengeli) tırnak istisnası: "${key}"`);
       continue;
     }
-    if (idx > 0 && idx < page.length - 1 && !legacyMid.has(String(key))) {
+    let lastProseIdx = page.length - 1;
+    while (lastProseIdx > 0 && /^\s*(?:\(\s*)?ÇN\s*:/u.test(String(page[lastProseIdx] || ''))) {
+      lastProseIdx--;
+    }
+    if (idx > 0 && idx < lastProseIdx && !legacyMid.has(String(key))) {
       violations.push(`sayfa ortası tırnak istisnası yasak: "${key}" (indeks ${idx}, sayfa uzunluğu ${page.length})`);
     }
   }
@@ -237,7 +236,7 @@ function findEnglishResidueDetails(data) {
 }
 
 function findTranslatorNotesDetails(data) {
-  const re = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+  const re = /(?<!\p{L})TN\s*:/gu;
   const matches = [];
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
@@ -371,6 +370,8 @@ function main() {
 
     // 2. Sıfır Tolerans Doğrulama Kontrolleri
     for (const row of verifyData.rows) {
+      // "ÇN:" bilinçli çevirmen notlarıdır; yalnızca İngilizce "TN:" kusur sayılır.
+      if (row[2].includes('(ÇN)')) continue;
       if (ZERO_TOLERANCE.some((z) => row[2].includes(z)) && row[1] > 0) {
         let details = [];
         if (row[2].includes('İngilizce kalıntı')) {

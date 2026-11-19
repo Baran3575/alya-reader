@@ -7,6 +7,8 @@ const {
   isSkippedCreditPage,
   isUsablePage,
   isTocPage,
+  isTranslatorNotePara,
+  stripInlineTrNotes,
   cleanSourceProse,
   resolveVolumeDir,
 } = require('./fidelity');
@@ -79,7 +81,13 @@ function evaluateMeaning(src, tr, options = {}) {
       }
     }
 
-    const t = Array.isArray(tr[k]) ? tr[k].map((s) => String(s || '').trim()).filter(Boolean) : [];
+    const t = Array.isArray(tr[k])
+      ? tr[k]
+          .map((s) => String(s || '').trim())
+          .filter((s) => s && !isTranslatorNotePara(s))
+          .map(stripInlineTrNotes)
+          .filter(Boolean)
+      : [];
     if (!en.length || !t.length) {
       skippedPages++;
       severePages.push({ page: p.page, reason: 'boş sayfa', pageMismatches: en.length });

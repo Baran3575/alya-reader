@@ -43,6 +43,14 @@ function isTocPage(p) {
   return /^Table of contents\b/i.test(String((p && p.text) || '').trim());
 }
 
+function isTranslatorNotePara(s) {
+  return /^\s*(?:\(\s*)?ÇN\s*:/u.test(String(s || ''));
+}
+
+function stripInlineTrNotes(s) {
+  return String(s || '').replace(/\(\s*ÇN\s*:[^)]*\)/gu, '').trim();
+}
+
 function isOcrNoiseLine(line) {
   const t = String(line || '').trim();
   if (t.length < 20) return false;
@@ -73,7 +81,8 @@ function analyzeFidelity(src, tr) {
   for (const p of src) {
     if (isPendingPage(p) || isSkippedCreditPage(p)) continue;
     const en = cleanSourceProse(p.text || '');
-    const trParas = Array.isArray(tr[String(p.page)]) ? tr[String(p.page)].filter(Boolean) : [];
+    const rawParas = Array.isArray(tr[String(p.page)]) ? tr[String(p.page)].filter(Boolean) : [];
+    const trParas = rawParas.filter((s) => !isTranslatorNotePara(s)).map(stripInlineTrNotes).filter(Boolean);
     const t = trParas.join(' ');
     if (!en.trim()) continue;
     const wEn = words(en);
@@ -152,7 +161,8 @@ function checkCoverageGates({ src, tr, bil = null, bounds = {} }) {
     const usable = isUsablePage(p);
     if (!usable) continue;
 
-    const trParas = Array.isArray(tr[key]) ? tr[key].map((s) => String(s || '').trim()).filter(Boolean) : [];
+    const rawParas = Array.isArray(tr[key]) ? tr[key].map((s) => String(s || '').trim()).filter(Boolean) : [];
+    const trParas = rawParas.filter((s) => !isTranslatorNotePara(s)).map(stripInlineTrNotes).filter(Boolean);
     if (trParas.length === 0) {
       emptyUsablePages.push(`s.${p.page}`);
       continue;
@@ -281,6 +291,8 @@ module.exports = {
   isSkippedCreditPage,
   isUsablePage,
   isTocPage,
+  isTranslatorNotePara,
+  stripInlineTrNotes,
   cleanSourceProse,
   analyzeFidelity,
   checkCoverageGates,
