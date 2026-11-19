@@ -104,16 +104,19 @@ const body =
 
 fs.writeFileSync(OUT, body);
 
+const totalArtCount = Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0);
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
   'window.ALYA_ART_INDEX=' +
   JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) +
   ';\n';
-fs.writeFileSync(ART_OUT, artBody);
+if (totalArtCount > 0 || !fs.existsSync(ART_OUT)) {
+  fs.writeFileSync(ART_OUT, artBody);
+}
 
 console.log(
   'illüstrasyon (gömülü Cilt 4/4.5):',
-  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  totalArtCount,
   'görsel | indeks:',
   (artBody.length / 1024).toFixed(1),
   'KB'

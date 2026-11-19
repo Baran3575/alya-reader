@@ -10,7 +10,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify, hasUnbalancedDelim, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./verify');
+const {
+  runVerify,
+  hasUnbalancedDelim,
+  hasInvertedCurlyQuotes,
+  countLowercaseStarts,
+  isCrossPageContinuation,
+  loadGlossaryTypos,
+} = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches, getPatchFilesForVolume } = require('../patch');
 const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc6_typography');
@@ -299,11 +306,15 @@ function main() {
             });
           }
         } else if (row[2].includes('küçük harfle başlayan cümle')) {
-          for (const [pg, arr] of Object.entries(data)) {
-            arr.forEach((t, i) => {
-              if (countLowercaseStarts(t) > 0) details.push(`s${pg}.${i}: ${t.slice(0, 90)}`);
+          const sortedPages = Object.keys(data).sort((a, b) => Number(a) - Number(b));
+          sortedPages.forEach((pg, pi) => {
+            data[pg].forEach((t, i) => {
+              const allowInitialLower = isCrossPageContinuation(data, sortedPages, pi, i);
+              if (countLowercaseStarts(t, { allowInitialLower }) > 0) {
+                details.push(`s${pg}.${i}: ${t.slice(0, 90)}`);
+              }
             });
-          }
+          });
         } else if (row[2].includes('ters kıvrık tırnak')) {
           for (const [pg, arr] of Object.entries(data)) {
             arr.forEach((t, i) => {

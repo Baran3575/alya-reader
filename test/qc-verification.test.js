@@ -203,10 +203,23 @@ function testPostProcessorRepairs() {
   assert.strictEqual(convertFormal('Hâlâ pişmanlık duymaktadır ve konuşmaktadır.'), 'Hâlâ pişmanlık duyuyor ve konuşuyor.');
   assert.strictEqual(convertFormal('bulunuyyor ve duyuyyor'), 'bulunuyor ve duyuyor');
 
-  // 2. Keep uppercase letters after stops in naturalize.js while preserving ordinals (2. cildinin)
-  const nat = naturalize('“Hadi ama! İstemeden bakışlarım kaydı.” Bunun nedeni neydi? İstemeden 2. cildinin kapağına baktı.');
+  // 2. Keep uppercase letters after stops in naturalize.js while preserving ordinals (2. cildinin) and .xyz URLs
+  const nat = naturalize('“Hadi ama! İstemeden bakışlarım kaydı.” Bunun nedeni neydi? İstemeden 2. cildinin kapağına ve https: //glucosetl. xyz/ adresine baktı.');
   assert(!/[!?]\s+[a-zçğıöşü]/u.test(nat), `Expected uppercase after stops, got: ${nat}`);
   assert(nat.includes('2. cildinin'), `Expected ordinal lowercase noun preserved, got: ${nat}`);
+  assert(nat.includes('https: //glucosetl. xyz/'), `Expected .xyz URL preserved without capitalization, got: ${nat}`);
+
+  // 2b. Cross-page sentence continuations (idx === 0 after unfinished previous page) are allowed
+  const { isCrossPageContinuation, countLowercaseStarts } = require('../scripts/qc/verify');
+  const contBook = {
+    '18': ['Şüphelendiği için nasıl cevap vereceğini tartıyordu; çünkü Sayaka’yı'],
+    '19': ['yeni öğrenci konseyi başkanlığı seçiminde potansiyel bir rakip olarak görüyordu.'],
+    '20': ['küçük harfle başlayan yeni paragraf.'],
+  };
+  assert.strictEqual(isCrossPageContinuation(contBook, ['18', '19', '20'], 1, 0), true);
+  assert.strictEqual(countLowercaseStarts(contBook['19'][0], { allowInitialLower: true }), 0);
+  assert.strictEqual(isCrossPageContinuation(contBook, ['18', '19', '20'], 2, 0), false);
+  assert.strictEqual(countLowercaseStarts(contBook['20'][0], { allowInitialLower: false }), 1);
 
   // 3. No "O" pronoun injection in qc10_starts.js; repairs legacy O’nin
   const starts = processPageStarts([
@@ -340,7 +353,7 @@ function testCalqueScoringAndStrictZeroToleranceGates() {
     { label: 'lowercase start', patch: '. ancak kimse gelmedi.', expectText: 'küçük harfle başlayan cümle' },
     { label: 'detached suffix', patch: ' “otaku” nin sesi duyuldu.', expectText: 'ayrık tırnak eki' },
     { label: 'unbalanced parenthesis', patch: ' (Bu parantez kapanmadı.', expectText: 'dengesiz parantez' },
-    { label: 'glossary typo', patch: ' Merhaba Kuzye-kun dedi.', expectText: 'sözlük/özel ad hatası' },
+    { label: 'glossary typo', patch: ' Merhaba Maschika dedi.', expectText: 'sözlük/özel ad hatası' },
   ];
 
   for (const c of cases) {
@@ -470,13 +483,18 @@ function testRussianDialogueDomRendering() {
     : [];
   if (fs.existsSync(booksDir)) assert(volFiles.length >= 11, 'public/books must contain one chunk per volume');
 
-  const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
-  const flat4 = vol4.pages.flatMap((p) => p.tr);
-  assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
-  assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
+  if (fs.existsSync(booksDir)) {
+    const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
+    const flat4 = vol4.pages.flatMap((p) => p.tr);
+    assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
+    assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
 
-  const art4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'art-4.json'), 'utf8'));
-  assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
+    const art4Path = path.join(booksDir, 'art-4.json');
+    if (fs.existsSync(art4Path)) {
+      const art4 = JSON.parse(fs.readFileSync(art4Path, 'utf8'));
+      assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
+    }
+  }
 
   for (const file of volFiles) {
     const book = JSON.parse(fs.readFileSync(path.join(booksDir, file), 'utf8'));

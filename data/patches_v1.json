@@ -4,7 +4,6 @@
   "description": "Cilt 4 kaynak-hizalı edebî yeniden yazım ve onarım yamaları",
   "patches": {
     "13.10": "Bölüm 9: Senin bana zorba demeni istemiyorum",
-    "58.9": "Bunu söyledikten sonra adam arkasını dönüp hızla uzaklaştı. Arkadaşları olduğu anlaşılan dört beş kişilik bir gruba doğru koşarken, “Durum fena dostum, orada ters bir şeyler dönüyor,” dediği uzaktan duyuluyordu.",
     "60.11": "Sayaka ansızın bağırdı; iki eliyle masaya vurarak ayağa kalktı ve gövdesini Yuki’ye doğru eğdi. Bu ani çıkış Yuki’yi bile şaşırttı. Neredeyse gerçek yüzünü ele verecek kadar Yuki’ye yaklaşan Sayaka hemen söze girdi.",
     "70.7": "Masachika’nın davetine hafifçe baş sallayan Nonoa da telefonunu cebine atıp ayağa kalktı. Böylece Masachika ile Nonoa bütün sabahı birlikte turistik noktaları gezerek geçirdiler. Nasıl bir araya geldikleri bile anlaşılmayan tuhaf bir ikili olmuşlardı ama Masachika’nın gerçekten eğlenmesi, hiç şüphesiz Nonoa’nın samimi ve neşeli doğası sayesindeydi.",
     "71.8": "“Bunu hangi ağızla söylüyorsun acaba, Onii-sama?”",
@@ -21,16 +20,12 @@
     "90.3": "Masachika’nın bakışlarını izleyerek arkasına dönen Alisa da şaşırmıştı. Vitrinde dizili birkaç mankenin gerisindeki duvarda, yabancı modellerin arasında Nonoa’nın posteri asılıydı. Ana caddeye doğru zarafetle poz veren kişinin kim olduğunu görünce ikisi de gayriihtiyari adımlarını durdurdu.",
     "93.5": "“Evet. Ve şey, sarı saçları göze çarpıyor da. İstem dışı bakışlarım oraya kayıyordu.”",
     "108.1": "Yuki anında sustuğu için Masachika lafı toparlamaya çalışarak sohbeti başlatmıştı ama… Touya yalnızca buruk bir tebessümle karşılık verdi; Masachika da şapşalca başını kaldırdı.",
-    "116.0": "“Değil mi?”",
     "123.11": "Masachika tam Yuki’nin sözlerinin ne anlama geldiğini çözmeye çalışıyordu ki bahsedilen o canavar oturma odasının penceresinde belirdi. Beyaz teni yaz güneşinin altında göz kamaştırıyordu. Gümüş saçları rüzgârda uçuşuyordu. Açık mavi dantelli bikinisinin sardığı dolgun göğüsleri ve incecik beli büyüleyici bir güzellik sergiliyordu. Beline bağladığı ince pareo ise hafifçe seçilen biçimli kalçalarının kıvrımını güçlükle örtüyordu.",
     "125.3": "“Yok, acele hüküm veremem. Hem mutlak hem de göreceli bir değerlendirme yapmam şart. Evet… İlk bakışta Masha-senpai orantı bakımından diğer ikisinden daha dolgun duruyor; fakat boy farkını hesaba katarsak Alya-san da form ve esneklik bakımından hiç fena değil—”",
     "130.10": "Konuyu dağıtmaya çalışsa da karşısında yine kuşkulu bakışlar buldu. Bunun üzerine Masachika mahcup bir tavırla Touya’ya döndü.",
-    "137.1": "“Nereden bileyim ki! Hayır, neyse, zaten bunun sık rastlanan bir durum olduğunu biliyorum!” Manga ve animelerde sıkça görülen “Soryaa~!”",
-    "137.2": "“Kyaa~, çok soğuk~! Sen başlattın~ Ei~!” tarzı sahneler aklına gelince Masachika da içinden, “Evet, gerçekten tam bir klişe sahne,” diye geçirdi.",
     "139.6": "Masachika boy ve kas gücü üstünlüğünü kullanarak küçük kız kardeşiyle çocuksu bir inatla boğuşmaya girişti. Yuki’nin gövdesini hızla kaldırıp onu ters yöne savurmaya çalıştı.",
     "139.13": "Az önce suyun altında kalmış olması gereken Ayano’nun sesini duyar duymaz… Masachika bir an sonra arkadan sıkıca yakalandı. Üstelik sırtına yaslanan ince kumaşın ardındaki o yumuşak ve esnek dokunuş onu büsbütün sarsmıştı. Ansızın iki güzel kızın arasında sıkışıp kalmıştı.",
     "140.5": "Kollarıyla bacaklarını kıskıvrak yakalayan iki kız, Masachika’nın bedenini aşağı çekerek onu defalarca suya batırdı.",
-    "144.10": "Maria’nın sözleri üzerine Masachika, “Demek böyle olaylar da oluyormuş,” diye düşünerek ona kaçamak bir bakış attı.",
     "145.4": "“Gerçekten büyütülecek bir şey değil, cidden. Havalı görüneceğim diye yarayı doğru dürüst tedavi ettirmedim, o yüzden izi kaldı…” Olay Masachika o kızla vakit geçirirken yaşanmıştı. Her zamanki gibi parkta birlikte oynadıkları sırada, ansızın huysuzlanan iri bir köpek ortaya çıkıp kıza saldırmıştı.",
     "146.0": "Tuhaf bir sessizlik içinde yolun yarısından fazlasını geride bırakmışken ayaklarının neredeyse yere değeceğini düşündü. Gelgelelim tam o sırada Masachika’nın avucundaki Maria’nın eli aniden sarsılıp kaskatı kesildi.",
     "146.2": "Sırtüstü yüzmeye geçen Masachika arkasındaki Maria’ya baktı. Ne var ki Maria sorusuna yanıt vermedi; onun omzunun üzerinden dalgınca suya bakıyordu.",
@@ -41,7 +36,6 @@
     "169.10": "Yüzü kıpkırmızı kesilen Alisa sert bakışlarla emredince Masachika uysalca sol elini uzattı. Alisa da o eli sol eliyle tutup sağ eliyle Masachika’nın elinin tersini var gücüyle çimdikledi.",
     "171.3": "“Hadi ama! Kesinlikle cevap ver!”",
     "171.11": "Masachika buruk bir gülümsemeyle karşılık verince Alisa burnundan soluyarak başını çevirdi. Sonra saç uçlarıyla oynarken pat diye konuştu. {Ama… Yine de sorumluluk almalısın.} (Evet… Yine aynı laf; iyi de ne demek bu şimdi?) Alisa’nın damdan düşercesine söylediği tsundere sözlerini duyan Masachika, dalgın bakışlarını yaz göğüne dikti.",
-    "173.0": "“Saçlar uzunsa yıkaması daha uzun sürer,” diye düşünen Chisaki ile Maria, “İçeride bizi bekleyen bir senpai varken rahatça yıkanabilir miyiz?” diyerek banyoya ilk giren olmaya karar verdiler. Bu arada iki erkek onlardan önce yıkanıp banyoyu boşaltmıştı. Centilmen erkekler olarak kızlara gösterdikleri bir incelikti bu.",
     "173.4": "“Affedersiniz.”",
     "174.0": "Aynadan arkasında duran iki senpai’sine göz attı… (Yok, öteki de en az onun kadar muhteşem.) Bakışları aynaya yansıyan iki senpai’sinin çıplak bedenlerine kilitlenmişti. Kas ve yağ dengesine bakılırsa birbirlerine denk sayılırlar. Her biri bambaşka yönlerden baş döndürücü hatlara sahip. (Biri romantik komedi dünyasının, diğeri ise fantezi dünyasının sakini resmen…)",
     "177.0": "O an yaşananları gayriihtiyari hatırlayan Masachika düşüncelerini hızla başka yöne çevirdi. Gelgelelim çok geç kalmıştı; ağabeyinin aklından geçenlere fazlasıyla duyarlı olan kız kardeşi, “Hımm~?” diye mırıldanarak Masachika’ya şüpheyle baktı.",
@@ -49,6 +43,9 @@
     "182.2": "Ne var ki bunu yalnızca şu içinden çıkılmaz durumdan kurtulduktan sonra yapabilirdi. Evet, şartlar hâlâ değişmemişti. Altında iç çamaşırı olmadan ortada kaldığı tam bir kriz anıydı bu.",
     "184.3": "(Ah be kız kardeşim!) Tam o sırada Yuki’nin, “Manzara o kadar büyüleyiciydi ki bu sevinci paylaşmak istedim,” sözleri Masachika’nın zihninde yankılandı. (Paylaşma yöntemin de fazla doğrudanmış hani!) Masachika hâlâ yukarı bakarken dişlerini sıkıp içinden öfkeyle haykırdı. Onun bu hâlini gören Alisa da fark edildiğini anlamıştı.",
     "191.3": "“Şey… Etrafımda bana yakın başka erkek yok da ondan…” Maria, yüzünü yastığa gömüp mırıldanan Alisa’ya tatlı bir sesle karşılık verdi.",
-    "193.1": "“…Gerçekten beni teselli etmesini isteyeceğim, duydun mu?” Bunu söyledikten sonra Maria’nın yüzüne, birkaç saniye önceki hâliyle taban tabana zıt, olgun ve hafif hüzünlü bir ifade çöktü. Yine de hafif bir iç çekişin ardından hemen parlak bir tebessüm takınıp odasının kapısını açtı…"
+    "193.1": "“…Gerçekten beni teselli etmesini isteyeceğim, duydun mu?” Bunu söyledikten sonra Maria’nın yüzüne, birkaç saniye önceki hâliyle taban tabana zıt, olgun ve hafif hüzünlü bir ifade çöktü. Yine de hafif bir iç çekişin ardından hemen parlak bir tebessüm takınıp odasının kapısını açtı…",
+    "58.9": "Bunu söyledikten sonra adam arkasını dönüp hızla uzaklaştı. Adamın, arkadaşları gibi görünen dört ya da beş kişilik bir gruba doğru koşarken onlara, “Durum kötü dostum, orada ters bir şeyler oluyor,” dediği sesini uzaktan duyabiliyorlardı.",
+    "144.10": "Maria’nın sözlerine karşılık olarak Masachika, “Böyle olaylar da oluyor demek ki,” diye düşünürken ona bir göz attı.",
+    "173.0": "“Saçlar uzunsa yıkaması daha uzun sürer,” diye düşündüler Chisaki ve Maria; “Bizi bekleyen bir senpai olduğunu düşünürsek, sakin yıkanabilir miyiz?” diye düşündüler ve önce içeri girmeye karar verdiler. Bu arada, iki erkek onlardan önce banyo yapmış ve orayı boşaltmıştı. Onurlu erkekler olarak, bu da kızlara karşı gösterilen bir özen biçimidir."
   }
 }

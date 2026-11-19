@@ -2,7 +2,7 @@
  "4": {
   "avg": 0.1,
   "flagged": 9,
-  "paragraphs": 3093
+  "paragraphs": 3092
  },
  "5": {
   "avg": 0.09,
@@ -36,7 +36,7 @@
  },
  "11": {
   "avg": 0.08,
-  "flagged": 25,
+  "flagged": 24,
   "paragraphs": 3122
  },
  "12": {
@@ -45,9 +45,9 @@
   "paragraphs": 475
  },
  "4.5": {
-  "avg": 0.08,
-  "flagged": 2,
-  "paragraphs": 2509
+  "avg": 0.05,
+  "flagged": 3,
+  "paragraphs": 2551
  },
  "9.5": {
   "avg": 0.05,

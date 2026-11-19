@@ -70,8 +70,8 @@ const KNOWN_SPLIT_QUOTES = {
 };
 
 const AUDITED_TARGETS = {
-  '4': new Set(['13.10', '71.8', '83.7', '93.5', '137.1', '171.3', '173.4', '209.5', '211.10', '212.1', '241.0', '267.6', '280.0']),
-  '4.5': new Set(['10.2', '17.5', '133.0', '170.0', '192.3', '205.3', '268.3', '284.2', '286.2', '287.2', '287.3', '345.3']),
+  '4': new Set(['13.10', '71.8', '83.7', '93.5', '171.3', '173.4']),
+  '4.5': new Set(['133.0', '170.0', '192.3', '205.3', '268.3', '284.2', '286.2', '287.2', '287.3', '345.3']),
 };
 
 const VOL_CONFIG = {
@@ -89,8 +89,26 @@ const VOL_CONFIG = {
   },
 };
 
-function isPreservedHandPageV4(pgNum, key, curatedPatches) {
-  if ((pgNum >= 14 && pgNum <= 55) || (pgNum >= 132 && pgNum <= 135)) return true;
+function loadQualityHandPages(vol) {
+  const qFile = path.join(ROOT, 'data', 'quality', `v${vol}.json`);
+  if (!fs.existsSync(qFile)) return new Set();
+  try {
+    return new Set(Object.keys(JSON.parse(fs.readFileSync(qFile, 'utf8'))).map(Number));
+  } catch {
+    return new Set();
+  }
+}
+
+function isPreservedHandPage(vol, pgNum, key, curatedPatches, qualityHandPages) {
+  if (qualityHandPages && qualityHandPages.has(pgNum)) return true;
+  if (vol === '4') {
+    if ((pgNum >= 14 && pgNum <= 55) || (pgNum >= 132 && pgNum <= 135) || (pgNum >= 194 && pgNum <= 281)) {
+      return true;
+    }
+  }
+  if (vol === '4.5') {
+    if (pgNum >= 9 && pgNum <= 79) return true;
+  }
   if (curatedPatches && Object.prototype.hasOwnProperty.call(curatedPatches, key)) return true;
   return false;
 }
@@ -267,6 +285,7 @@ function buildAlignedRecords(vol, options = {}) {
   const curatedPatches = cfg.curatedPatchFile && fs.existsSync(cfg.curatedPatchFile)
     ? JSON.parse(fs.readFileSync(cfg.curatedPatchFile, 'utf8'))
     : {};
+  const qualityHandPages = loadQualityHandPages(vol);
 
   const srcByPage = new Map();
   for (const p of srcArr) srcByPage.set(String(p.page), p);
@@ -299,7 +318,7 @@ function buildAlignedRecords(vol, options = {}) {
         enPage: rawPageEn,
         score: q.score,
         notes: q.notes,
-        preserved: vol === '4' && isPreservedHandPageV4(pgNum, key, curatedPatches),
+        preserved: isPreservedHandPage(vol, pgNum, key, curatedPatches, qualityHandPages),
       });
     });
   }
@@ -408,7 +427,7 @@ function applyCandidateMap(candidatesByVol, options = {}) {
 
     if (!options.dryRun) {
       fs.writeFileSync(cfg.patchOut, JSON.stringify(mergedPatches, null, 2) + '\n');
-      fs.writeFileSync(cfg.trFile, JSON.stringify(previewTrData) + '\n');
+      fs.writeFileSync(cfg.trFile, JSON.stringify(previewTrData, null, 2) + '\n');
     }
 
     const afterEval = evaluateData(previewTrData);

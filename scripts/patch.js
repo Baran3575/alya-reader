@@ -239,7 +239,9 @@ if (require.main === module) {
     console.log(`✓ Önizleme başarılı (Cilt ${volCfg.key}): ${totalCount} yama doğrulandı (${patchFiles.length} dosya).`);
     console.log(`  Sıfır regresyon, tüm yama anahtarları geçerli. Toplam puan değişimi: ${totalDiff}`);
   } else {
-    fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
+    const rawExisting = fs.readFileSync(targetFile, 'utf8');
+    const indent = rawExisting.startsWith('{\n "') ? 1 : 2;
+    fs.writeFileSync(targetFile, JSON.stringify(fin, null, indent) + '\n');
     console.log(`✓ Cilt ${volCfg.key}: ${totalApplied} yama başarıyla uygulandı (${volCfg.finalRel}).`);
   }
 }

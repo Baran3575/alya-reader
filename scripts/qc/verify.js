@@ -8,7 +8,7 @@ const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
 const YYOR_RE = /\p{L}yyor/giu;
 const CORNER_QUOTE_RE = /[『』「」]/g;
 const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
-const URL_CLEAN_RE = /https?:\s*\/\/[^\s)]+|\b[\w-]+\.(?:com|gg|me|org|net)(?:\/[^\s)]*)?/giu;
+const URL_CLEAN_RE = /https?:\s*\/\/(?:[^\s)]|\.\s+(?:com|gg|me|org|net|xyz))+|\b[\w-]+\s*\.\s*(?:com|gg|me|org|net|xyz)(?:\/[^\s)]*)?/giu;
 const GLOSSARY_PATH = path.join(__dirname, '..', '..', 'data', 'glossary.json');
 
 function escapeRegExpUnicode(s) {
@@ -62,10 +62,19 @@ function hasInvertedCurlyQuotes(t) {
   return false;
 }
 
-function countLowercaseStarts(t) {
+function isCrossPageContinuation(bookData, sortedPages, pageIndex, paraIndex) {
+  if (paraIndex !== 0 || pageIndex <= 0) return false;
+  const prevArr = bookData[sortedPages[pageIndex - 1]] || [];
+  if (!Array.isArray(prevArr) || prevArr.length === 0) return false;
+  const prevLast = String(prevArr[prevArr.length - 1] || '').trim();
+  if (!prevLast) return false;
+  return !/[.!?][”’)\]}]*$/u.test(prevLast);
+}
+
+function countLowercaseStarts(t, opts = {}) {
   const clean = t.replace(URL_CLEAN_RE, 'URL');
   let n = 0;
-  if (/^[“"‘'(\[{]*[a-zçğıöşü]/u.test(clean)) n++;
+  if (!opts.allowInitialLower && /^[“"‘'(\[{]*[a-zçğıöşü]/u.test(clean)) n++;
   const afterStop = clean.match(
     /(?:(?<!\d)(?<!(?<!\p{L})(?:vb|vs|bkz|örn|ör|dr|prof|sn|yy|Vb|Vs|Bkz|Örn|Ör|Dr|Prof|Sn))\.|[!?])\s+[“"‘'(\[{]*[a-zçğıöşü]/gu
   );
@@ -76,8 +85,13 @@ function countLowercaseStarts(t) {
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
   const f = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+  const sortedPages = Object.keys(f).sort((a, b) => Number(a) - Number(b));
   const paras = [];
-  for (const [p, arr] of Object.entries(f)) arr.forEach((t, i) => paras.push({ p, i, t }));
+  sortedPages.forEach((p, pi) => {
+    (f[p] || []).forEach((t, i) => {
+      paras.push({ p, i, t, allowInitialLower: isCrossPageContinuation(f, sortedPages, pi, i) });
+    });
+  });
 
   const count = (re) => paras.reduce((a, x) => a + (x.t.match(re) || []).length, 0);
   // Türkçe harfler için Unicode sınır: \b "ı, ş, ğ" yanında çalışmaz
@@ -104,7 +118,7 @@ function runVerify(filePath) {
     if (hasUnbalancedDelim(x.t, '[', ']')) unbalS++;
     if (hasInvertedCurlyQuotes(x.t)) invQ++;
     detachedSuf += (x.t.match(DETACHED_QUOTE_SUFFIX_RE) || []).length;
-    lowerStarts += countLowercaseStarts(x.t);
+    lowerStarts += countLowercaseStarts(x.t, { allowInitialLower: x.allowInitialLower });
   }
   row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
   row('  ', unbalP, 'dengesiz parantez');
@@ -169,4 +183,11 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify, hasUnbalancedDelim, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos };
+module.exports = {
+  runVerify,
+  hasUnbalancedDelim,
+  hasInvertedCurlyQuotes,
+  countLowercaseStarts,
+  isCrossPageContinuation,
+  loadGlossaryTypos,
+};

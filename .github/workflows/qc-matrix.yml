@@ -45,9 +45,11 @@ jobs:
       - name: Run Unified QC CLI (${{ matrix.volume }})
         run: node scripts/qc/cli.js --volume ${{ matrix.volume }} --strict --check-regression
 
-      - name: Run QC and pipeline verification unit tests
+      - name: Build reader bundle and run unit tests
         if: matrix.volume == '4'
-        run: npm run test:suite
+        run: |
+          npm run build:bundle
+          npm run test:suite
 
       - name: Verify canonical source files were untouched
         run: |

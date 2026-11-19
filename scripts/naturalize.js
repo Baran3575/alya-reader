@@ -144,12 +144,20 @@ function context(t) {
 }
 
 function capitalizeStops(t) {
-  let out = t.replace(/^([“"‘'(\[{]*)([a-zçğıöşü])/u, (m, pre, ch) => pre + ch.toLocaleUpperCase('tr'));
+  const urls = [];
+  let masked = t.replace(
+    /https?:\s*\/\/(?:[^\s)]|\.\s+(?:com|gg|me|org|net|xyz))+|\b[\w-]+\s*\.\s*(?:com|gg|me|org|net|xyz)(?:\/[^\s)]*)?/giu,
+    (m) => {
+      urls.push(m);
+      return `__URL_${urls.length - 1}__`;
+    }
+  );
+  let out = masked.replace(/^([“"‘'(\[{]*)([a-zçğıöşü])/u, (m, pre, ch) => pre + ch.toLocaleUpperCase('tr'));
   out = out.replace(
     /((?:(?<!\d)(?<!(?<!\p{L})(?:vb|vs|bkz|örn|ör|dr|prof|sn|yy|Vb|Vs|Bkz|Örn|Ör|Dr|Prof|Sn))\.|[!?])\s+[“"‘'(\[{]*)([a-zçğıöşü])/gu,
     (m, pre, ch) => pre + ch.toLocaleUpperCase('tr')
   );
-  return out;
+  return out.replace(/__URL_(\d+)__/g, (_, i) => urls[Number(i)]);
 }
 
 function naturalize(text, opts = {}) {
@@ -214,7 +222,9 @@ if (require.main === module) {
       console.log('SONRA:', b.slice(0, 220));
     }
   } else {
-    fs.writeFileSync(FILE, JSON.stringify(fin));
+    const rawExisting = fs.readFileSync(FILE, 'utf8');
+    const indent = rawExisting.startsWith('{\n "') ? 1 : 2;
+    fs.writeFileSync(FILE, JSON.stringify(fin, null, indent) + '\n');
     console.log('doğallaştırma uygulandı:', changed, 'paragraf | dosya:', FILE);
   }
 }

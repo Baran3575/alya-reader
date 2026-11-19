@@ -10,6 +10,7 @@
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
     "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "pretest:suite": "node scripts/build_bundle.js",
     "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",

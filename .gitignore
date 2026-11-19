@@ -10,6 +10,5 @@ data45/back_en.json
 .cache/
 dist/
 
-# üretilen cilt parçaları (npm run build:bundle); Cilt 4/4.5 gömülü illüstrasyon parçaları korunur
-public/books/*
-!public/books/art-*.json
+# üretilen cilt parçaları (npm run build:bundle)
+public/books/
