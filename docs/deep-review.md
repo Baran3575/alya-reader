@@ -6,17 +6,17 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | Başlangıç · Kapak ve görseller | 13 | 80 | 13.3 | 8.8 | 95 | "gerçekten" |
-| 1 | Önsöz · Unutmak İstediğim Geçmiş | 6 | 1074 | 6.1 | 2.0 | 90 | gereksiz iyelik |
-| 2 | Bölüm 1 · Karın fetişi diye bir şey duymad | 27 | 4298 | 11.7 | 3.1 | 84 | gereksiz iyelik |
+| 1 | Önsöz · Unutmak İstediğim Geçmiş | 6 | 1074 | 6.1 | 1.6 | 90 | gereksiz iyelik |
+| 2 | Bölüm 1 · Karın fetişi diye bir şey duymad | 27 | 4298 | 11.7 | 3.0 | 84 | cümle başı "Ama/Fakat" |
 | 3 | Bölüm 2 · Otaku'lar gerçekten sinir bozucu | 25 | 4222 | 10.9 | 3.2 | 85 | "sadece" |
-| 4 | Bölüm 3 · Ha? Gerçekten mi? | 29 | 5672 | 10.2 | 4.9 | 86 | "gerçekten" |
-| 5 | Bölüm 4 · Hayır, durum öyle değil | 20 | 3282 | 11.1 | 3.8 | 86 | cümle başı "Ama/Fakat" |
-| 6 | Bölüm 5 · O sumo değil | 31 | 5403 | 11.4 | 3.3 | 85 | "sadece" |
-| 7 | Bölüm 6 · Bir kaplumbağa olmak istiyorum | 20 | 3813 | 10.3 | 4.7 | 84 | "sadece" |
+| 4 | Bölüm 3 · Ha? Gerçekten mi? | 29 | 5672 | 10.2 | 4.7 | 86 | "gerçekten" |
+| 5 | Bölüm 4 · Hayır, durum öyle değil | 20 | 3282 | 11.1 | 3.7 | 86 | cümle başı "Ama/Fakat" |
+| 6 | Bölüm 5 · O sumo değil | 31 | 5403 | 11.4 | 3.2 | 85 | "sadece" |
+| 7 | Bölüm 6 · Bir kaplumbağa olmak istiyorum | 20 | 3813 | 10.3 | 4.5 | 84 | "sadece" |
 | 8 | Bölüm 7 · Sanki Süzülüyor Gibi | 22 | 4332 | 10.9 | 4.8 | 87 | "sadece" |
-| 9 | Bölüm 8 · Deliryum sırasında beklenmedik s | 23 | 4040 | 9.5 | 3.5 | 83 | cümle başı "Ama/Fakat" |
-| 10 | Bölüm 9 · Senin tarafından zorba olarak ni | 22 | 3619 | 9.5 | 3.9 | 88 | gereksiz iyelik |
-| 11 | Bölüm 10 · Sevgi Duyguları | 32 | 5755 | 10.3 | 3.6 | 85 | cümle başı "Ama/Fakat" |
+| 9 | Bölüm 8 · Deliryum sırasında beklenmedik s | 23 | 4040 | 9.5 | 3.3 | 83 | cümle başı "Ama/Fakat" |
+| 10 | Bölüm 9 · Senin tarafından zorba olarak ni | 22 | 3619 | 9.5 | 3.6 | 88 | cümle başı "Ama/Fakat" |
+| 11 | Bölüm 10 · Sevgi Duyguları | 32 | 5755 | 10.3 | 3.5 | 85 | cümle başı "Ama/Fakat" |
 | 12 | Sonsöz · Unutulmaması Gereken Bir Geçmiş | 12 | 2244 | 8.0 | 4.1 | 86 | "kendi" |
 
 ### Cilt 4 · 0. Başlangıç · Kapak ve görseller (s.0–13)
@@ -28,14 +28,14 @@
 - **edilgen "tarafından"**: 1
   - “…da beklenmedik sürprizler mi? Bölüm 9: Senin tarafından zorba olarak nitelendirilmek istemiyorum Böl…”
 - **gereksiz iyelik**: 1
-  - “…ırasında beklenmedik sürprizler mi? Bölüm 9: Senin tarafından zorba olarak nitelendirilmek iste…”
+  - “…ırasında beklenmedik sürprizler mi? Bölüm 9: Senin tarafından zorba olarak nitelendirilmek istemiyorum…”
 
 ### Cilt 4 · 1. Önsöz · Unutmak İstediğim Geçmiş (s.13–19)
 
 - **Kelime/cümle**: ort 6.1 kelime/cümle · tip/örnek oranı 0.67 · diyalog satırı/sayfa 6.2
-- **gereksiz iyelik**: 9
-  - “…edenin zayıf, elden ne gelir ki? Merak etme, senin için de elimden geleni yaparım. Suou ailesin…”
-  - “…dim. Bu yüzden daha da çok çalışmalıyım. Sen onun yerine Yuki’ye göz kulak ol; ben idare ederi…”
+- **gereksiz iyelik**: 4
+  - “… hocamı ilgilendirmez. Ne de olsa o insanlar benim arkadaşım değil. Onlar ancak ayak altında dolaşıp baş…”
+  - “…Yuki benim için endişeleniyor… Onun yüzünden okulu asamam. Asamam! “Yine mi işe gidiy…”
 - **"gerçekten"**: 3
   - “…n?” Gürültü yapmayın, beni rahatsız etmeyin; gerçekten sinir bozucusunuz. Önemsiz şeylerle uğraşmay…”
   - “… çektiğim acıyı anlamıyorsun! Canım yanıyor. Gerçekten çok yanıyor. Ojii-sama’nın isteği çok ağır. …”
@@ -54,12 +54,12 @@
 
 - **Sadakat**: ort 84.4; zayıf: s.20 (74: ad yok: Suou sayı yok: 1 kısa x0.61); s.40 (74: diyalog -2); s.42 (74: diyalog -2)
 - **Kelime/cümle**: ort 11.7 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 10.0
-- **gereksiz iyelik**: 18
-  - “…maz mıydık?” “Söyledim ya, öyle bir anım yok benim.” “Oi, oi, bu kadar acınacak şeyler söyleme.…”
-  - “…rı edilmiş gibi davranan Yuki’ye baktı. Yuki onun bakışını hiç umursamadı ve küçük oyununa dev…”
 - **cümle başı "Ama/Fakat"**: 11
   - “… kızın şarkı gibi fısıltısı sessizliği yırttı. Ama fısıltının hedefi olan delikanlı, gözleri kap…”
   - “… kızın şarkı gibi fısıltısı sessizliği yırttı. Ama fısıltının hedefi olan delikanlı, gözleri kap…”
+- **gereksiz iyelik**: 11
+  - “…rı edilmiş gibi davranan Yuki’ye baktı. Yuki onun bakışını hiç umursamadı ve küçük oyununa devam etti…”
+  - “…ğım, sonra da okuldan atılacağım.” “Ha, yani benim rolüm aptal prens, öyle mi?” “Sonra Suou ailesi b…”
 - **tire aralığı tutarsız**: 10
   - “…e bağırdı. “Yazık oldu, süre doldu!!! O hâlde—” “Ahhh?!” Birden boynunda keskin bir acı pat…”
   - “…Ojii-sama’nın beyaz saçı, biliyor musun!” “Ne—?!” “Hahahaha! Kandırdım seni, hahaha, sadece…”
@@ -72,7 +72,7 @@
 - **"bu yüzden"**: 6
   - “…“İşte bu yüzden demiştim ya. Hâlâ kalkmazsan seni öperim.” “…”
   - “…“Bu yüzden, yaramaz kız rolünde, seçim kampanyasını kaz…”
-- **Ani düşüş**: s.38(13)
+- **Ani düşüş**: s.38(13), s.26(12), s.27(9), s.36(9)
 
 ### Cilt 4 · 3. Bölüm 2 · Otaku'lar gerçekten sinir bozucu (s.46–71)
 
@@ -87,15 +87,15 @@
 - **cümle başı "Ama/Fakat"**: 7
   - “…hh~ ikimiz de hâlâ çocuk gibiyiz” der gibiydi. Ama Masachika hemen düzeltmeye girişti. “Bunadığı…”
   - “…hh~ ikimiz de hâlâ çocuk gibiyiz” der gibiydi. Ama Masachika hemen düzeltmeye girişti. “Bunadığı…”
-- **gereksiz iyelik**: 7
-  - “…treden kısa olanlar binemiyormuş, değil mi~? Senin için imkânsız değil mi bu?” “O kadar da kısa…”
-  - “…çevreyi taradı. Şaşırtıcı biçimde Masachika, onun neyi… yok, kimi aradığını biliyordu. Bunu an…”
 - **"ise"**: 6
   - “…ken Masachika bakışlarını ona çevirdi. Ayano ise havaya karışmış gibi sessizce duruyordu. Yuk…”
   - “…ken Masachika bakışlarını ona çevirdi. Ayano ise havaya karışmış gibi sessizce duruyordu. Yuk…”
 - **"kendi"**: 6
   - “…Bir ara oyun salonunun bütün rekor tablosunu kendi adımla doldurmuştum…” “Oradaki çalışanların …”
   - “…i yavaşça platforma girdi ve güvenlik çubuğu kendiliğinden kalktı. “……” Ne var ki Ayano ayağa k…”
+- **cümle başı "Ve"**: 4
+  - “…a ile Yuki refleksle başlarını o yöne çevirdi. Ve orada, hiç beklemedikleri hâlde, gündelik kıy…”
+  - “…den korkutucu derecede soğuk bir ışık yayıldı… Ve açıkça görülüyordu ki, öfkenin eşiğindeydi. O…”
 - **Ani düşüş**: s.67(13), s.60(12), s.65(3)
 
 ### Cilt 4 · 4. Bölüm 3 · Ha? Gerçekten mi? (s.71–100)
@@ -108,9 +108,6 @@
 - **"sadece"**: 23
   - “… aslında ilk günden beri şöyle düşünüyordu: “Sadece ders çalışmak için olsa da, ne kadar gösteri…”
   - “…di. (Evet, açıkça şık giyinmiş… Her ne kadar sadece yaz tatili ödevlerini birlikte yapıyor olsak…”
-- **gereksiz iyelik**: 23
-  - “… yine de görmezden geliyorum, biliyor musun! Benim onurlu bir adam olduğum için minnettar olmal…”
-  - “…şkırtıcı bir gülümseme gönderdi. “…Hmm~? Ya… Senin evine öylece girsem ne olurdu acaba?”…”
 - **"diye" öncesi virgül yok**: 13
   - “…ferin~ hadi yapalım~ ona bir ders ver, Aniki~” diye kışkırtırken, melek kılığındaki Maria da “Ya…”
   - “…ferin~ hadi yapalım~ ona bir ders ver, Aniki~” diye kışkırtırken, melek kılığındaki Maria da “Ya…”
@@ -120,7 +117,10 @@
 - **cümle başı "Ama/Fakat"**: 11
   - “…tmese de bu sözden hoşlandığını ele veriyordu. Ama Masachika utangaç bir tavırla defterine bakar…”
   - “…kızı yiyecek kadar da yırtıcı bir mizaç yoktu. Ama bunu burada itiraf etmek yenilgiyi kabul etme…”
-- **Ani düşüş**: s.88(23), s.99(22), s.91(21), s.93(21), s.94(14)
+- **"olduğunu" zinciri**: 11
+  - “…e dedin?” “‘Makyajın ne kadar iyi ya da kötü olduğunu biliyor musun?’ dedim.” Alisa bunu alaycı bi…”
+  - “…arklı bir açıdan bakarsak, bunun iyi bir şey olduğunu söyleyebiliriz… Bir dakika bekleyip, sonra d…”
+- **Ani düşüş**: s.88(22), s.99(22), s.93(20), s.73(17), s.91(17), s.84(16), s.94(14)
 
 ### Cilt 4 · 5. Bölüm 4 · Hayır, durum öyle değil (s.100–120)
 
@@ -135,15 +135,15 @@
 - **"gerçekten"**: 13
   - “…rduğu anda ter boşandı ve bu, Masachika için gerçekten can sıkıcıydı. “Eh, bu sıcakta denize gitmek…”
   - “…nseyi üyesiyiz sadece… Yok, dikkatli bakınca gerçekten ünlü çekimi gibi duruyor.) Üzerinde yalnızca…”
-- **gereksiz iyelik**: 8
-  - “…telik rakibim Yuki-san onu adıyla çağırırken benim ortağıma soyadıyla seslenmem garip olur. Bu …”
-  - “…dı. Yine de Yuki yarım bir kafa atma gücüyle onun koluna zorla sarıldı… “Hadi o zaman Yuki-cha…”
 - **"sadece"**: 6
   - “…biliyordu. (Hepimiz öğrenci konseyi üyesiyiz sadece… Yok, dikkatli bakınca gerçekten ünlü çekimi…”
   - “…ini anlatıyordu. Son boss imparator, “Bunlar sadece zayıfların saf hayalleri” diye homurdanmakla…”
 - **"ise"**: 6
   - “…a içindeki kuşku bir anda dağıldı. Masachika ise Yuki’nin gözlerinin şehvetle parladığı anı v…”
   - “…Masachika yanakları seğirerek pes etti, Yuki ise kuru bir gülümsemeyle yetindi. Ama âşıklar, …”
+- **"olduğunu" zinciri**: 4
+  - “…ünceli bir yüzle devam etti. “Doğru… Rakibim olduğunu bile bile Masachika-kun’a bu kadar samimi da…”
+  - “…rdında “Sözü kopardım!” der gibi bir sırıtış olduğunu gayet iyi sezdi. İçinden de “Gerçi kavgayı b…”
 
 ### Cilt 4 · 6. Bölüm 5 · O sumo değil (s.120–151)
 
@@ -155,9 +155,6 @@
 - **"gerçekten"**: 12
   - “…de el değmemiş bir kumsal görünce afalladı. “Gerçekten tamamen kapalıymış… Yok, böyle söylemek tuha…”
   - “…ine bakıp otaku sohbetlerine devam ederken… “Gerçekten şaşırtıcı. Yanında iki kişi varken Başkan’ın…”
-- **gereksiz iyelik**: 10
-  - “…ç bir gülümsemeyle karşılık verdi. “Şey, ben senin gibi gürbüz görünmüyorum. Vücudum hep iriydi…”
-  - “…i gibi dolgun bir vücut deniyor…!” “Bu sefer benim için fazla yeni, takip edemiyorum. Şey, ne d…”
 - **"kendi"**: 9
   - “…sonra bir ay önce yeniden idmana başlamıştı. Kendi kaslarının yeterince gelişmediğini bildiği i…”
   - “…de olsa şu üst kol, karın ve uyluk kaslarını kendi gözünle gördün.”…”
@@ -167,7 +164,10 @@
 - **"diye" öncesi virgül yok**: 7
   - “…kafasıyla hemen “o zaman stil sahibi bir cüce” diye düşündü. Yorumu epey acımasızdı ama Touya bu…”
   - “…r demek.” İstemsizce “O vücutla nasıl yüzmez?” diye ağzından kaçıracaktı, ama cümleyi yuttu. Ali…”
-- **Ani düşüş**: s.146(14), s.147(7), s.151(4), s.148(3)
+- **"ise"**: 5
+  - “…a duyduğu saygıyı bir kat daha artırdı; Yuki ise hayranlıkla burnundan soludu. “Aşk kördür… Y…”
+  - “…rdı. Biri atmosfere uyup bağırdı. Bir diğeri ise düz bir sesle. Yaz ortasındaki kumsalda tari…”
+- **Ani düşüş**: s.146(12), s.144(11), s.147(7), s.151(4), s.148(3)
 
 ### Cilt 4 · 7. Bölüm 6 · Bir kaplumbağa olmak istiyorum (s.151–171)
 
@@ -176,12 +176,12 @@
 - **"sadece"**: 21
   - “…ikten sonra sahil bölgesine geri döndüğünde, sadece ikinci sınıf öğrencilerinden oluşan grubu gö…”
   - “…ikten sonra sahil bölgesine geri döndüğünde, sadece ikinci sınıf öğrencilerinden oluşan grubu gö…”
-- **gereksiz iyelik**: 20
-  - “…daha fazla kum yığılıyordu ve nedense Maria, onun etrafında tahta bir çubukla tuhaf desenler ç…”
-  - “…, durup kafasını kaşıdı. Acaba kendi varlığı onun dikkatini mi dağıtıyordu? Peki o zaman, şimd…”
 - **"gerçekten"**: 11
   - “…dan, ona samimi bir şekilde iltifat ederek, “Gerçekten gizli bir niyetim yok~. Sadece beline bakıyo…”
   - “…şte, bilirsin… Geriye dönüp baktığımda, bunu gerçekten hissettim.” Alisa da bunu söylerken gözlerin…”
+- **gereksiz iyelik**: 10
+  - “…daha fazla kum yığılıyordu ve nedense Maria, onun etrafında tahta bir çubukla tuhaf desenler çiziyord…”
+  - “…, durup kafasını kaşıdı. Acaba kendi varlığı onun dikkatini mi dağıtıyordu? Peki o zaman, şimdilik durum…”
 - **"diye" öncesi virgül yok**: 7
   - “…önce öyle değildi ya; “Nereye bakıyorsun, ha?” diye soğuk bir bakışla onu azarlamıştı. Alisa’nın…”
   - “…önce öyle değildi ya; “Nereye bakıyorsun, ha?” diye soğuk bir bakışla onu azarlamıştı. Alisa’nın…”
@@ -191,6 +191,7 @@
 - **"kendi"**: 6
   - “…ören Masachika, durup kafasını kaşıdı. Acaba kendi varlığı onun dikkatini mi dağıtıyordu? Peki …”
   - “… etmeme gerek kalmasa bile… Arkadaşlıklarını kendi başına genişletebilirsin. Düşündüğümde, nede…”
+- **Ani düşüş**: s.160(15)
 
 ### Cilt 4 · 8. Bölüm 7 · Sanki Süzülüyor Gibi (s.171–193)
 
@@ -222,9 +223,6 @@
 - **cümle başı "Ama/Fakat"**: 13
   - “… Normalde gece sütyeni takarım, biliyor musun? Ama bugün getirmeyi unutmuşum…” … Masachika bu ko…”
   - “…anga kafası, ha’ diye düşünüp dilini şaklattı. Ama karşısında dindar bir azizeyi andıran Maria v…”
-- **gereksiz iyelik**: 12
-  - “…l mi? Masha-san’ın adına leke sürülebilir.” “Benim umurumda değil ama~” “Umursayan benim.” Bunu…”
-  - “…lir.” “Benim umurumda değil ama~” “Umursayan benim.” Bunu şaka yollu değil, son derece ciddi bi…”
 - **"olduğunu" zinciri**: 10
   - “… çabuk gir~ gir~” “Hımm…” Chisaki’nin nerede olduğunu göremeyince şaşkınlıkla başını yana eğen Mas…”
   - “…rın eğlenemezse, ikisi de suçun kendilerinde olduğunu düşünür, değil mi? O yüzden beni fazla dert …”
@@ -237,15 +235,15 @@
 - **"yani"**: 7
   - “…“Yani birlikte.” “?… Ahh~” O an Masachika durumu k…”
   - “…rdü; istemsizce alnına dokundu. “Eee? Hımmm? Yani… Masha-san’ın erkek arkadaşı olduğu söylenti…”
+- **"sadece"**: 5
+  - “…ı. Umurunda da değildi. Daha doğrusu, lütfen sadece “sütyen takmıyorum” deyip durma. Söylemesen …”
+  - “…ki, Senpai’nin bana bir işi mi vardı?” “Şey… Sadece Chisaki-chan’la Başkan’a baş başa kalma fırs…”
 - **Ani düşüş**: s.210(17)
 
 ### Cilt 4 · 10. Bölüm 9 · Senin tarafından zorba olarak nitelendirilmek istemiyorum (s.216–238)
 
 - **Sadakat**: ort 88.3; zayıf: s.218 (74: diyalog -2); s.224 (74: diyalog -2)
 - **Kelime/cümle**: ort 9.5 kelime/cümle · tip/örnek oranı 0.54 · diyalog satırı/sayfa 6.3
-- **gereksiz iyelik**: 16
-  - “… Sırayla: Masachika’nın sağında Alisa vardı. Onun ötesinde Maria, daha ötede… yani Masachika’n…”
-  - “…uki oturuyordu. Masachika’nın solunda Ayano, onun önünde Chisaki ile Touya vardı. Tam ortaları…”
 - **cümle başı "Ama/Fakat"**: 11
   - “…arını hazırlayan Touya bile bunu beklemiyordu. Ama taş-kâğıt-makası çocuk oyuncağına çeviren gör…”
   - “…la gizlice bir iz koyup koyamayacağını denedi… Ama hemen vazgeçti. Çubuklar oldukça sağlamdı ve …”
@@ -261,7 +259,9 @@
 - **"sadece"**: 6
   - “… yok, fazla uç emirler veremezsin, tamam mı? Sadece sağduyu sınırları içinde kalmak şartıyla.” Ş…”
   - “…zını aşan bir ses değildi. “Eh, bütün bunlar sadece dostluğu pekiştirmek için… O hâlde emirleri …”
-- **Ani düşüş**: s.233(14)
+- **gereksiz iyelik**: 6
+  - “…uki oturuyordu. Masachika’nın solunda Ayano, onun önünde Chisaki ile Touya vardı. Tam ortalarında …”
+  - “…ir ‘komiklik’ ve ‘kayış’ hikâyesi.” “Oh, oh! Senin tsukkomi’n de fena değil, Kuze!” “Ufufu, aynen öyle.”…”
 
 ### Cilt 4 · 11. Bölüm 10 · Sevgi Duyguları (s.238–270)
 
@@ -276,15 +276,15 @@
 - **"gerçekten"**: 14
   - “…yok; lütfen başka birine yönelin.” “Hım, biz gerçekten festivalin tadını çıkarmaya geldik. O yüzden…”
   - “… size etrafı gezdirebiliriz, biliyorsunuz~” “Gerçekten çok güzelsin, ha~ adın ne senin?” “Hey, hey,…”
-- **gereksiz iyelik**: 14
-  - “…sunuz~” “Gerçekten çok güzelsin, ha~ adın ne senin?” “Hey, hey, o senin gerçek saçın mı~? Ah, J…”
-  - “…sunuz~” “Gerçekten çok güzelsin, ha~ adın ne senin?” “Hey, hey, o senin gerçek saçın mı~? Ah, J…”
 - **"kendi"**: 11
   - “…talar giymişti; bu manzarayı gören Masachika kendi yukatasını getirdiği için minnettar hissetti…”
   - “… bıraktığına emindi. İster istemez Masachika kendi dikkatsizliğini düşündü. Belki de kardeşinin…”
 - **"olduğunu" zinciri**: 9
   - “…ş!?” Bunun sadece “küçük bir yerel festival” olduğunu sanan Masachika, tezgâhların ve ziyaretçiler…”
   - “… pamuk şekerle bile ne kadar hoş bir manzara olduğunu düşündüm.”…”
+- **"yani"**: 9
+  - “…“Hmm, gerçekten mi~?” “…Ne var canım, yani…” Maria gülümseyip elini yanağına koydu; Ali…”
+  - “…vul seslerini duydular. “Aa, mikoshi çıkmış. Yani havai fişek gösterisinin vakti geldi mi?” To…”
 - **Ani düşüş**: s.265(17)
 
 ### Cilt 4 · 12. Sonsöz · Unutulmaması Gereken Bir Geçmiş (s.270–282)
@@ -305,9 +305,9 @@
 - **"ise"**: 5
   - “… anlamamaya çalıştığı söylenebilirdi. Nedeni ise kendisi için fazlasıyla anlaşılırdı. (Aşk me…”
   - “… anlamamaya çalıştığı söylenebilirdi. Nedeni ise kendisi için fazlasıyla anlaşılırdı. (Aşk me…”
-- **gereksiz iyelik**: 5
-  - “…lığı sayesinde donmuş kalbi erimeye başladı. Onun için her şeyi yapabileceğini hissetti. (Bu y…”
-  - “… sadakatine ve çabalarına ihanet etti? Neden benim çabalarımı takdir etmiyor…? “Tamam, anladım.…”
+- **"gerçekten"**: 5
+  - “…“Ahh, artık onu gerçekten göremiyorum, ha.” Çok geçmeden Suou ailesi o…”
+  - “…ğıran küçük Masachika’ya babası şöyle dedi: “Gerçekten harika, değil mi? Aslında ben de eskiden pol…”
 
 
 ## Cilt 5
@@ -315,32 +315,32 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 4 | 0 | 0.0 | 0 | — | — |
-| 1 | Prolog · Rastlamak | 11 | 1890 | 10.0 | 3.0 | 90 | gereksiz iyelik |
-| 2 | Bölüm 1 · Kavuşma ve Veda | 15 | 2765 | 10.4 | 3.8 | 88 | gereksiz iyelik |
-| 3 | Bölüm 2 · Rüya olması gerçek olduğu anlamı | 22 | 3639 | 12.2 | 3.0 | 89 | gereksiz iyelik |
-| 4 | Bölüm 3 · O tarafta ne yapacaktı? | 24 | 4183 | 11.4 | 3.7 | 85 | gereksiz iyelik |
-| 5 | Bölüm 4 · Bir Erkeğin Allığına Kim İhtiyaç | 23 | 3887 | 10.6 | 3.4 | 89 | gereksiz iyelik |
-| 6 | Bölüm 5 · Rus Dere veya Kısaca Açığa Çıkan | 22 | 3686 | 11.5 | 3.4 | 88 | gereksiz iyelik |
-| 7 | Bölüm 6 · Gerçekten Bunda Suçlu Olmadığımı | 25 | 4455 | 11.2 | 3.6 | 88 | "gerçekten" |
-| 8 | Bölüm 7 · Üzgünüm, Suçluyum | 24 | 4041 | 10.4 | 3.8 | 90 | gereksiz iyelik |
-| 9 | Bölüm 8 · Erkeklerin Yüzü Bu yüzden Kızarı | 16 | 2844 | 10.3 | 3.9 | 87 | gereksiz iyelik |
-| 10 | Bölüm 9 · Bu Adamlar Çok Güçlü Değil mi? | 18 | 3160 | 11.1 | 2.9 | 86 | gereksiz iyelik |
-| 11 | Bölüm 10 · İrade ve Gurur | 23 | 4783 | 10.1 | 3.1 | 88 | "kendi" |
-| 12 | Bölüm 11 · Kazanan… | 15 | 2913 | 9.0 | 3.1 | 89 | gereksiz iyelik |
-| 13 | Epilog · Sonsöz | 15 | 3355 | 10.2 | 4.5 | 90 | gereksiz iyelik |
+| 1 | Prolog · Rastlamak | 11 | 1890 | 10.0 | 2.7 | 90 | "sadece" |
+| 2 | Bölüm 1 · Kavuşma ve Veda | 15 | 2765 | 10.4 | 3.5 | 88 | "sadece" |
+| 3 | Bölüm 2 · Rüya olması gerçek olduğu anlamı | 22 | 3639 | 12.2 | 2.7 | 89 | "olduğunu" zinciri |
+| 4 | Bölüm 3 · O tarafta ne yapacaktı? | 24 | 4183 | 11.4 | 3.5 | 85 | "gerçekten" |
+| 5 | Bölüm 4 · Bir Erkeğin Allığına Kim İhtiyaç | 23 | 3887 | 10.6 | 3.1 | 89 | "sadece" |
+| 6 | Bölüm 5 · Rus Dere veya Kısaca Açığa Çıkan | 22 | 3686 | 11.5 | 3.2 | 88 | gereksiz iyelik |
+| 7 | Bölüm 6 · Gerçekten Bunda Suçlu Olmadığımı | 25 | 4455 | 11.2 | 3.5 | 88 | "gerçekten" |
+| 8 | Bölüm 7 · Üzgünüm, Suçluyum | 24 | 4041 | 10.4 | 3.5 | 90 | "olduğunu" zinciri |
+| 9 | Bölüm 8 · Erkeklerin Yüzü Bu yüzden Kızarı | 16 | 2844 | 10.3 | 3.6 | 87 | "bu yüzden" |
+| 10 | Bölüm 9 · Bu Adamlar Çok Güçlü Değil mi? | 18 | 3160 | 11.1 | 2.6 | 86 | "sadece" |
+| 11 | Bölüm 10 · İrade ve Gurur | 23 | 4783 | 10.1 | 3.0 | 88 | "kendi" |
+| 12 | Bölüm 11 · Kazanan… | 15 | 2913 | 9.0 | 2.9 | 89 | "sadece" |
+| 13 | Epilog · Sonsöz | 15 | 3355 | 10.2 | 4.3 | 90 | "bu yüzden" |
 
 ### Cilt 5 · 1. Prolog · Rastlamak (s.4–15)
 
 - **Kelime/cümle**: ort 10.0 kelime/cümle · tip/örnek oranı 0.61 · diyalog satırı/sayfa 2.9
-- **gereksiz iyelik**: 10
-  - “…uk mu? Sanırım Sensei onu çok destekliyor.” “Onun çok eski ve prestijli bir aileden geldiğini …”
-  - “…lim diye…” Takdir edilmeyen insanların acısı onun etrafında dönüyordu. Kendine dair düşmanlık …”
 - **"sadece"**: 7
   - “…şeyin boşuna olacağını söyledi… Yeter artık. Sadece bırakmak istiyorum…” Bunun gibi cümleleri uz…”
   - “… beri bunların hepsini yapma arzusu yoktu. O sadece büyükbabasının beklentilerini karşılamak ist…”
 - **"gerçekten"**: 5
   - “…“Eh〜, eh〜, bekle bir dakika〜! Gerçekten ne dediğini bilmiyorum, biliyor musun〜?” Bas…”
   - “…ma sonra ışıltılı biçimde gülümsedi. {Uwaah, gerçekten, teşekkür ederim, çok tatlı ♡!} Masha’nın pe…”
+- **gereksiz iyelik**: 4
+  - “…lim diye…” Takdir edilmeyen insanların acısı onun etrafında dönüyordu. Kendine dair düşmanlık ve sürg…”
+  - “…mel bir puan elde ettiğinde… tüm sıralamalar onun adıyla doldu. “…Eh, sanırım bu kadar.” İlgisi az…”
 - **"bu yüzden"**: 4
   - “…“Eh, öyle görünüyor ki dedikodular yayılmış, bu yüzden yapılacak bir şey yok…” Kendini buna ikna et…”
   - “…“Eh, öyle görünüyor ki dedikodular yayılmış, bu yüzden yapılacak bir şey yok…” Kendini buna ikna et…”
@@ -350,13 +350,11 @@
 - **edilgen "tarafından"**: 2
   - “…tilerini karşılamak istiyordu. Sadece annesi tarafından övülmek istiyordu. Kardeşini rahatlatmak ist…”
   - “…me arzusu. Masachika’ya bulaşan ve Masachika tarafından şiddetle kenara itilen çocuklarla aynı ifade…”
+- **Ani düşüş**: s.13(13)
 
 ### Cilt 5 · 2. Bölüm 1 · Kavuşma ve Veda (s.15–30)
 
 - **Kelime/cümle**: ort 10.4 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 8.2
-- **gereksiz iyelik**: 12
-  - “… gülümsemeyle yavaşça başını salladı. “Evet… Benim Saa-kun.” Bu sözleri duyduktan sonra anıları…”
-  - “…a-kun’un beni koruduğu işaretler… Nasıl hâlâ senin böyle bir şeye sahip başka biri olduğunu düş…”
 - **"sadece"**: 9
   - “… görünüşü önündeki senpai’den çok farklıydı. Sadece boyu ve vücut şekli tamamen farklı değildi, …”
   - “…en nefret etmene gerek yok“ demek istiyorum, sadece bunu defalarca söylemek istiyorum.” Bunu söy…”
@@ -366,6 +364,9 @@
 - **cümle başı "Ve"**: 7
   - “…ri geçirdi ve evden kaçtı, sonra eve gelemedi. Ve sorun şu ana kadar devam etti. Yaşadığı sorun…”
   - “…kızın tereddüt etmeden bağırmasına neden oldu. Ve aynı zamanda……”
+- **gereksiz iyelik**: 6
+  - “…a çalışsa da Maria’nın tutumu hiç değişmedi. Onun ciddi gözlerini görünce Masachika’nın sesi doğal o…”
+  - “…a’nın düşünceleri sevgi ve tutkuyla doluydu. Onun ifadesini böyle gören Masachika, gerçeklikten kaçmak i…”
 - **"bu yüzden"**: 5
   - “…ulamaya çalıştım ama sen hiç cevap vermedin, bu yüzden şöyle düşündüm: ” Belki de seni başkasıyla k…”
   - “…tatilde seni göremezsem vazgeçmeyi düşündüm. Bu yüzden…kader bu.” “F-kader… Hayır, bana göre bu bir…”
@@ -376,9 +377,6 @@
 ### Cilt 5 · 3. Bölüm 2 · Rüya olması gerçek olduğu anlamına gelmez… (s.30–52)
 
 - **Kelime/cümle**: ort 12.2 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 8.0
-- **gereksiz iyelik**: 13
-  - “…şuyordu. Daha sonra büyükanne ve büyükbabası onun mutlu yüzünü görmesin diye terastan gizlice …”
-  - “…nmayın. Burada ne yaptığınızı sormak isteyen benim.” “Ne yapıyorum ben, ah, kafam…!” “Beyniniz …”
 - **"olduğunu" zinciri**: 11
   - “…lmeden önce oynadığım otome oyununun dünyası olduğunu hatırlamaya başladım.” “Kimse sana önceki ha…”
   - “…lmeden önce oynadığım otome oyununun dünyası olduğunu hatırlamaya başladım.” “Kimse sana önceki ha…”
@@ -391,18 +389,18 @@
 - **"bu yüzden"**: 5
   - “…n boss’u da fethedebileceksiniz, değil mi?” “Bu yüzden, her şeyden önce Onii-chan’ın bu gizli karak…”
   - “…“İşte bu yüzden sen hiç cesareti olmayan kahrolası bir bakir…”
+- **gereksiz iyelik**: 4
+  - “…şuyordu. Daha sonra büyükanne ve büyükbabası onun mutlu yüzünü görmesin diye terastan gizlice odasın…”
+  - “…arlandı─────. “Hala saf〜!” “Uhh!” …Masachika onun gelişini tahmin etmesine rağmen Yuki’nin vücudunun mi…”
 - **"diye" öncesi virgül yok**: 4
   - “…ümserken Masachika’nın içinden “Ah, kahretsin” diye düşündüğü anda, sade giyinmiş ve kollarında …”
   - “…ayca sakin kalmaya karar veren ağabeyine “Muu” diyerek yanaklarını şişirdi. “Bu durumda üzgün ol…”
-- **Ani düşüş**: s.49(16), s.43(11), s.42(7), s.52(4)
+- **Ani düşüş**: s.49(14), s.43(11), s.42(7), s.52(4)
 
 ### Cilt 5 · 4. Bölüm 3 · O tarafta ne yapacaktı? (s.52–76)
 
 - **Sadakat**: ort 85.3; zayıf: s.67 (66: diyalog -3); s.56 (74: diyalog -2); s.68 (74: diyalog -2)
 - **Kelime/cümle**: ort 11.4 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 6.9
-- **gereksiz iyelik**: 13
-  - “…“Sonunda benim matematik ödevim de tamamlandı…” Yaz tatili …”
-  - “…lerdi hedeflerine ulaşmış olacaktı. Ancak bu onun sıradan bir biçimde “İyi iş!” O halde dağıla…”
 - **"gerçekten"**: 10
   - “…” “Evet, bununla tüm ödevimi bitirdim.” “Ah, gerçekten mi? İyi iş.” Görünüşe göre Alya tüm ödevleri…”
   - “…nu nasıl bilebilirim?” “Doğru mu? Ah, hayır, gerçekten anlamana gerek yok. Öyle demek istemedim… Bi…”
@@ -418,14 +416,14 @@
 - **"olduğunu" zinciri**: 9
   - “…k etmek istedi… ama sakince riskin çok büyük olduğunu düşündü. Masachika, yanlış cevap olduğunu bi…”
   - “…k etmek istedi… ama sakince riskin çok büyük olduğunu düşündü. Masachika, yanlış cevap olduğunu bi…”
-- **Ani düşüş**: s.63(16), s.71(11), s.65(9)
+- **"ayrıca"**: 7
+  - “…yönetmek olduğunda… Alisa mükemmeliyetçidir. Ayrıca etrafındakilerin gözünde “mükemmellik” stand…”
+  - “…yönetmek olduğunda… Alisa mükemmeliyetçidir. Ayrıca etrafındakilerin gözünde “mükemmellik” stand…”
+- **Ani düşüş**: s.71(11), s.65(9)
 
 ### Cilt 5 · 5. Bölüm 4 · Bir Erkeğin Allığına Kim İhtiyaç Duyar? (s.76–99)
 
 - **Kelime/cümle**: ort 10.6 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 16
-  - “… nadiren başını eğiyordu. Diğer grup üyeleri onun davranışı karşısında şaşkınlığa uğradılar. T…”
-  - “… ruh halini paylaşıyorlardı. “Utanma” dedi. “Senin uğruna akrabalarımın önünde eğilmekten korkm…”
 - **"sadece"**: 12
   - “…, buradaki durum ne?” Öncelikle burada neden sadece iki kişi vardı? Bugün Takeshi ile Hikaru’nun…”
   - “…Nao’nun erkek arkadaşı Ryuichi Kasugano’ydu. Sadece bu da değil, diğer üçü sanki neler olduğunu …”
@@ -441,14 +439,17 @@
 - **cümle başı "Ama/Fakat"**: 10
   - “…de birlikte katılalım!” “Dışarıdan katılım mı? Ama elbette bu…” Nao, başından beri hedeflediği c…”
   - “…ğil mi?” Dedi ki, “Eh, evet… Sanırım bu doğru. Ama sorun değil. Eğer torunundan ömür boyu sürece…”
+- **"kendi"**: 5
+  - “…Riho, babasının şirketindeki durumun kendi kontrolü dışında olsa da yine de en azından …”
+  - “…i ağzının kenarını kaldırdı ve başparmağıyla kendisini işaret etti. “Sorun şu ki, büyükbabam Ei…”
 - **Ani düşüş**: s.89(12)
 
 ### Cilt 5 · 6. Bölüm 5 · Rus Dere veya Kısaca Açığa Çıkan Aşk (s.99–121)
 
 - **Kelime/cümle**: ort 11.5 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 8.1
-- **gereksiz iyelik**: 19
-  - “…ne fark var?” “Sanırım çok farklı olacak. Ve senin keman çaldığını hiç duymadım.” “Bunu bilmiyo…”
-  - “…ını hiç duymadım.” “Bunu bilmiyordum. Eh, bu benim övüneceğim bir şey değil… En iyi ihtimalle, …”
+- **gereksiz iyelik**: 10
+  - “…ını hiç duymadım.” “Bunu bilmiyordum. Eh, bu benim övüneceğim bir şey değil… En iyi ihtimalle, ” Cz…”
+  - “…ık sorgulayan katı bir kadın patron gibiydi. Onun gözünde kesinlikle kötülüğe tolerans yoktu.…”
 - **"bu yüzden"**: 9
   - “…u sevdiği anlamına geliyor, değil mi? Hikaru bu yüzden bu durumdaydı.” “…Hmm~?”…”
   - “…k Yuki’nin başka planları vardı ve gelemedi, bu yüzden Sayaka’yı boş olan kontenjana kendisine katı…”
@@ -475,9 +476,6 @@
 - **"bu yüzden"**: 11
   - “…in yapılan bağış da önemli miktarda paraydı, bu yüzden Raikokai’nin onayı olmadan planın uygulanmas…”
   - “…e iş dünyasında gerçekten de ağır toplardır… bu yüzden muhtemelen artık bu kadar küçük bir grubu um…”
-- **gereksiz iyelik**: 10
-  - “…Masachika onun arkasına sinerek, “Eh, aslında karşıtlıkları…”
-  - “…ydi, değil mi?” “…Ah, doğru.” Masachika ses tonunu alçalttığını fark etti ve kendi kendine, “K…”
 - **"olduğunu" zinciri**: 9
   - “…çin üzgünüm ama yeni gömleklerin biraz sıcak olduğunu duydum?” “Ne? Neden?” İkisi de ona “Sen deli…”
   - “…eden bahsediyorsun sen?” “Bugün bile gelinim olduğunu iddia eden güzel bir transfer öğrenci yeni d…”
@@ -487,14 +485,14 @@
 - **"sadece"**: 7
   - “…satış standı kurulmasına karar verildi. Eğer sadece satın alma olsaydı koridorlar, satın almak i…”
   - “…satış standı kurulmasına karar verildi. Eğer sadece satın alma olsaydı koridorlar, satın almak i…”
-- **Ani düşüş**: s.136(13)
+- **"kendi"**: 7
+  - “…psi biraz kafası karışmış duruyordu ve Alisa kendi kendine mırıldandı, “Neler olduğundan emin d…”
+  - “…sachika ses tonunu alçalttığını fark etti ve kendi kendine, “Kahretsin, ” diye düşündü. Alisa v…”
+- **Ani düşüş**: s.125(13), s.136(12)
 
 ### Cilt 5 · 8. Bölüm 7 · Üzgünüm, Suçluyum (s.146–170)
 
 - **Kelime/cümle**: ort 10.4 kelime/cümle · tip/örnek oranı 0.54 · diyalog satırı/sayfa 7.4
-- **gereksiz iyelik**: 20
-  - “…ğdi. Ancak Masachika hiç endişeli değildi ve onun tepkisini fark etme belirtisi göstermedi. Bu…”
-  - “… ne olduğunun farkındaydı. Bu sahiplenmeydi. Onun başkalarıyla böyle arkadaş olmasını istemiyo…”
 - **"olduğunu" zinciri**: 12
   - “…eninle tanıştığıma memnun oldum… Aslında kim olduğunu biliyordum ama böyle tanıtılmak biraz tuhaf …”
   - “…eninle tanıştığıma memnun oldum… Aslında kim olduğunu biliyordum ama böyle tanıtılmak biraz tuhaf …”
@@ -504,20 +502,20 @@
 - **"bu yüzden"**: 7
   - “…üm komite üyeleri mola vermek zorunda kaldı, bu yüzden fazla yer kalmadı. “Bu yıl da festival iki g…”
   - “…%20 artıran bir kahve dükkanı projesi vardı… bu yüzden bununla ilgileneceğiz.” “Bir dakika bekle.” …”
+- **gereksiz iyelik**: 7
+  - “…ğdi. Ancak Masachika hiç endişeli değildi ve onun tepkisini fark etme belirtisi göstermedi. Bu arada top…”
+  - “… ne olduğunun farkındaydı. Bu sahiplenmeydi. Onun başkalarıyla böyle arkadaş olmasını istemiyordu. Onunl…”
 - **cümle başı "Ve"**: 7
   - “…zından bana biraz daha farklı davranabilirdin! Ve randevuya çıktık. Ben…Ben…hatta seni öptüm! V…”
   - “…zından bana biraz daha farklı davranabilirdin! Ve randevuya çıktık. Ben…Ben…hatta seni öptüm! V…”
 - **"gerçekten"**: 7
   - “…sana benden bahsetti mi?” “Evet.” “Evet, ben gerçekten Suou-san ve Kuze-san’ın arkadaşıyım. Bir zam…”
   - “…imle hitap etmelerine izin verdiğim kişiler, gerçekten kalbimi açtığım kişilerdir. Kolayca elde ede…”
-- **Ani düşüş**: s.153(26)
+- **Ani düşüş**: s.153(25)
 
 ### Cilt 5 · 9. Bölüm 8 · Erkeklerin Yüzü Bu yüzden Kızarır… (s.170–186)
 
 - **Kelime/cümle**: ort 10.3 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 5.8
-- **gereksiz iyelik**: 17
-  - “…nmişti. Ama diğer yandan… “Ah, özür dilerim! Benim hatam!” Bazı üyeler Alisa’nın mükemmelliğine…”
-  - “…ha hata yaptı ve performans durdu. Bu sadece onun pratik eksikliğine bağlanabilir. Ancak…”
 - **"bu yüzden"**: 10
   - “…“Ben bir enstrüman çalmıyorum, bu yüzden bunun sen ve Maruyama-kun için ne kadar zor …”
   - “…“Ben bir enstrüman çalmıyorum, bu yüzden bunun sen ve Maruyama-kun için ne kadar zor …”
@@ -530,6 +528,9 @@
 - **"olduğunu" zinciri**: 9
   - “…zden bugünlük hangi kısımların hataya yatkın olduğunu bulmaya çalışalım.” Alisa’nın ağzından çıkan…”
   - “… verildi. “Evet… Hala geliştirilecek çok şey olduğunu biliyorum ama bu iyi hissettirdi.” Bu sözler…”
+- **gereksiz iyelik**: 6
+  - “…üçük bir kahkaha attı. Takeshi, sanki bir an onun gülümsemesine şaşırmış gibi ağzını açtıktan sonra…”
+  - “…a yüzen ürüne bakarken seğirdi. Bütün bunlar onun fikri olsa da, böyle bir ürünü yapan kişinin, onu …”
 - **"gerçekten"**: 5
   - “…sini yükseltti. “Ah, teşekkür ederim. Hayır, gerçekten üzgünüm. Biraz daha pratik yapmalıydım.” “Bi…”
   - “…eshi, Alisa’ya döndü. “Ama yine de Kujou-san gerçekten harika. Çok iyi şarkı söylüyor! Bu kadar ber…”
@@ -538,9 +539,6 @@
 
 - **Sadakat**: ort 86.2; zayıf: s.190 (74: diyalog -2)
 - **Kelime/cümle**: ort 11.1 kelime/cümle · tip/örnek oranı 0.54 · diyalog satırı/sayfa 7.9
-- **gereksiz iyelik**: 14
-  - “…ndan ve yoğun kıskançlıktan başı dönüyordu. “Senin sorunun ne Kuzzechi? Uhh, bing bong.” Masacc…”
-  - “…efes vererek ona sert bir biçimde seslendi. “Onun peşinden gitmemiz gerekmez mi?” “Ha?” “Onu t…”
 - **"sadece"**: 12
   - “…tı ve Sayaka iç geçirerek cevap verdi. “…Ben sadece biraz temiz hava alacağım.”…”
   - “…r şey için burada değilim. Burada tanışmamız sadece bir tesadüftü.” Bunu söyledikten ve omuzları…”
@@ -550,13 +548,16 @@
 - **"gerçekten"**: 6
   - “…geliyor! İlk başta bunu başaramayacağımızdan gerçekten endişeliydim…” “Evet, özellikle “Phantom”da …”
   - “…geliyor! İlk başta bunu başaramayacağımızdan gerçekten endişeliydim…” “Evet, özellikle “Phantom”da …”
+- **gereksiz iyelik**: 6
+  - “…n bir gülümsemeyle gizlendi. “Biliyor musun, senin gibi insanların neden bu kadar popüler olduğunu g…”
+  - “…uzaklaşırken bunu söyledi. Omzunun üzerinden onun sırtına bakan Sayaka gözlüğünü kaldırdı. “Ne yaptı…”
 - **cümle başı "Ama/Fakat"**: 4
   - “…lamamız gerekiyordu.” “Evet, öyle düşünüyorum. Ama hepsini bir araya getirdiğimizde, bu’Phantom’…”
   - “…ibi bir gülümsemeyle kutuları havaya kaldırdı. Ama bu gülümseme çok geçmeden sertleşti. “Bu arad…”
 - **"kendi"**: 4
   - “…la konuşun ya da kız arkadaşınızla ağlayarak kendinizi toparlayın. Eğer bunu yapamazsan işini b…”
   - “…la konuşun ya da kız arkadaşınızla ağlayarak kendinizi toparlayın. Eğer bunu yapamazsan işini b…”
-- **Ani düşüş**: s.196(12), s.187(9)
+- **Ani düşüş**: s.196(11), s.187(9), s.203(7)
 
 ### Cilt 5 · 11. Bölüm 10 · İrade ve Gurur (s.204–227)
 
@@ -570,23 +571,20 @@
 - **"olduğunu" zinciri**: 8
   - “… sonundan çıktı ve etkinliğin başlamak üzere olduğunu duyurdu. Masachika hâlâ seyircilerin arkasın…”
   - “…mı geliyor? Bunun uygun bir yanlış hesaplama olduğunu düşünüyorum. Masachika ellerini çırparken bu…”
-- **gereksiz iyelik**: 8
-  - “…şka bir konu olsun, kolaylıkla halledebilir! Onun engin bilgisi bu sınav savaşında güzelce kul…”
-  - “…şka bir konu olsun, kolaylıkla halledebilir! Onun engin bilgisi bu sınav savaşında güzelce kul…”
 - **"yani"**: 8
   - “… farklı temadan oluşuyor. Son soru eklenecek yani toplamda 31 soru olacak ve her yarışmacının …”
   - “…zca bir kişi’Yardım Çağrısı’nı kullanabilir. Yani bir kişi’Yardım Çağrısı’ yaptığında karşı ta…”
 - **cümle başı "Ama/Fakat"**: 7
   - “… katılın, olur mu? Şimdi nasıl katılacaksınız… Ama ondan önce herkes için önemli bir uyarı var.”…”
   - “…indedir. Zor sorular ise 20 puan değerindedir… Ama bu sefer 100 puan formatını kullanacağız - do…”
+- **edilgen "tarafından"**: 5
+  - “…nleme Komitesi, Yayın Kulübü ve Drama Kulübü tarafından yönetildi. Masachika daha sonra doğrudan Org…”
+  - “…nleme Komitesi, Yayın Kulübü ve Drama Kulübü tarafından yönetildi. Masachika daha sonra doğrudan Org…”
 - **Ani düşüş**: s.226(17), s.218(16)
 
 ### Cilt 5 · 12. Bölüm 11 · Kazanan… (s.227–242)
 
 - **Kelime/cümle**: ort 9.0 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 4.8
-- **gereksiz iyelik**: 11
-  - “…korkusuzca güldü ve şöyle dedi: “Bu dünyada… benim ve Onii-chan’ın aklını okumakta Ayano’dan da…”
-  - “…e ona itaat edeceğim~” Masachika akıllı telefonunu göz açıp kapayıncaya kadar cebine koydu ve …”
 - **"sadece"**: 10
   - “…iyi kimse olamaz, değil mi? Bu yüzden… Ayano sadece”…”
   - “…il mi?” “Evet, lütfen yardım edin.” “Tamam~, sadece rahatlayın~. Bir süre önce sınıftaki insanla…”
@@ -596,26 +594,29 @@
 - **"bu yüzden"**: 6
   - “… daha önce hiç yarışma programı izlememişti, bu yüzden “doğru cevapların genel yüzdesi = ilk önce h…”
   - “… daha önce hiç yarışma programı izlememişti, bu yüzden “doğru cevapların genel yüzdesi = ilk önce h…”
+- **gereksiz iyelik**: 6
+  - “…eki Alisa’ya baktı. Ancak Alisa bir kez daha onun bakışlarını fark etmedi. “Pekala, artık dördüncü tema …”
+  - “…de sabırsızlık artmaya başladı. Kugh! HAYIR! Benim düşünemediğim şeyleri düşünme! Eldeki soruna odaklanmam…”
 - **"yani"**: 6
   - “…et! Japon takvimi mi? Yanlış! Ocak ve Şubat! Yani İngilizce mi? Hayır, daha kolay bir şey… Top…”
   - “…gelmeye başladı. “Yuki-sama, yıldızlar yedi. Yani doğru cevap 3.” “Anladım, teşekkür ederim Ay…”
 - **"gerçekten"**: 4
   - “…dım etmeye istekli, değil mi~?” “İşte böyle, gerçekten üzgünüm~ Kuze-kun. Çünkü bu aynı zamanda seç…”
   - “…a-sama’yı öpeceğim.” “Evet teslim oluyorum~. Gerçekten pes ediyorum, sadece ona itaat edeceğim~” Ma…”
-- **Ani düşüş**: s.228(13), s.234(11)
+- **Ani düşüş**: s.228(12), s.234(11)
 
 ### Cilt 5 · 13. Epilog · Sonsöz (s.242–257)
 
 - **Kelime/cümle**: ort 10.2 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 3.2
-- **gereksiz iyelik**: 14
-  - “…a çözmeye çalışıyordu, biliyorsun değil mi? Sonunda durum tersine dönmüş olabilir ama içerik b…”
-  - “…düşündü. “Sana güvenen pek çok insan var ve… senin yeteneğini tanıyan pek çok insan var. Ve… Se…”
 - **"bu yüzden"**: 12
   - “…rken rekabetçi ruhu ve mücadele ruhu arttı. “Bu yüzden gücümü kanıtlamak istiyorum. Yuki-san’ı kend…”
   - “…ek çok insan size destek olmak isteyecektir. Bu yüzden baştan beri mağlup olmadınız.” Cümlelerini t…”
 - **"ayrıca"**: 8
   - “…sı bakımından Ohii-sama kazanıyor, değil mi? Ayrıca problemleri çözerken kuralları da çözmeye ça…”
   - “…lüyor. “Ha?” diye düşünenler için. bu sefer “ayrıca” kelimesini gördüğünüzde. Bu Ekstra Cilt 4.5…”
+- **gereksiz iyelik**: 8
+  - “…mdayken gösterdiği bu onurlu davranış… Zaten onun hayranıyım.” “Ah, Suou-sama da öyle. Kujou-sama’nın is…”
+  - “…düşündü. “Sana güvenen pek çok insan var ve… senin yeteneğini tanıyan pek çok insan var. Ve… Sen ve Yuki-s…”
 - **"sadece"**: 8
   - “…Yuki-san’ı kendi gücümle yenmek istiyorum ve sadece senin için yük olan bir süs olmak istemiyoru…”
   - “…iyorum. Senin ortağın olmayı hak eden benim. Sadece tanınmak istiyorum…” Sözler sonunda soldu. A…”
@@ -632,21 +633,21 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 7 | 103 | 20.6 | 1.9 | 100 | "bu yüzden" |
-| 1 | Prolog · Sihirbazım | 4 | 723 | 8.6 | 6.9 | 85 | gereksiz iyelik |
-| 2 | Bölüm 1 · Bu Adamlar Bu İşe Çok Girmiş | 21 | 3777 | 12.5 | 3.4 | 89 | gereksiz iyelik |
-| 3 | Bölüm 2 · Bir Otaku’nun Romantizmi | 26 | 4244 | 11.8 | 3.5 | 89 | "sadece" |
-| 4 | Bölüm 3 · Tartışmadan Daha Ciddiye Aldım | 22 | 4110 | 11.6 | 3.3 | 89 | "gerçekten" |
-| 5 | Bölüm 4 · Doğrusunu söylemek gerekirse kal | 20 | 3310 | 11.5 | 3.0 | 90 | gereksiz iyelik |
-| 6 | Bölüm 5 · Bir biçimde Daha İyi Hissediyoru | 24 | 4439 | 10.7 | 4.2 | 89 | "gerçekten" |
-| 7 | Bölüm 6 · Savaş Gücü Önemlidir, Değil mi? | 30 | 4819 | 10.9 | 3.5 | 89 | gereksiz iyelik |
-| 8 | Bölüm 7 · Şiddet Her Şeyi Çözer | 30 | 5270 | 11.1 | 3.0 | 88 | gereksiz iyelik |
-| 9 | Bölüm 8 · Verilmezse Kırmaktan Başka Seçen | 15 | 3078 | 11.3 | 3.1 | 88 | gereksiz iyelik |
-| 10 | Bölüm 9 · Sözümü Tutacağım | 19 | 3532 | 10.7 | 3.8 | 90 | gereksiz iyelik |
-| 11 | Bölüm 10 · Ona teşekkür etmek ve veda etme | 20 | 3303 | 9.4 | 4.1 | 90 | gereksiz iyelik |
-| 12 | Epilog · Şimdi, Sadece Şu Anda | 12 | 1766 | 10.1 | 5.2 | 91 | gereksiz iyelik |
-| 13 | Ek Hikâye · Slit-Paisen’in Doğduğu Gün | 6 | 1068 | 12.7 | 3.1 | 88 | "gerçekten" |
-| 14 | Sonsöz · Sonsöz | 2 | 395 | 11.0 | 5.6 | 95 | cümle başı "Ve" |
-| 15 | Ek Hikâye · Yuri Dünyayı Kurtarıyor | 4 | 651 | 11.4 | 3.5 | 90 | kesme öncesi boşluk |
+| 1 | Prolog · Sihirbazım | 4 | 723 | 8.6 | 6.4 | 85 | "kendi" |
+| 2 | Bölüm 1 · Bu Adamlar Bu İşe Çok Girmiş | 21 | 3777 | 12.5 | 3.2 | 89 | "olduğunu" zinciri |
+| 3 | Bölüm 2 · Bir Otaku’nun Romantizmi | 26 | 4244 | 11.8 | 3.2 | 89 | "sadece" |
+| 4 | Bölüm 3 · Tartışmadan Daha Ciddiye Aldım | 22 | 4110 | 11.6 | 3.1 | 89 | "gerçekten" |
+| 5 | Bölüm 4 · Doğrusunu söylemek gerekirse kal | 20 | 3310 | 11.5 | 2.9 | 90 | "sadece" |
+| 6 | Bölüm 5 · Bir biçimde Daha İyi Hissediyoru | 24 | 4439 | 10.7 | 3.9 | 89 | "gerçekten" |
+| 7 | Bölüm 6 · Savaş Gücü Önemlidir, Değil mi? | 30 | 4819 | 10.9 | 3.4 | 89 | gereksiz iyelik |
+| 8 | Bölüm 7 · Şiddet Her Şeyi Çözer | 30 | 5270 | 11.1 | 2.9 | 88 | gereksiz iyelik |
+| 9 | Bölüm 8 · Verilmezse Kırmaktan Başka Seçen | 15 | 3078 | 11.3 | 2.7 | 88 | gereksiz iyelik |
+| 10 | Bölüm 9 · Sözümü Tutacağım | 19 | 3532 | 10.7 | 3.6 | 90 | "gerçekten" |
+| 11 | Bölüm 10 · Ona teşekkür etmek ve veda etme | 20 | 3303 | 9.4 | 3.8 | 90 | "gerçekten" |
+| 12 | Epilog · Şimdi, Sadece Şu Anda | 12 | 1766 | 10.1 | 4.6 | 91 | "sadece" |
+| 13 | Ek Hikâye · Slit-Paisen’in Doğduğu Gün | 6 | 1068 | 12.7 | 3.0 | 88 | "gerçekten" |
+| 14 | Sonsöz · Sonsöz | 2 | 395 | 11.0 | 5.3 | 95 | cümle başı "Ve" |
+| 15 | Ek Hikâye · Yuri Dünyayı Kurtarıyor | 4 | 651 | 11.4 | 3.4 | 90 | kesme öncesi boşluk |
 
 ### Cilt 6 · 0. İllüstrasyonlar · İllüstrasyonlar (s.0–7)
 
@@ -658,9 +659,6 @@
 ### Cilt 6 · 1. Prolog · Sihirbazım (s.7–11)
 
 - **Kelime/cümle**: ort 8.6 kelime/cümle · tip/örnek oranı 0.69 · diyalog satırı/sayfa 2.5
-- **gereksiz iyelik**: 8
-  - “…Birinin benimle aynı yükseklikte ve hızda uçmasını isterim…”
-  - “…rda bana rehberlik etmek için üstümden uçtu. Onun yüzünden düşmekten ya da karanlığa girmekten…”
 - **"kendi"**: 4
   - “…devam etmeliyim… “Bundan pek hoşlanmıyorsan, kendi başına yap!” Dokuz yaşımdayken sınıf arkadaş…”
   - “…devam etmeliyim… “Bundan pek hoşlanmıyorsan, kendi başına yap!” Dokuz yaşımdayken sınıf arkadaş…”
@@ -673,6 +671,9 @@
 - **"gerçekten"**: 4
   - “… O gittiğinde yalnızdım, ama yine de kendimi gerçekten bilgili bulduğumda onun yanımda olmasının ka…”
   - “…iz yerler var. Ve… “Alya’nın şarkı söylemesi gerçekten çok güzel!” “Grubun adını gerçekten çok beğe…”
+- **gereksiz iyelik**: 4
+  - “…rda bana rehberlik etmek için üstümden uçtu. Onun yüzünden düşmekten ya da karanlığa girmekten hiçb…”
+  - “…yine de kendimi gerçekten bilgili bulduğumda onun yanımda olmasının kararsızlığına içerledim. O,…”
 - **"sadece"**: 3
   - “…mı ben de bilmiyordum. Bunu fark ettiğim an, sadece daha yükseğe ulaşmayı amaçlayan kendi yaşam …”
   - “…da hemen cevap verdim. O olmak istedim çünkü sadece olmak istedim. Bu kadar yükseği hedeflemenin…”
@@ -680,9 +681,6 @@
 ### Cilt 6 · 2. Bölüm 1 · Bu Adamlar Bu İşe Çok Girmiş (s.11–32)
 
 - **Kelime/cümle**: ort 12.5 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 7.9
-- **gereksiz iyelik**: 13
-  - “…a planda kuru erik tadında bir tat alıyorum… Benim hayal gücüm mü?”…”
-  - “…tkar görünüyorlardı. “Daha fazla yaklaşma!” “Onun fotoğrafını çekmeyin! Hayır, paranızı almaya…”
 - **"olduğunu" zinciri**: 12
   - “…ardı. “Sanırım esası zencefilli gazoz ama ne olduğunu bilmiyorum… Daha önce bir yerlerde yemiştim.…”
   - “…tırıldığını yazıp insanlardan onu içerken ne olduğunu tahmin etmelerini isteme fikrini ortaya attı…”
@@ -698,6 +696,9 @@
 - **"diye" öncesi virgül yok**: 6
   - “…rı kulübünün üç kızı, hayal kırıklığıyla “Ah…” diye inleyen oğlanları hızla uzaklaştırdı. Alya b…”
   - “… eski güzel kraliyet elfleri ince gövdelidir!” diyemedi. Ve elbette göz kamaştırıcı elflerin gen…”
+- **"gerçekten"**: 6
+  - “…uk sarı saçları vardır, değil mi? Yani bunun gerçekten derin bir anlamı olduğunu düşünmüyorum, anlı…”
+  - “…şkin izlenimlerini coşkuyla söyledi. “Hayır, gerçekten muhteşemdi. Ben de sınava girmeye çalıştım a…”
 - **Ani düşüş**: s.18(12)
 
 ### Cilt 6 · 3. Bölüm 2 · Bir Otaku’nun Romantizmi (s.32–58)
@@ -707,15 +708,15 @@
 - **"sadece"**: 17
   - “…yoktu. “Anlıyorum. Sınav gösterisinden sonra sadece hafif bir yemek yedim, o yüzden hadi iyi yem…”
   - “…yoktu. “Anlıyorum. Sınav gösterisinden sonra sadece hafif bir yemek yedim, o yüzden hadi iyi yem…”
-- **gereksiz iyelik**: 17
-  - “…r Şanslı Köri daha! Köri ve pilav olmadan!” “Benim için de!”…”
-  - “…z önce çok karanlık bir konuşma duydum.” “Bu senin hayal gücün olmalı.” “Bu sadece benim hayal …”
 - **"gerçekten"**: 10
   - “… koyarak kıvranıp çekinerek uzaklaştı. “Ah~, gerçekten mi~? Çok mutluyum♡.” …ve “haha♡” ses efekti …”
   - “…r kız!” diye düşünmüştü. ve onunla geçinmeyi gerçekten planlamıyordu. Tek istisna Maria’ydı… hayır,…”
 - **"yani"**: 9
   - “… Sınıfından herhangi bir şikayet gelmemişti, yani bu sadece bir söylentiydi. “Kulağa hoş geliy…”
   - “…ika, genellikle kendi başına bir hizmetçinin yani Ayano’nun yanında olduğundan, bir hizmetçiyl…”
+- **gereksiz iyelik**: 7
+  - “…en?” Masachika yorgun gözlerini nefes nefese onun aklını okuyan iki kıza çevirdi. Ancak Alisa ona c…”
+  - “…Evet usta, lütfen isminizi buraya yazınız.” “Benim adım mı?” “Böylece Nonoa’nın ve Master’ın adını …”
 - **"bu yüzden"**: 6
   - “…ndan heyecan ve gerilimin etkisi devam etti, bu yüzden pek iştahları yoktu. “Anlıyorum. Sınav göste…”
   - “…releri tamamen koyu perdelerle kapatılmıştı, bu yüzden içeride neler olduğunu göremiyordunuz. Başka…”
@@ -733,9 +734,6 @@
 - **"sadece"**: 12
   - “…a göre değiştirirdi ve eğer anlamadıysa, siz sadece dalkavukluk yaparak inisiyatif alabilirsiniz…”
   - “…dadı. “…hala bir şeye kızgın mısın?” “Hayır? Sadece bana verdiğin sözü unutmuş olabileceğini düş…”
-- **gereksiz iyelik**: 12
-  - “…ir işe yaradığını hatırlamıyordu ama sınıfın onun hakkındaki düşüncesinin zamanla değiştiğini …”
-  - “…inde kimliğini açıklayana kadar çoğu öğrenci onun Başkan Yardımcısı olduğunu bile hatırlamıyor…”
 - **"olduğunu" zinciri**: 11
   - “…li bir dereceye kadar küçümsenmenin daha iyi olduğunu bile düşünüyordu. Dediğimiz gibi, “Risk büyü…”
   - “…li bir dereceye kadar küçümsenmenin daha iyi olduğunu bile düşünüyordu. Dediğimiz gibi, “Risk büyü…”
@@ -745,17 +743,20 @@
 - **"kendi"**: 6
   - “…kardı ve tek dizinin üstüne çöktü, sağ elini kendi göğsüne koydu ve sol elini Alisa’ya doğru uz…”
   - “…eksin?” “Ha, ha…… Uh, bir anınız──?” “Sadece kendi sözlerinizle, baskı olmadan içtenlikle sorma…”
-- **Ani düşüş**: s.79(14), s.60(13)
+- **cümle başı "Ama/Fakat"**: 5
+  - “…} (Ah, evet…… Bu doğru.) {Baskı yaparak değil… Ama bunun yerine beni düzgün bir biçimde davet et…”
+  - “…(Alya gibi ben de biraz endişeliydim… Ama hiçbir sorunla karşı karşıyaymış gibi görünmü…”
+- **Ani düşüş**: s.79(13), s.60(11)
 
 ### Cilt 6 · 5. Bölüm 4 · Doğrusunu söylemek gerekirse kalbim biraz titredi (s.80–100)
 
 - **Kelime/cümle**: ort 11.5 kelime/cümle · tip/örnek oranı 0.54 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 14
-  - “…iyatlı bir tavırla başını kaldırdı. Doğrudan onun yüzüne bakan Masachika sessizce sordu: “Nede…”
-  - “…Bu bir yarışmaydı ve ikimiz de adil oynadık. Benim mütevazı olduğumu düşündüğün için işin kolay…”
 - **"sadece"**: 12
   - “… bir hikaye olurdu. “…Ne yapıyorsun?” Ayano, sadece üç parmağını değil, avucunun tamamını yere b…”
   - “…uygusuz bir ses tonuyla cevap verdi. “Hayır… Sadece hizmetimden memnun kalmadın.” “Hayır, beni d…”
+- **gereksiz iyelik**: 9
+  - “…iyatlı bir tavırla başını kaldırdı. Doğrudan onun yüzüne bakan Masachika sessizce sordu: “Neden hiz…”
+  - “…Bu bir yarışmaydı ve ikimiz de adil oynadık. Benim mütevazı olduğumu düşündüğün için işin kolayına…”
 - **"olduğunu" zinciri**: 8
   - “…erçek hizmetçilerle ilişkilendirmenin yanlış olduğunu açıkladı. “…ben de bunu söylüyorum. Anladın …”
   - “… ne kadar onun varlığını hissetmese de orada olduğunu bildiği için kendini rahat hissetmiyordu. Ma…”
@@ -768,7 +769,7 @@
 - **cümle başı "Ve"**: 4
   - “…nu öğrendiğim iyi oldu.” “Ah, teşekkür ederim. Ve çürük bir otaku olduğum için özür dilerim.” “…”
   - “…sonra Masachika’nın kafasını yıkamaya başladı. Ve böylece ilk önce şampuanlama başladı… (Vaay, …”
-- **Ani düşüş**: s.86(15), s.100(3)
+- **Ani düşüş**: s.86(15), s.97(11), s.100(3)
 
 ### Cilt 6 · 6. Bölüm 5 · Bir biçimde Daha İyi Hissediyorum (s.100–124)
 
@@ -776,9 +777,6 @@
 - **"gerçekten"**: 20
   - “…ıları bilmiyorum. Ve dürüst olmak gerekirse, gerçekten ilgilenmiyorum.” “Öyle mi? Görünüşe göre pek…”
   - “… boşluğu doldurmaya çalıştılar. “Bir dakika, gerçekten mi? Mümkün değil! Ciddi misin?!” Onların düş…”
-- **gereksiz iyelik**: 19
-  - “…sın! Bu doğru değil~! Ah, ne büyük kayıp! Bu benim popüler olmak için tek şansım olabilirdi!” “…”
-  - “…ada başını tutan ve önünde kıvranan Takeshi sonunda içini çekti ve teslimiyetle yere çöktü. “A…”
 - **"bu yüzden"**: 14
   - “…n ve Sarashina-senpai’nin sorumluluğundadır, bu yüzden…Ben de ayrıntıları bilmiyorum. Ve dürüst olm…”
   - “…arımız var! Kıskançlıktan ölmek istemiyoruz, bu yüzden size katılamayız. Gerçekten üzgünüm!” “Eh? A…”
@@ -791,15 +789,18 @@
 - **"yani"**: 8
   - “…cısının asıl görevi Raikokai ile ilgilenmek. Yani ben orada olmasam bile bu pek sorun yaratmaz…”
   - “…iyordun? Bir şey söylemeliydin.” “Şey, evet, yani…” Masachika’nın sözleri üzerine Takeshi bell…”
+- **"kendi"**: 8
+  - “…öfkeyle parladı ama Masachika yılmadı ve onu kendi teorisiyle yüzleştirdi. “Ryuichi ile çıkmanı…”
+  - “…diye sordu. Bu kısa soruya yanıt olarak Masa kendi kendine düşünürken gerçekleri dürüstçe söyle…”
 - **Ani düşüş**: s.121(6)
 
 ### Cilt 6 · 7. Bölüm 6 · Savaş Gücü Önemlidir, Değil mi? (s.124–154)
 
 - **Sadakat**: ort 88.6; zayıf: s.126 (74: diyalog -2)
 - **Kelime/cümle**: ort 10.9 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 16
-  - “… korkuya kapılan Takeshi’ye şunları söyledi. Onun sözleri üzerine Masachika, göz ucuyla Alisa’…”
-  - “…n gün Kiryuin’le tanıştık, değil mi? Seninle onun arasında bir şey mi var, Masachika?” “Kiryui…”
+- **gereksiz iyelik**: 11
+  - “… korkuya kapılan Takeshi’ye şunları söyledi. Onun sözleri üzerine Masachika, göz ucuyla Alisa’nın ifad…”
+  - “…n gün Kiryuin’le tanıştık, değil mi? Seninle onun arasında bir şey mi var, Masachika?” “Kiryuin, bu …”
 - **"sadece"**: 11
   - “…h evet.” Ve böylece sahne arkasında kalanlar sadece Masachika ve Alisa oldu. Geçen gün tam da bu…”
   - “…h evet.” Ve böylece sahne arkasında kalanlar sadece Masachika ve Alisa oldu. Geçen gün tam da bu…”
@@ -820,9 +821,9 @@
 ### Cilt 6 · 8. Bölüm 7 · Şiddet Her Şeyi Çözer (s.154–184)
 
 - **Kelime/cümle**: ort 11.1 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 7.4
-- **gereksiz iyelik**: 20
-  - “…endisiyle el ele tutuşan Sayaka’ydı. Takeshi onun serbest olan diğer elini hemen sıkıca kavrad…”
-  - “…Sahne. Arkasına bakan Masachika telefonunu çıkardı ve diğer ikisinin nerede olduğunu m…”
+- **gereksiz iyelik**: 15
+  - “…bakma.” Ancak adamlar ona sadece baktılar ve onun varlığını tamamen görmezden geldiler. “Affedersiniz!…”
+  - “…ğil, Nonoa’nın doğuştan gelen benzersizliği, onun suçluluk ve empati eksikliğinden kaynaklanıyord…”
 - **cümle başı "Ama/Fakat"**: 11
   - “… Birine vururlarsa o kişi de karşılık verirdi. Ama o…”
   - “… formalitelerini anlamış olmalı” diye düşündü. Ama bu bir hataydı. Nonoa duyguları anlayamıyordu…”
@@ -843,9 +844,9 @@
 ### Cilt 6 · 9. Bölüm 8 · Verilmezse Kırmaktan Başka Seçenek Kalmaz (s.184–199)
 
 - **Kelime/cümle**: ort 11.3 kelime/cümle · tip/örnek oranı 0.58 · diyalog satırı/sayfa 6.9
-- **gereksiz iyelik**: 20
-  - “…ikle yanılıyorlar, bunu en çok hak eden kişi benim…” Tırnaklarını yerken mırıldanan Taiki, sess…”
-  - “…a elbette bu bir yanlış anlaşılma değildi. “’Benim hakkımda ne biliyorsun?’ derken neyi kastedi…”
+- **gereksiz iyelik**: 7
+  - “…a elbette bu bir yanlış anlaşılma değildi. “’Benim hakkımda ne biliyorsun?’ derken neyi kastediyorsun…”
+  - “…e çıkıp Yuki’nin akıllı telefonunu kaldırdı. Onun varlığını fark etmeyen Taiki, onun aniden ortaya çık…”
 - **"ayrıca"**: 6
   - “…şkünlüktür, bu yüzden lütfen bundan kaçının. Ayrıca böyle devam ederseniz geleceğinizde tek görd…”
   - “…ğrenci Konseyi’nin otoritesini baltalamaktı. Ayrıca Sumire-san’ın kendi güvenilirliğini artırmak…”
@@ -861,14 +862,11 @@
 - **edilgen "tarafından"**: 4
   - “…saygı duymuşlardı. Seçim kampanyasında Touya tarafından mağlup edilmemiş olsaydı şimdiye kadar ona h…”
   - “…saygı duymuşlardı. Seçim kampanyasında Touya tarafından mağlup edilmemiş olsaydı şimdiye kadar ona h…”
-- **Ani düşüş**: s.188(14), s.192(12)
+- **Ani düşüş**: s.192(11)
 
 ### Cilt 6 · 10. Bölüm 9 · Sözümü Tutacağım (s.199–218)
 
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 6.3
-- **gereksiz iyelik**: 12
-  - “…me göre ben de öne çıkmak istiyorum!” “…Ha?” Onun canlandırıcı bir biçimde dürüst hissettiren …”
-  - “…an Yardımcısı adayı… Peki ya Prenses Alya?” “Onun tek başına dışarı çıktığını görmek nadirdir.…”
 - **"gerçekten"**: 11
   - “… Bu isteklerle kendini tutamaz mısın Kuze?” “Gerçekten. Bundan sonra bir performansım var, biliyor …”
   - “…ez dinlemiş olursam olayım… Piyano Prensi’ne gerçekten yakışıyordu.” “Gerçekten…’Dahi’ Yusho-san’a …”
@@ -884,17 +882,20 @@
 - **"bu yüzden"**: 6
   - “…tıksız bir talepte bulunduğunun farkındaydı, bu yüzden özür dilemek tek uygun yanıttı. Olay nedeniy…”
   - “…tıksız bir talepte bulunduğunun farkındaydı, bu yüzden özür dilemek tek uygun yanıttı. Olay nedeniy…”
-- **Ani düşüş**: s.217(17), s.209(11), s.215(11)
+- **cümle başı "Ama/Fakat"**: 5
+  - “…işin içindeyse yapabileceğimiz hiçbir şey yok… Ama piyano yarışmasıyla neyi kastediyorsun? Daha …”
+  - “…Yumi’nin ne söylemek üzere olduğunu anlamıştı. Ama anladığı için… hayır, tam olarak anladığı içi…”
+- **Ani düşüş**: s.217(16), s.209(11)
 
 ### Cilt 6 · 11. Bölüm 10 · Ona teşekkür etmek ve veda etmek istiyorum (s.218–238)
 
 - **Kelime/cümle**: ort 9.4 kelime/cümle · tip/örnek oranı 0.57 · diyalog satırı/sayfa 5.7
-- **gereksiz iyelik**: 24
-  - “…rüşü gösterdiğin için. Diğer grup üyeleri de onun minnettarlık sözlerine gülümseyerek karşılık…”
-  - “…erine gülümseyerek karşılık verdi. “Bu cümle benim için de geçerli! Canlı gösteri çok muhteşemd…”
 - **"gerçekten"**: 19
   - “…lmuş muydu? (Ah, yani bu…) “Ödüllendirilmek” gerçekten böyle bir şey miydi? Alisa uzun süredir hiçb…”
   - “…alladı, enerjileri biraz arttı. “Evet, evet… Gerçekten muhteşemdi! Bu da benden gelen bir pohpohlam…”
+- **gereksiz iyelik**: 15
+  - “…rüşü gösterdiğin için. Diğer grup üyeleri de onun minnettarlık sözlerine gülümseyerek karşılık verdi. “Bu …”
+  - “…nın aradığı çocuktu; ama yine de değildi. O, onun hiç tanımadığı bir Masachika’ydı. Tanıdığı Masa…”
 - **"sadece"**: 9
   - “…ın klavye performansı da gerçekten iyiydi!” “Sadece kibarlık ediyormuşsun gibi hissetmeden edemi…”
   - “…nnettarlığa gerek yok.” “Hayır, cidden, bunu sadece söylemiyorum──” “Neyse, Takeshi’yi bir kenar…”
@@ -912,9 +913,6 @@
 ### Cilt 6 · 12. Epilog · Şimdi, Sadece Şu Anda (s.238–250)
 
 - **Kelime/cümle**: ort 10.1 kelime/cümle · tip/örnek oranı 0.63 · diyalog satırı/sayfa 5.4
-- **gereksiz iyelik**: 15
-  - “…ci bir insan mıyım…) Alisa’nın Masachika’nın onun için özel bir insan olduğunu inkar etmeye ni…”
-  - “…ci bir insan mıyım…) Alisa’nın Masachika’nın onun için özel bir insan olduğunu inkar etmeye ni…”
 - **"sadece"**: 8
   - “…amanlar Alisa’nın tek istediği Masachika’nın sadece ona bakması ve Masachika’ya bakan tek kişini…”
   - “…ndisini ısırmasına izin vermeliydi…Hayır, bu sadece durumu daha da anlaşılmaz hale getirir. (Ugh…”
@@ -924,13 +922,16 @@
 - **cümle başı "Ama/Fakat"**: 7
   - “…yor? Bu sahiplenmenin gerçek doğası bu muydu…? Ama dürüst olmak gerekirse, tüm bu duygular onun …”
   - “…ir hareketti. (Ah, neden böyle bir şey yaptım… Ama Yuki-san daha önce de aynı şeyi yapmıştı, değ…”
+- **gereksiz iyelik**: 6
+  - “…ecek biriydi. Alisa muhtemelen Masachika’nın onun düşündüğünden daha özel olduğunu düşünüyordu. (Yani me…”
+  - “…Masachika onun yanında. Alisa ısırık izlerini gizleyen yapışkan …”
 - **"olduğunu" zinciri**: 5
   - “…a’nın Masachika’nın onun için özel bir insan olduğunu inkar etmeye niyeti yoktu. Çocukluğunun yanı…”
   - “…a’nın Masachika’nın onun için özel bir insan olduğunu inkar etmeye niyeti yoktu. Çocukluğunun yanı…”
 - **cümle başı "Ve"**: 3
   - “…umursamaz davranmasını sinir bozucu buluyordu… Ve farkına bile varmadan bunları yapmıştı. (Ah… …”
   - “…umursamaz davranmasını sinir bozucu buluyordu… Ve farkına bile varmadan bunları yapmıştı. (Ah… …”
-- **Ani düşüş**: s.240(25), s.247(6)
+- **Ani düşüş**: s.247(5)
 
 ### Cilt 6 · 13. Ek Hikâye · Slit-Paisen’in Doğduğu Gün (s.250–256)
 
@@ -942,9 +943,6 @@
 - **edilgen "tarafından"**: 2
   - “…yor?) Bu düşünce muhtemelen sadece Masachika tarafından değil aynı zamanda orada bulunan herkes tara…”
   - “…yor?) Bu düşünce muhtemelen sadece Masachika tarafından değil aynı zamanda orada bulunan herkes tara…”
-- **gereksiz iyelik**: 2
-  - “…atmosfer doldurdu. (Ah oğlum, bu zor olacak. Benim sorunum olmasa da yine de sinir bozucu.) Böy…”
-  - “…it bir hikaye yer almaktadır. “Şimdi spor salonunun sahne planlarını tartışmaya başlayalım.” O…”
 - **"olduğunu" zinciri**: 2
   - “…Kulübü başkanı konuştu. “Bunun iyi bir fikir olduğunu düşünüyorum.” “Ha…?” Hafif Müzik Kulübü başk…”
   - “…arlar. Masachika da başlangıçta planın saçma olduğunu düşünüyordu ama şimdi gerçekten işe yarayabi…”
@@ -954,6 +952,8 @@
 - **cümle başı "Ve"**: 2
   - “…tileyen Hafif Müzik Kulübü başkanına çevrildi. Ve sonra── ◇ “Hayır, bu harikaydı. Müzakere bece…”
   - “…lan olurdu ama gerçekten o kadar etkilenmişti. Ve duygudan titreyen dudakları istemsizce belli …”
+- **"sadece"**: 1
+  - “…en cheongsam giyiyor?) Bu düşünce muhtemelen sadece Masachika tarafından değil aynı zamanda orad…”
 - **Ani düşüş**: s.256(5)
 
 ### Cilt 6 · 14. Sonsöz · Sonsöz (s.256–258)
@@ -968,11 +968,10 @@
 - **"bu yüzden"**: 2
   - “…erjik…?” Eh, bugünlerde işler böyle yürüyor. Bu yüzden sonsözün ana içerik olduğunu düşünen tüm oku…”
   - “…ğa çıkardım, ancak bunları minimumda tuttum, bu yüzden lütfen beni affedin. Hile içermeyen parçalam…”
-- **gereksiz iyelik**: 2
-  - “…yler yapacak başka bir yazar yok. Öncelikle, benim gibi sayfa sayısını doğru yönetemeyen ve “Va…”
-  - “…yler yapacak başka bir yazar yok. Öncelikle, benim gibi sayfa sayısını doğru yönetemeyen ve “Va…”
 - **"diye" öncesi virgül yok**: 1
   - “…ve “Vay canına, ne kadar çok fazla sayfa var!” diye istemeden her şeyi yazan bir yazar bulmak na…”
+- **gereksiz iyelik**: 1
+  - “…yler yapacak başka bir yazar yok. Öncelikle, benim gibi sayfa sayısını doğru yönetemeyen ve “Vay can…”
 - **"gerçekten"**: 1
   - “…nlikle hiçbir art amacım yoktu. Çabalarınızı gerçekten takdir ediyorum. Ayrıca şu anda harika manga…”
 
@@ -982,9 +981,6 @@
 - **kesme öncesi boşluk**: 3
   - “…i-chan, sen de öyle düşünüyorsun, değil mi?!” ’Bu kadar aniden ne oldu?’ “Falan-blah-blah, y…”
   - “…i-chan, sen de öyle düşünüyorsun, değil mi?!” ’Bu kadar aniden ne oldu?’ “Falan-blah-blah, y…”
-- **gereksiz iyelik**: 3
-  - “…Bunu öne süren Yuki, aniden akıllı telefonunu çıkarıp bir arama yaptı. Diğer kişi cevap v…”
-  - “…ır, bu çok fazla…” “Sorun değil. Sonuçta sen benim sevimli küçük kız kardeşim gibisin.” “Ah…” Y…”
 - **"sadece"**: 2
   - “…eti üzerindeki sutyeninin kopçasını çıkardı. Sadece bir saniye içinde. Artık iç çamaşırından kur…”
   - “…m onii-chan. Her şeyi birleştirmeye çalışmak sadece ucuz bir hareketti.” ’Evet, işleri zorlamaya…”
@@ -994,6 +990,9 @@
 - **"olduğunu" zinciri**: 2
   - “… kadar ağırdı ki, biraz dinlenmeye ihtiyacım olduğunu düşündüm…” “Böylece?” “Evet, Yuri dünyayı ku…”
   - “…sanki onları düzgünce sıkmanın nasıl bir şey olduğunu biliyormuşsun gibi konuşuyorsun.” “Hey, nede…”
+- **gereksiz iyelik**: 2
+  - “…” “Hey, neden şimdi bunu konuşuyoruz──” Yuki onun sözünü bitirmesine izin vermeden aramayı kapattı …”
+  - “…ır, bu çok fazla…” “Sorun değil. Sonuçta sen benim sevimli küçük kız kardeşim gibisin.” “Ah…” Yuki, giz…”
 - **uzun cümle**: 1
   - “…260. sayfa…”
 - **Ani düşüş**: s.260(15)
@@ -1004,20 +1003,20 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 6 | 114 | 19.0 | 1.8 | 100 | "bu yüzden" |
-| 1 | Prolog · Bu | 7 | 1348 | 10.3 | 4.5 | 91 | gereksiz iyelik |
-| 2 | Bölüm 1 · Yeniden Birleşme | 28 | 5344 | 10.2 | 4.4 | 89 | gereksiz iyelik |
-| 3 | Bölüm 2 · Bu Tür Öngörülere İhtiyacımız Yo | 27 | 5108 | 11.9 | 3.2 | 89 | gereksiz iyelik |
-| 4 | Bölüm 3 · Bir dakika, Cowlick’im ayağa mı  | 30 | 5193 | 11.5 | 3.4 | 89 | gereksiz iyelik |
-| 5 | Bölüm 4 · Yüzyılın En Büyük Karışıklık Duy | 29 | 5356 | 11.3 | 3.5 | 89 | gereksiz iyelik |
-| 6 | Bölüm 5 · Karakter Yaratacaksanız Utancı B | 33 | 5908 | 11.8 | 3.7 | 89 | gereksiz iyelik |
-| 7 | Bölüm 6 · Kalbe Zarar Veren Senpai ve Kalb | 24 | 3809 | 11.2 | 3.5 | 89 | gereksiz iyelik |
-| 8 | Bölüm 7 · Yuvarlanan Büyük Bir Top Muhteme | 25 | 3651 | 10.7 | 3.3 | 90 | gereksiz iyelik |
-| 9 | Bölüm 8 · Gerçekten Büyüdün, Değil mi? | 16 | 2738 | 9.6 | 3.9 | 90 | gereksiz iyelik |
-| 10 | Bölüm 9 · Rastlamak | 16 | 2900 | 9.7 | 3.8 | 89 | gereksiz iyelik |
-| 11 | Bölüm 10 · At Yarışması | 17 | 3154 | 10.0 | 3.2 | 88 | "gerçekten" |
-| 12 | Epilog · Bu | 9 | 1711 | 9.7 | 4.7 | 89 | gereksiz iyelik |
-| 13 | Yan Hikâye · Çocukluk Arkadaşı Olduğu Zama | 5 | 871 | 9.8 | 2.3 | 92 | "gerçekten" |
-| 14 | Sonsöz · Sonsöz | 6 | 1692 | 10.0 | 5.0 | 97 | "sadece" |
+| 1 | Prolog · Bu | 7 | 1348 | 10.3 | 3.9 | 91 | gereksiz iyelik |
+| 2 | Bölüm 1 · Yeniden Birleşme | 28 | 5344 | 10.2 | 4.1 | 89 | "gerçekten" |
+| 3 | Bölüm 2 · Bu Tür Öngörülere İhtiyacımız Yo | 27 | 5108 | 11.9 | 3.0 | 89 | "sadece" |
+| 4 | Bölüm 3 · Bir dakika, Cowlick’im ayağa mı  | 30 | 5193 | 11.5 | 3.1 | 89 | "yani" |
+| 5 | Bölüm 4 · Yüzyılın En Büyük Karışıklık Duy | 29 | 5356 | 11.3 | 3.3 | 89 | gereksiz iyelik |
+| 6 | Bölüm 5 · Karakter Yaratacaksanız Utancı B | 33 | 5908 | 11.8 | 3.5 | 89 | "yani" |
+| 7 | Bölüm 6 · Kalbe Zarar Veren Senpai ve Kalb | 24 | 3809 | 11.2 | 3.2 | 89 | "sadece" |
+| 8 | Bölüm 7 · Yuvarlanan Büyük Bir Top Muhteme | 25 | 3651 | 10.7 | 3.0 | 90 | "gerçekten" |
+| 9 | Bölüm 8 · Gerçekten Büyüdün, Değil mi? | 16 | 2738 | 9.6 | 3.8 | 90 | kesme öncesi boşluk |
+| 10 | Bölüm 9 · Rastlamak | 16 | 2900 | 9.7 | 3.5 | 89 | "gerçekten" |
+| 11 | Bölüm 10 · At Yarışması | 17 | 3154 | 10.0 | 3.0 | 88 | "gerçekten" |
+| 12 | Epilog · Bu | 9 | 1711 | 9.7 | 4.3 | 89 | gereksiz iyelik |
+| 13 | Yan Hikâye · Çocukluk Arkadaşı Olduğu Zama | 5 | 871 | 9.8 | 2.1 | 92 | "gerçekten" |
+| 14 | Sonsöz · Sonsöz | 6 | 1692 | 10.0 | 4.8 | 97 | "sadece" |
 
 ### Cilt 7 · 0. İllüstrasyonlar · İllüstrasyonlar (s.0–6)
 
@@ -1029,9 +1028,9 @@
 ### Cilt 7 · 1. Prolog · Bu (s.6–13)
 
 - **Kelime/cümle**: ort 10.3 kelime/cümle · tip/örnek oranı 0.62 · diyalog satırı/sayfa 4.1
-- **gereksiz iyelik**: 16
-  - “…. “Ve… bu elbise çok güzel olsa da, tasarımı benim toplum içinde giymem için biraz fazla müteva…”
-  - “…alanına giren iki büyük tepeye takıldı ve bu onun hızla yukarı bakmasına neden oldu. Hayır, bu…”
+- **gereksiz iyelik**: 8
+  - “…alanına giren iki büyük tepeye takıldı ve bu onun hızla yukarı bakmasına neden oldu. Hayır, bu do…”
+  - “…e Masachika arka dişlerini sıktı. Hey, Slit! Onun diğer tüm öğrencilerin önünde böyle bir kıyafet…”
 - **"sadece"**: 4
   - “… fazla yakın değil miyiz?” “Gerçekten mi? Bu sadece senin hayal gücün değil mi?” “Hayır, çok yak…”
   - “… fazla yakın değil miyiz?” “Gerçekten mi? Bu sadece senin hayal gücün değil mi?” “Hayır, çok yak…”
@@ -1047,14 +1046,11 @@
 - **"diye" öncesi virgül yok**: 2
   - “…öğrenci mutlaka “Bu ikisi kesinlikle bir çift” diye düşünürdü. Hatta bu durumda “Çıkmıyoruz” des…”
   - “…a zorladı. Sonra Slit-paisen’in “Ben başardım” diyen görüntüsü zihninde canlandı ve Masachika ar…”
-- **Ani düşüş**: s.13(7)
+- **Ani düşüş**: s.13(6)
 
 ### Cilt 7 · 2. Bölüm 1 · Yeniden Birleşme (s.13–41)
 
 - **Kelime/cümle**: ort 10.2 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 6.0
-- **gereksiz iyelik**: 21
-  - “…“Heeh~! Peki onun piyano düellosunu kabul etmesini nasıl sağla…”
-  - “…“Heeh~! Peki onun piyano düellosunu kabul etmesini nasıl sağla…”
 - **"gerçekten"**: 20
   - “…bir özür olarak tanımlamak daha doğru olur. “Gerçekten özür dilerim.” Bu sözleri sahnede tüm öğrenc…”
   - “…rak dikkat çekti. “Hey Kuze! Bu sabahki olay gerçekten festival sırasındaki piyano gösterisinden mi…”
@@ -1070,14 +1066,14 @@
 - **"bu yüzden"**: 11
   - “…ve spekülasyonların yayılmasını istemiyordu. Bu yüzden Masachika, onların sorularını elinden geldiğ…”
   - “…ve spekülasyonların yayılmasını istemiyordu. Bu yüzden Masachika, onların sorularını elinden geldiğ…”
+- **cümle başı "Ve"**: 10
+  - “… büyüleyici çekiciliğini koruduğu düşünülürse. Ve dürüst olmak gerekirse Touya’nın toplantıda y…”
+  - “…ir komedi skeçinden fırlamış mutlak bir sahne. Ve böylece, tüm öğrencilerin gülse mi yoksa kızs…”
 - **Ani düşüş**: s.26(14)
 
 ### Cilt 7 · 3. Bölüm 2 · Bu Tür Öngörülere İhtiyacımız Yoktu (s.41–68)
 
 - **Kelime/cümle**: ort 11.9 kelime/cümle · tip/örnek oranı 0.50 · diyalog satırı/sayfa 7.4
-- **gereksiz iyelik**: 20
-  - “…bakışları dalgalandı. Aynı zamanda Masachika onun duygularını açıkça anlıyordu. En başından be…”
-  - “…bakışları dalgalandı. Aynı zamanda Masachika onun duygularını açıkça anlıyordu. En başından be…”
 - **"sadece"**: 17
   - “…kullandı. “Evet, haklısın. Üzgünüm Alya-san. Sadece vokallerin muhteşemdi, bu yüzden…” “Ah, ımm.…”
   - “…kişi Nonoa’ydı. Onun beklenmedik gönüllülüğü sadece Takeshi’nin değil Hikaru’nun da gözlerini fa…”
@@ -1087,6 +1083,9 @@
 - **"yani"**: 10
   - “… sonra dışarıdan umursamaz bir ses konuştu. “Yani~, bu katılabileceğim anlamına mı geliyor? Vo…”
   - “…“Hmm~? Yani Sayacchi ya da Alisa gibi herhangi bir komit…”
+- **gereksiz iyelik**: 10
+  - “…bakışları dalgalandı. Aynı zamanda Masachika onun duygularını açıkça anlıyordu. En başından beri Fortitu…”
+  - “…e yer alan tek kişi Sarashina-senpai, ama bu onun dayanıklılığından kaynaklanıyor… Biraz zor olabilir, öyle …”
 - **"bu yüzden"**: 9
   - “…iği yumrukla suçlunun ön dişlerini kırmıştı, bu yüzden başkalarını gerçekten eleştiremezdi. Üstelik…”
   - “…iği yumrukla suçlunun ön dişlerini kırmıştı, bu yüzden başkalarını gerçekten eleştiremezdi. Üstelik…”
@@ -1097,15 +1096,15 @@
 ### Cilt 7 · 4. Bölüm 3 · Bir dakika, Cowlick’im ayağa mı kalktı? (s.68–98)
 
 - **Kelime/cümle**: ort 11.5 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 9.7
-- **gereksiz iyelik**: 25
-  - “…n. Öğle tatilinde Maria ile yaptığı konuşma. Onun hissettiği duygu ve Maria’ya duyduğu o ani h…”
-  - “…ce… evet. Böyle tuhaf bir mazeret öne sürmek benim hatam. Masachika kendi kendine kıkırdayıp ke…”
 - **"yani"**: 17
   - “…uluşma için tekrar buluşmaya karar verdiler, yani bu altısının son buluşması değildi. “Arkadaş…”
   - “…uluşma için tekrar buluşmaya karar verdiler, yani bu altısının son buluşması değildi. “Arkadaş…”
 - **"gerçekten"**: 17
   - “…ederim, şimdi biraz daha iyi hissediyorum.” “Gerçekten mi? Bunu duyduğuma sevindim…”…”
   - “…yordu. Muhtemelen yarından itibaren her şeyi gerçekten verebilmek için bugün iyice eğlenmeyi planlı…”
+- **gereksiz iyelik**: 13
+  - “…n. Öğle tatilinde Maria ile yaptığı konuşma. Onun hissettiği duygu ve Maria’ya duyduğu o ani heyecan. Bir…”
+  - “…ldukça beceriklisin, değil mi Ayano? Yine de senin adına üzülüyorum.” Yuki repliklerini söylerken a…”
 - **"sadece"**: 12
   - “…a koşarken Masachika’nın nefesi ağırlaştı ve sadece yüzü değil tüm vücudu kızardı. Ancak yüreğin…”
   - “…ştı. “Hey, kes şunu!” “Ah, doğru! At kuyruğu sadece canlılığı ifade eden bir saç modeli değildir…”
@@ -1115,14 +1114,13 @@
 - **tire aralığı tutarsız**: 8
   - “… göğsüne kaydı, yanağını onunkine bastırdı ve— {Ben de sana güveneceğim.} Kulağına yavaşça …”
   - “…nmiş bir kararlılıkla evinin kapısını itti ve— “Ah, tekrar hoş geldin!” Küçük kız kardeşi k…”
-- **Ani düşüş**: s.79(12)
 
 ### Cilt 7 · 5. Bölüm 4 · Yüzyılın En Büyük Karışıklık Duygusu (s.98–127)
 
 - **Kelime/cümle**: ort 11.3 kelime/cümle · tip/örnek oranı 0.48 · diyalog satırı/sayfa 6.7
-- **gereksiz iyelik**: 28
-  - “…m her zamanki hız trenleri ve benzeri şeyler benim için sorun değil… havada asılı kalmak ya da …”
-  - “…le sohbet ediyordu. “(Gördün mü, bak, Hikaru senin iyiliğin için elinden geleni yapıyor, biliyo…”
+- **gereksiz iyelik**: 17
+  - “…le sohbet ediyordu. “(Gördün mü, bak, Hikaru senin iyiliğin için elinden geleni yapıyor, biliyorsun d…”
+  - “…sa da, böyle daha hızlı dönmesini istemişti. Onun abartılı oyunculuğunu gören Masachika ürperdi. Ne k…”
 - **"gerçekten"**: 16
   - “…u yüzden yılda dört ya da beş kez giderim.” “Gerçekten mi? Bu biraz şaşırtıcı.” “Bunu çok anlıyorum…”
   - “…en gidip Alya-san ile konuşmuyorsun?)” “(Sen gerçekten…)” Utangaç tarafını açıkça gösteren Takeshi,…”
@@ -1138,20 +1136,20 @@
 - **cümle başı "Ama/Fakat"**: 9
   - “…ya kasıtlı olarak katılmak centilmenlik miydi? Ama yine de diğer üçü onay verdikten sonra hemen …”
   - “… Alisa özür dileyerek hızla kolunu geri çekti. Ama şimdi Alisa kolunun desteği olmadan tüm vücud…”
-- **Ani düşüş**: s.125(18), s.124(15)
+- **Ani düşüş**: s.125(17), s.124(15)
 
 ### Cilt 7 · 6. Bölüm 5 · Karakter Yaratacaksanız Utancı Bir kenara bırakalım (s.127–160)
 
 - **Kelime/cümle**: ort 11.8 kelime/cümle · tip/örnek oranı 0.49 · diyalog satırı/sayfa 8.5
-- **gereksiz iyelik**: 31
-  - “…İlk elden, onun eskiden çiçekleri seven nazik bir kız olduğu…”
-  - “…İlk elden, onun eskiden çiçekleri seven nazik bir kız olduğu…”
 - **"yani"**: 28
   - “… arasında Yuki sağ elini kaldırdı ve sordu. “Yani bu, Sarashina-senpai’nin hem Öğrenci Konseyi…”
   - “…semeyle başını eğdi. “Peki~, merak ediyorum? Yani, muhtemelen daha çok fahri danışman gibi ola…”
 - **"gerçekten"**: 19
   - “…irtisi göstermeden nostaljiyle konuştu. “Ah, gerçekten anıları canlandırıyor. Ben de yapmayı denedi…”
   - “…canlandırıyor. Ben de yapmayı denedim~” “Ha? Gerçekten mi?” Masachika hevesle yemi yutarken Chisaki…”
+- **gereksiz iyelik**: 16
+  - “…ir kız olduğunu söyleyen sözler ve yorumlar, onun nasıl değiştiğini merak ediyordu. “Eh, ben kulübü…”
+  - “…i huzursuz hissetmeden edemedi. Lanet olsun, onun farkına varmamaya çalışıyordum… Kalbinin çarptığın…”
 - **"olduğunu" zinciri**: 15
   - “…ayın birçok yönden etkisinin ne kadar önemli olduğunu gösteriyor. Keyifli geçen okul şenliği sıras…”
   - “…, onun eskiden çiçekleri seven nazik bir kız olduğunu söyleyen sözler ve yorumlar, onun nasıl deği…”
@@ -1161,13 +1159,11 @@
 - **"bu yüzden"**: 11
   - “…Disiplin Komitesi Başkanlığı görevini tam da bu yüzden reddetti. Öte yandan Disiplin Kurulu Başkanl…”
   - “…Disiplin Komitesi Başkanlığı görevini tam da bu yüzden reddetti. Öte yandan Disiplin Kurulu Başkanl…”
+- **Ani düşüş**: s.155(17)
 
 ### Cilt 7 · 7. Bölüm 6 · Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai (s.160–184)
 
 - **Kelime/cümle**: ort 11.2 kelime/cümle · tip/örnek oranı 0.54 · diyalog satırı/sayfa 8.3
-- **gereksiz iyelik**: 14
-  - “…’nın morali artık iyi duruyordu ve Masachika onun ortaokul günlerinden kalma imajının çökmekte…”
-  - “…den alevlenmişti. Ancak hâlâ Maria’nın neden onun yanında garip hissettiğini anlayamıyordu. Eğ…”
 - **"sadece"**: 13
   - “…Alisa herhangi bir karşı argüman sunamadı ve sadece başını sallayıp kabul etti. Bunu gören ve hi…”
   - “…Sadece. Sonuçta grubumuzda yalnızca ben ve Nonoa va…”
@@ -1183,14 +1179,14 @@
 - **"bu yüzden"**: 6
   - “…uçta grubumuzda yalnızca ben ve Nonoa vardı, bu yüzden herhangi bir risk o değildi. “…bunu düşünmed…”
   - “…lısın, değil mi? Buna katlanmak zorundaydın… bu yüzden bu kadar duyarsız olduğum ve istem dışı sana…”
-- **Ani düşüş**: s.165(21), s.168(10), s.180(10)
+- **cümle başı "Ama/Fakat"**: 6
+  - “…er hissettiriyordu. Özrünü kabul etmeli miyim? Ama eğer öyleysem, bu, Masha’ya art niyetle baktı…”
+  - “…ğrusunu söylemek gerekirse ona öyle bakıyorum! Ama Masha’nın da söylediği gibi, bunun nedeni erg…”
+- **Ani düşüş**: s.165(21), s.168(10), s.180(9)
 
 ### Cilt 7 · 8. Bölüm 7 · Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur (s.184–209)
 
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 7.2
-- **gereksiz iyelik**: 12
-  - “…teşlendiği anda koşmaya başladılar. “Ah~, bu senin için Alya. Oldukça hızlı.” Alisa öndeydi ve …”
-  - “…mı? Belki de pembe olan? Bilmiyorum! Aslında onun hangi yarışmacı olduğunu bile bilmiyorum!” Y…”
 - **"gerçekten"**: 10
   - “…Şu anda Ekim ayının sonlarıydı. Gerçekten sonbahar olup olmadığı sorusunu akla getiren…”
   - “… Ayakta kalan son kişi kim olacak?” “…Başkan gerçekten elinden geleni yapıyor.” Judo ve Rugby gibi …”
@@ -1206,17 +1202,20 @@
 - **"işte"**: 4
   - “…” diye mırıldandı. “Kırmızı takım hızlı! Ama işte yeşil takımdan Higashiyama geliyor, dışarıda…”
   - “…“Ve işte~! Bakın! Judo Kulübü’nün üçüncü sınıf oyuncu…”
+- **"olduğunu" zinciri**: 4
+  - “…ından kahkahalarla karşılandı. Öte yandan ne olduğunu anlamayan Alisa ise görev bilinciyle ekmeği …”
+  - “…an? Bilmiyorum! Aslında onun hangi yarışmacı olduğunu bile bilmiyorum!” Yarı eğlendiren, yarı şok …”
 - **Ani düşüş**: s.185(13)
 
 ### Cilt 7 · 9. Bölüm 8 · Gerçekten Büyüdün, Değil mi? (s.209–225)
 
 - **Kelime/cümle**: ort 9.6 kelime/cümle · tip/örnek oranı 0.57 · diyalog satırı/sayfa 4.8
-- **gereksiz iyelik**: 12
-  - “…Yuki-sama yorum yapıyor mu? Cidden mi? Belki benim adımı söyler?” “Kasıtlı olarak yavaş koşarsa…”
-  - “…ıma yarı şaka niteliğinde bir yarışma… ve kimsenin ciddi olarak kazanmaya çalıştığını düşünmüyo…”
 - **kesme öncesi boşluk**: 8
   - “…ndirmesi üzerine Masachika da sıraya katıldı. ’Şimdi sıradaki etkinlik çöpçü avı. Bu etkinli…”
   - “… o sırada Yuki’nin yorumu kulaklarına ulaştı. ’Neler oluyor burada? Konu tablosuna ilk ulaşa…”
+- **gereksiz iyelik**: 8
+  - “…Yuki-sama yorum yapıyor mu? Cidden mi? Belki benim adımı söyler?” “Kasıtlı olarak yavaş koşarsam,’E…”
+  - “…tsin! Kes şunu, seni utanmaz aptal! Maa-chan senin sırtına binen kişi! Maa-chan’a karşı pis arzular b…”
 - **edilgen "tarafından"**: 6
   - “…eyi’nin Halkla İlişkiler Sorumlusu Yuki Suou tarafından üstlenilecek.’ Yorum kabininden gelen seviml…”
   - “…örüntü düzeltmesi, acımasız bir fiziksel güç tarafından acımasızca parçalandı ve Masachika’nın olduğ…”
@@ -1233,12 +1232,12 @@
 ### Cilt 7 · 10. Bölüm 9 · Rastlamak (s.225–241)
 
 - **Kelime/cümle**: ort 9.7 kelime/cümle · tip/örnek oranı 0.55 · diyalog satırı/sayfa 7.8
-- **gereksiz iyelik**: 16
-  - “…i doğruydu. Alisa bunu anlamasına ve aslında onunla aynı fikirde olsa da dudaklarını sıkıca bü…”
-  - “…r, Öğrenci Konseyi üyesi olarak yardım etmek benim görevim” “Anlıyorum… At binme yarışmasında i…”
 - **"gerçekten"**: 10
   - “…izin vermemeleri gerekmez mi!? Buna yalnızca gerçekten güvendiğin biriyle izin vermelisin… Zaten se…”
   - “…tti. “Teşekkür ederim~ Kujou-san. Orada beni gerçekten kurtardın.” “…Hayır, Öğrenci Konseyi üyesi o…”
+- **gereksiz iyelik**: 9
+  - “… durdurmaya çalıştı ama Alisa sert bir sesle onun sözünü kesti. “Yakında döneceğim.” “…anladım. Bu …”
+  - “…kıyafetleri arasında gidip geliyorlar.” “Ah… Benim sınıfımda da, özellikle artık iki takım üniformamız…”
 - **"olduğunu" zinciri**: 9
   - “…sında kalmıştı. Masha’nın bir erkek arkadaşı olduğunu bilmesine rağmen yine de ona bu talimatları …”
   - “…sında kalmıştı. Masha’nın bir erkek arkadaşı olduğunu bilmesine rağmen yine de ona bu talimatları …”
@@ -1265,22 +1264,22 @@
 - **cümle başı "Ama/Fakat"**: 6
   - “… ve yalnızlık karışımı bir duyguyla izliyordu. Ama bunun üzerinde daha fazla durmadan önce… “Bu …”
   - “…encilerin tepkilerinden de memnun kaldı. “…Ha? Ama böyle devam ederse Kuze tam bir harem durumun…”
-- **gereksiz iyelik**: 6
-  - “…iledi. Gerçekten çok büyümüş… Alisa’yı sanki onun koruyucusuymuş gibi neşe ve yalnızlık karışı…”
-  - “…la tanışın! Binici, Alisa Mikhailovna Kujou! Onun atları Kuze Masachika, Maria Mikhailovna Kuj…”
 - **"bu yüzden"**: 5
   - “… etti. “Bu kadar şaşırtıcı mı? Yuki popüler, bu yüzden aslında beklenmedik bir durum değil.” “…” Hi…”
   - “…si Öğrenci Konseyi günlerindeki gençleriydi. Bu yüzden kendi bakımından da şüphesiz onlarla rakip o…”
 - **"kendi"**: 5
   - “… Konseyi günlerindeki gençleriydi. Bu yüzden kendi bakımından da şüphesiz onlarla rakip olarak …”
   - “…nın ardından Masachika’nın grubunun her biri kendi atlı takımlarını oluşturdu. Binicileri üç at…”
+- **"yani"**: 4
+  - “… anlayışıydı. “Mükemmel Elena-senpai, hayır, yani Seksi, pft Maskesi.” “Az önce güldün mü?”…”
+  - “…ollarına veya omuzlarına oturur, değil mi? S-Yani bu şu anlama geliyor… alttaki takım üyeleri …”
 
 ### Cilt 7 · 12. Epilog · Bu (s.258–267)
 
 - **Kelime/cümle**: ort 9.7 kelime/cümle · tip/örnek oranı 0.61 · diyalog satırı/sayfa 4.9
-- **gereksiz iyelik**: 16
-  - “…hem sebep hem de sonuçla tek başına uğraşmak onun yüküydü. Ama şimdi… “Ah!” Alisa’ya inanan ve…”
-  - “…a gülümseyerek destek olan ablası ve… “Ah~!” Onun yüzü aklına geldi ve Alisa yüzünü masasına g…”
+- **gereksiz iyelik**: 9
+  - “…hem sebep hem de sonuçla tek başına uğraşmak onun yüküydü. Ama şimdi… “Ah!” Alisa’ya inanan ve onun…”
+  - “…a gülümseyerek destek olan ablası ve… “Ah~!” Onun yüzü aklına geldi ve Alisa yüzünü masasına gömd…”
 - **"bu yüzden"**: 7
   - “…eneyimlememişti. Şimdiye kadar hep yalnızdı, bu yüzden istediği sonuçları elde edemese bile hem seb…”
   - “… ve bizim yenilgimizdi. Bunu herkes anlıyor, bu yüzden kimse sizi suçlamıyor. Ama yenilgiyi kibirle…”
@@ -1303,9 +1302,6 @@
 - **"gerçekten"**: 3
   - “…ı. “Yuki-chan bunu daha iyi yapabilirdi… Ben gerçekten iyi değilim…” Bu beklenmedik aşağılık ifades…”
   - “…ı. “Yuki-chan bunu daha iyi yapabilirdi… Ben gerçekten iyi değilim…” Bu beklenmedik aşağılık ifades…”
-- **gereksiz iyelik**: 2
-  - “…larak adlandırılan birine yakışıyordu. Ancak onun ortağı olmak oldukça zorlayıcıydı. “Ayano-sa…”
-  - “…’un gerçekten muhteşem olduğunu fark etmedi! Benim de daha çok çalışmam gerekiyor! Belki de bun…”
 - **"kendi"**: 2
   - “… ettiğinden tamamen farklıydı. Bu genç kızın kendi yaşam yoluna ve kendi duygularına karar verm…”
   - “… ettiğinden tamamen farklıydı. Bu genç kızın kendi yaşam yoluna ve kendi duygularına karar verm…”
@@ -1315,6 +1311,8 @@
   - “…lanıyordu ve bunu değiştirmek zor duruyordu, bu yüzden Natsu ısrar etmeyi bırakmıştı. Yine de bu ya…”
 - **ağır isimleştirme**: 1
   - “…erinin derinliği karşısında şaşırdı ve cevap vermekte zorlandı. Ancak şaşkın görünen Masachika şöy…”
+- **"yani"**: 1
+  - “…eni giderek daha iyi hissettiriyor… Keyifli. Yani…” Sandalyesinden kalktı ve elini Ayano’ya do…”
 
 ### Cilt 7 · 14. Sonsöz · Sonsöz (s.272–278)
 
@@ -1325,9 +1323,6 @@
 - **"olduğunu" zinciri**: 7
   - “…ımıza çıktığını ve bence eşsiz bir güzelliği olduğunu düşünüyorum. 13 de iyidir; Chuunibyou’ya ben…”
   - “…nin hafif roman tarihinde muhtemelen bir ilk olduğunu söylemiştim… ama yazar bir arkadaşım bana şö…”
-- **gereksiz iyelik**: 7
-  - “…. Ancak sayfaları kendim yönetememek tamamen benim hatam. Yazacak başka bir şeyim kalmadı. Bunu…”
-  - “…m gibi görünüyor, ancak bu muhtemelen sadece benim hayal gücüm. Neyse, sırada ne var… Ah, doğru…”
 - **"diye" öncesi virgül yok**: 6
   - “…ar bu rakamlarla ilgili olarak “Ah, bu ilginç” diyebilir, ancak beşeri bilimlerdeki insanların b…”
   - “…bir üyesi el yazmasında göründü. “Bu mükemmel” diye düşündüm ve manga uyarlama sanatçısı Saho Te…”
@@ -1337,6 +1332,9 @@
 - **"yani"**: 3
   - “…f roman endüstrisinde muhtemelen bir ilktir, yani tamamen yanlış değildir, değil mi? Bu ciltte…”
   - “…tüm bu Slit-Paisen durumundan bile bahsetti. Yani, güncellemeleri takip eden okuyucular büyük …”
+- **"kendi"**: 3
+  - “…ları kesebilirsiniz. Ancak geçen sefer biraz kendimi kaptırdım ve sayfalarım tükendi, bu da ben…”
+  - “…ık bir şey yaptığının farkında olsa da neden kendini bu kadar önemsiyor?” diye merak edebilirsi…”
 
 
 ## Cilt 8
@@ -1345,18 +1343,18 @@
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 7 | 112 | 22.4 | 8.0 | 100 | "bu yüzden" |
 | 1 | Prolog · Gizli | 4 | 779 | 8.7 | 1.7 | 90 | cümle başı "Ama/Fakat" |
-| 2 | Bölüm 1 · İlk Aşk | 20 | 3650 | 9.4 | 3.0 | 91 | gereksiz iyelik |
-| 3 | Bölüm 2 · Yalan | 28 | 4839 | 12.4 | 3.6 | 90 | gereksiz iyelik |
-| 4 | Bölüm 3 · Saflık | 26 | 4284 | 9.5 | 3.2 | 89 | "gerçekten" |
-| 5 | Bölüm 4 · Maruz | 20 | 3601 | 9.2 | 3.0 | 90 | gereksiz iyelik |
-| 6 | Bölüm 5 · Kaos | 33 | 6209 | 10.3 | 3.4 | 90 | gereksiz iyelik |
-| 7 | Bölüm 6 · Oyun | 41 | 6786 | 11.1 | 2.7 | 89 | gereksiz iyelik |
-| 8 | Bölüm 7 · Müzik | 32 | 5486 | 10.0 | 3.3 | 89 | gereksiz iyelik |
-| 9 | Bölüm 8 · Dostluk | 18 | 3310 | 10.5 | 2.8 | 89 | gereksiz iyelik |
-| 10 | Bölüm 9 · Nimet | 19 | 3008 | 10.6 | 2.7 | 89 | gereksiz iyelik |
-| 11 | Bölüm 10 · İtiraf | 13 | 2280 | 8.9 | 4.2 | 90 | gereksiz iyelik |
+| 2 | Bölüm 1 · İlk Aşk | 20 | 3650 | 9.4 | 2.8 | 91 | gereksiz iyelik |
+| 3 | Bölüm 2 · Yalan | 28 | 4839 | 12.4 | 3.3 | 90 | "sadece" |
+| 4 | Bölüm 3 · Saflık | 26 | 4284 | 9.5 | 3.0 | 89 | "gerçekten" |
+| 5 | Bölüm 4 · Maruz | 20 | 3601 | 9.2 | 2.6 | 90 | "olduğunu" zinciri |
+| 6 | Bölüm 5 · Kaos | 33 | 6209 | 10.3 | 3.0 | 90 | "gerçekten" |
+| 7 | Bölüm 6 · Oyun | 41 | 6786 | 11.1 | 2.5 | 89 | "gerçekten" |
+| 8 | Bölüm 7 · Müzik | 32 | 5486 | 10.0 | 3.1 | 89 | "gerçekten" |
+| 9 | Bölüm 8 · Dostluk | 18 | 3310 | 10.5 | 2.6 | 89 | "gerçekten" |
+| 10 | Bölüm 9 · Nimet | 19 | 3008 | 10.6 | 2.4 | 89 | "gerçekten" |
+| 11 | Bölüm 10 · İtiraf | 13 | 2280 | 8.9 | 3.9 | 90 | "gerçekten" |
 | 12 | Epilog · Tövbe | 3 | 504 | 9.7 | 6.3 | 90 | "olduğunu" zinciri |
-| 13 | Sonsöz · Sonsöz | 5 | 1242 | 10.4 | 4.8 | 98 | "sadece" |
+| 13 | Sonsöz · Sonsöz | 5 | 1242 | 10.4 | 4.5 | 98 | "sadece" |
 
 ### Cilt 8 · 0. İllüstrasyonlar · İllüstrasyonlar (s.0–7)
 
@@ -1386,9 +1384,9 @@
 ### Cilt 8 · 2. Bölüm 1 · İlk Aşk (s.11–31)
 
 - **Kelime/cümle**: ort 9.4 kelime/cümle · tip/örnek oranı 0.55 · diyalog satırı/sayfa 4.0
-- **gereksiz iyelik**: 16
-  - “…z davranıyordum ki… utanıyorum. Utanç çoktan onun içini doldurmaya başlamıştı ve Masachika öğl…”
-  - “…yemek yeme hakkında utanmadan edemedi. Ancak onun saf gülümsemesi karşısında hiçbir şey söyley…”
+- **gereksiz iyelik**: 11
+  - “…z davranıyordum ki… utanıyorum. Utanç çoktan onun içini doldurmaya başlamıştı ve Masachika öğle yeme…”
+  - “…ten, bu kadar korkusuz olabilmesi korkutucu. Senin tarafında olması güven verici ama… Yöntem ne olursa…”
 - **"kendi"**: 10
   - “…ününü kutlayacağına söz vermişti. Ama şimdi, kendinden emin bir biçimde sınıftan ayrılırken yap…”
   - “…hasının yakınındaki alanda dolaşan Masachika kendi kendine mırıldandı. Öğleden sonra katılacağı…”
@@ -1409,9 +1407,6 @@
 ### Cilt 8 · 3. Bölüm 2 · Yalan (s.31–59)
 
 - **Kelime/cümle**: ort 12.4 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 8.5
-- **gereksiz iyelik**: 23
-  - “…bu tür bilgileri derinlemesine araştırdıkça, onun değerlilik duygusunun arttığını hissetti ve …”
-  - “…önemli, ben mi yoksa yemeğin mi!?” “Şimdilik benim yemeğim.” “O halde eğer senin için bitirirse…”
 - **"sadece"**: 13
   - “…ne inanmıştı. Ama gizliden gizliye babasının sadece ayırt edici olmayan bir tat alma duyusuna sa…”
   - “…eddüt etmeden karşılık verdi. “Peki baba, bu sadece hoşlanılabilirlikteki bir fark.” “Böylesine …”
@@ -1424,6 +1419,9 @@
 - **cümle başı "Ve"**: 8
   - “…aktı ve sanki onu ikna ediyormuş gibi konuştu. Ve bakışları Masachika’nın kaldırılmış gözleriyl…”
   - “…ksini iddia etmesi sayesinde suçluluğu azaldı. Ve bu yüzden… “…Anlıyorum.” Masachika da hafif b…”
+- **gereksiz iyelik**: 8
+  - “… musun?” “Hayır, bilmiyorum. Nedir bu?” “Eh, benim Onii-chan’ım olsan bile, çekip kontrol etmedikçe …”
+  - “…tum ♡. Gidip onu benim için alabilir misin?” Onun isteği üzerine Kyotarou’nun gülümsemesi çatladı. ⋆⋅…”
 - **cümle başı "Ama/Fakat"**: 6
   - “…tığı her yabancı yemeği beğendiğine inanmıştı. Ama gizliden gizliye babasının sadece ayırt edici…”
   - “…bi konuşuyorum.” “Bir düşünün, öyle değil mi~? Ama komik adam olarak?” “Ah, iyi anlamda, tamam m…”
@@ -1435,9 +1433,6 @@
 - **"gerçekten"**: 18
   - “…iz konuştu. “Hayır~…Hiçbir şey olmamış gibi, gerçekten…” “?” Masachika, Nonoa’nın açık sözlülüğü iç…”
   - “…iz konuştu. “Hayır~…Hiçbir şey olmamış gibi, gerçekten…” “?” Masachika, Nonoa’nın açık sözlülüğü iç…”
-- **gereksiz iyelik**: 16
-  - “…hika, Nonoa’ya gerçekten benzemeyen sözlerle onun profiline dikkatle baktı. Uzaklara bakan pro…”
-  - “…bükerek başını defalarca kaşıdı. Ancak Nonoa onun tavrına aldırış etmeden konuşmaya başladı. “…”
 - **"kendi"**: 10
   - “…tlığın ona uymayacağını fark etti. Nonoa’nın kendisinin tam olarak anlamadığı duyguları içeren …”
   - “…tlığın ona uymayacağını fark etti. Nonoa’nın kendisinin tam olarak anlamadığı duyguları içeren …”
@@ -1450,19 +1445,22 @@
 - **"olduğunu" zinciri**: 7
   - “…bazı şeylerin netleşmesinin yaygın bir durum olduğunu fark etti. Nonoa’nın ihtiyacı olan şey muhte…”
   - “…lnızca bacaklarını gördüğü için o sırada kim olduğunu belirleyemedi ancak ayak sesi olmamasına bak…”
+- **"yani"**: 6
+  - “… tavrına aldırış etmeden konuşmaya başladı. “Yani dün~ Alisa’ya doğum günü hediyesi almak için…”
+  - “…n önceliği değilim’ diye düşündüm. Ve sonra, yani…” Nonoa bunu açıkladıktan sonra sustu. Masac…”
 
 ### Cilt 8 · 5. Bölüm 4 · Maruz (s.85–105)
 
 - **Kelime/cümle**: ort 9.2 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 4.8
-- **gereksiz iyelik**: 22
-  - “…ne önemi var? Artık çok geç. Zaten çaresizce onun kalbini çalmıştı. Masachika Kuze dışında kim…”
-  - “…m…} ⋆⋅☆⋅⋆ “Çok teşekkür ederim Miyamae-sama. Senin sayende Masachika-sama’dan gerektiği gibi öz…”
 - **"olduğunu" zinciri**: 11
   - “…ygularının farkına vardı ve aşkın ulaşılamaz olduğunu kısa sürede anladı. Böyle bir şey için ağlam…”
   - “…ün hafif müzik kulübünde grup çalışması günü olduğunu hatırladı. Ah… belki bugün atlarım. Yatağa d…”
 - **"kendi"**: 10
   - “…n bittiğini belirten zil sesini duydu. “Eğer kendini iyi hissetmiyorsan neden revir yatağında d…”
   - “…baretti… romantik bir ilgiden değil. Yine de kendi başına gitti ve ona aşık oldu, kendi başına …”
+- **gereksiz iyelik**: 10
+  - “…ne önemi var? Artık çok geç. Zaten çaresizce onun kalbini çalmıştı. Masachika Kuze dışında kimseyle bi…”
+  - “…bu.” “…Sana sapkın biri gibi mi görünüyor?” “Senin gibi yumuşak kalpli birine öyle gelmiyor mu?” Yus…”
 - **"sadece"**: 8
   - “… gidiyorum tamam mı? Sen de geliyor musun?” “Sadece bir süreliğine.” “Anladım. Yakında orada ola…”
   - “…varması son derece nadirdir. Çoğu insan bunu sadece bir tesadüf olarak görür veya en fazla onlar…”
@@ -1477,9 +1475,6 @@
 ### Cilt 8 · 6. Bölüm 5 · Kaos (s.105–138)
 
 - **Kelime/cümle**: ort 10.3 kelime/cümle · tip/örnek oranı 0.48 · diyalog satırı/sayfa 7.2
-- **gereksiz iyelik**: 32
-  - “… vücudu. İtirafı bir fısıltı gibi düştü. Ve… onunla samimi bir hayata dair Rusça samimi açıkla…”
-  - “…yafette ne var? Yasadışı Kız-senpai.” “Evet, benim! Bazen Rüzgar Topluluğu Kulübü’nün güzel baş…”
 - **"gerçekten"**: 20
   - “…ları. Hayır, dinlememeye çalıştım, tamam mı? Gerçekten yaptım… ama onun sözlerinin kulaklarıma girm…”
   - “…e Nonoa’dan bir kez daha özür diledi. Hayır, gerçekten üzgünüm. Az önce Alya’ya eşlik ediyordun ve …”
@@ -1495,14 +1490,14 @@
 - **"olduğunu" zinciri**: 10
   - “…a şimdilik Alisa’nın bu konuda oldukça titiz olduğunu çok iyi anlamıştı. Bilmek istemediği ama yin…”
   - “…“Maria-chan’ın alkol hakkında bu kadar zayıf olduğunu bilmiyordum… Bu konuda Rusların Japonlardan …”
-- **Ani düşüş**: s.112(21), s.124(12), s.120(11)
+- **cümle başı "Ama/Fakat"**: 8
+  - “…rkadaşının adını bilip bilmediğini bilmiyordu. Ama eğer şans eseri bunu yaptıysa, bu büyük bir s…”
+  - “…enzer bir şey getirebilir misin lütfen!?” “Ha? Ama orada bir çöp kutusu var…” “Ama o zaman kötü …”
+- **Ani düşüş**: s.112(21), s.124(12), s.120(10)
 
 ### Cilt 8 · 7. Bölüm 6 · Oyun (s.138–179)
 
 - **Kelime/cümle**: ort 11.1 kelime/cümle · tip/örnek oranı 0.45 · diyalog satırı/sayfa 6.9
-- **gereksiz iyelik**: 20
-  - “… mi?” “Sanırım cosplay’de utanan tek kişinin benim olmam haksızlık!” “Belki ikincil hasara nede…”
-  - “…iri ölebilir’ gibi şeyler söyledi. Bu yüzden onun yerine bu kostümü giymek zorunda kaldım~” “……”
 - **"gerçekten"**: 19
   - “…stüm verdiler, ne yapabilirdim ki!” “Peki bu gerçekten bir cadı kostümü müydü?” Veya belki de cadı …”
   - “…stüm verdiler, ne yapabilirdim ki!” “Peki bu gerçekten bir cadı kostümü müydü?” Veya belki de cadı …”
@@ -1518,20 +1513,23 @@
 - **"bu yüzden"**: 8
   - “…ı nereye bakacağı hakkında kararsız bıraktı. Bu yüzden Masachika, yanındaki görsel olarak saldırgan…”
   - “…i değil. Biri ölebilir’ gibi şeyler söyledi. Bu yüzden onun yerine bu kostümü giymek zorunda kaldım…”
-- **Ani düşüş**: s.149(13), s.153(13), s.175(12), s.176(10), s.157(9), s.170(9), s.158(7)
+- **gereksiz iyelik**: 7
+  - “…esini yükseltti. “Peki o zaman, başlayalım!” Onun bağırışına yanıt olarak diğerleri de kağıt bardakları…”
+  - “…semeyle baktı. “Fufufu, Kuze-kun’la ilk önce benim yüzleşeceğimi düşünüyorsan… En başında benimle yüzleşmek z…”
+- **Ani düşüş**: s.149(12), s.153(12), s.175(11), s.176(10), s.151(9), s.157(9), s.170(8), s.158(7)
 
 ### Cilt 8 · 8. Bölüm 7 · Müzik (s.179–211)
 
 - **Kelime/cümle**: ort 10.0 kelime/cümle · tip/örnek oranı 0.49 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 24
-  - “…ti duydu. Fakat… “Gördün mü? Buradaki herkes benim haremin bir parçası!” Elena muzaffer bir gül…”
-  - “… bağımlı gibi… Daha yakından incelendiğinde, onun bu konserine sürekli olarak katılan sadece ü…”
 - **"gerçekten"**: 16
   - “…-” “Haremime hoş geldin!” “…Bu tür bir giriş gerçekten sizin için uygun mu?”…”
   - “…il mi? Eşlik edecek bir piyanist arıyoruz.” “Gerçekten mi? Hmm~…?” Kadın başını sallayarak karşılık…”
 - **"sadece"**: 16
   - “…azsın!” “Bu… özür dilerim.” “Özür dileme! Bu sadece bir şaka. Elena-senpai her zaman pervasız ve…”
   - “…de, onun bu konserine sürekli olarak katılan sadece üç kişi vardı ve diğer üyeler sadece sessizc…”
+- **gereksiz iyelik**: 12
+  - “… bağımlı gibi… Daha yakından incelendiğinde, onun bu konserine sürekli olarak katılan sadece üç k…”
+  - “…şmayı sabırsızlıkla bekliyorum…” “Çok katı!” Onun sözünü kesen Elena, dramatik bir biçimde kolunu M…”
 - **"yani"**: 10
   - “…ından Arai. Flüt çalıyorum.” Yanlış anladım, yani o “ufufu” tipi değil, “ara-ara” tipi. Aklınd…”
   - “…ddüt etti ve sonra tuhaf biçimde kıkırdadı. “Yani… neden burada piyano çaldığımı bir bakıma gö…”
@@ -1541,18 +1539,18 @@
 - **cümle başı "Ama/Fakat"**: 7
   - “…uğunun üzerinde hareket ettirdi. Ve sonra… Ha? Ama neden oynuyorum? Parmakları dondu. Neden ve k…”
   - “…bii ki Elena ve… rüzgar topluluğu kulübü için. Ama neden? Ne demek neden?…”
-- **Ani düşüş**: s.200(20), s.199(17), s.207(12), s.198(11), s.185(10), s.196(10)
+- **Ani düşüş**: s.200(18), s.199(16), s.207(12), s.198(11), s.185(10), s.196(10), s.190(9)
 
 ### Cilt 8 · 9. Bölüm 8 · Dostluk (s.211–229)
 
 - **Sadakat**: ort 88.8; zayıf: s.216 (74: diyalog -2)
 - **Kelime/cümle**: ort 10.5 kelime/cümle · tip/örnek oranı 0.55 · diyalog satırı/sayfa 6.7
-- **gereksiz iyelik**: 17
-  - “…endişelenmene gerek yok.” “Görüyorsun ya, bu benim bir kızın evine ilk gidişim… en azından hatı…”
-  - “…m… en azından hatırlayabildiğim kadarıyla.” “Benim için de aynısı geçerli ama…” Masachika eski …”
 - **"gerçekten"**: 9
   - “…“…Hey, birdenbire bu konuda gerçekten gergin olmaya başladım.” Alisa’nın yaşadığı …”
   - “…karşılık verildiğinde, mesafeyi kapatanların gerçekten Touya ve Chisaki olduğu ortaya çıktı. Doğal …”
+- **gereksiz iyelik**: 9
+  - “…Takeshi’nin eşyalarını alan Masachika, onun hızla markete gidişini izledi. “…Parti boyunca …”
+  - “…duyuldu. “Hoş geldiniz. Lütfen içeri girin.” Onun sesini takiben lobinin kapısı açıldı. Görüşme hemen…”
 - **"yani"**: 9
   - “…“Öyle mi? Yani senden daha uzun.” “Ben bundan bahsetmiyorum…”
   - “…. “Peki hangi yöne?” “Şu anda 1. dairedeyiz, yani orada değil mi?” Masachika, gitmeleri gereke…”
@@ -1565,17 +1563,17 @@
 - **"olduğunu" zinciri**: 4
   - “…endini alamadı. Bir anda böyle bir ihtimalin olduğunu düşündü. Ancak asansör o anda geldiğinden Ma…”
   - “…khail’in daha fazla yemek servis etmek üzere olduğunu hisseden Masachika cesaretini topladı ve kon…”
-- **Ani düşüş**: s.215(13), s.228(13)
+- **Ani düşüş**: s.215(13), s.228(12)
 
 ### Cilt 8 · 10. Bölüm 9 · Nimet (s.229–248)
 
 - **Kelime/cümle**: ort 10.6 kelime/cümle · tip/örnek oranı 0.55 · diyalog satırı/sayfa 6.1
-- **gereksiz iyelik**: 14
-  - “…rkaç kez gözlerini kırpmasını sağladı, ancak onun yaşlı gözleriyle şaşırdı. “Ah canım, Alya-ch…”
-  - “…zlerini hatırlayınca kasıldı. Ah, anlıyorum… Senin adına sevindim Alya. Bunu gerçekten kalbinin…”
 - **"gerçekten"**: 11
   - “…e kaynaşmak… Masachika, ne kadar etkileyici~ Gerçekten herkesle iyi geçinebiliyor… O gerçekten bamb…”
   - “…ici~ Gerçekten herkesle iyi geçinebiliyor… O gerçekten bambaşka bir şey. Diğer üç çocuk akıllarında…”
+- **gereksiz iyelik**: 5
+  - “…zlerini hatırlayınca kasıldı. Ah, anlıyorum… Senin adına sevindim Alya. Bunu gerçekten kalbinin der…”
+  - “…üzden bazen havai fişekleri görebilirsiniz.” Onun ayık açıklamasını dinleyen herkes başını salladı…”
 - **cümle başı "Ve"**: 4
   - “…i hediyeyi verirken konuklar hızla bakıştılar. Ve bir biçimde sadece bir bakışla sıranın Masach…”
   - “…diyesi bir akıllı telefon ekran koruyucusuydu. Ve Ayano’nun hediyesi… “Kitap mı?” “Evet, bu ben…”
@@ -1592,15 +1590,15 @@
 ### Cilt 8 · 11. Bölüm 10 · İtiraf (s.248–261)
 
 - **Kelime/cümle**: ort 8.9 kelime/cümle · tip/örnek oranı 0.61 · diyalog satırı/sayfa 6.8
-- **gereksiz iyelik**: 13
-  - “…da yalnızca bir yetişkini arayabiliyordu. Ve onun gibi…”
-  - “…emek için bir pratik turu yapsak nasıl olur? Benim için de uzun zaman oldu~” Kurt adam oyununun…”
 - **"gerçekten"**: 9
   - “… “Sanırım artık ayrılma zamanım geldi.” “Ha, gerçekten mi? Sokağa çıkma yasağı falan mı…?” Elbette …”
   - “…msemeye zorladı. “Hayır, hiçbir şey değil…” “Gerçekten mi~? Ama yüzünde korkutucu bir ifade vardı.”…”
 - **"olduğunu" zinciri**: 8
   - “…ki-sama’nın sana herkesten daha çok ihtiyacı olduğunu düşünüyorum.” Ayano’nun ona spor festivalind…”
   - “…ki-sama’nın sana herkesten daha çok ihtiyacı olduğunu düşünüyorum.” Ayano’nun ona spor festivalind…”
+- **gereksiz iyelik**: 7
+  - “…da yalnızca bir yetişkini arayabiliyordu. Ve onun gibi…”
+  - “…ver bunu, mesele bu değil! Yuki acı çekiyor. Onun yanında olmak için başka bir nedene gerek yok!”…”
 - **"sadece"**: 6
   - “…yalan söyledi…” “……” Ayano’nun açıklamasının sadece yarısı Masachika’nın aklına geldi. Yuki grib…”
   - “… bir ifade vardı.” “Öyle mi yaptım? Belki de sadece düşüncelere dalmıştım.”…”
@@ -1618,8 +1616,8 @@
   - “…nık. Yuki’nin çok meraklı ve yaramaz bir kız olduğunu hatırlıyorum. Açık havayı seviyordu, gördüğü…”
   - “…nık. Yuki’nin çok meraklı ve yaramaz bir kız olduğunu hatırlıyorum. Açık havayı seviyordu, gördüğü…”
 - **gereksiz iyelik**: 4
-  - “…Onu mutlu etmek istedim. Onun özgür olmasını istedim. Ve eğer bunu yapamıy…”
-  - “…Onu mutlu etmek istedim. Onun özgür olmasını istedim. Ve eğer bunu yapamıy…”
+  - “…Onu mutlu etmek istedim. Onun özgür olmasını istedim. Ve eğer bunu yapamıyorsam…”
+  - “…rinde herhangi bir iyileşme belirtisi yoktu. Onun figürünün bahçeden ve malikanenin koridorlarından ne …”
 - **cümle başı "Ve"**: 2
   - “…lu etmek istedim. Onun özgür olmasını istedim. Ve eğer bunu yapamıyorsam, en azından güvenilir …”
   - “… harika bir kardeş olmaya devam etmek istedim. Ve bir gün kız kardeşimi ait olduğu yere geri gö…”
@@ -1645,15 +1643,14 @@
 - **"gerçekten"**: 6
   - “…ok ve Temanamachi-sensei’nin insansı avatarı gerçekten ürkütücü. Ne yapmalıyım? Hmm~… Ah, doğru. Bu…”
   - “…ok ve Temanamachi-sensei’nin insansı avatarı gerçekten ürkütücü. Ne yapmalıyım? Hmm~… Ah, doğru. Bu…”
-- **gereksiz iyelik**: 4
-  - “…ıkarılırsa) olsaydı ben de rahatsız olurdum. Benim zihinsel durumum şekil hafızası alaşımı gibi…”
-  - “…mak istemiyorum. Eğer evde değilsem, o zaman benim için bir izin günü değil. Benim için durum b…”
 - **cümle başı "Ve"**: 3
   - “…fer aslında sonsöz için yazacak bir şeyim var! Ve sadece bir değil, iki tane! İşte başlıyoruz, …”
   - “…lında yerinde doğaçlama konuşmalar yapıyorlar. Ve muhtemelen yanlarındaki iki veya üç kişiyle t…”
 - **"yani"**: 2
   - “…yınının başlangıcına denk gelmesi gerekiyor, yani bunu takip edersek 8. Cilt Nisan ayında yayı…”
   - “…) başka dünyalara da gitmemişlerdir (hariç). Yani hiç yurtdışına çıkmamış olsam da Roshidere’y…”
+- **"işte"**: 1
+  - “…il, iki tane! İşte başlıyoruz, hadi bakalım, işte dokuz sayfalık bir sonsöz!… Neyse plan bu za…”
 
 
 ## Cilt 9
@@ -1661,19 +1658,19 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 8 | 157 | 22.4 | 5.7 | 100 | "bu yüzden" |
-| 1 | Prolog · Buna rağmen Yuki hâlâ bir çocuktu | 4 | 633 | 7.4 | 4.4 | 90 | cümle başı "Ama/Fakat" |
-| 2 | Bölüm 1 · Ve Her Şey Uyluk Oldu | 20 | 4041 | 8.4 | 5.7 | 90 | gereksiz iyelik |
-| 3 | Bölüm 2 · Ve Böylece Çocuk ile Annesinin G | 20 | 3493 | 9.1 | 4.4 | 91 | gereksiz iyelik |
-| 4 | Bölüm 3 · Ve Hepsi Hiçbir Şeye Dönüştü | 18 | 3766 | 9.4 | 6.3 | 91 | gereksiz iyelik |
-| 5 | Bölüm 4 · Ve Masachika Bir Karar Verdi | 18 | 3273 | 10.0 | 5.8 | 91 | gereksiz iyelik |
-| 6 | Bölüm 5 · Ve Sonra Kanun Gerçek Oldu | 29 | 5334 | 11.2 | 4.1 | 89 | gereksiz iyelik |
-| 7 | Bölüm 6 · Ve Alisa Güvenle Taşındı | 31 | 6348 | 9.6 | 5.8 | 90 | gereksiz iyelik |
-| 8 | Bölüm 7 · Ve suçlu ortaya çıktı | 28 | 5111 | 10.8 | 3.8 | 90 | gereksiz iyelik |
-| 9 | Bölüm 8 · Ve Böylece Tohumlar Ekildi | 19 | 3483 | 10.3 | 5.5 | 89 | gereksiz iyelik |
-| 10 | Bölüm 9 · Ve böylece ikisi karşı karşıya g | 25 | 4643 | 10.7 | 5.4 | 90 | gereksiz iyelik |
-| 11 | Epilog · Böylece Kendim Oldum | 7 | 1344 | 8.7 | 7.4 | 89 | gereksiz iyelik |
-| 12 | Yan Hikâye · Soğuk Bir Adamın Kalbi | 18 | 3845 | 10.7 | 4.9 | 88 | gereksiz iyelik |
-| 13 | Sonsöz · Sonsöz | 11 | 3079 | 11.1 | 6.0 | 95 | "gerçekten" |
+| 1 | Prolog · Buna rağmen Yuki hâlâ bir çocuktu | 4 | 633 | 7.4 | 4.3 | 90 | cümle başı "Ama/Fakat" |
+| 2 | Bölüm 1 · Ve Her Şey Uyluk Oldu | 20 | 4041 | 8.4 | 5.2 | 90 | gereksiz iyelik |
+| 3 | Bölüm 2 · Ve Böylece Çocuk ile Annesinin G | 20 | 3493 | 9.1 | 4.0 | 91 | "gerçekten" |
+| 4 | Bölüm 3 · Ve Hepsi Hiçbir Şeye Dönüştü | 18 | 3766 | 9.4 | 5.7 | 91 | "gerçekten" |
+| 5 | Bölüm 4 · Ve Masachika Bir Karar Verdi | 18 | 3273 | 10.0 | 5.4 | 91 | "sadece" |
+| 6 | Bölüm 5 · Ve Sonra Kanun Gerçek Oldu | 29 | 5334 | 11.2 | 3.7 | 89 | cümle başı "Ama/Fakat" |
+| 7 | Bölüm 6 · Ve Alisa Güvenle Taşındı | 31 | 6348 | 9.6 | 5.4 | 90 | "gerçekten" |
+| 8 | Bölüm 7 · Ve suçlu ortaya çıktı | 28 | 5111 | 10.8 | 3.6 | 90 | "gerçekten" |
+| 9 | Bölüm 8 · Ve Böylece Tohumlar Ekildi | 19 | 3483 | 10.3 | 5.2 | 89 | gereksiz iyelik |
+| 10 | Bölüm 9 · Ve böylece ikisi karşı karşıya g | 25 | 4643 | 10.7 | 5.1 | 90 | "gerçekten" |
+| 11 | Epilog · Böylece Kendim Oldum | 7 | 1344 | 8.7 | 6.5 | 89 | cümle başı "Ve" |
+| 12 | Yan Hikâye · Soğuk Bir Adamın Kalbi | 18 | 3845 | 10.7 | 4.3 | 88 | gereksiz iyelik |
+| 13 | Sonsöz · Sonsöz | 11 | 3079 | 11.1 | 5.8 | 95 | "gerçekten" |
 
 ### Cilt 9 · 0. İllüstrasyonlar · İllüstrasyonlar (s.0–8)
 
@@ -1693,22 +1690,21 @@
 - **"sadece"**: 2
   - “… başka seçenek bırakmadı. Ama ne yazık ki bu sadece ciğerlerinin yukarıdan eziliyormuş gibi hiss…”
   - “…zlerini kapatıp yavaş, derin bir nefes aldı. Sadece nefes almak bile parmak uçlarındaki kanın çe…”
-- **gereksiz iyelik**: 2
-  - “…? Buna inanamadı. Hepsinden nefret ediyordu. Onun ağladığını görmeli, suçluluk ve üzüntüyle ac…”
-  - “…e bir çocuk gibi ağladı. Ama yaptığı tek şey onun nefes almasını daha da düzensiz hale getirme…”
 - **"bir çok/her şey" ayrık**: 1
   - “…çin daha ne kadar suda yürümesi gerekecekti? Hiç bir çıkış var mıydı? Böylesine korkunç bir gelec…”
 - **"kendi"**: 1
   - “…asına neden oluyordu. Acıyla mücadele ederek kendi tarafına dönmeyi başardığında, artık vücudun…”
 - **ardışık aynı kelime**: 1
   - “…öksürük fışkırdı ve dışarı çıkmaya zorlandı. Tekrar tekrar öksürmeye devam etti; her birine boğazını ya…”
+- **"ayrıca"**: 1
+  - “…ette bir anlığına dışarı çıkmış olmalı. Yuki ayrıca yanındaki telefonu kullanırsa evdeki birinin…”
 
 ### Cilt 9 · 2. Bölüm 1 · Ve Her Şey Uyluk Oldu (s.12–32)
 
 - **Kelime/cümle**: ort 8.4 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 3.6
-- **gereksiz iyelik**: 40
-  - “…“Sonunda… Yuki için hiçbir şey yapamadım, ” diye it…”
-  - “…ir kıza dönüşmesiydi. “Kaçtım biliyor musun? Onun kardeşi olmaktan kaçtım.” Dayanamadı. O kada…”
+- **gereksiz iyelik**: 18
+  - “…ir kıza dönüşmesiydi. “Kaçtım biliyor musun? Onun kardeşi olmaktan kaçtım.” Dayanamadı. O kadar göz ka…”
+  - “…Masachika’ydı. Küçük kız kardeşini şımartmak onun tüm suçluluk duygusundan kurtulmasını sağladı. …”
 - **cümle başı "Ama/Fakat"**: 17
   - “…a bir ağabey kılığına girmesine olanak tanıdı. Ama derinlerde… o her zaman gerçeği biliyordu.…”
   - “…ememenin, inatla tek başına ilerlemenin acısı. Ama varoluşunun asıl anlamını inkar etmekten kaça…”
@@ -1728,9 +1724,6 @@
 ### Cilt 9 · 3. Bölüm 2 · Ve Böylece Çocuk ile Annesinin Gözleri Buluştu (s.32–52)
 
 - **Kelime/cümle**: ort 9.1 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 5.8
-- **gereksiz iyelik**: 24
-  - “…“……” “Lütfen bunları kullanın.” Onun gidişini izlerken Natsu onlara Masachika ve …”
-  - “…eğil. Eminim Yuki-sama memnun olacaktır. Ama onun hastalığına yakalanmamak için lütfen bu mask…”
 - **"gerçekten"**: 17
   - “…i ölçüde azaltacaktır. O ikisini Alya varken gerçekten görmek istemiyorum… Onların önünde nasıl dav…”
   - “…nrım. Aman tanrım, aman tanrım, aman tanrım! Gerçekten, gerçekten. Gerçekten çok uzun zaman oldu! H…”
@@ -1740,19 +1733,20 @@
 - **"olduğunu" zinciri**: 8
   - “…onseyi üyesiyim. Yuki-san’ın gripten yatalak olduğunu duyduk, bu yüzden bir anlığına da olsa uğray…”
   - “…te öğrenci konseyi üyesiyim. Saatin uygunsuz olduğunu anlıyorum ama onu selamlayabilir miyiz?” Gen…”
+- **gereksiz iyelik**: 8
+  - “…“……” “Lütfen bunları kullanın.” Onun gidişini izlerken Natsu onlara Masachika ve Alisa’nın…”
+  - “…eğil. Eminim Yuki-sama memnun olacaktır. Ama onun hastalığına yakalanmamak için lütfen bu maskeleri takı…”
 - **"sadece"**: 7
   - “…nsei’nin bakışlarıyla doğrudan karşılaştı ve sadece birkaç adım ötede durdu. İnisiyatif alarak ö…”
   - “…ydı. “Ben Gensei Suou, Yuki’nin büyükbabası… Sadece ziyaret ettiğinizi söylüyorsunuz ama veliler…”
 - **cümle başı "Ama/Fakat"**: 5
   - “…rını yapması gerektiğini çoktan kabul etmişti. Ama yine de sorgulamadan edemedi… Yani ön kapıdan…”
   - “… gibi bir kararlılıkla yüzleşeceğini umuyordu. Ama şimdi… Buradan böyle geçeceğimi hiç düşünmemi…”
+- **Ani düşüş**: s.42(5)
 
 ### Cilt 9 · 4. Bölüm 3 · Ve Hepsi Hiçbir Şeye Dönüştü (s.52–70)
 
 - **Kelime/cümle**: ort 9.4 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 3.9
-- **gereksiz iyelik**: 34
-  - “…aralıklarına dahil etmeye çalışırdı. Sık sık onun kaprislerinin insafına kalıyordum ama yine d…”
-  - “…eyimin başarabileceğini asla ümit edemezdim. Onun üç günde ustalaştığı şeyleri öğrenmek benim …”
 - **"gerçekten"**: 19
   - “… Bakın!” “Onii-sama, ne yapıyorsun…?” “Yumi! Gerçekten çok güzel bir çamurlu hamur tatlısı yaptım, …”
   - “…“Naotaka-kun gerçekten harika, değil mi? Onun hâlâ ilkokul öğrencis…”
@@ -1762,6 +1756,9 @@
 - **"sadece"**: 11
   - “…rkenden fark etmişe benziyordu. Onun gözleri sadece yetenekteydi ve daha sonra gözleri hep ağabe…”
   - “… olmadığını varsaydılar. “Hayır, hayır, Yumi sadece geç olgunlaşan biri! Ağabeyi olarak bunu gar…”
+- **gereksiz iyelik**: 11
+  - “… Babam bunu erkenden fark etmişe benziyordu. Onun gözleri sadece yetenekteydi ve daha sonra gözleri he…”
+  - “…eklentileri varmış gibi hissettim. Yani o da benim hayalimi destekleyecek. Elbette bu gerçekten parlayab…”
 - **cümle başı "Ve"**: 11
   - “…iyano çaldığım zaman beni sık sık övüyorlardı. Ve bir gün… “Yumi-chan, piyanoda gerçekten çok i…”
   - “…sanlarla ağzına kadar dolu bir ortamda buldum. Ve bu yüzden ilerlemem durdu. “Bu konuda endişel…”
@@ -1772,9 +1769,6 @@
 ### Cilt 9 · 5. Bölüm 4 · Ve Masachika Bir Karar Verdi (s.70–88)
 
 - **Kelime/cümle**: ort 10.0 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 4.9
-- **gereksiz iyelik**: 19
-  - “…“Babam haklıydı. Sonunda benim gibi sıradan birinin başarabileceği tek şey,…”
-  - “…Yuki ile ilişkisinin çökmemesinin tek nedeni onun çabalarıydı. Keşke… Keşke Masachika, Yuki’ni…”
 - **"sadece"**: 12
   - “…a teslimiyet içermiyordu. Bunun yerine sanki sadece evrensel bir gerçeği dile getiriyormuş gibi …”
   - “… yerine, onun etrafında dolaşanların aklında sadece Suou ailesinin zenginliğini ve servetini söm…”
@@ -1790,17 +1784,20 @@
 - **"bu yüzden"**: 8
   - “… aynı değiliz. Masachika’nın yeteneği vardı. Bu yüzden etrafındakilerin ondan büyük beklentileri va…”
   - “…Yeteneği yoktu ve bu yüzden etrafındakiler tarafından küçümseniyordu. He…”
+- **gereksiz iyelik**: 7
+  - “…“Babam haklıydı. Sonunda benim gibi sıradan birinin başarabileceği tek şey, kadı…”
+  - “…Yuki ile ilişkisinin çökmemesinin tek nedeni onun çabalarıydı. Keşke… Keşke Masachika, Yuki’nin kız kar…”
 - **Ani düşüş**: s.88(5)
 
 ### Cilt 9 · 6. Bölüm 5 · Ve Sonra Kanun Gerçek Oldu (s.88–117)
 
 - **Kelime/cümle**: ort 11.2 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 9.2
-- **gereksiz iyelik**: 40
-  - “… hareket düzgün, etkili ve göze çarpmıyordu. Onun görünüşte kusursuz duruşunu gören Masachika,…”
-  - “… hareket düzgün, etkili ve göze çarpmıyordu. Onun görünüşte kusursuz duruşunu gören Masachika,…”
 - **cümle başı "Ama/Fakat"**: 16
   - “… Yumi’nin sözlerinin onları şaşırttığı açıktı. Ama Masachika onları fark edecek durumda değildi,…”
   - “…re sahip birinin sorumluluklarını ihmal ettin. Ama yine de daha iyi bir halef olduğunu iddia edi…”
+- **gereksiz iyelik**: 15
+  - “… hareket düzgün, etkili ve göze çarpmıyordu. Onun görünüşte kusursuz duruşunu gören Masachika, dün …”
+  - “…ü. Konuşurken, göz teması kurmaya çabalarken onun etrafındaki tereddütleri hâlâ gezinen bakışlarında açıkç…”
 - **"diye" öncesi virgül yok**: 14
   - “…değiştireceğiz. Kahveyi çalışma odama getir, ” diye talimat verdi Natsu’ya. “Anlaşıldı.” Natsu t…”
   - “…chika’ya doğru döndü. “Peki istediğin şey ne?” diye sordu, gözleri soğuk, sert bir parıltı saçıy…”
@@ -1813,14 +1810,11 @@
 - **"kendi"**: 11
   - “…orlardı. Dörtlüye hizmet eden Natsu ve Ayano kendi başlarına kaldılar ve özenle görevlerine dev…”
   - “…anlılığını gerçekten geliştirmiş. Evet, ona “kendi hızım” özelliğini vererek onu 5M’den 6M’ye y…”
-- **Ani düşüş**: s.96(20), s.107(17), s.116(16), s.103(15)
+- **Ani düşüş**: s.96(19), s.107(15), s.103(14), s.116(14)
 
 ### Cilt 9 · 7. Bölüm 6 · Ve Alisa Güvenle Taşındı (s.117–148)
 
 - **Kelime/cümle**: ort 9.6 kelime/cümle · tip/örnek oranı 0.46 · diyalog satırı/sayfa 4.1
-- **gereksiz iyelik**: 46
-  - “…enzeyen bir duyguyu ilk kez yöneltmesiydi ve onun patlamasının şoku Masachika için çok büyüktü…”
-  - “…enzeyen bir duyguyu ilk kez yöneltmesiydi ve onun patlamasının şoku Masachika için çok büyüktü…”
 - **"gerçekten"**: 27
   - “…achika, yeniden birlikte yaşama ihtimalinden gerçekten mutlu olacağına bile inanıyordu. Yani, eğer …”
   - “…achika, yeniden birlikte yaşama ihtimalinden gerçekten mutlu olacağına bile inanıyordu. Yani, eğer …”
@@ -1836,14 +1830,14 @@
 - **"yani"**: 18
   - “…masasına çağırması üzerine duraksadı. “Nasıl yani? Bence oldukça iyi oldu…” “…Evet, çok lezzet…”
   - “…n gerçekten mutlu olacağına bile inanıyordu. Yani, eğer o kadar sinirlendiyse sanırım yanlış b…”
-- **Ani düşüş**: s.137(28), s.143(18)
+- **gereksiz iyelik**: 18
+  - “…enzeyen bir duyguyu ilk kez yöneltmesiydi ve onun patlamasının şoku Masachika için çok büyüktü. Yuki’nin b…”
+  - “…ün çok ağlıyordu… Ama yine de bunca zamandır onun iyiliğini feda ettiğimi inkar etmek mümkün değil… Sözl…”
+- **Ani düşüş**: s.137(28), s.120(19)
 
 ### Cilt 9 · 8. Bölüm 7 · Ve suçlu ortaya çıktı (s.148–176)
 
 - **Kelime/cümle**: ort 10.8 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 7.9
-- **gereksiz iyelik**: 17
-  - “…e bakarken Masachika’nın yüzü seğirdi. Alisa onun karşısında tamamen suskun kalmıştı. Gördükle…”
-  - “…Doğum Günün Kutlu Olsun…” yazıyordu. “Ee, bu benim için mi?” Masasındaki hediye yığınına, tamam…”
 - **"gerçekten"**: 15
   - “…ya da kurdele bulunmamasıydı; bu da bunların gerçekten hediye mi yoksa sadece rastgele süs eşyaları…”
   - “…, kart veya ipucu yoktu. Tek ipucu, bunların gerçekten doğum günü hediyesi olduğunu belirten, üzeri…”
@@ -1856,17 +1850,20 @@
 - **"diye" öncesi virgül yok**: 9
   - “…vet, evet. Sanırım işi zamanında bitiremedik…” diye ekledi bir başkası. Çizimler üzerinde çalışa…”
   - “…geri kalanı da bir bakıma bu kervana katıldı…” diye açıkladı Masachika, düşünceli biçimde kaşlar…”
+- **gereksiz iyelik**: 8
+  - “…e bakarken Masachika’nın yüzü seğirdi. Alisa onun karşısında tamamen suskun kalmıştı. Gördükleri şey, …”
+  - “…afı” gerçekten var olmuş olabilir ve tamamen onun önünde duran öğrenci konseyi başkan yardımcısı t…”
 - **cümle başı "Ama/Fakat"**: 8
   - “…ikler!” “Doğum günün kutlu olsun!” “Tebrikler! Ama bugünün gerçek gün olup olmadığını bilmiyorum…”
   - “…ve ardından yavaşça başını salladı. “Haklısın… Ama bence bu sevinilecek bir şey. Sınıftaki herke…”
-- **Ani düşüş**: s.156(16), s.170(16), s.172(12), s.165(11)
+- **Ani düşüş**: s.170(16), s.156(15), s.152(14), s.159(13), s.165(10), s.172(10)
 
 ### Cilt 9 · 9. Bölüm 8 · Ve Böylece Tohumlar Ekildi (s.176–195)
 
 - **Kelime/cümle**: ort 10.3 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 7.4
-- **gereksiz iyelik**: 36
-  - “…u yüzden bu farklı türdeki ilgiyle baş etmek onun için bir zorluktu. Yuki-san benim durumumda …”
-  - “…e baş etmek onun için bir zorluktu. Yuki-san benim durumumda olsaydı muhtemelen kolayca mükemme…”
+- **gereksiz iyelik**: 23
+  - “…eri telaşlı tepki yerine, aldıkları tek şey, onun ezici güzelliğinin eşlik ettiği sakin bir teşekkür…”
+  - “…den bu sabah disiplin kurulu ofisine gittim. Benim tarafımdan herhangi bir suçtan dolayı çağrılmadı.” …”
 - **"gerçekten"**: 16
   - “…ot gibi geliyordu. “Vay canına~ Alisa, şimdi gerçekten popüler oluyorsun.” “Aslında öyle değil. Sad…”
   - “… “Aslında öyle değil. Sadece eğleniyorlar.” “Gerçekten~? Evet, sanırım biraz şakacı alay etme var a…”
@@ -1886,9 +1883,6 @@
 ### Cilt 9 · 10. Bölüm 9 · Ve böylece ikisi karşı karşıya geldi (s.195–220)
 
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.48 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 27
-  - “…m. Bunun için üzgünüm!” “Evet, düşündüm. Ama senin için bu biraz nadir görülen bir durum Kuze.”…”
-  - “… biraz nadir görülen bir durum Kuze.” “Evet, benim hatam~. Hemen düzelteceğim…” Masachika belge…”
 - **"gerçekten"**: 21
   - “…zdı. Açıkça çıkıp şöyle bir şey söyleyemem: “Gerçekten bir varis ya da diplomat olmak istemiyorum a…”
   - “…tin mi? Yani, öğrenci konseyi başkanı olmayı gerçekten isteyen diğer adaylardan bu pozisyonu aldığı…”
@@ -1901,6 +1895,9 @@
 - **"yani"**: 12
   - “…Vay, eğer kusura bakmazsan, seni dinliyorum. Yani, arada bir gerçek bir başkan gibi davranmak …”
   - “…tirdi, “Ama kendini hiç… suçlu hissettin mi? Yani, öğrenci konseyi başkanı olmayı gerçekten is…”
+- **gereksiz iyelik**: 11
+  - “…uşmak pek sorun değildi. Sonuçta Alisa artık onun sorunlarını zaten biliyordu, bu yüzden bunları burada …”
+  - “…rak neyden rahatsız olduğunu bilmiyorum. Ama benim gördüğüm kadarıyla sen… etrafındakilere karşı fazla …”
 - **cümle başı "Ama/Fakat"**: 9
   - “… Yaptım. Bunun için üzgünüm!” “Evet, düşündüm. Ama senin için bu biraz nadir görülen bir durum K…”
   - “…eşeceğine hiçbir zaman gerçekten inanmamıştım… Ama değişmek için gerçekten bir nedene ihtiyacım …”
@@ -1908,12 +1905,12 @@
 ### Cilt 9 · 11. Epilog · Böylece Kendim Oldum (s.220–227)
 
 - **Kelime/cümle**: ort 8.7 kelime/cümle · tip/örnek oranı 0.57 · diyalog satırı/sayfa 2.7
-- **gereksiz iyelik**: 19
-  - “…ben gülerken ve heyecanla ellerimi çırparken onun şaşkın tepkisini görmek için sık sık onları …”
-  - “…ben gülerken ve heyecanla ellerimi çırparken onun şaşkın tepkisini görmek için sık sık onları …”
 - **cümle başı "Ve"**: 9
   - “…yüzden karşımda her zaman bir gülümseme vardı. Ve bu sadece nii-sama değildi. Büyükbabam Suou a…”
   - “…kurtuldukları için rahatlamış hissedebilirler. Ve diğer herkese gelince, muhtemelen benim gitti…”
+- **gereksiz iyelik**: 7
+  - “…ben gülerken ve heyecanla ellerimi çırparken onun şaşkın tepkisini görmek için sık sık onları nii-sa…”
+  - “…ar yoğun olduğunu ve o zamana kadar herkesin benim kaygısız tavrımı görmezden gelmesinin sebebinin… onu…”
 - **"gerçekten"**: 6
   - “…Bu, uzak geçmişte, hâlâ gerçekten genç olduğum zamanlardan kalma, artık bulanı…”
   - “…Bu, uzak geçmişte, hâlâ gerçekten genç olduğum zamanlardan kalma, artık bulanı…”
@@ -1930,9 +1927,9 @@
 ### Cilt 9 · 12. Yan Hikâye · Soğuk Bir Adamın Kalbi (s.227–245)
 
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 6.1
-- **gereksiz iyelik**: 44
-  - “…’ya döndü, öyle mi?” “Arkasında duran çocuk, onun en büyük oğlu mu? Sanırım onu ​​ilk kez görü…”
-  - “…’ya döndü, öyle mi?” “Arkasında duran çocuk, onun en büyük oğlu mu? Sanırım onu ​​ilk kez görü…”
+- **gereksiz iyelik**: 21
+  - “… doğaldı. Belki… hem küçük kardeşimin hem de benim yetersizliklerimizi anlamış ve hatta belki de alt aileden bir ha…”
+  - “… sık sık dile getirmeye başladı. Belki de bu onun ağabeyi olarak bana güvenme şekliydi. Yine de onunla…”
 - **cümle başı "Ama/Fakat"**: 15
   - “…lk kez toplum önüne çıkışı. Adı… Gensei miydi? Ama yine de, her iki ebeveynin de onun kadar küçü…”
   - “…; Suou adını lekelemeyecek kadar yetenekliydi. Ama yine de yumuşak bir çocuktu. İradesi zayıftı,…”
@@ -1978,18 +1975,18 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 11 | 243 | 18.7 | 2.5 | 100 | "bu yüzden" |
-| 1 | Prolog · Küçük Kardeş Modu, Etkinleştir | 5 | 744 | 9.8 | 4.8 | 88 | gereksiz iyelik |
-| 2 | Bölüm 1 · Ezici Sevimliliğimin Karşısında  | 21 | 3797 | 11.3 | 4.7 | 90 | gereksiz iyelik |
-| 3 | Bölüm 2 · Ayano Havaya Karışıyor | 14 | 2545 | 9.5 | 5.9 | 89 | "gerçekten" |
-| 4 | Bölüm 3 · Biz sadece yatakta sarılıyoruz v | 19 | 3947 | 11.7 | 5.9 | 89 | gereksiz iyelik |
-| 5 | Bölüm 4 · Alisa’nın Beynini Defalarca Yok  | 33 | 6130 | 10.8 | 6.4 | 90 | gereksiz iyelik |
-| 6 | Bölüm 5 · Sır Paylaşım Oturumu Başlıyor | 25 | 4587 | 11.5 | 6.3 | 89 | gereksiz iyelik |
-| 7 | Bölüm 6 · Patronlar Perde Arkasından Ortay | 21 | 4202 | 10.7 | 6.7 | 89 | gereksiz iyelik |
-| 8 | Bölüm 7 · Kötü öğretir | 22 | 4568 | 13.3 | 5.0 | 90 | gereksiz iyelik |
-| 9 | Bölüm 8 · Meryem Ana, Hizmetçi ve Yarık | 27 | 5294 | 11.3 | 4.8 | 90 | gereksiz iyelik |
-| 10 | Bölüm 9 · Perde Yükseliyor | 19 | 4444 | 11.8 | 5.8 | 88 | "diye" öncesi virgül yok |
-| 11 | Bölüm 10 · Kraliçe | 16 | 3029 | 11.5 | 5.1 | 90 | "diye" öncesi virgül yok |
-| 12 | Epilog · İhanet | 16 | 3527 | 11.3 | 6.1 | 93 | gereksiz iyelik |
+| 1 | Prolog · Küçük Kardeş Modu, Etkinleştir | 5 | 744 | 9.8 | 4.6 | 88 | cümle başı "Ama/Fakat" |
+| 2 | Bölüm 1 · Ezici Sevimliliğimin Karşısında  | 21 | 3797 | 11.3 | 4.3 | 90 | "yani" |
+| 3 | Bölüm 2 · Ayano Havaya Karışıyor | 14 | 2545 | 9.5 | 5.7 | 89 | "gerçekten" |
+| 4 | Bölüm 3 · Biz sadece yatakta sarılıyoruz v | 19 | 3947 | 11.7 | 5.5 | 89 | "gerçekten" |
+| 5 | Bölüm 4 · Alisa’nın Beynini Defalarca Yok  | 33 | 6130 | 10.8 | 6.0 | 90 | "gerçekten" |
+| 6 | Bölüm 5 · Sır Paylaşım Oturumu Başlıyor | 25 | 4587 | 11.5 | 5.9 | 89 | "diye" öncesi virgül yok |
+| 7 | Bölüm 6 · Patronlar Perde Arkasından Ortay | 21 | 4202 | 10.7 | 6.2 | 89 | cümle başı "Ama/Fakat" |
+| 8 | Bölüm 7 · Kötü öğretir | 22 | 4568 | 13.3 | 4.9 | 90 | "diye" öncesi virgül yok |
+| 9 | Bölüm 8 · Meryem Ana, Hizmetçi ve Yarık | 27 | 5294 | 11.3 | 4.6 | 90 | "diye" öncesi virgül yok |
+| 10 | Bölüm 9 · Perde Yükseliyor | 19 | 4444 | 11.8 | 5.6 | 88 | "diye" öncesi virgül yok |
+| 11 | Bölüm 10 · Kraliçe | 16 | 3029 | 11.5 | 5.0 | 90 | "diye" öncesi virgül yok |
+| 12 | Epilog · İhanet | 16 | 3527 | 11.3 | 5.6 | 93 | "gerçekten" |
 
 ### Cilt 10 · 0. İllüstrasyonlar · İllüstrasyonlar (s.0–11)
 
@@ -2003,9 +2000,6 @@
 ### Cilt 10 · 1. Prolog · Küçük Kardeş Modu, Etkinleştir (s.11–16)
 
 - **Kelime/cümle**: ort 9.8 kelime/cümle · tip/örnek oranı 0.70 · diyalog satırı/sayfa 3.8
-- **gereksiz iyelik**: 4
-  - “…a da ona şunu söylemişti: Yuki’nin çocukluğu onun alışılmadık derecede güçlü merakı ve sınır t…”
-  - “…a da ona şunu söylemişti: Yuki’nin çocukluğu onun alışılmadık derecede güçlü merakı ve sınır t…”
 - **cümle başı "Ama/Fakat"**: 2
   - “… ve sınır tanımayan enerjisiyle tanımlanmıştı. Ama sonra hastalık gelip onu özgürlüğünü elinden …”
   - “…ebileceği anlamına gelmiyordu. Bunu biliyordu. Ama yine de…! “Hhh…” Gözleri zaten kısılmış olan …”
@@ -2015,6 +2009,9 @@
 - **"kendi"**: 2
   - “…ık gelip onu özgürlüğünü elinden aldı ve onu kendi bedeniyle zorlu bir savaşın içine sürükledi.…”
   - “…tığım nii-sama’yı suçlu hissettirmek, ” Yuki kendi gözyaşlarını tutmak için elinden geleni yapa…”
+- **gereksiz iyelik**: 2
+  - “…a da ona şunu söylemişti: Yuki’nin çocukluğu onun alışılmadık derecede güçlü merakı ve sınır tanımayan en…”
+  - “…uşmuyordu. Alisa bunu çok iyi anladı. Sadece onun hikayesini dinlemek bile Yuki’nin yaşadığı acıyı ve ıst…”
 - **cümle başı "Ve"**: 2
   - “…or ki… Yuki’nin şu anki versiyonu gerçek oydu… Ve Alisa’nın başından beri iyi tanıdığını düşünd…”
   - “…u, farkına bile varmadan ağzından kayıp gitti. Ve Alisa bunu sorduğuna pişman bile olmadan, Yuk…”
@@ -2024,9 +2021,6 @@
 ### Cilt 10 · 2. Bölüm 1 · Ezici Sevimliliğimin Karşısında Titreyin! (s.16–37)
 
 - **Kelime/cümle**: ort 11.3 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 7.0
-- **gereksiz iyelik**: 26
-  - “…osu ya da başka bir şey? Yuki’nin açıklaması onun için o kadar anlaşılmazdı ki Alisa, kendisin…”
-  - “…yalnızca gözlerini kırpıştırabiliyordu. Yuki onun önünde sandalyesinden kalktı, bir elini dram…”
 - **"yani"**: 14
   - “…lan gerek yok; sadece açıklaman sorun değil… Yani bu gerçekten bilmek istediğim şey değil, yan…”
   - “…ani bu gerçekten bilmek istediğim şey değil, yani senin tatlılığın? Daha doğrusu’benim’ mi? Az…”
@@ -2036,6 +2030,9 @@
 - **"diye" öncesi virgül yok**: 12
   - “…ir biçimde açıklamamı istediğini söylüyorsun…” diye konuştu. “E-evet.” “Bu tatlılığımı anlatmak …”
   - “…riye doğru eğdi. “Pekâlâ… Görmek inanmaktır, ” diye mırıldandı ve bir anda sağ kolunu hareket et…”
+- **gereksiz iyelik**: 12
+  - “…yalnızca gözlerini kırpıştırabiliyordu. Yuki onun önünde sandalyesinden kalktı, bir elini dramatik…”
+  - “…i sağ gözünü açtı. “Gözleriniz bayram etsin! Benim bu ezici tatlılığıma tanık olun.” “Ah, hayır, s…”
 - **"olduğunu" zinciri**: 10
   - “…nun ablasına karşı olduğundan oldukça farklı olduğunu gösteriyor. Eğer ona bunlardan hangilerinin …”
   - “…nun ablasına karşı olduğundan oldukça farklı olduğunu gösteriyor. Eğer ona bunlardan hangilerinin …”
@@ -2049,9 +2046,6 @@
 - **"gerçekten"**: 12
   - “…bu sefer farklı bir yöne. Daha doğrusu! Eğer gerçekten buysa, okulda tam bir hanımefendi gibi davra…”
   - “…onu biraz rahatsız etti. “Uhhh… Bu arada çay gerçekten çok lezzetliydi.” “Çok teşekkür ederim.” “Ta…”
-- **gereksiz iyelik**: 12
-  - “…da daha derin bir anlam vardı, ama aslında o benim telaşlanmamla sadece eğleniyordu, değil mi…?…”
-  - “… Alisa’nın hissettiği şok, “Bir dakika, yani onun altında böyle mi!? Daha ziyade, ” S-yani bu …”
 - **cümle başı "Ve"**: 10
   - “…yudumlamış ve sonunda sakinleşmeye başlamıştı. Ve Yuki’nin tuhaf ve tarif edilemez zihinsel man…”
   - “…uşuna sessizce derin bir hayranlık beslemişti. Ve bu sadece hayranlık da değildi, biraz kıskanç…”
@@ -2061,17 +2055,17 @@
 - **cümle başı "Ama/Fakat"**: 10
   - “…lık da vardı, hatta belki biraz da kıskançlık. Ama maske çıktığında… altında yatan şey buydu. Ha…”
   - “…l edebileceğinin çok ötesinde bir dünyaydı bu. Ama yine de Ayano’nun sözlerinin ardındaki ağırlı…”
+- **gereksiz iyelik**: 7
+  - “… Alisa’nın hissettiği şok, “Bir dakika, yani onun altında böyle mi!? Daha ziyade, ” S-yani bu kadar…”
+  - “…knik olarak sordu, bu doğru… Ama esas olarak benim rahatsız olduğumu hissetti ve kulak verdi. Bu konu h…”
 - **"olduğunu" zinciri**: 7
   - “…küçülttü. “Geriye dönüp bakmanın dikkatsizce olduğunu biliyorum. Ortak bir arkadaş olsa da izinsiz…”
   - “…i.” “G-gerçekten mi? Gerçekten durumun böyle olduğunu düşünmüyorum…” “Hayır, hâlâ öğrenecek çok şe…”
-- **Ani düşüş**: s.41(22)
+- **Ani düşüş**: s.41(22), s.49(20)
 
 ### Cilt 10 · 4. Bölüm 3 · Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var? (s.51–70)
 
 - **Kelime/cümle**: ort 11.7 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 8.9
-- **gereksiz iyelik**: 25
-  - “… vermekten kendini alamadı. Ama yine de Yuki onun hafif tonunu kendi tonuyla karşılamayı redde…”
-  - “… vermekten kendini alamadı. Ama yine de Yuki onun hafif tonunu kendi tonuyla karşılamayı redde…”
 - **"gerçekten"**: 19
   - “…rmaktan hoşlanmayan Masachika gibi biri için gerçekten çok… cazip bir teklifti. Ama ben… onun nezak…”
   - “…an, bu konuyu düzgün bir biçimde konuşmamızı gerçekten isterim, ” kararlılığını ilan etti ve Yuki’y…”
@@ -2081,6 +2075,9 @@
 - **"diye" öncesi virgül yok**: 14
   - “… üstündeymiş gibi… Dur hayır, umrumda değil, ” diye şaka yaptı Masachika uzun bir iç çekmeden ön…”
   - “… üstündeymiş gibi… Dur hayır, umrumda değil, ” diye şaka yaptı Masachika uzun bir iç çekmeden ön…”
+- **gereksiz iyelik**: 12
+  - “…suçlu hissediyordu. “…Kötüyüm.” “Hmph!” Yuki onun özrüne sinirle homurdandı ve yatağa otururken bir…”
+  - “…de kolay değildi. “Benimle dalga geçme.” “Bu benim sözüm!” “Külotun şu anda bunların hiçbiriyle alak…”
 - **"sadece"**: 12
   - “…tlice kelimelere dökerek verdi. “Öyle değil… Sadece… eskiden hayallerin, seçimlerin vardı. Olmak…”
   - “…rdu. “Artık acı çekmeni istemedim onii-chan… Sadece sonunda özgür olmanı istedim.” Bu Yuki’nin b…”
@@ -2092,15 +2089,15 @@
 ### Cilt 10 · 5. Bölüm 4 · Alisa’nın Beynini Defalarca Yok Etmek (s.70–103)
 
 - **Kelime/cümle**: ort 10.8 kelime/cümle · tip/örnek oranı 0.48 · diyalog satırı/sayfa 8.2
-- **gereksiz iyelik**: 54
-  - “…ses tonu bile bir anda değişti. “Lütfen buna benim’kadınsı modum’ demez misin?” “Nyaagh! Kafam …”
-  - “…pışkan, ” Masachika’nın kız kardeşi ellerini onun omuzlarına koyarken ve bacaklarını ona dolay…”
 - **"gerçekten"**: 37
   - “…de Gülmeye Kesinlikle İzin Verilmez…’” “Buna gerçekten bir son vermelisin, biliyor musun? Ve Jodie’…”
   - “…de Gülmeye Kesinlikle İzin Verilmez…’” “Buna gerçekten bir son vermelisin, biliyor musun? Ve Jodie’…”
 - **"diye" öncesi virgül yok**: 29
   - “…ar tutkulu ve yoğun biçimde kucaklıyordun ki♡” diye tatlı biçimde mırıldanırken abartılı bir kad…”
   - “…“Ah, ah, bunun için üzgünüm, ” diye özür diledi Yuki, hâlâ şakacı manga benzeri …”
+- **gereksiz iyelik**: 27
+  - “…pışkan, ” Masachika’nın kız kardeşi ellerini onun omuzlarına koyarken ve bacaklarını ona dolayarak usta…”
+  - “…bakışlarını kaçırdı ve saçıyla oynadı. Bunun onun utancını saklamanın bir yolu olduğu herkes için acı…”
 - **cümle başı "Ve"**: 19
   - “… evdeki tek tuhaf kişi sizsiniz.” “Kesinlikle! Ve bu malikanenin vakur havasında, Büyükbabamla …”
   - “…a gerçekten bir son vermelisin, biliyor musun? Ve Jodie’yi büyükbabanın arkasından falan göster…”
@@ -2110,13 +2107,11 @@
 - **"olduğunu" zinciri**: 12
   - “…klamasına neden olan bir şey vardı. Sanki ne olduğunu anlamaya çalışıyormuş gibi yüzüne daha yakın…”
   - “…ıldı. “Bir zamanlar gerçekten Masachika Suou olduğunu…” odayı işaret ederken yumuşak bir sesle kon…”
+- **Ani düşüş**: s.103(19)
 
 ### Cilt 10 · 6. Bölüm 5 · Sır Paylaşım Oturumu Başlıyor (s.103–128)
 
 - **Kelime/cümle**: ort 11.5 kelime/cümle · tip/örnek oranı 0.50 · diyalog satırı/sayfa 8.9
-- **gereksiz iyelik**: 29
-  - “… Nonoa çenesini bir eline dayadı ve sanki bu onun gerçek sandalyesiymiş gibi bir tavır takındı…”
-  - “…air tam bir açıklama yapmak… ve ama Yuki ile benim sakladığımız sır hakkında konuşmak.” “Bir sı…”
 - **"diye" öncesi virgül yok**: 22
   - “…hika bir kez daha ağzını açtı. “Gerçek şu ki…” diye başladı. “Biz aslında aynı ebeveynleri payla…”
   - “… Yuki’ye öylesine sıradan bir biçimde “sizler” diye hitap etti.…”
@@ -2132,14 +2127,14 @@
 - **"sadece"**: 12
   - “…anki yumuşak gülümsemesini sergiledi. “Hmm~, sadece bir his mi?” sakince konuştu. “Mesela, Kuze-…”
   - “…anki yumuşak gülümsemesini sergiledi. “Hmm~, sadece bir his mi?” sakince konuştu. “Mesela, Kuze-…”
+- **cümle başı "Ve"**: 11
+  - “…e sakin bir duruşla Yuki’nin koltuğuna oturdu. Ve son olarak Ayano’nun her zamanki koltuğunda N…”
+  - “…anki gibi havaya karışarak duvara yaslanmıştı. Ve bununla başlamak için ağzını açtı. “Tamam~, y…”
 
 ### Cilt 10 · 7. Bölüm 6 · Patronlar Perde Arkasından Ortaya Çıkıyor (s.128–149)
 
 - **Sadakat**: ort 88.8; zayıf: s.147 (74: diyalog -2)
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 4.8
-- **gereksiz iyelik**: 33
-  - “…Neredeyse herkes gözleri Sayaka’ya odaklanıp onun konuşmasını beklerken merak ediyordu. O da ş…”
-  - “…teşem bir ders kitabı çöküşünden etkilenerek onun omzunu tuttu. “B-bekle, bir dakika!” Bu arad…”
 - **cümle başı "Ama/Fakat"**: 17
   - “…Ama Takeshi gibi biri için bu bile onun fazlasıyl…”
   - “…Ama Alisa için şu anda durum daha iyiydi, kendisi…”
@@ -2155,14 +2150,14 @@
 - **"gerçekten"**: 14
   - “…ozda kara tarih utancına maruz kaldı. ⋆⋅☆⋅⋆ “Gerçekten harikasın, dostum… Gerçekten, ” Masachika, y…”
   - “…ozda kara tarih utancına maruz kaldı. ⋆⋅☆⋅⋆ “Gerçekten harikasın, dostum… Gerçekten, ” Masachika, y…”
-- **Ani düşüş**: s.140(33)
+- **gereksiz iyelik**: 12
+  - “…Neredeyse herkes gözleri Sayaka’ya odaklanıp onun konuşmasını beklerken merak ediyordu. O da şaşkınlıkla…”
+  - “…teşem bir ders kitabı çöküşünden etkilenerek onun omzunu tuttu. “B-bekle, bir dakika!” Bu arada Masac…”
+- **Ani düşüş**: s.140(31)
 
 ### Cilt 10 · 8. Bölüm 7 · Kötü öğretir (s.149–171)
 
 - **Kelime/cümle**: ort 13.3 kelime/cümle · tip/örnek oranı 0.50 · diyalog satırı/sayfa 6.8
-- **gereksiz iyelik**: 19
-  - “…r’ gibi bir hareket de ne oluyor?” Masachika onun kendini beğenmiş tavrına şaka yapmadan edeme…”
-  - “…r’ gibi bir hareket de ne oluyor?” Masachika onun kendini beğenmiş tavrına şaka yapmadan edeme…”
 - **"diye" öncesi virgül yok**: 19
   - “…geldiğinde anlayacağın bir şey. Evet…” “Doğru” diye onayladı Souma. “Ufufu~, ” diye kıkırdadı Ar…”
   - “…geldiğinde anlayacağın bir şey. Evet…” “Doğru” diye onayladı Souma. “Ufufu~, ” diye kıkırdadı Ar…”
@@ -2172,6 +2167,9 @@
 - **"sadece"**: 17
   - “…n başkası değildi ve rüzgar grubunun üyeleri sadece hayret dolu ifadelerle bakabiliyorlardı. Baz…”
   - “…n başkası değildi ve rüzgar grubunun üyeleri sadece hayret dolu ifadelerle bakabiliyorlardı. Baz…”
+- **gereksiz iyelik**: 13
+  - “…r’ gibi bir hareket de ne oluyor?” Masachika onun kendini beğenmiş tavrına şaka yapmadan edemedi. “Çün…”
+  - “…r kafa karışıklığıyla ona baktı, bir an için onun kirli bir şaka yaptığından şüphelendi, sonra rahat…”
 - **cümle başı "Ama/Fakat"**: 9
   - “…issederek ayağa kalktı ve kibarca selam verdi. Ama bu sadece başka bir alkış yağmuruna yol açtı …”
   - “…lerinin arkasından yavaşça yaklaştığını gördü. Ama yine de kimse ona yol açmadı. “Ah, ne! Heeeey…”
@@ -2182,15 +2180,15 @@
 ### Cilt 10 · 9. Bölüm 8 · Meryem Ana, Hizmetçi ve Yarık (s.171–198)
 
 - **Kelime/cümle**: ort 11.3 kelime/cümle · tip/örnek oranı 0.51 · diyalog satırı/sayfa 5.7
-- **gereksiz iyelik**: 28
-  - “…utançtan hemen orada ölürdüm… Haaaah~, evet, benim gibi sıradan insanların bu kadar kendini beğ…”
-  - “…iği anlamına geliyor. Açıkçası… Yani sanırım onun ortalıkta kalıp bana göz kulak olmasından fa…”
 - **"diye" öncesi virgül yok**: 20
   - “…an hemen bana haber ver, tamam mı?” “Pekala, ” diye yanıtladı Masachika, sağlık öğretmeninin (ay…”
   - “…renci konseyi bugün de izinli.” “Ah, öyle mi?” diye sordu Masachika, Slit-paisen’in bakışlarını …”
 - **"sadece"**: 19
   - “…ol topunu sürmeyi denemişti ki bu genellikle sadece parmaklarının sıkışmasıyla sonuçlanan pervas…”
   - “…ol topunu sürmeyi denemişti ki bu genellikle sadece parmaklarının sıkışmasıyla sonuçlanan pervas…”
+- **gereksiz iyelik**: 18
+  - “…utançtan hemen orada ölürdüm… Haaaah~, evet, benim gibi sıradan insanların bu kadar kendini beğenmiş…”
+  - “…iği anlamına geliyor. Açıkçası… Yani sanırım onun ortalıkta kalıp bana göz kulak olmasından falan dah…”
 - **"yani"**: 16
   - “…beğenmiş olması hiç de iyi değil, değil mi…? Yani kendimle fazla dolu olduğumu falan düşünmüyo…”
   - “…ması gibi… Ah, daha önce hiç sarhoş olmadım, yani kim bilir~? Masachika, muhtemelen o bilinçdı…”
@@ -2200,7 +2198,7 @@
 - **cümle başı "Ama/Fakat"**: 12
   - “…rslerine kolayca geri dönebileceğini hissetti. Ama yine de sağlık öğretmeninin talimatlarını ita…”
   - “…lek ile yoluna devam ederek gününe devam etti. Ama sonra… beşinci ve altıncı dönemler arasındaki…”
-- **Ani düşüş**: s.198(3)
+- **Ani düşüş**: s.181(19), s.198(3)
 
 ### Cilt 10 · 10. Bölüm 9 · Perde Yükseliyor (s.198–217)
 
@@ -2212,15 +2210,15 @@
 - **"gerçekten"**: 20
   - “…rlaştırıyordu; bu yüzden teknik olarak, eğer gerçekten isterlerse, sayımdan sorumlu öğrenci konseyi…”
   - “…rlaştırıyordu; bu yüzden teknik olarak, eğer gerçekten isterlerse, sayımdan sorumlu öğrenci konseyi…”
-- **gereksiz iyelik**: 16
-  - “…ni anlıyorum ama cidden çizgiyi aşmış… Yani, onun arkadaşı olması gereken birine bunu bana söy…”
-  - “…sledikleri göz önüne alındığında, ilk etapta senin katılmaman daha iyi olur.” “Ahh~, bu doğru, …”
 - **"bu yüzden"**: 14
   - “…e kırmızı-beyaz oylama yapmamızı istiyorlar, bu yüzden yardıma normalden daha fazla insana ihtiyacı…”
   - “…aya göre kesinlikle daha fazla zaman alıyor, bu yüzden katılımın yüksek olduğu toplantılarda pek ku…”
 - **"sadece"**: 12
   - “… İlgi gruplarının kulüp odası hakları yok ve sadece iki grup arasındaki üye sayısını dikkate alm…”
   - “…üzerinde kafa yorarak. Hayır, sonuçta Yuusho sadece hayal görüyor… Alya’nın Nonoa’nın karakterin…”
+- **gereksiz iyelik**: 9
+  - “…sledikleri göz önüne alındığında, ilk etapta senin katılmaman daha iyi olur.” “Ahh~, bu doğru, değil…”
+  - “…ven bana, tamam mı? Sana söyledim, değil mi? Senin tarafındayım, Ayanono… Fufu, teşekkürler. Tamam, sonra k…”
 - **"yani"**: 8
   - “…ettiğini anlıyorum ama cidden çizgiyi aşmış… Yani, onun arkadaşı olması gereken birine bunu ba…”
   - “…ılması kesinleşmeden bir gün önce yapılacak, yani… bu perşembe. Evet, dürüst olmak gerekirse, …”
@@ -2231,12 +2229,12 @@
 - **"diye" öncesi virgül yok**: 25
   - “… Tamam, hadi bir kez daha üzerinden geçelim, ” diye önerdi ikincisi. “Evet.” Elena odaya, “’Kaaa…”
   - “… Tamam, hadi bir kez daha üzerinden geçelim, ” diye önerdi ikincisi. “Evet.” Elena odaya, “’Kaaa…”
-- **gereksiz iyelik**: 14
-  - “…ın tuhaf olduğunu biliyorum ama bunu atlaman senin için gerçekten sorun olur mu Kuze-kun?” “Eve…”
-  - “…in gerçekten sorun olur mu Kuze-kun?” “Evet. Benim adıma katılan güvenilir bir ortağım var, ” d…”
 - **"gerçekten"**: 12
   - “…duğunu biliyorum ama bunu atlaman senin için gerçekten sorun olur mu Kuze-kun?” “Evet. Benim adıma …”
   - “…ydı mümkün olabilirdi, değil mi~? Peki Alisa gerçekten tüm bu pisliklerle tek başına başa çıkabilec…”
+- **gereksiz iyelik**: 9
+  - “…in gerçekten sorun olur mu Kuze-kun?” “Evet. Benim adıma katılan güvenilir bir ortağım var, ” diye …”
+  - “…rek. “Tamam. O halde bir kez üstten alalım.” Onun liderliğini takip eden Masachika, piyanoya bakmak için g…”
 - **"olduğunu" zinciri**: 5
   - “… değil mi?” diye sordu. “Bunu sormamın tuhaf olduğunu biliyorum ama bunu atlaman senin için gerçek…”
   - “…ştırıldığında ilk şüphelenilecek kişinin kim olduğunu düşünüyorsunuz? Tahmin edilmesi veya kaçınıl…”
@@ -2246,14 +2244,11 @@
 - **cümle başı "Ama/Fakat"**: 3
   - “…Ama aynı zamanda, sanki akılları nihayet yetişmiş…”
   - “…i artık açıktı. Boş oyları saymıyorum elbette. Ama ne yazık ki bu, Nonoa’nın kurduğu tuzağın ta …”
-- **Ani düşüş**: s.229(25), s.218(17), s.233(10)
+- **Ani düşüş**: s.229(25), s.218(16), s.233(10)
 
 ### Cilt 10 · 12. Epilog · İhanet (s.233–249)
 
 - **Kelime/cümle**: ort 11.3 kelime/cümle · tip/örnek oranı 0.56 · diyalog satırı/sayfa 3.8
-- **gereksiz iyelik**: 21
-  - “…züne parlak bir gülümseme yerleşti. “Hm? Ah, benim hatam, benim hatam. Sadece birazcık düşüncel…”
-  - “…züne parlak bir gülümseme yerleşti. “Hm? Ah, benim hatam, benim hatam. Sadece birazcık düşüncel…”
 - **"gerçekten"**: 16
   - “…ltılı gülümsemesi hala bozulmamıştı. “Hayır, gerçekten, olayların gidişatı ne kadar şaşırtıcı değil…”
   - “…nda o zamanlar Başkan Yardımcısı-san’a karşı gerçekten sempatik bir hava vardı; Alisa bu durumda ye…”
@@ -2269,6 +2264,9 @@
 - **cümle başı "Ama/Fakat"**: 8
   - “…aşıyormuş gibi neşeli bir ses tonuyla konuştu… Ama sonra, hiçbir uyarıda bulunmadan, ifadesi anı…”
   - “…ıkla suçlanmaya dayanamıyormuş gibi, sanırım~? Ama eğer sakince düşünürsen, piyano kulübünün Yar…”
+- **"kendi"**: 8
+  - “…sa bu durumda yeniden sayım talep etmek için kendi yolundan çekilip’Gördün mü? Herhangi bir sah…”
+  - “…sa bu durumda yeniden sayım talep etmek için kendi yolundan çekilip’Gördün mü? Herhangi bir sah…”
 
 
 ## Cilt 11
@@ -2276,27 +2274,27 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 6 | 0 | 0.0 | 0 | — | — |
-| 1 | Prolog · Birleşik Cephe | 20 | 3400 | 12.9 | 5.5 | 90 | gereksiz iyelik |
-| 2 | Bölüm 1 · Bütün plancılar toplanıyor | 34 | 5580 | 11.5 | 5.8 | 89 | gereksiz iyelik |
-| 3 | Bölüm 2 · Beyni Bulmak | 35 | 5825 | 11.2 | 6.1 | 90 | "diye" öncesi virgül yok |
-| 4 | Bölüm 3 · Bundan Daha Fazlası, Karşılıklı  | 28 | 4313 | 10.9 | 6.6 | 90 | "diye" öncesi virgül yok |
-| 5 | Bölüm 4 · Görünüşe göre Usta-Hizmetçi Ters | 26 | 4124 | 9.8 | 5.9 | 89 | "diye" öncesi virgül yok |
-| 6 | Bölüm 5 · Büyük-Küçük Kardeş Değişiminin Y | 39 | 6857 | 11.0 | 6.0 | 89 | "diye" öncesi virgül yok |
-| 7 | Bölüm 6 · Bundan da fazlası, Bu Onii-chan! | 29 | 4768 | 11.2 | 6.8 | 90 | gereksiz iyelik |
-| 8 | Bölüm 7 · Kampanya Vaadini Bulmak | 29 | 4593 | 12.5 | 5.6 | 90 | "gerçekten" |
-| 9 | Bölüm 8 · İki Prenses Karşı Karşıya | 34 | 5204 | 11.7 | 4.0 | 90 | gereksiz iyelik |
-| 10 | Epilog · Ortak Bir Savaş | 22 | 3298 | 10.1 | 4.8 | 90 | gereksiz iyelik |
+| 1 | Prolog · Birleşik Cephe | 20 | 3400 | 12.9 | 4.9 | 90 | "diye" öncesi virgül yok |
+| 2 | Bölüm 1 · Bütün plancılar toplanıyor | 34 | 5580 | 11.5 | 5.4 | 89 | "diye" öncesi virgül yok |
+| 3 | Bölüm 2 · Beyni Bulmak | 35 | 5825 | 11.2 | 5.8 | 90 | "diye" öncesi virgül yok |
+| 4 | Bölüm 3 · Bundan Daha Fazlası, Karşılıklı  | 28 | 4313 | 10.9 | 6.4 | 90 | "diye" öncesi virgül yok |
+| 5 | Bölüm 4 · Görünüşe göre Usta-Hizmetçi Ters | 26 | 4124 | 9.8 | 5.6 | 89 | "diye" öncesi virgül yok |
+| 6 | Bölüm 5 · Büyük-Küçük Kardeş Değişiminin Y | 39 | 6857 | 11.0 | 5.6 | 89 | "diye" öncesi virgül yok |
+| 7 | Bölüm 6 · Bundan da fazlası, Bu Onii-chan! | 29 | 4768 | 11.2 | 6.5 | 90 | "gerçekten" |
+| 8 | Bölüm 7 · Kampanya Vaadini Bulmak | 29 | 4593 | 12.5 | 5.3 | 90 | "gerçekten" |
+| 9 | Bölüm 8 · İki Prenses Karşı Karşıya | 34 | 5204 | 11.7 | 3.7 | 90 | gereksiz iyelik |
+| 10 | Epilog · Ortak Bir Savaş | 22 | 3298 | 10.1 | 4.3 | 90 | gereksiz iyelik |
 | 11 | Sonsöz · Sonsöz | 10 | 1422 | 12.9 | 4.4 | 100 | "sadece" |
 
 ### Cilt 11 · 1. Prolog · Birleşik Cephe (s.6–26)
 
 - **Kelime/cümle**: ort 12.9 kelime/cümle · tip/örnek oranı 0.53 · diyalog satırı/sayfa 7.7
-- **gereksiz iyelik**: 36
-  - “…sana haber vereyim dedim.” Elbette Masachika onun ne dediğini anlamıştı. Peki neden Yuki’nin b…”
-  - “…sana haber vereyim dedim.” Elbette Masachika onun ne dediğini anlamıştı. Peki neden Yuki’nin b…”
 - **"diye" öncesi virgül yok**: 16
   - “…u tamamen şaşkına çevirmişti. “Dediğim gibi, ” diye tekrar doğruladı Yuki, “Bugün ortaya çıkan p…”
   - “…u tamamen şaşkına çevirmişti. “Dediğim gibi, ” diye tekrar doğruladı Yuki, “Bugün ortaya çıkan p…”
+- **gereksiz iyelik**: 14
+  - “…lışılmadık derecede ürkek bir itiraftı ve bu onun şaşkınlığını daha da derinleştirdi. “Ancak, ” diye deva…”
+  - “…manevralar yapmaya çalıştığı. Görünüşe göre… senin konumunu tehdit edecek bir çeşit plan var…” Bunu yüks…”
 - **"sadece"**: 12
   - “…f alan bir çeşit plan olacak gibi görünüyor. Sadece sana haber vereyim dedim.” Elbette Masachika…”
   - “…it karşı önlem bulmaları gerekiyordu. Ancak… sadece Alisa’nın hedef olduğunu bildikleri halde ne…”
@@ -2309,20 +2307,20 @@
 - **cümle başı "Ama/Fakat"**: 8
   - “…iye mantık yürüttü. Bu… gerçekten olabilir mi? Ama dostum……”
   - “…lerini çürütmeye çalıştı ama sonunda vazgeçti. Ama yine de Alisa ve Yuusho’nun baş başa buluşmas…”
-- **Ani düşüş**: s.13(22), s.24(21), s.10(15)
+- **Ani düşüş**: s.13(18), s.10(15)
 
 ### Cilt 11 · 2. Bölüm 1 · Bütün plancılar toplanıyor (s.26–60)
 
 - **Kelime/cümle**: ort 11.5 kelime/cümle · tip/örnek oranı 0.48 · diyalog satırı/sayfa 5.4
-- **gereksiz iyelik**: 41
-  - “…rini diken diken eden bir ürpertiydi; o anda onun kahverengi gözlerine bakan herkesin paylaşma…”
-  - “…“Bu benim sözüm, biliyor musun~?” Az önce “bu” diye aç…”
 - **"diye" öncesi virgül yok**: 27
   - “… Burada ne kadar seçkin bir toplantımız var, ” diye seslendi. İfadesi açıkça memnuniyet doluydu,…”
   - “…“Bu benim sözüm, biliyor musun~?” Az önce “bu” diye açıkça görevden alınan Nonoa, onun yerine te…”
 - **"gerçekten"**: 25
   - “… bulurlardı. Fakat… “……” Elbette bu hikayeyi gerçekten satın alan tek bir kişi bile yoktu. Kesinlik…”
   - “…“Ama bu konuda gerçekten derin bir şey yok? Eğer Alisa hedef alınıyor…”
+- **gereksiz iyelik**: 19
+  - “…rini diken diken eden bir ürpertiydi; o anda onun kahverengi gözlerine bakan herkesin paylaşmak zorunda k…”
+  - “…“Bu benim sözüm, biliyor musun~?” Az önce “bu” diye açıkça …”
 - **"sadece"**: 18
   - “…dı, ister her zamanki kabadayılığıydı, ister sadece soğukkanlılığını toparlamak için hızlı bir g…”
   - “…yormuşsun gibi duruyordu, değil mi? Yani ben sadece senin o küçük planını bozmak için geçici ola…”
@@ -2339,12 +2337,12 @@
 - **"diye" öncesi virgül yok**: 42
   - “…ıyla meseleyi halledilmiş sayacağız, Senpai, ” diye yanıtladı Alisa, Aoi’ye sessizce baktıktan s…”
   - “…diğim gibi, onunla yalnızca bir kez tanıştım…” diye konuştu. “Yüzünü o kadar net hatırlamıyorum……”
-- **gereksiz iyelik**: 33
-  - “…de omuzlarını küçülttü. Nonoa’nın yanı sıra… onun piyonu haline gelen bilinmeyen bir kişi tara…”
-  - “…, hayır, bu değil… Yumruğu ilk atan bendim…” Onun özür dilemesi Aoi’nin daha da huzursuz görün…”
 - **"gerçekten"**: 26
   - “…bir suçluluk duygusuydu. “Hımm, bir kez daha gerçekten özür dilerim Kujou-san. O öğrenci toplantısı…”
   - “…“Ah, gerçekten…? O zaman bir bakacağım ama… fazla umutlanma…”
+- **gereksiz iyelik**: 15
+  - “…de omuzlarını küçülttü. Nonoa’nın yanı sıra… onun piyonu haline gelen bilinmeyen bir kişi tarafından …”
+  - “…, hayır, bu değil… Yumruğu ilk atan bendim…” Onun özür dilemesi Aoi’nin daha da huzursuz görünmesi…”
 - **"sadece"**: 15
   - “…şlerdi. …Ya da en azından resmi mazeretlerin sadece yarısıydı bu.…”
   - “…kolay kabulüne zihinsel olarak yumruk attı. …Sadece Yuusho’nun tam o anda beklenmedik bir hamle …”
@@ -2361,9 +2359,6 @@
 - **"diye" öncesi virgül yok**: 37
   - “…gelen Touya sessizliği ilk bozan oldu. “Haaah” diye içini çekti. “…Yani sonuçta kimse bu amaca u…”
   - “…ak düşünmeye daldı. “Hımm, Sarashina-senpai, ” diye konuştu Masachika. “Hm? N’aber?”…”
-- **gereksiz iyelik**: 18
-  - “…n önemli piyonuyla ilgiliydi… Hatta pratikte onun sağ kolu da olabilirdi, bu yüzden böylesine …”
-  - “…z? Onlar hakkındaki izlenimleriniz nelerdi?” Onun isteği üzerine Maachika, Alisa, Yuki ve Ayan…”
 - **"gerçekten"**: 14
   - “…z olduğu anlamına gelmiyordu. Bu, soruşturma gerçekten başlamadan önce hepsinin düşündüğü bir şeydi…”
   - “…. Soruşturdukları kadın şüphelileri korumayı gerçekten önemsemiş olsalardı, şüphe altında oldukları…”
@@ -2376,7 +2371,9 @@
 - **"sadece"**: 10
   - “…a!” diye bağırdı Sumire, hemen itiraz etti. “Sadece bir buçuk günlük soruşturmanın ardından gerç…”
   - “…i Chisaki ve Sumire bile sanki bunalmış gibi sadece şaşkınlıkla bakabiliyorlardı. “O-ohhh, evet,…”
-- **Ani düşüş**: s.112(24)
+- **cümle başı "Ve"**: 9
+  - “…şansımızın oldukça düşük olduğunu düşünüyorum. Ve bundan da önemlisi, aslında bundan kaynaklana…”
+  - “…dın olmaya ne kadar yaklaşabileceği hakkında…? Ve aynı zamanda, el sanatları kulübünün sadece k…”
 
 ### Cilt 11 · 5. Bölüm 4 · Görünüşe göre Usta-Hizmetçi Tersine Dönüşü Bir Yanlış Anlamaydı (s.123–149)
 
@@ -2384,9 +2381,9 @@
 - **"diye" öncesi virgül yok**: 31
   - “…dınız. Bugün iyice dinlendiğinizden emin olun” diye ekledi. İki efendisi onu gülümseyerek karşıl…”
   - “…günün hangi gün olduğunu biliyor musun Ayano?” diye sordu Yuki, donmuş beynini hareket etmeye ve…”
-- **gereksiz iyelik**: 31
-  - “…cak o hiçbir yerde bulunamadı. Ancak o zaman onun öğlen erken saatlerde Suou ailesine gittiğin…”
-  - “…yano’nun sırtını avucuyla nazikçe okşayarak, onun yanaklarını şişirdiğini ve gözleri sersemlem…”
+- **gereksiz iyelik**: 20
+  - “…yano’nun sırtını avucuyla nazikçe okşayarak, onun yanaklarını şişirdiğini ve gözleri sersemlemiş bir kaf…”
+  - “… hatırlatıyor…” dedi Masachika, Yuki neşeyle onun yüzüne bakmak için eğilirken Ayano’nun duygusal s…”
 - **"gerçekten"**: 15
   - “…sla yorucu olmayan hafif bir dokuya sahipti. Gerçekten mükemmel. Üstelik çok saygı duyduğu ve sevdi…”
   - “…rını fark etti ve hemen kendine geldi. “B-bu gerçekten çok lezzetli, Masachika-sa-” “Kibar konuşma …”
@@ -2399,7 +2396,6 @@
 - **"olduğunu" zinciri**: 7
   - “…sine gittiğini hatırladı. “Bugünün hangi gün olduğunu biliyor musun Ayano?” diye sordu Yuki, donmu…”
   - “…sine gittiğini hatırladı. “Bugünün hangi gün olduğunu biliyor musun Ayano?” diye sordu Yuki, donmu…”
-- **Ani düşüş**: s.133(20)
 
 ### Cilt 11 · 6. Bölüm 5 · Büyük-Küçük Kardeş Değişiminin Yanlış Anlaşılması Gibi Görünüyor (s.149–188)
 
@@ -2407,9 +2403,9 @@
 - **"diye" öncesi virgül yok**: 64
   - “…“Ah, Masachika-kun, ” diye seslendi Yuki. “Bir dakikalığına şuna bakabi…”
   - “…“Ah, Masachika-kun, ” diye seslendi Yuki. “Bir dakikalığına şuna bakabi…”
-- **gereksiz iyelik**: 42
-  - “…erçekten izin vermiyorum Başkan. Yani cidden benim bu şeyin küçük kardeşi olduğumu mu söylüyors…”
-  - “…öğrenci konseyi ofisinde oynadıkları oyun ve onun kendi külotunu açığa çıkarması ve yenilgiyi …”
+- **gereksiz iyelik**: 18
+  - “…erçekten izin vermiyorum Başkan. Yani cidden benim bu şeyin küçük kardeşi olduğumu mu söylüyorsun?…”
+  - “…öğrenci konseyi ofisinde oynadıkları oyun ve onun kendi külotunu açığa çıkarması ve yenilgiyi ilan e…”
 - **"gerçekten"**: 17
   - “…blasına benziyor.” “Bunun buralara kaymasına gerçekten izin vermiyorum Başkan. Yani cidden benim bu…”
   - “…nci konseyi ofisinde striptiz oyunu oynamanı gerçekten göz ardı edemem, biliyor musun?” “Burada da …”
@@ -2426,9 +2422,6 @@
 ### Cilt 11 · 7. Bölüm 6 · Bundan da fazlası, Bu Onii-chan! (s.188–217)
 
 - **Kelime/cümle**: ort 11.2 kelime/cümle · tip/örnek oranı 0.49 · diyalog satırı/sayfa 7.6
-- **gereksiz iyelik**: 35
-  - “…Bu onun elinde olmadan tekrar fark ettiği bir şeydi,…”
-  - “…Bu onun elinde olmadan tekrar fark ettiği bir şeydi,…”
 - **"gerçekten"**: 26
   - “…için çok teşekkür ederim ama artık iyiyim.” “Gerçekten mi? Bunu duymak güzel ama…” Daha fazla bir ş…”
   - “…onra kontrol ettireceksin, değil mi?” “Evet, gerçekten de plan bu, ” diye güvence verdi Yuki. “O ha…”
@@ -2441,6 +2434,9 @@
 - **"yani"**: 20
   - “…ken Ayano’nun başını hafifçe eğerek. “…Uhhh, yani… biraz geç oldu ama… iyi misin? Nonoa-san ha…”
   - “…ken Ayano’nun başını hafifçe eğerek. “…Uhhh, yani… biraz geç oldu ama… iyi misin? Nonoa-san ha…”
+- **gereksiz iyelik**: 18
+  - “…ı hissetmediği içindi. Buna ek olarak, Alisa onun küçük kız kardeşi gibi davrandığını yalnızca birk…”
+  - “… bu tür şüphelerle karşılaştık. Yani… sadece senin aranın nasıl olduğunu merak ediyordum, Alya-san.” …”
 - **"kendi"**: 11
   - “…Masachika-kun ve Yuki-san yani, diye düşündü kendi kendine.…”
   - “…rafa çevirdiğinde bu Alisa’nın tuhaf biçimde kendini bilinçli hissetmesine neden oldu. Doğru: O…”
@@ -2451,9 +2447,6 @@
 - **"gerçekten"**: 30
   - “…ım etmek için yan taraftan atlayarak. “Eee~? Gerçekten mi?” “Ah, şu anki başkanın kampanya vaadi ya…”
   - “…evlerine uygun olmadığını ilan etmesi mi? Bu gerçekten hiç oldu mu?” “Hmm, son yıllarda o kadar da …”
-- **gereksiz iyelik**: 26
-  - “…ri bekleniyor… Bu beni biraz meraklandırdı.” Onun elini yüzünün önünde sanki bunun arkasında d…”
-  - “…“Bu onun ana vaadiydi, öyle mi?” Masachika mırıldandı…”
 - **"diye" öncesi virgül yok**: 20
   - “…bırsızlıkla beklenecek bir şey olarak düşün, ” diye araya girdi Masachika, ona yardım etmek için…”
   - “…son yıllarda o kadar da değil, görünüşe göre…” diye yanıtladı Masachika. “Ah, ama yaklaşık beş y…”
@@ -2463,6 +2456,9 @@
 - **"yani"**: 14
   - “…konun üzerinden birkaç gün geçmişti. Dördü - yani Masachika, Alisa, Takeshi ve Hikaru - şu and…”
   - “…yu almanıza neden olabilir, biliyor musunuz? Yani sanırım biz burada gerçek politikacıların ak…”
+- **gereksiz iyelik**: 13
+  - “…ri bekleniyor… Bu beni biraz meraklandırdı.” Onun elini yüzünün önünde sanki bunun arkasında daha de…”
+  - “…yanındaki kişiyi ararken olduğu gibi: açıkça senin yanında olan bir sürü insan vardı, değil mi?” “Ah…”
 - **"olduğunu" zinciri**: 8
   - “…Annemle babamdan gerçekten böyle bir zamanın olduğunu duydum” dedi. “Evet, ” diye mırıldandı ikinc…”
   - “… Elbette, kulüp odamızın sıkışık ve uygunsuz olduğunu falan düşünmüştüm, ama aslında gidip piyano …”
@@ -2470,9 +2466,9 @@
 ### Cilt 11 · 9. Bölüm 8 · İki Prenses Karşı Karşıya (s.246–280)
 
 - **Kelime/cümle**: ort 11.7 kelime/cümle · tip/örnek oranı 0.50 · diyalog satırı/sayfa 2.9
-- **gereksiz iyelik**: 34
-  - “…e çıktı. Kanatlarda kalan Masachika ve Alisa onun gidişini izlediler. Tıpkı ilk yarıyılda oldu…”
-  - “…ne çekecek… Görünüşe göre bu sefer gerçekten onun arka plan desteği olacağım, değil mi? Masach…”
+- **gereksiz iyelik**: 18
+  - “…e çıktı. Kanatlarda kalan Masachika ve Alisa onun gidişini izlediler. Tıpkı ilk yarıyılda olduğu gibi, …”
+  - “…nin halkla ilişkiler sorumlusu Yuki Suou-san onun adresini verecek.” Sunucunun Maria’nın konuşmasının b…”
 - **"kendi"**: 17
   - “…masına dahil ederken, Alisa ve Masachika’nın kendi konuşmalarının herkesin aklından silineceğin…”
   - “…nin hafifçe büyüdüğünü hisseden Alisa, sanki kendi üzerine düşünüyormuş gibi bakışlarını indird…”
@@ -2488,14 +2484,14 @@
 - **cümle başı "Ve"**: 10
   - “… bir deyişle, en iyi olduğum şey bu, değil mi? Ve aynı zamanda bu, şu anki ortağı Alisa’nın da …”
   - “…r biçimde hazırlamasının vücut bulmuş haliydi. Ve yine de, tüm bu gizli önlemlere rağmen… onlar…”
-- **Ani düşüş**: s.249(20), s.262(16), s.278(15)
+- **Ani düşüş**: s.249(18), s.262(16), s.278(12)
 
 ### Cilt 11 · 10. Epilog · Ortak Bir Savaş (s.280–302)
 
 - **Kelime/cümle**: ort 10.1 kelime/cümle · tip/örnek oranı 0.58 · diyalog satırı/sayfa 4.6
-- **gereksiz iyelik**: 32
-  - “…uz motivasyonla bugüne kadar güç kazanmıştı. Onun sayesinde düne kadar her şeyin yolunda gitti…”
-  - “…n başına doğru kaydırırken gözlerini kıstı. “Senin saçın ne? Bir beyefendinin mutlaka kendi saç…”
+- **gereksiz iyelik**: 16
+  - “…n başına doğru kaydırırken gözlerini kıstı. “Senin saçın ne? Bir beyefendinin mutlaka kendi saçını y…”
+  - “…i… o kadar şaşırtıcı derecede güzeldi ki, bu onun sözlerini elinden aldı. Ha…? O… biraz… farklı mı hisse…”
 - **"sadece"**: 14
   - “… fincan kahve kadar düzdü. “Neden dedin? Ben sadece Sumire-neesan’a eşlik ediyordum; sadece kend…”
   - “… fincan kahve kadar düzdü. “Neden dedin? Ben sadece Sumire-neesan’a eşlik ediyordum; sadece kend…”
@@ -2511,7 +2507,7 @@
 - **"diye" öncesi virgül yok**: 6
   - “…ı. “Ama evde denediğimde biraz daha iyi oldu…” diye mırıldandı. Yüzünü buruşturup farklı yaptığı…”
   - “…mdiye kadar herkesin işi bitmiştir, değil mi?” diye mırıldandı, sözleri daha çok kendi kendine y…”
-- **Ani düşüş**: s.300(20)
+- **Ani düşüş**: s.300(17)
 
 ### Cilt 11 · 11. Sonsöz · Sonsöz (s.302–312)
 
@@ -2542,8 +2538,8 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 25 | 0 | 0.0 | 0 | — | — |
-| 1 | Prolog · Birlikte İlk Dansımız | 7 | 1198 | 11.2 | 3.7 | 90 | "gerçekten" |
-| 2 | Bölüm 1 · Son Dansı Kim Paylaşacak? | 41 | 6428 | 11.2 | 4.4 | 90 | gereksiz iyelik |
+| 1 | Prolog · Birlikte İlk Dansımız | 7 | 1198 | 11.2 | 3.4 | 90 | "gerçekten" |
+| 2 | Bölüm 1 · Son Dansı Kim Paylaşacak? | 41 | 6428 | 11.2 | 4.0 | 90 | "gerçekten" |
 | 3 | Bölüm 2 · Herkesle Noel Arifesi | 1 | 0 | 0.0 | 0 | — | — |
 
 ### Cilt 12 · 1. Prolog · Birlikte İlk Dansımız (s.25–32)
@@ -2558,28 +2554,27 @@
 - **"olduğunu" zinciri**: 4
   - “…… Bu mantıklı mı? Ayaklarının üzerinde hafif olduğunu söyleyebilirsin ama…”…”
   - “…h, ne kadar harika…!” “Bir şeyin çok değerli olduğunu düşünmek bu mudur…?” Etraflarından Alisa ve …”
-- **gereksiz iyelik**: 4
-  - “…nen ilk Noel partisini düzenliyordu. Spor salonunun salonunda iki çift seçim adayı ilk dansın …”
-  - “…başladı. “Hey, Kujou-san’ın ayak hareketleri senin de dikkatini çekmiyor mu?” “Evet… bunu açıkl…”
 - **cümle başı "Ve"**: 2
   - “…Hmph. Bundan hoşlanmadı. Bir parça bile değil. Ve o anda bir şey daha netleşti. Bu onun kendisi…”
   - “…Hmph. Bundan hoşlanmadı. Bir parça bile değil. Ve o anda bir şey daha netleşti. Bu onun kendisi…”
 - **birleşik yazım**: 1
   - “…ıkların altında parlıyordu. Rüya gibi sahne, birçok öğrencinin, kız ve erkek öğrencilerin, sanki…”
-- **Ani düşüş**: s.32(14)
+- **edilgen "tarafından"**: 1
+  - “… Akademisi, öğrenci konseyi memuru Yuki Suou tarafından düzenlenen ilk Noel partisini düzenliyordu. …”
+- **Ani düşüş**: s.32(13)
 
 ### Cilt 12 · 2. Bölüm 1 · Son Dansı Kim Paylaşacak? (s.32–73)
 
 - **Kelime/cümle**: ort 11.2 kelime/cümle · tip/örnek oranı 0.45 · diyalog satırı/sayfa 5.0
-- **gereksiz iyelik**: 44
-  - “…gerçekte kendini zar zor toparlayabiliyordu. Onun sınırında ne vardı…? Bu Alisa’nınkiydi, dans…”
-  - “…rken vücutlarının birbirine yakın duruşundan onun tam güvenini hissedebiliyordu. Sanki tek kel…”
 - **"gerçekten"**: 28
   - “…ümsedi ve onlara seslendi. “Siz ikiniz orada gerçekten iyiydiniz. Dürüst olmak gerekirse, bu kadar …”
   - “…bi mesafeli bir bakışla aldı. Onlara bakınca gerçekten barıştıklarına inanmak zordu ama… Evet. Kesi…”
 - **"diye" öncesi virgül yok**: 19
   - “…im hakkında hâlâ hiçbir fikrin yok, değil mi?” diyen küçük bir gülümsemeyle izliyordu. {Hey, ned…”
   - “…ksel olarak mı?” “Bu profesyonel güreş değil…” diye mırıldandı Alisa. Masachika, Kujou kardeşler…”
+- **gereksiz iyelik**: 15
+  - “…gerçekte kendini zar zor toparlayabiliyordu. Onun sınırında ne vardı…? Bu Alisa’nınkiydi, dans ettikl…”
+  - “…etkileyici görünüyordun! Ve Kuze-kun, ben de senin bu kadar iyi dans edebildiğini bilmiyordum! Dos…”
 - **"olduğunu" zinciri**: 14
   - “…gerçekten şaşırdım. Dans etmede bu kadar iyi olduğunu hiç bilmiyordum.” Ona yaklaşan kişi, Masachi…”
   - “…durumun gelişmesini izlerken büyük bir sorun olduğunu fark etti. Ancak o zamana kadar artık çok ge…”
@@ -2589,7 +2584,7 @@
 - **"kendi"**: 10
   - “…akla diğerlerine baktı. Öğrenciler heyecanla kendi aralarında iki çiftin az önce yaptığı dans h…”
   - “…El Sanatları Kulübü’ndendiler. Güzel kızlara kendi diktikleri kıyafetleri giydirme fırsatını as…”
-- **Ani düşüş**: s.55(20)
+- **Ani düşüş**: s.55(17), s.56(12), s.44(4)
 
 
 ## Cilt 4.5
@@ -2597,19 +2592,19 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | Başlangıç · Kapak ve görseller | 8 | 110 | 13.8 | 7.3 | 93 | aşırı "ve" (cümlede 4+) |
-| 1 | Bölüm 1 · Güller ve Yuri | 29 | 3689 | 10.3 | 4.1 | 84 | "gerçekten" |
-| 2 | Bölüm 2 · Prenses ve Tanrıça | 25 | 3302 | 11.0 | 3.5 | 86 | gereksiz iyelik |
-| 3 | Bölüm 3 · Ruh Hali ve İştah | 21 | 2566 | 9.5 | 3.7 | 89 | cümle başı "Ama/Fakat" |
-| 4 | Bölüm 4 · Brocon ve Siscon | 22 | 2875 | 11.8 | 4.5 | 89 | "sadece" |
-| 5 | Bölüm 5 · İdeal ve Gerçek | 22 | 2858 | 11.6 | 3.9 | 88 | "gerçekten" |
+| 1 | Bölüm 1 · Güller ve Yuri | 29 | 3689 | 10.3 | 4.0 | 84 | "gerçekten" |
+| 2 | Bölüm 2 · Prenses ve Tanrıça | 25 | 3302 | 11.0 | 3.4 | 86 | cümle başı "Ama/Fakat" |
+| 3 | Bölüm 3 · Ruh Hali ve İştah | 21 | 2566 | 9.5 | 3.5 | 89 | cümle başı "Ama/Fakat" |
+| 4 | Bölüm 4 · Brocon ve Siscon | 22 | 2875 | 11.8 | 4.4 | 89 | "sadece" |
+| 5 | Bölüm 5 · İdeal ve Gerçek | 22 | 2858 | 11.6 | 3.8 | 88 | "gerçekten" |
 | 6 | Bölüm 6 · Depolar ve Kilitli Odalar | 28 | 3250 | 10.8 | 3.8 | 88 | "sadece" |
-| 7 | Bölüm 7 · Takımyıldızlar ve Diz Çöküş | 27 | 4120 | 11.0 | 3.7 | 88 | "sadece" |
-| 8 | Bölüm 8 · Güzel Kız ve İçine Kapanık Oğlan | 27 | 4099 | 10.8 | 3.2 | 89 | gereksiz iyelik |
-| 9 | Bölüm 9 · Merhametli ve Ore-sama | 34 | 4618 | 9.9 | 3.1 | 86 | gereksiz iyelik |
-| 10 | Bölüm 10 · Sakarlık ve Mağaza Çalışanları | 27 | 3631 | 11.3 | 3.4 | 89 | "sadece" |
-| 11 | Bölüm 11 · Yemek ve Muhakeme | 28 | 4132 | 11.2 | 3.9 | 88 | "olduğunu" zinciri |
-| 12 | Bölüm 12 · Sevgili ve Efendi | 28 | 3897 | 10.8 | 3.5 | 88 | "gerçekten" |
-| 13 | Bölüm 13 · Masachika ve Alya | 21 | 2852 | 9.9 | 4.0 | 87 | "gerçekten" |
+| 7 | Bölüm 7 · Takımyıldızlar ve Diz Çöküş | 27 | 4120 | 11.0 | 3.5 | 88 | "sadece" |
+| 8 | Bölüm 8 · Güzel Kız ve İçine Kapanık Oğlan | 27 | 4099 | 10.8 | 3.1 | 89 | gereksiz iyelik |
+| 9 | Bölüm 9 · Merhametli ve Ore-sama | 34 | 4618 | 9.9 | 2.9 | 86 | "kendi" |
+| 10 | Bölüm 10 · Sakarlık ve Mağaza Çalışanları | 27 | 3631 | 11.3 | 3.3 | 89 | "sadece" |
+| 11 | Bölüm 11 · Yemek ve Muhakeme | 28 | 4132 | 11.2 | 3.8 | 88 | "olduğunu" zinciri |
+| 12 | Bölüm 12 · Sevgili ve Efendi | 28 | 3897 | 10.8 | 3.3 | 88 | "gerçekten" |
+| 13 | Bölüm 13 · Masachika ve Alya | 21 | 2852 | 9.9 | 3.8 | 87 | "gerçekten" |
 
 ### Cilt 4.5 · 0. Başlangıç · Kapak ve görseller (s.0–8)
 
@@ -2635,27 +2630,27 @@
 - **"olduğunu" zinciri**: 8
   - “…malı” düşüncesiydi. Kendi hobbinden rahatsız olduğunu karşı tarafa sezdirme. Çünkü bu, karşı taraf…”
   - “…taku olarak bilgimin Sayaka-san’ınkinden iyi olduğunu sen de fark etmişsindir. O yüzden Sayaka-san…”
-- **gereksiz iyelik**: 7
-  - “… gülümsedi. “Sorun değil, merak etme. Ben de senin ne hissettiğini anlıyorum.” “…Gerçekten mi? …”
-  - “…ıtsız bir tavırla devam etti. “Kimishima-san benimle konuşmayacaksa başkasına sorabilirim, deği…”
 - **"ise"**: 7
   - “…eyerek sessizce birbirlerine baktılar. Ayano ise hâlâ sessizce churro’sunun keyfini sürüyordu…”
   - “…eyerek sessizce birbirlerine baktılar. Ayano ise hâlâ sessizce churro’sunun keyfini sürüyordu…”
-- **Ani düşüş**: s.19(14), s.23(14), s.10(11), s.35(10)
+- **"bu yüzden"**: 4
+  - “…si” ile “kendi ilgi alanı”nı aynı şey sayar; bu yüzden karşısındaki de aynı hobiyi paylaşsa bile “k…”
+  - “…no bunu fark etmedi. “Bu… Biraz sorun olur.” Bu yüzden içtenlikle söylemişti. Fazla dürüst cevabını…”
+- **Ani düşüş**: s.19(14), s.23(14)
 
 ### Cilt 4.5 · 2. Bölüm 2 · Prenses ve Tanrıça (s.37–62)
 
 - **Sadakat**: ort 85.5; zayıf: s.40 (68: diyalog -2 kısa x0.60); s.43 (68: diyalog -2 kısa x0.65); s.41 (76: diyalog -1 kısa x0.64)
 - **Kelime/cümle**: ort 11.0 kelime/cümle · tip/örnek oranı 0.58 · diyalog satırı/sayfa 4.3
-- **gereksiz iyelik**: 14
-  - “…ne baktı. “Rea… Önce kapıyı çalsana…” “Şimdi onun sırası değil! Abla~ lütfen!” “…Tamam, tamam.…”
-  - “…şilerle~ Ah, abla da gelsin mi?” “Hmm~? Yok, benim bugün kendi planlarım var.” “Demek öyle~ o z…”
 - **cümle başı "Ama/Fakat"**: 13
   - “…k çalışıyor, kızlar arasında epey seviliyordu. Ama bu, üç kardeş için doğal bir durumdu. “Bugün …”
   - “…ığı olsa muhtemelen o ahlaka uygun davranırdı. Ama şu anda Nonoa’nın tanıdıkları burada değildi.…”
 - **"gerçekten"**: 12
   - “…amam mı? Son savunma hattımı hâlâ koruyorum, gerçekten. Zaten ikemen tiplerden hiç hoşlanmam, biliy…”
   - “…rum. Sana sadece kardeşim gibi davranıyorum, gerçekten.” “Ne demek istediğini hiç anlamadım.” Kız k…”
+- **gereksiz iyelik**: 9
+  - “…ne baktı. “Rea… Önce kapıyı çalsana…” “Şimdi onun sırası değil! Abla~ lütfen!” “…Tamam, tamam.” K…”
+  - “…şilerle~ Ah, abla da gelsin mi?” “Hmm~? Yok, benim bugün kendi planlarım var.” “Demek öyle~ o zaman …”
 - **"sadece"**: 9
   - “…değiştiren senden bunu duymak istemem~” “Ben sadece gelenlere izin veriyorum, senin gibi kimseyi…”
   - “…han.” “? Sana çocuk gibi davranmıyorum. Sana sadece kardeşim gibi davranıyorum, gerçekten.” “Ne …”
@@ -2679,15 +2674,15 @@
 - **"olduğunu" zinciri**: 7
   - “… bir bahane uydurdu. Evet, sadece sevenlerin olduğunu düşündüğü için baharatlı yemeklerin de kendi…”
   - “…irsiz cevabından utanmıştı. Yine de birlikte olduğunu söylediği için Ayano’nun masasına doğru yürü…”
-- **gereksiz iyelik**: 7
-  - “…n bir kademe daha acı olan bir ramendi. “…Bu benim siparişim.” “Demek öyle…” Servis edilen rame…”
-  - “…yle sipariş verdi. Sonra Ayano’ya dönüp önce onun yemesini istedi. “O hâlde, bu nazik teklifin…”
 - **"sadece"**: 5
   - “…sının içinde böyle bir bahane uydurdu. Evet, sadece sevenlerin olduğunu düşündüğü için baharatlı…”
   - “…deyse hiç konuşmuyoruz; en iyi ihtimalle biz sadece Öğrenci Konseyi’nin üyeleriyiz… Ama karşıt a…”
 - **"yani"**: 4
   - “…lirsin. Yine de Yuki ve ben zaten arkadaşız, yani…)…”
   - “… acının altındaki umamiyi iyi tadabiliyordu. Yani hiç yalan söylemiyordu. Sadece umamiyi hisse…”
+- **"kendi"**: 4
+  - “…alanan ağzını yeniden kapattı. Eskiden Alisa kendi sohbetlerini pek başlatmazdı. Üstelik… Ayano…”
+  - “…mlamak için doğru terim neydi? Elbette Alisa kendi açısından Ayano’yla arkadaş olmaya isteksiz …”
 - **Ani düşüş**: s.72(20)
 
 ### Cilt 4.5 · 4. Bölüm 4 · Brocon ve Siscon (s.83–105)
@@ -2708,10 +2703,10 @@
 - **"olduğunu" zinciri**: 8
   - “…aki bir ergen için böyle bir tepkinin normal olduğunu düşündü. (Öte yandan…)…”
   - “…-chan, Ojii-chan eskiden yabancıların farklı olduğunu, kalçalarının güzel bir şekli olduğunu söyle…”
-- **gereksiz iyelik**: 7
-  - “…du. Ama sakın bunu dile getirmeyin, çünkü bu onun dert ettiği bir şeydi. Adamın adı Kuze Kyota…”
-  - “…hissi vardı. Belki de fazla ağır beklentiler onun gelişimini köreltmişti. Ama vahşi doğaya dön…”
-- **Ani düşüş**: s.93(13), s.94(13), s.104(13), s.87(9)
+- **"kendi"**: 4
+  - “…n arkasından baktı ve buruk bir gülümsemeyle kendi kendine konuştu. Sonra kendini topladıktan s…”
+  - “…turan bu boy daha da sevimli görünmüyor mu!” Kendi fiziğiyle hiçbir kompleksi olmadığı anlaşıla…”
+- **Ani düşüş**: s.94(13), s.104(13), s.93(11), s.87(9)
 
 ### Cilt 4.5 · 5. Bölüm 5 · İdeal ve Gerçek (s.105–127)
 
@@ -2729,12 +2724,12 @@
 - **"yani"**: 7
   - “… Yedi Gizem’i biliyor musunuz?” “Yedi Gizem, yani… tuvaletteki Hanako-san hayaletine ya da ken…”
   - “…“Şey, yani, Başkan’ı suçlamak beyhude, ama… yorum yapma…”
-- **gereksiz iyelik**: 6
-  - “…asachika diğerlerini temsilen konuştu. “Yok, benim için sorun değil ama… bu, üniforma değişikli…”
-  - “…ıştırdı ve Alisa yüzünde mahcup bir ifadeyle onun hatasını düzeltti. Başını yana çeviren Masac…”
 - **tire aralığı tutarsız**: 6
   - “…ldi, o yüzden bu küçük mesele bizim işimiz.” — Masachika “Eh, bu kadar insanın olmasının an…”
   - “…ldi, o yüzden bu küçük mesele bizim işimiz.” — Masachika “Eh, bu kadar insanın olmasının an…”
+- **"olduğunu" zinciri**: 4
+  - “…inledikten sonra Masachika hiç de eğlenmemiş olduğunu gösteren bir karşılık verdi. Yuki bu tepkiye…”
+  - “… çünkü vuramıyorum!’ diyecek tipte bir insan olduğunu düşünmüştüm.”…”
 
 ### Cilt 4.5 · 6. Bölüm 6 · Depolar ve Kilitli Odalar (s.127–155)
 
@@ -2770,9 +2765,6 @@
 - **"gerçekten"**: 12
   - “…i görünmüyorsun da…” “E-Ehh~? Öyle değil ki, gerçekten mi? Elimden geleni yapacağım!” Gözlerinde ha…”
   - “…i. “Peki, Alya’nın kendisi iyi mi?” “İyiyim, gerçekten. Masha’nın aksine, ben korkak biri değilim.”…”
-- **gereksiz iyelik**: 10
-  - “…ın açıkça ortaya çıktı…” Sadece bu söz bile, onun korktuğunu itiraf ettiği anlamına geliyordu.…”
-  - “…lediklerimin hepsini hatırlıyor mu? Bu artık onun için de utanç verici değil mi!?) Karanlık ge…”
 - **"olduğunu" zinciri**: 9
   - “…luydu, biraz da sevimli duruyordu, ama… “İyi olduğunu söylemeye çalıştığın o an, aslında iyi olmad…”
   - “…nı dolaşıp” kırmızı üniformalı kız“ın nerede olduğunu arayabiliriz.” “T-Tamam…” “Evet, öyle yapalı…”
@@ -2782,14 +2774,17 @@
 - **cümle başı "Ve"**: 8
   - “…utanç verici bir şey söylediğimi hatırlıyorum! Ve sen benden tam da bu cümleyi yeniden ifade et…”
   - “…ni çekti ve önüne baktı. “Öyleyse, başlayalım… Ve çabucak bitirelim.” “… Ohh~”…”
+- **cümle başı "Ama/Fakat"**: 6
+  - “…ı ve Maria’ya biraz şaşkın bir ifadeyle baktı… Ama sakinmiş gibi davranıyorsa, bu sadece Masachi…”
+  - “…le baktı ve Masachika hemen ondan özür diledi. Ama Maria aniden şaşkın bir ifade takındı ve hızl…”
 - **Ani düşüş**: s.169(19)
 
 ### Cilt 4.5 · 8. Bölüm 8 · Güzel Kız ve İçine Kapanık Oğlan (s.182–209)
 
 - **Kelime/cümle**: ort 10.8 kelime/cümle · tip/örnek oranı 0.52 · diyalog satırı/sayfa 5.3
-- **gereksiz iyelik**: 21
-  - “…ndan gelen bir tür ceza mı? Eğer zorbalıksa, senin sorunlarını da dinlemeye hazırım, biliyor mu…”
-  - “…hiyerarşiler de tam bu sıralarda oluşmuştu. Sonunda… Açık konuşmak istemem ama, sınıfın en alt…”
+- **gereksiz iyelik**: 14
+  - “…ndan gelen bir tür ceza mı? Eğer zorbalıksa, senin sorunlarını da dinlemeye hazırım, biliyor musun?” “Ehh…”
+  - “…öğrencisiydi. “Sen… Adın ne?” “Şey, ah evet, benim adım Kenzaki… Kenzaki Touya.” “Anlıyorum… O hald…”
 - **"sadece"**: 14
   - “… sahip olduğunu biliyordu; bu yüzden birinin sadece yüzüne bakarak ona aşkını itiraf etmesi hiç …”
   - “…k itirafı yapılmamış değildi. Ne var ki çoğu sadece “Erkek arkadaşın yok mu? Kız arkadaşım olsan…”
@@ -2805,15 +2800,12 @@
 - **"olduğunu" zinciri**: 5
   - “…le düşündüğü için, ondan hoşlanan erkeklerin olduğunu anlayamıyordu. Eğer ona aşkını itiraf eden k…”
   - “…le düşündüğü için, ondan hoşlanan erkeklerin olduğunu anlayamıyordu. Eğer ona aşkını itiraf eden k…”
-- **Ani düşüş**: s.194(12), s.185(11), s.191(9), s.204(8), s.209(8)
+- **Ani düşüş**: s.194(12), s.185(11), s.191(9), s.200(8), s.209(8), s.204(7)
 
 ### Cilt 4.5 · 9. Bölüm 9 · Merhametli ve Ore-sama (s.209–243)
 
 - **Sadakat**: ort 86.0; zayıf: s.211 (74: diyalog -2); s.227 (74: diyalog -2); s.228 (74: diyalog -2)
 - **Kelime/cümle**: ort 9.9 kelime/cümle · tip/örnek oranı 0.50 · diyalog satırı/sayfa 5.4
-- **gereksiz iyelik**: 16
-  - “… mı takmayı düşünüyorsun!?” “Hayır, ben bunu senin için takmayı umuyordum…” “Zaten buna ihtiyac…”
-  - “…Ah… Belki de bunu biraz fazla söyledim. Oysa benim için hazırlamak için o kadar zahmete girmişt…”
 - **"kendi"**: 9
   - “…ce bir kenara bırakmış olabilirdi ki? Kitabı kendi parasıyla satın almıştı ve o andan itibaren …”
   - “…“Ben de bazen öyle düşünüyorum.” Yuki kendi kendine mırıldandı, ardından bakışları yatak…”
@@ -2829,7 +2821,10 @@
 - **"sadece"**: 7
   - “…zun başarılı oldu.” “Ah, evet… Hmm, şimdilik sadece pencereyi açalım, olur mu?” “Tamam, anladım.…”
   - “…oplayacağının hiçbir belirtisini göstermedi. Sadece boş bir ifadeyle yerdeki tek bir noktaya don…”
-- **Ani düşüş**: s.216(12), s.230(10), s.242(10)
+- **"diye" öncesi virgül yok**: 6
+  - “…nersem ve başarısız olursa, biraz garip olur~” diye düşünürken, tam o anda Masachika’nın varlığı…”
+  - “…kıldı. Dün gece, “uykuyu iyileştiren bir koku” diyerek Masachika’ya kokulu bir mum uzatmış, bütü…”
+- **Ani düşüş**: s.216(12), s.242(10), s.227(8)
 
 ### Cilt 4.5 · 10. Bölüm 10 · Sakarlık ve Mağaza Çalışanları (s.243–270)
 
@@ -2846,12 +2841,12 @@
 - **cümle başı "Ama/Fakat"**: 7
   - “…ık saçlarını görünce biraz endişeli duruyordu. Ama Maria’nın gülümsemesi Alisa’nın bu endişeleri…”
   - “… farkında olmasa da bunu birkaç kez yaşamıştı. Ama hepsi girişimde kalmıştı; çünkü fail ona doku…”
-- **gereksiz iyelik**: 7
-  - “…gün ya da yarın almayı düşünüyordum.” Maria, onun bir sonraki sözlerini önceden tahmin ederek,…”
-  - “… hareketini önceden tahmin etmiş olan Alisa, onun sol bileğini yakalayıp onu durdurdu. “Bugün …”
 - **"olduğunu" zinciri**: 6
   - “…, evet… Şey, o zaman…” Kız kardeşinin tembel olduğunu gururla dile getirmesinden biraz rahatsız ol…”
   - “…, evet… Şey, o zaman…” Kız kardeşinin tembel olduğunu gururla dile getirmesinden biraz rahatsız ol…”
+- **"bu yüzden"**: 6
+  - “…ne plaja ne de yüzme havuzuna gitmemişlerdi; bu yüzden, dört yıl öncesine kıyasla birçok yönden büy…”
+  - “…ışında giymenin uygunsuz olduğunu biliyordu. Bu yüzden,…”
 - **Ani düşüş**: s.247(13), s.256(13), s.265(10)
 
 ### Cilt 4.5 · 11. Bölüm 11 · Yemek ve Muhakeme (s.270–298)
@@ -2864,9 +2859,6 @@
 - **"sadece"**: 16
   - “…da önemsiz bir sohbet devam ediyordu. Burada sadece iki erkek vardı ve konuşacak pek çok konu ol…”
   - “…da önemsiz bir sohbet devam ediyordu. Burada sadece iki erkek vardı ve konuşacak pek çok konu ol…”
-- **gereksiz iyelik**: 9
-  - “…bir yemeğe mayonez eklemek… Ekşi krema ya da onun gibi bir şey değil mi? Hayır, bunu hiç duyma…”
-  - “…rüst bir değerlendirme yapacağım. Hangisinin senin yemeğin olduğunu öğrenmiş olsam bile, kararı…”
 - **"gerçekten"**: 8
   - “…Öyle söyleyince kulağa karmaşık geliyor, ama gerçekten öyle mi?”…”
   - “…ka, bunu bir bahane olarak kullanmış olsa da gerçekten tuvalete gitmişti… Ayağa kalktığında Masachi…”
@@ -2876,7 +2868,9 @@
 - **cümle başı "Ama/Fakat"**: 6
   - “…pai… Yemek yapmada iyi değil mi?” “Bilmiyorum? Ama bu konuyu daha önce hiç konuşmamış olmamız, b…”
   - “…nlara bir bakalım mı?” “Onlara bir bakalım mı? Ama mutfağa girmemiz yasak…” “Aslında tuvalete gi…”
-- **Ani düşüş**: s.293(11)
+- **"bu yüzden"**: 5
+  - “… kabul edildi ve işler tam da böyle gelişti. Bu yüzden, adil olması adına, beş kız mutfakta yemek p…”
+  - “…a bir kez boğazını temizledi ve devam etti. “Bu yüzden… Üçünün hazırlayacağı yemeklere gelince, ne …”
 
 ### Cilt 4.5 · 12. Bölüm 12 · Sevgili ve Efendi (s.298–326)
 
@@ -2884,9 +2878,6 @@
 - **"gerçekten"**: 18
   - “…hat bir hal alıyordu. “Hayret, Masachika-kun gerçekten berbat, değil mi~. Masha-senpai’nin yemekler…”
   - “…hat bir hal alıyordu. “Hayret, Masachika-kun gerçekten berbat, değil mi~. Masha-senpai’nin yemekler…”
-- **gereksiz iyelik**: 12
-  - “…an ağzına götüren Ayano’yu görünce bakışları onun karnına kaydı; birkaç saniye sessizce düşünd…”
-  - “…ha-senpai’nin yemekleri gerçekten güzel, ama onun bizim yemeklerimizi şöyle övmesini isterdim:…”
 - **"sadece"**: 11
   - “… yaşarken böyle cevap verdi. Ne var ki Ayano sadece merakla başını yana eğdi. Tam o anda Yuki gü…”
   - “…mek iyi bir şey değil, bu doğru. Ama yine de sadece manga getirirsen bence yine de komik olur.” …”
@@ -2896,10 +2887,13 @@
 - **cümle başı "Ama/Fakat"**: 7
   - “…” kelimesi çıkınca Alisa’nın eli bir an durdu. Ama mini bir çöreği umursamadan ağzına götüren Ay…”
   - “…irlenmiş olduğu için kendi kendine mırıldandı. Ama Ayano, neyden söz edildiğini anlamamış gibi d…”
+- **gereksiz iyelik**: 7
+  - “…an ağzına götüren Ayano’yu görünce bakışları onun karnına kaydı; birkaç saniye sessizce düşündükten …”
+  - “…rkeklerden bahsediyoruz, değil mi? Bu sadece benim duygularım mı? Alya-san, sürekli Onii-chan’dan bahsedi…”
 - **"yani"**: 6
   - “…kten? Şey,’göze göz, dişe diş’ gibi bir şey, yani öyle bir şey değil.” “?” Alisa, konuşmayı ta…”
   - “…şöyle düşündü: “Ahh~ anlıyorum…” (Anlıyorum. Yani onun aşk rakibi olup olmayacağımı merak ediy…”
-- **Ani düşüş**: s.305(15), s.302(13), s.319(9), s.322(8)
+- **Ani düşüş**: s.305(15), s.302(12), s.319(9)
 
 ### Cilt 4.5 · 13. Bölüm 13 · Masachika ve Alya (s.326–347)
 
@@ -2908,9 +2902,6 @@
 - **"gerçekten"**: 14
   - “…arı karşısında Masachika’nın yanağı seğirdi. Gerçekten uyumaya çalışıyor olabilirdi ama bu aşırı ag…”
   - “…ktan sonra ironik bir biçimde gülümsedi. “Bu gerçekten sinir bozucu, ha.” “Ha, haha…” Masachika, Ma…”
-- **gereksiz iyelik**: 12
-  - “…ın sağ kolunu kucakladı ve tekrar uyku pozisyonuna dönecek şekilde başını dikkatlice konumland…”
-  - “…video oynattı. ‘Oi, oi, birdenbire neyin var senin? Fotoğrafımı çekmek istemenizi anlıyorum ama…”
 - **"yani"**: 9
   - “… binmeden önce villayı temizleyip toparladı. Yani yorgunluktan uykuya dalması beklenirdi. Soru…”
   - “…le olsa öpüşme konusunu asla açmayın. Asla… “Yani, ımmm…” (Er ya da geç, muhtemelen bu konuşma…”
@@ -2923,6 +2914,10 @@
 - **"bu yüzden"**: 5
   - “…rlerini görmek onlar için bir biçimde zordu, bu yüzden onunla yalnız kalmaya cesaret edemedi… Ve o …”
   - “… sonuçlandı” açıklamasının ardından silindi. Bu yüzden bu sefer videonun oynatılması gerçekten şaşı…”
+- **cümle başı "Ve"**: 4
+  - “… seyahat ettiği ana vagonda başka yolcu yoktu. Ve öğrenci konseyi üyeleri arasında hiçbir konuş…”
+  - “… yüzden onunla yalnız kalmaya cesaret edemedi… Ve o zamandan beri ilk kez Alisa ile yalnız bir …”
+- **Ani düşüş**: s.337(12)
 
 
 ## Cilt 9.5
@@ -2930,36 +2925,36 @@
 | Böl. | Başlık | Sayfa | Kelime | Cümle ort. | Kusur/100k | Sadakat | Ana sorun |
 | ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 0 | İllüstrasyonlar · İllüstrasyonlar | 7 | 0 | 0.0 | 0 | — | — |
-| 1 | Kısa Hikâye 1 · Peki, Hadi Kedi Kafeye Gid | 23 | 3960 | 11.0 | 3.6 | 82 | gereksiz iyelik |
-| 2 | Kısa Hikâye 2 · Tamam hadi havuza gidelim | 48 | 8286 | 11.0 | 3.9 | 80 | gereksiz iyelik |
-| 3 | Kısa Hikâye 3 · Yeterli Değilse Kendimi Da | 8 | 1327 | 12.1 | 4.4 | 76 | gereksiz iyelik |
-| 4 | Kısa Hikâye 4 · Animasyon Mağazası Memuru  | 9 | 1521 | 9.4 | 4.5 | 91 | gereksiz iyelik |
+| 1 | Kısa Hikâye 1 · Peki, Hadi Kedi Kafeye Gid | 23 | 3960 | 11.0 | 3.3 | 82 | "gerçekten" |
+| 2 | Kısa Hikâye 2 · Tamam hadi havuza gidelim | 48 | 8286 | 11.0 | 3.6 | 80 | "diye" öncesi virgül yok |
+| 3 | Kısa Hikâye 3 · Yeterli Değilse Kendimi Da | 8 | 1327 | 12.1 | 4.3 | 76 | "gerçekten" |
+| 4 | Kısa Hikâye 4 · Animasyon Mağazası Memuru  | 9 | 1521 | 9.4 | 3.9 | 91 | gereksiz iyelik |
 | 5 | Kısa Hikâye 5 · Alya’nın İlk Kelime Sahtek | 5 | 906 | 8.6 | 4.0 | 77 | "olduğunu" zinciri |
-| 6 | Kısa Hikâye 6 · Bir Adamın Rüyası | 8 | 902 | 10.1 | 5.4 | 92 | "gerçekten" |
-| 7 | Kısa Hikâye 7 · Hizmetçi Her Şeyi Gördü | 8 | 1005 | 10.9 | 4.5 | 87 | cümle başı "Ama/Fakat" |
+| 6 | Kısa Hikâye 6 · Bir Adamın Rüyası | 8 | 902 | 10.1 | 5.1 | 92 | "gerçekten" |
+| 7 | Kısa Hikâye 7 · Hizmetçi Her Şeyi Gördü | 8 | 1005 | 10.9 | 4.3 | 87 | cümle başı "Ama/Fakat" |
 | 8 | Kısa Hikâye 8 · Donna Yarışmayı Buldozerle | 6 | 945 | 10.5 | 3.8 | 86 | cümle başı "Ama/Fakat" |
-| 9 | Kısa Hikâye 9 · Tavşan Paniği! | 10 | 1481 | 9.9 | 2.8 | 82 | gereksiz iyelik |
-| 10 | Kısa Hikâye 10 · Dostça (?) Uyumluluk Okum | 8 | 1300 | 11.8 | 4.2 | 82 | gereksiz iyelik |
-| 11 | Kısa Hikâye 11 · Sensei~, Başkan ve Başkan | 6 | 949 | 9.0 | 4.2 | 85 | cümle başı "Ve" |
-| 12 | Kısa Hikâye 12 · Burası Vücut Geliştirme K | 7 | 949 | 11.4 | 4.0 | 86 | gereksiz iyelik |
-| 13 | Kısa Hikâye 13 · Not: Masachika Değerlendi | 6 | 1056 | 10.5 | 5.4 | 87 | "gerçekten" |
-| 14 | Kısa Hikâye 14 · Görünüşe göre Yuki-chan v | 6 | 1010 | 10.5 | 3.9 | 82 | "kendi" |
-| 15 | Kısa Hikâye 15 · Sensei~, Başkan ve Başkan | 7 | 859 | 10.7 | 6.5 | 84 | gereksiz iyelik |
+| 9 | Kısa Hikâye 9 · Tavşan Paniği! | 10 | 1481 | 9.9 | 2.6 | 82 | "sadece" |
+| 10 | Kısa Hikâye 10 · Dostça (?) Uyumluluk Okum | 8 | 1300 | 11.8 | 3.8 | 82 | "diye" öncesi virgül yok |
+| 11 | Kısa Hikâye 11 · Sensei~, Başkan ve Başkan | 6 | 949 | 9.0 | 4.1 | 85 | cümle başı "Ve" |
+| 12 | Kısa Hikâye 12 · Burası Vücut Geliştirme K | 7 | 949 | 11.4 | 3.8 | 86 | cümle başı "Ve" |
+| 13 | Kısa Hikâye 13 · Not: Masachika Değerlendi | 6 | 1056 | 10.5 | 5.2 | 87 | "gerçekten" |
+| 14 | Kısa Hikâye 14 · Görünüşe göre Yuki-chan v | 6 | 1010 | 10.5 | 3.7 | 82 | "kendi" |
+| 15 | Kısa Hikâye 15 · Sensei~, Başkan ve Başkan | 7 | 859 | 10.7 | 5.8 | 84 | "diye" öncesi virgül yok |
 | 16 | Kısa Hikâye 16 · Kulüp Faaliyetleri Kabile | 8 | 1157 | 10.4 | 4.8 | 87 | cümle başı "Ve" |
 
 ### Cilt 9.5 · 1. Kısa Hikâye 1 · Peki, Hadi Kedi Kafeye Gidelim (s.7–30)
 
 - **Sadakat**: ort 81.6; zayıf: s.28 (54: diyalog -2 rusça -2); s.11 (74: diyalog -2); s.12 (74: diyalog -2)
 - **Kelime/cümle**: ort 11.0 kelime/cümle · tip/örnek oranı 0.55 · diyalog satırı/sayfa 5.9
-- **gereksiz iyelik**: 24
-  - “…de “danışmanlık oturumu” ya da daha doğrusu, onun üflemeli müzik topluluğundaki birinci yılınd…”
-  - “…alga geçiyor olmalısın~! Rüzgar topluluğunun senin için tek anlamı bu mu!? Buradaki küçük Elena…”
 - **"gerçekten"**: 14
   - “…“Bunun kedilerle nasıl bir ilişkisi olduğunu gerçekten anlamıyorum… Rüzgâr topluluğunda bir şey mi …”
   - “…imde yere çöktü. Ancak sonrasında yaşananlar gerçekten beklenmedikti… Maria, odadaki herkesi şaşırt…”
 - **"yani"**: 9
   - “…dı. “Eh, sanırım seni duyabiliyorum…” “Evet! Yani, görüyorsun…” Ve bunu takip eden şey, Elena’…”
   - “…bir yer değil mi amirite?” “Bakır teller mi? Yani sana o’kıvılcım’ falan vermiyorlar mı diyors…”
+- **gereksiz iyelik**: 9
+  - “…de “danışmanlık oturumu” ya da daha doğrusu, onun üflemeli müzik topluluğundaki birinci yılındaki -Elen…”
+  - “…yine disiplin komitesi olmasın!” “Ha? Bu işi benim halletmemi istediğini mi söylüyorsun?” “Çok üzgünüm!” M…”
 - **"diye" öncesi virgül yok**: 8
   - “…gerçekten mi? Tanrım~, bu çok utanç verici~, ” diye yanıtladı Maria, yanakları kızararak utangaç…”
   - “…ç çekti. “Bir kedi kafesine gitmek istiyorum…” diye mırıldandı. Masachika yarı gülerek, “Masha-s…”
@@ -2969,18 +2964,18 @@
 - **tire aralığı tutarsız**: 5
   - “…imajını yeniden değerlendirdin, değil mi!?” “—Öncelikle saygı duyulmaya değer bir’liderlik …”
   - “… önemi yoktu. “Vay be, o kadar çok şey var ki—”…”
-- **Ani düşüş**: s.11(13), s.15(13), s.20(13)
+- **Ani düşüş**: s.11(13), s.15(13), s.20(11)
 
 ### Cilt 9.5 · 2. Kısa Hikâye 2 · Tamam hadi havuza gidelim (s.30–78)
 
 - **Sadakat**: ort 80.1; zayıf: s.54 (52: diyalog -1 rusça -3); s.56 (54: diyalog -4 sayı yok: 1); s.32 (58: diyalog -4)
 - **Kelime/cümle**: ort 11.0 kelime/cümle · tip/örnek oranı 0.47 · diyalog satırı/sayfa 6.0
-- **gereksiz iyelik**: 46
-  - “…meyle kesin bir dille reddetti. “Görüyorsun, benim gizli bir stratejim var.” Biz iyiyiz “Zengin…”
-  - “…n kabustan başka bir şey değildi. “Hayır, bu benim sorunum. Bu kimsenin hatası ya da buna benze…”
 - **"diye" öncesi virgül yok**: 26
   - “…rak adlandırmak için iyi bir zaman olabilir, ” diye mırıldandı. Günün planı, sabah 11’de bir ara…”
   - “…rak adlandırmak için iyi bir zaman olabilir, ” diye mırıldandı. Günün planı, sabah 11’de bir ara…”
+- **gereksiz iyelik**: 20
+  - “…meyle kesin bir dille reddetti. “Görüyorsun, benim gizli bir stratejim var.” Biz iyiyiz “Zengin insan…”
+  - “…y söylemem gerekirse, Elena-senpai, erkekler senin açıkça alay etmeni olduğu gibi görmeye eğilimlid…”
 - **"olduğunu" zinciri**: 19
   - “…n insanları burada aynı kefeye koymanın adil olduğunu düşünmüyorum. Kiryuin-senpai sadece özeldir,…”
   - “… büyük bir havuzu kiralamanın aslında mümkün olduğunu düşünmüyorum. Yolda bakımda olduğunu ve kull…”
@@ -2993,18 +2988,18 @@
 - **"sadece"**: 14
   - “…n adil olduğunu düşünmüyorum. Kiryuin-senpai sadece özeldir, hepsi bu…” Sumire’nin şifreli bir s…”
   - “…Kiryuin Grubunun gelecekteki başkanı olarak, sadece tesislerimizden birini teftiş ediyorum!’…ya …”
-- **Ani düşüş**: s.35(18), s.57(18)
+- **Ani düşüş**: s.35(18), s.57(17), s.67(13), s.70(13)
 
 ### Cilt 9.5 · 3. Kısa Hikâye 3 · Yeterli Değilse Kendimi Daha Sarılabilir Hale Getireceğim (s.78–86)
 
 - **Sadakat**: ort 76.0; zayıf: s.84 (50: diyalog -6); s.79 (66: diyalog -3); s.85 (66: diyalog -3)
 - **Kelime/cümle**: ort 12.1 kelime/cümle · tip/örnek oranı 0.66 · diyalog satırı/sayfa 6.3
-- **gereksiz iyelik**: 8
-  - “…Masachika telefonunu yumuşak bir ses ile yatağın üzerine düşürdü…”
-  - “…gerçekten üzüldüğünü hayal edemiyordu. Bunun onun ayrıntılı kurulumlarından sadece biri olma i…”
 - **"gerçekten"**: 6
   - “… çocuklara yaymayın, tamam mı? Bazıları size gerçekten inanabilir.” “Zaten öyle, ” Yuki sırıttı ve …”
   - “…zlemledi kliniksel bir tavırla. Aksine, eğer gerçekten dalırsa onu ikiye bölebileceğinden endişelen…”
+- **gereksiz iyelik**: 6
+  - “… istiyorsun, değil mi? Hmm?” Ancak Masachika onun bakışlarına donuk bir bakışla karşılık verdi. Kız kard…”
+  - “…gerçekten üzüldüğünü hayal edemiyordu. Bunun onun ayrıntılı kurulumlarından sadece biri olma ihtimali …”
 - **"diye" öncesi virgül yok**: 5
   - “…ak yumuşak bir biçimde “Küçük bir mola zamanı” diye mırıldandı ve yan tarafına yuvarlandı. Hemen…”
   - “…ak yumuşak bir biçimde “Küçük bir mola zamanı” diye mırıldandı ve yan tarafına yuvarlandı. Hemen…”
@@ -3021,9 +3016,9 @@
 ### Cilt 9.5 · 4. Kısa Hikâye 4 · Animasyon Mağazası Memuru Normie Otaku Olmanın Hayalini Kuruyor (s.86–95)
 
 - **Kelime/cümle**: ort 9.4 kelime/cümle · tip/örnek oranı 0.64 · diyalog satırı/sayfa 2.3
-- **gereksiz iyelik**: 19
-  - “…elirli bir kitabı bulmakta zorlanıyor! Şimdi benim şansım. İşte öne çıkıp travmamın üstesinden …”
-  - “…emen arkamı döndüm. Yardım edilemez sanırım. Benim gibi içe dönük otakular kızlara rakip olamaz…”
+- **gereksiz iyelik**: 10
+  - “…elirli bir kitabı bulmakta zorlanıyor! Şimdi benim şansım. İşte öne çıkıp travmamın üstesinden geldiğ…”
+  - “…emen arkamı döndüm. Yardım edilemez sanırım. Benim gibi içe dönük otakular kızlara rakip olamaz. Son…”
 - **"sadece"**: 5
   - “…ş türlerinin su türlerine yenilmesi gibi; bu sadece bir nitelik uyumsuzluğu meselesi. Elbette, d…”
   - “…“Hımm… Başlığın adını bilmiyorum; sadece kapağın neye benzediğini…” Gibi Kafamı şaşkı…”
@@ -3039,7 +3034,7 @@
 - **cümle başı "Ve"**: 3
   - “…bir kahramanın aşk hikayesine yardım edebilir. Ve kim bilir? Belki bir gün benim gibi biri bile…”
   - “…t eden küçük, aptal bir komünist olmayı bırak. Ve başkalarıyla iyi geçinmek için karizmatik olm…”
-- **Ani düşüş**: s.95(17), s.92(15)
+- **Ani düşüş**: s.95(16), s.92(13)
 
 ### Cilt 9.5 · 5. Kısa Hikâye 5 · Alya’nın İlk Kelime Sahtekarlığı Oyunu (s.95–100)
 
@@ -3061,8 +3056,8 @@
   - “…aldırdı. “Dün güzel bir uygulama buldum. Siz sadece oyuncu sayısını ve kaç tane sahtekar istediğ…”
   - “…da Masachika’nın gözleri şaşkınlıkla büyüdü. Sadece o değildi; diğerleri de aynı derecede şaşırm…”
 - **gereksiz iyelik**: 2
-  - “…36. yılının başlangıcını temsil ediyor, yani onun sayısı bunlardan herhangi biri olarak yoruml…”
-  - “…nun yerine gözlüklerini ayarlarken belirtti. Onun bu açıklaması herkesin kaşlarını çatmasına n…”
+  - “…36. yılının başlangıcını temsil ediyor, yani onun sayısı bunlardan herhangi biri olarak yorumlanabi…”
+  - “…nun yerine gözlüklerini ayarlarken belirtti. Onun bu açıklaması herkesin kaşlarını çatmasına nede…”
 
 ### Cilt 9.5 · 6. Kısa Hikâye 6 · Bir Adamın Rüyası (s.100–108)
 
@@ -3070,9 +3065,6 @@
 - **"gerçekten"**: 6
   - “…ı yansıttığını duymuştu ama bu çok fazlaydı. Gerçekten içten içe böyle bir şey istiyor muyum? Kendi…”
   - “…olarak anlamıyormuş gibi davrandı. Durun… Bu gerçekten gerçek Alya olabilir mi? Daha sonra aklından…”
-- **gereksiz iyelik**: 5
-  - “…rum yaparken Masachika’nın yüzü dondu. Bunun onun gizli arzularının bir tezahürü olduğunu düşü…”
-  - “…rum yaparken Masachika’nın yüzü dondu. Bunun onun gizli arzularının bir tezahürü olduğunu düşü…”
 - **"kendi"**: 4
   - “… rüya mı? Bir yerlerden rüyaların insanların kendi gizli arzularını yansıttığını duymuştu ama b…”
   - “…ekten içten içe böyle bir şey istiyor muyum? Kendi kendine acı bir biçimde gülerken sahne anide…”
@@ -3085,6 +3077,9 @@
 - **üç nokta karışık**: 2
   - “… mutluluk saçıyordu ki, gerçek dışı duruyordu. …Haha. Masachika tamamen gerçekçi olmayan manz…”
   - “…maya başladı ve kaslarındaki gerginlik azaldı. …Hayır, bekle bir saniye. İyi hissetmekle kast…”
+- **"olduğunu" zinciri**: 2
+  - “…u. Bunun onun gizli arzularının bir tezahürü olduğunu düşünmek… Şimdi bunu kabul etmek çok daha zo…”
+  - “…neredeyse ezilecek olsa da, Alisa’nın gerçek olduğunu bilmek her şeyi mükemmel bir biçimde yoluna …”
 
 ### Cilt 9.5 · 7. Kısa Hikâye 7 · Hizmetçi Her Şeyi Gördü (s.108–116)
 
@@ -3096,9 +3091,6 @@
 - **"kendi"**: 3
   - “…nime yeme teklifini reddettikten sonra Ayano kendini Yuki’nin odasında metresinin ona tavsiye e…”
   - “…nime yeme teklifini reddettikten sonra Ayano kendini Yuki’nin odasında metresinin ona tavsiye e…”
-- **gereksiz iyelik**: 3
-  - “…i, hayatındaki en önemli varlık olan öncelik onun manga okumasını istiyordu. Hayır, onun hakkı…”
-  - “…i, hayatındaki en önemli varlık olan öncelik onun manga okumasını istiyordu. Hayır, onun hakkı…”
 - **tire aralığı tutarsız**: 3
   - “… aldı. Ama yaklaşık on dakika sonra… “Peki.” —Yuki aniden mangasını bıraktı ve hızla yatağı…”
   - “… odasına çağırdığı bir sahneyi anlatıyordu ve— “Ayano! Bir dakikalığına buraya gel!” “Evet”…”
@@ -3108,6 +3100,9 @@
 - **ardışık aynı kelime**: 3
   - “…a, kaçma. * “Çevir, çevir.” Mm-hmm, mm-hmm. *Kıpır kıpır, kıpır kıpır, kıpır kıpır~! * …kitabı çekip …”
   - “…Çevir, çevir.” Mm-hmm, mm-hmm. *Kıpır kıpır, kıpır kıpır, kıpır kıpır~! * …kitabı çekip çıkarmak için…”
+- **"bu yüzden"**: 2
+  - “…kındaki düşüncelerini okuyup paylaşmak için. Bu yüzden manga okumak şu anda Ayano’nun en büyük önce…”
+  - “… bir eşyayı” yanında istemeyeceğini düşündü. Bu yüzden Ayano, sorumluluk almanın ve onu meraklı göz…”
 - **Ani düşüş**: s.116(12)
 
 ### Cilt 9.5 · 8. Kısa Hikâye 8 · Donna Yarışmayı Buldozerle Geçiyor (s.116–122)
@@ -3136,15 +3131,15 @@
 
 - **Sadakat**: ort 82.3; zayıf: s.131 (45: diyalog -1 rusça -1 sayı yok: 4/7/2 kısa x0.51); s.124 (74: diyalog -2)
 - **Kelime/cümle**: ort 9.9 kelime/cümle · tip/örnek oranı 0.69 · diyalog satırı/sayfa 5.2
-- **gereksiz iyelik**: 6
-  - “…nuştu. “Hımm, bunu bir an önce bitirsek mi?” Onun sözleri kulüp üyeleri arasında bir sarsıntı …”
-  - “… artırdı. Maria bunu fark etse de etmese de sonunda saate baktı ve konuştu. “Hımm, bunu bir an…”
 - **"sadece"**: 5
   - “… çoğu kişi, kostümleri denerken karşılarında sadece iç çamaşırıyla duran Maria’ya kaçamak bakışl…”
   - “…trol duygularını kaybedeceğini biliyordu. Ve sadece bir kişinin aklını kaybetmesi, geri kalanlar…”
 - **cümle başı "Ve"**: 3
   - “…z kontrol duygularını kaybedeceğini biliyordu. Ve sadece bir kişinin aklını kaybetmesi, geri ka…”
   - “…n sesini tüm odada neredeyse duyabiliyordunuz. Ve tam kaosa sürüklenip vahşi hayvanlar gibi Mar…”
+- **gereksiz iyelik**: 3
+  - “…nuştu. “Hımm, bunu bir an önce bitirsek mi?” Onun sözleri kulüp üyeleri arasında bir sarsıntı yarattı …”
+  - “… Onu şimdilik depo odasına götür!” “E-evet!” Onun emrini yerine getiren Masachika, depo odasına doğru…”
 - **"yani"**: 2
   - “…“Yani kostümler hakkında bize tam destek vereceksi…”
   - “…tif düşünceleri tek bir yorumda özetlendi: E-yani… Demek bu Cazibe Cadısının cesedi! Alisa zat…”
@@ -3158,9 +3153,6 @@
 
 - **Sadakat**: ort 81.5; zayıf: s.137 (64: diyalog -2 rusça -1); s.136 (74: diyalog -2)
 - **Kelime/cümle**: ort 11.8 kelime/cümle · tip/örnek oranı 0.63 · diyalog satırı/sayfa 6.9
-- **gereksiz iyelik**: 6
-  - “… şans versek iyi olur.” “Evet, hadi yapalım. Senin için de uygun mu Alya-san?” Yuki, doğalca ko…”
-  - “…üzerinde büyük bir kristal küre duruyordu ve onun arkasında gözlerine kadar indirilmiş koyu mo…”
 - **"diye" öncesi virgül yok**: 4
   - “…en falımıza baksak iyi olacak diye düşündüm, ” diye açıklarken Yuki herhangi bir endişe duymadan…”
   - “…ana dik dik bakıyorsun?” “Hiçbir nedeni yok, ” diye somurtarak arkasını dönerken bu sefer elini …”
@@ -3176,6 +3168,9 @@
 - **"yani"**: 3
   - “…else de Alisa’nın tepkisi oldukça ılımlıydı. Yani Alya kesinlikle’kader ancak kendi kendine çi…”
   - “…i bile aşan bir şey; bu aile!” Biz kardeşiz… Yani, öyle mi? Hem Masachika hem de Yuki’nin düşü…”
+- **"bu yüzden"**: 3
+  - “…nmadığı bazı orijinal aletler bile getirmiş, bu yüzden falımıza baksak iyi olacak diye düşündüm, ” …”
+  - “…aları genellikle sadece iki kişiyle yapılır, bu yüzden…” “O halde ikişer ikişer okuyalım. Tamam mı?…”
 
 ### Cilt 9.5 · 11. Kısa Hikâye 11 · Sensei~, Başkan ve Başkan Yardımcısı Her Fırsatta Rom-Com’daymış gibi Davranmaya Devam Ediyorlar~! (s.140–146)
 
@@ -3202,9 +3197,6 @@
 ### Cilt 9.5 · 12. Kısa Hikâye 12 · Burası Vücut Geliştirme Kulübü mü, Yoksa Başka Bir Şey mi? (s.146–153)
 
 - **Kelime/cümle**: ort 11.4 kelime/cümle · tip/örnek oranı 0.68 · diyalog satırı/sayfa 7.4
-- **gereksiz iyelik**: 4
-  - “…Ne yazık ki, sanki onun düşünce sürecini tamamen önceden tahmin etmi…”
-  - “…Ne yazık ki, sanki onun düşünce sürecini tamamen önceden tahmin etmi…”
 - **cümle başı "Ve"**: 3
   - “…ğini ilk elden görmek… Alisa sonunda pes etti. Ve sonuç olarak… “Aaahhh~! Teşekkür ederim! Çok …”
   - “…ğini ilk elden görmek… Alisa sonunda pes etti. Ve sonuç olarak… “Aaahhh~! Teşekkür ederim! Çok …”
@@ -3220,6 +3212,9 @@
 - **"gerçekten"**: 2
   - “…ti hazırladık!” “Ben… ben tanrı değilim… Ha? Gerçekten bir şeyler mi hazırladın? Sadece benim için …”
   - “… vücut!” “O çok büyük!” “Cazibe Tanrıçası!” “Gerçekten görünmez bir korse mi giyiyorsun!?” “Yüksek!…”
+- **"sadece"**: 2
+  - “…lim… Ha? Gerçekten bir şeyler mi hazırladın? Sadece benim için mi?” Bunun üzerine Alisa onların …”
+  - “… reddetti. Ya da en azından denedi. “Lütfen! Sadece üç dakikalığına!”…”
 
 ### Cilt 9.5 · 13. Kısa Hikâye 13 · Not: Masachika Değerlendirme Hakkında İyi Değildir (s.153–159)
 
@@ -3233,15 +3228,15 @@
 - **cümle başı "Ama/Fakat"**: 3
   - “…eya lise öğrencisi için göz alıcı bir şey yok. Ama sonra- “Ah…?” Masachika vinil çarşaflardan bi…”
   - “… bakalım… Bin yen… Bunu teklif etmek isterdim. Ama sekizini de alırsan, sana sekiz yüze veririm.…”
-- **gereksiz iyelik**: 3
-  - “…ve başını sallayarak karşılık verdi. “Bunlar benim babamın eşyalarının bir parçası. Görünüşe ba…”
-  - “…rum… Sonuçta her birinin kendine göre… Belki benim babam da bu konuda özel bir şeyler hissetmiş…”
 - **cümle başı "Ve"**: 3
   - “…a hoş görünüyor, değil mi? Tablo da çok güzel. Ve buradaki de, zengin bir ailenin evinde sergil…”
   - “…daha da kötü bir uyum gibi geliyor, değil mi…? Ve vay, sanat gerçekten berbat.” Alisa alttaki t…”
 - **"kendi"**: 3
   - “…men yeniden düşünmeden önce adamın sözlerini kendi kendine düşündü. Hayır, burada sadece sekiz …”
   - “…tanmış gibi hafifçe kıkırdadı. Daha doğrusu, kendi babasının bu kadar ucuz görünen bir parçaya …”
+- **"yani"**: 2
+  - “…da yaklaşık üç bin yen civarındaydı sanırım? Yani, sadece hoşuma giden birkaç tabak seçtim. Eğ…”
+  - “…emek biraz anlamsız geliyor, biliyor musun…? Yani, onlara biraz şık bir sofra takımı gibi davr…”
 
 ### Cilt 9.5 · 14. Kısa Hikâye 14 · Görünüşe göre Yuki-chan ve Ayano-chan Çocuksu Masumiyetlerine Dönmüşler (s.159–165)
 
@@ -3253,9 +3248,6 @@
 - **"diye" öncesi virgül yok**: 3
   - “…e “Vay be, bu ne? Süper eğlenceli görünüyor, ” diye mırıldandı. Daha spesifik olarak, onun asıl …”
   - “…… Sakın bana söyleme… Bunlar da top sayılır!?” diye mırıldandı mutlak dehşete doymuş bir sesle. …”
-- **gereksiz iyelik**: 3
-  - “…or, ” diye mırıldandı. Daha spesifik olarak, onun asıl dikkatini çeken şey su balonlarının ta …”
-  - “…kla parladı. “Fwah~, yaz, ha…? Görünüşe göre benim de çocukluğuma dönme zamanım geldi…” bakışla…”
 - **"gerçekten"**: 3
   - “…“Kahretsin, eğer böyle bir şey duyduysam, bu gerçekten barışçıl bir acil durum. İyi şanslar.” Büyük…”
   - “…“Kahretsin, eğer böyle bir şey duyduysam, bu gerçekten barışçıl bir acil durum. İyi şanslar.” Büyük…”
@@ -3265,20 +3257,22 @@
 - **"sadece"**: 2
   - “…ah!” Coşkulu bir haykırışla ilk atış atıldı… Sadece hedefini absürt derecede geniş bir farkla ıs…”
   - “…“N’aber…? Geri çekilme hakkında endişelenme, sadece kıkırdamaya başla” “Zaten peşimdeler.” “Ah, …”
+- **cümle başı "Ama/Fakat"**: 1
+  - “…z gözlerini kırpmaktan başka bir şey yapamadı. Ama o anda biliyordu ki, metresinin kaprislerinde…”
 
 ### Cilt 9.5 · 15. Kısa Hikâye 15 · Sensei~, Başkan ve Başkan Yardımcısı Yaralı Birinin Önünde Bile Romantik Komedideymiş Gibi Davranmaya Devam Ediyorlar~! (s.165–172)
 
 - **Sadakat**: ort 83.7; zayıf: s.169 (74: diyalog -2); s.170 (74: diyalog -2)
 - **Kelime/cümle**: ort 10.7 kelime/cümle · tip/örnek oranı 0.67 · diyalog satırı/sayfa 7.1
-- **gereksiz iyelik**: 10
-  - “…ş ve hiç ses çıkarmadan yere düşmüştü. Maria onun yanına koştu, onun orada tamamen hareketsiz …”
-  - “…ş ve hiç ses çıkarmadan yere düşmüştü. Maria onun yanına koştu, onun orada tamamen hareketsiz …”
 - **"diye" öncesi virgül yok**: 6
   - “…nda yeni üniformasını giymenin tam ortasında…” diye fısıldadı Maria, biraz sıkıntılı bir ifadeyl…”
   - “…nda yeni üniformasını giymenin tam ortasında…” diye fısıldadı Maria, biraz sıkıntılı bir ifadeyl…”
 - **"sadece"**: 5
   - “…etsiz yattığını görünce paniğe kapıldı, hâlâ sadece iç çamaşırıyla olduğunu tamamen unutmuştu. D…”
   - “…etsiz yattığını görünce paniğe kapıldı, hâlâ sadece iç çamaşırıyla olduğunu tamamen unutmuştu. D…”
+- **gereksiz iyelik**: 4
+  - “…ş ve hiç ses çıkarmadan yere düşmüştü. Maria onun yanına koştu, onun orada tamamen hareketsiz yattı…”
+  - “…biraz sıkıntılı bir ifadeyle. “Ah, anladım.” Onun sözleri üzerine Touya, beceriksizce de olsa hızla gö…”
 - **"gerçekten"**: 3
   - “…kaldırmamızın bir sakıncası yok… Bir dakika, gerçekten neler oluyor? Orada bir şey mi var?” Touya k…”
   - “…bir şey yüzünden olsa bile derse geç kalması gerçekten kötü olur. Ben onun yerine Kuze-kun’u alacağ…”

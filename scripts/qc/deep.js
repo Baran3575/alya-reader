@@ -64,7 +64,8 @@ const RULES = [
   ['"ayrıca"', /\bayrıca\b/giu, 2],
   ['aşırı "ve" (cümlede 4+)', /(?:\bve\b[^.!?…]{0,120}){4,}/gu, 3],
   ['"hem…hem…hem"', /\bhem\b[^.!?…]{0,60}\bhem\b[^.!?…]{0,60}\bhem\b/gu, 3],
-  ['gereksiz iyelik', /\b(senin|benim|onun)\b/giu, 1],
+  // yalnızca iyelik ekiyle birlikte kullanılan (çift işaretli) zamirler
+  ['gereksiz iyelik', /\b(senin|benim|onun)\s+[\wçğıöşü]+(?:sı|si|su|sü|ı|i|u|ü)\b/giu, 1],
   ['ardışık aynı kelime', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(?!hadi hadi|uzun uzun|sessiz sessiz|evet evet|vay vay|peki peki|tek tek|tir tir|yavaş yavaş|azar azar|birer birer|için için|kendi kendine|bacak bacak|göz göz|diş diş|yüz yüz|el ele|diz dize|omuz omuza|sırt sırta)([A-Za-zÇĞİÖŞÜçğıöşü]{5,})\s+\1(?![A-Za-zÇĞİÖŞÜçğıöşü])/giu, 4],
   ['İngilizce kalıntı', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(the|and|with|that|you|from|about|because|something|really)(?![A-Za-zÇĞİÖŞÜçğıöşü])/gu, 8],
   ['Kiril', /[\u0400-\u04FF]/gu, 8],
