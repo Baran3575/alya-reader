@@ -34,7 +34,7 @@ const NAMERE = new RegExp(`\\b(${NAMES.join('|')})(?![A-Za-zÇĞİÖŞÜçğıö
 
 // Kural tanımları: [ad, regex, ağırlık, açıklama]
 const RULES = [
-  ['birleşik yazım', /\b(birşey|birşeyler|herşey|hiçbirşey|yanlız|herkez|birdaha|farketmez|suçüstü|bir an önce)\b/giu, 3],
+  ['birleşik yazım', /\b(birşey|birşeyler|herşey|hiçbirşey|yanlız|herkez|birdaha|farketmez|suçüstü)\b/giu, 3],
   ['"bir çok/her şey" ayrık', /\b(bir çok|hiç bir|bir kaç)\b/giu, 2],
   ['yanlış özel ad yazımı', /\b(Arisa|Alissa|Maşaçika|Masaçika|Çisaki|Şisaki|Toya|Kuze-kun’a|Masachikaya)\b/gu, 3],
   ['özel ad eki kesme yok', new RegExp(`\\b(${NAMES.join('|')})(ya|ye|yı|yi|da|de|dan|den|nın|nin|nun|nün|lar|ler|la|le|sı|si)\\b`, 'gu'), 3],
@@ -64,8 +64,7 @@ const RULES = [
   ['aşırı "ve" (cümlede 4+)', /(?:\bve\b[^.!?…]{0,120}){4,}/gu, 3],
   ['"hem…hem…hem"', /\bhem\b[^.!?…]{0,60}\bhem\b[^.!?…]{0,60}\bhem\b/gu, 3],
   // yalnızca iyelik ekiyle birlikte kullanılan (çift işaretli) zamirler
-  ['gereksiz iyelik', /\b(senin|benim|onun)\s+[\wçğıöşü]+(?:sı|si|su|sü|ı|i|u|ü)\b/giu, 1],
-  ['ardışık aynı kelime', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(?!hadi hadi|uzun uzun|sessiz sessiz|evet evet|vay vay|peki peki|hayır hayır|evet evet|tek tek|tir tir|yavaş yavaş|azar azar|birer birer|için için|kendi kendine|bacak bacak|göz göz|diş diş|yüz yüz|el ele|diz dize|omuz omuza|sırt sırta)([A-Za-zÇĞİÖŞÜçğıöşü]{5,})\s+\1(?![A-Za-zÇĞİÖŞÜçğıöşü])/giu, 4],
+  ['ardışık aynı kelime', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(?!hadi hadi|uzun uzun|sessiz sessiz|evet evet|vay vay|peki peki|hayır hayır|evet evet|tek tek|tir tir|yavaş yavaş|azar azar|birer birer|için için|kendi kendine|bacak bacak|göz göz|diş diş|şaşkın şaşkın|türlü türlü|zaman zaman|teker teker|kıpır kıpır|yüz yüz|el ele|diz dize|omuz omuza|sırt sırta)([A-Za-zÇĞİÖŞÜçğıöşü]{5,})\s+\1(?![A-Za-zÇĞİÖŞÜçğıöşü])/giu, 4],
   ['İngilizce kalıntı', /(?<![A-Za-zÇĞİÖŞÜçğıöşü])(the|and|with|that|you|from|about|because|something|really)(?![A-Za-zÇĞİÖŞÜçğıöşü])/gu, 8],
   ['Kiril', /[\u0400-\u04FF]/gu, 8],
   ['Japonca köşe tırnak', /[『』「」]/gu, 5],
@@ -88,7 +87,6 @@ const NARR_ONLY = new Set([
   '"ayrıca"',
   '"hem…hem…hem"',
   'aşırı "ve" (cümlede 4+)',
-  'gereksiz iyelik',
 ]);
 
 // Replik dışı paragrafların birleşimi.
@@ -192,7 +190,9 @@ for (const vol of Object.keys(BOOKS)) {
       let pageScore = 0;
       for (const [name, re, weight] of RULES) {
         if (!re) continue;
-        const hay = NARR_ONLY.has(name) ? narr : text;
+        let hay = NARR_ONLY.has(name) ? narr : text;
+        // Üç nokta kuralı paragraf sınırını aşmasın: satır sonları nötrlenir.
+        if (name === 'üç nokta karışık') hay = hay.replace(/\n/g, ' \u0000 ');
         const hits = hay.match(new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g'));
         if (!hits) continue;
         const rec = stats.get(name) || { n: 0, ex: [] };
