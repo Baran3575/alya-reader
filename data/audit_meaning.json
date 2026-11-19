@@ -80,11 +80,35 @@
   "t": "…"
  },
  {
+  "page": 246,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Ne kadar düşünse de Masachika’nın aklına gelen tek şey, yaptığı o muziplik oluyordu. Yakınlaşmak bir yana, kızın kendisinden nefret edeceğinden korkuyordu."
+ },
+ {
+  "page": 248,
+  "i": 10,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Tabii~. Ah, istersen kameranı da alabilirim?”"
+ },
+ {
   "page": 271,
   "i": 0,
   "en": true,
   "tr": false,
   "mode": "proportional",
   "t": "“Ara Masachika-chan, dışarı mı çıkıyorsun?”"
+ },
+ {
+  "page": 276,
+  "i": 6,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Neden! Sürekli bu evde kalmanın ne anlamı var ki! Bu evden çıksak daha iyi!”"
  }
 ]

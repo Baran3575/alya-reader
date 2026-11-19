@@ -119,8 +119,10 @@ function evaluateFidelity(src, tr, options = {}) {
 
     const minExpectedParas = Math.max(1, mergedEnParas.length - (allowPrevContinuation ? 1 : 0));
 
+    const carriedWords =
+      allowPrevContinuation && trArr.length < mergedEnParas.length ? words(mergedEnParas[0]) : 0;
     const t = trArr.join(' ');
-    const wEn = words(enClean);
+    const wEn = Math.max(1, words(enClean) - carriedWords);
     const wTr = words(t);
     const ratio = wEn ? wTr / wEn : 1;
 

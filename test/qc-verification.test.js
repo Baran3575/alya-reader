@@ -207,6 +207,8 @@ function testLiteraryRestorations() {
   assert.strictEqual(v4['112'].length, 14, 'Vol 4 page 112 must have 14 paragraphs');
   assert.strictEqual(v4['118'].length, 16, 'Vol 4 page 118 must have 16 paragraphs');
   assert(v4['118'].join(' ').includes('2D') && v4['118'].join(' ').includes('Ayano'), 'Vol 4 page 118 must restore 2D joke and Ayano');
+  assert.strictEqual(v4['255'].length, 12, 'Vol 4 page 255 must have all 12 paragraphs');
+  assert(v4['255'].join(' ').includes('mikoshi') && v4['255'].join(' ').includes('Maria'), 'Vol 4 page 255 must restore mikoshi festival scene');
   assert.strictEqual(v4['279'].length, 11, 'Vol 4 page 279 must have 11 paragraphs');
   assert(v4['279'].join(' ').includes('Alisa'), 'Vol 4 page 279 must preserve Alisa');
 
@@ -620,6 +622,34 @@ function testIntentionalCornerQuotesAndCyrillic() {
   }
 }
 
+function testCrossPageContinuationWordRatio() {
+  console.log('Testing cross-page continuation word-ratio adjustment...');
+  const { evaluateFidelity } = require(path.join(ROOT, 'scripts', 'qc', 'fidelity.js'));
+  const mockSrc = [
+    {
+      page: 10,
+      text: 'Masachika walked calmly across the courtyard with Yuki and Ayano beside him.\n"Actually, the part where a childhood',
+    },
+    {
+      page: 11,
+      text: 'friend for a very long time forcefully attacks the main character out of sheer jealousy is definitely the most moving part of all."\n"Wait, Masachika and Nonoa are walking towards our table right now!" Yuki whispered to Sayaka across the plaza.',
+    },
+  ];
+  const mockTr = {
+    '10': [
+      'Masachika, yanında Yuki ve Ayano ile avluda sakince yürüdü.',
+      '“Aslında uzun süreli çocukluk arkadaşının kıskançlıkla ana karaktere saldırması en dokunaklı kısımdır.”',
+    ],
+    '11': [
+      '“Bekle, Masachika ile Nonoa şu an masamıza doğru yürüyor!” diye fısıldadı Yuki meydanın karşısından Sayaka’ya.',
+    ],
+  };
+  const res = evaluateFidelity(mockSrc, mockTr, { volume: '4.5', minRatio: 0.55, minWordsForRatio: 15 });
+  assert.strictEqual(res.droppedParaPages.length, 0, 'Cross-page carry must not flag dropped paragraph');
+  assert.strictEqual(res.lowRatioPages.length, 0, 'Cross-page carry must adjust effective English word count');
+  console.log('  ✓ Cross-page continuation word-ratio adjustment verified');
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -639,6 +669,7 @@ function runAll() {
   testMissingCharacterNameFailsCLI();
   testFabricatedPage30FailsCLI();
   testHighWordRatioAndSevereNegationGates();
+  testCrossPageContinuationWordRatio();
   testMergeEmptyBilingualGuard();
   testAuditMeaningZeroSkippedPages();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
