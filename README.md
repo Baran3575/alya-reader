@@ -57,3 +57,10 @@ npm test                                               # tüm birim/entegrasyon 
 node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sıkı kalite ve regresyon kontrolü
 node scripts/patch.js --dry-run                        # Cilt 4 el yaması şema ve regresyon doğrulaması
 ```
+
+### Arayüz
+
+- Üst çubuk tek satır: **Cilt 4** · bölüm adı · Çeviri/Orijinal · tema. Yazı boyutu düğmeleri kaldırıldı, metin sabit boyutta.
+- Cilt ya da bölüm düğmesine dokununca alttan liste açılır: ciltlerde bölüm/okundu sayısı, bölümlerde **bölüm adı + sayfa aralığı**.
+- Okundu sistemi elle: her bölüm satırındaki ✓ ile işaretlenir (`alya4:read:<cilt>`), "Hepsini okundu say" / "İşaretleri temizle" düğmeleri vardır. Otomatik işaretleme yok.
+- Alt çubuk: ‹ › düğmeleri, bölüm adı, sayfa aralığı, kaydırıcı. Görsele dokununca tam ekran.

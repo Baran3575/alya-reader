@@ -8,6 +8,8 @@
     const el = d.createElement('p');
     if (/^[“"—–{-]/.test(t)) {
       el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    } else if (/^[(\[]/.test(t)) {
+      el.className = 'thought';
     }
     let pos = 0;
     while (pos < t.length) {
@@ -36,6 +38,7 @@
         pos = close + 1;
         continue;
       }
+      el.appendChild(d.createTextNode('{'));
       const span = d.createElement('span');
       span.className = 'ru-dialog';
       span.appendChild(d.createTextNode(inner));
@@ -45,6 +48,7 @@
         span.title = roma;
       }
       el.appendChild(span);
+      el.appendChild(d.createTextNode('}'));
       pos = close + 1;
     }
     return el;
@@ -60,7 +64,7 @@
 
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
-  const volButtons = Array.from(document.querySelectorAll('#volMenu [data-vol], #volSelector [data-vol]'));
+  const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
 
   const LS = {
     get(k, d) {
@@ -109,98 +113,205 @@
     });
   }
 
-  /* cilt seçici: basınca açılan menü (yana kaydırma yok) */
-  /* alt sayfa perdeleri: mobilde içerik kararması ve dışarı dokunma */
-  function syncBackdrop() {
-    const backdrop = $('sheetBackdrop');
-    if (!backdrop) return;
-    const anyOpen = ['volMenu', 'tocPanel', 'settingsPanel'].some((id) => {
-      const el = $(id);
-      return el && !el.hidden;
-    });
-    backdrop.hidden = !anyOpen;
-    requestAnimationFrame(() => backdrop.classList.toggle('is-open', anyOpen));
-  }
-
   function measureChrome() {
     const bar = document.querySelector('.bar');
-    const nav = document.querySelector('.nav');
-    if (bar) document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px');
-    if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+    if (!bar) return;
+    const h = bar.offsetHeight;
+    if (h > 20) document.documentElement.style.setProperty('--bar-h', h + 'px');
   }
-
-  function toggleVolMenu(open) {
-    const menu = $('volMenu');
-    if (!menu) return;
-    const next = open === undefined ? menu.hidden : open;
-    if (next) {
-      if ($('tocPanel') && !$('tocPanel').hidden) {
-        $('tocPanel').hidden = true;
-        $('tocBtn')?.setAttribute('aria-expanded', 'false');
-      }
-      if ($('settingsPanel') && !$('settingsPanel').hidden) {
-        $('settingsPanel').hidden = true;
-        $('settingsBtn')?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    menu.hidden = !next;
-    $('volBtn')?.setAttribute('aria-expanded', String(!menu.hidden));
-    syncBackdrop();
-  }
-  $('volBtn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleVolMenu();
-  });
-  function toggleSettings(open) {
-    const panel = $('settingsPanel');
-    if (!panel) return;
-    const next = open === undefined ? panel.hidden : open;
-    if (next) {
-      if ($('volMenu') && !$('volMenu').hidden) {
-        $('volMenu').hidden = true;
-        $('volBtn')?.setAttribute('aria-expanded', 'false');
-      }
-      if ($('tocPanel') && !$('tocPanel').hidden) {
-        $('tocPanel').hidden = true;
-        $('tocBtn')?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    panel.hidden = !next;
-    $('settingsBtn')?.setAttribute('aria-expanded', String(!panel.hidden));
-    syncBackdrop();
-  }
-  $('settingsBtn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleSettings();
-  });
-  document.addEventListener('click', (e) => {
-    const menu = $('volMenu');
-    if (menu && !menu.hidden && !menu.contains(e.target) && !$('volBtn')?.contains(e.target)) toggleVolMenu(false);
-    const set = $('settingsPanel');
-    if (set && !set.hidden && !set.contains(e.target) && !$('settingsBtn')?.contains(e.target)) toggleSettings(false);
-  });
-  $('sheetBackdrop')?.addEventListener('click', () => {
-    toggleVolMenu(false);
-    toggleToc(false);
-    toggleSettings(false);
-  });
   window.addEventListener('resize', measureChrome);
   window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
 
+  /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
+  const volTitle = {
+    '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
+    '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
+  };
+
+  function readSet(vol) {
+    const v = LS.get('read:' + vol, []);
+    return Array.isArray(v) ? v : [];
+  }
+  function isRead(vol, i) {
+    return readSet(vol).includes(i);
+  }
+  function setRead(vol, i, on) {
+    const set = new Set(readSet(vol));
+    if (on) set.add(i);
+    else set.delete(i);
+    LS.set('read:' + vol, [...set].sort((x, y) => x - y));
+  }
+  function readCount(vol) {
+    return readSet(vol);
+  }
+
+  const libView = $('libView');
+  const libList = $('libList');
+  const readerEl = $('reader');
+  let libKind = 'vol';
+  let libVol = String(state.vol);
+  let libOpen = false;
+
+  function showLibrary(kind, volumeKey) {
+    libKind = kind;
+    libVol = String(volumeKey || state.vol);
+    libOpen = true;
+    libView.hidden = false;
+    readerEl.hidden = true;
+    $('volBtn').setAttribute('aria-expanded', 'true');
+    $('chBtn').setAttribute('aria-expanded', 'true');
+    $('libActions').hidden = kind !== 'ch';
+    $('libBack').hidden = !(kind === 'ch' && volumeKey);
+    buildList(volumeKey);
+    window.scrollTo(0, 0);
+    measureChrome();
+  }
+
+  function hideLibrary() {
+    libOpen = false;
+    libView.hidden = true;
+    readerEl.hidden = false;
+    $('volBtn').setAttribute('aria-expanded', 'false');
+    $('chBtn').setAttribute('aria-expanded', 'false');
+    measureChrome();
+  }
+
+  function buildList(volumeKey) {
+    libList.innerHTML = '';
+    if (libKind === 'vol') {
+      $('libTitle').textContent = 'Ciltler';
+      for (const key of Object.keys(volTitle)) {
+        const total = (window.ALYA_BUNDLE?.vols?.[key]?.chapters || []).length;
+        const read = readCount(key).length;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.dataset.vol = key;
+        card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
+        card.innerHTML =
+          '<span class="lib-num">' + key + '</span>' +
+          '<span class="lib-info">' +
+          '<span class="lib-name">Cilt ' + key + '</span>' +
+          '<span class="lib-meta">' + total + ' bölüm · ' + read + '/' + total + ' okundu</span>' +
+          '</span>' +
+          '<span class="lib-go" aria-hidden="true">›</span>';
+        card.addEventListener('click', () => showLibrary('ch', key));
+        libList.appendChild(card);
+      }
+      return;
+    }
+
+    $('libTitle').textContent = 'Cilt ' + volumeKey;
+    const list = (volumeKey === String(state.vol) ? chapters() : (window.ALYA_BUNDLE?.vols?.[volumeKey]?.chapters || []));
+    chListFor(volumeKey, list);
+  }
+
+  function chListFor(volumeKey, list) {
+    libList.innerHTML = '';
+    list.forEach((c, i) => {
+      const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
+      const title = c.title || '';
+      const read = isRead(volumeKey, i);
+      const range =
+        volumeKey === String(state.vol) && c.page
+          ? (() => {
+              const [st, en] = chapterRange(i);
+              return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+            })()
+          : '';
+      const row = document.createElement('div');
+      row.className =
+        'lib-row' +
+        (read ? ' is-read' : '') +
+        (c.pending ? ' is-pending' : '') +
+        (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'lib-main';
+      main.innerHTML =
+        '<span class="lib-name">' + label + '</span>' +
+        (title && title !== label ? '<span class="lib-sub">' + title + '</span>' : '') +
+        (range ? '<span class="lib-meta">' + range + '</span>' : '');
+      main.addEventListener('click', async () => {
+        if (volumeKey !== String(state.vol)) {
+          LS.set('page:' + state.vol, state.page);
+          state.vol = volumeKey;
+          LS.set('vol', volumeKey);
+          const targetCh = (window.ALYA_BUNDLE?.vols?.[volumeKey]?.chapters || [])[i];
+          state.page = targetCh && targetCh.page ? targetCh.page : 1;
+          LS.set('page:' + volumeKey, state.page);
+          hideLibrary();
+          try {
+            await load();
+            goChapter(i);
+          } catch (err) {
+            reader.innerHTML = '<p class="empty-note">Cilt ' + volumeKey + ' yüklenemedi: ' + err.message + '</p>';
+          }
+        } else {
+          hideLibrary();
+          goChapter(i);
+        }
+      });
+
+      const check = document.createElement('button');
+      check.type = 'button';
+      check.className = 'lib-check' + (read ? ' is-on' : '');
+      check.setAttribute('aria-pressed', String(read));
+      check.setAttribute('aria-label', label + ' okundu');
+      check.textContent = '✓';
+      check.addEventListener('click', () => {
+        const next = !isRead(volumeKey, i);
+        setRead(volumeKey, i, next);
+        check.classList.toggle('is-on', next);
+        check.setAttribute('aria-pressed', String(next));
+        row.classList.toggle('is-read', next);
+        markTocRead();
+      });
+
+      row.append(main, check);
+      libList.appendChild(row);
+    });
+  }
+
+  $('volBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('vol');
+  });
+  $('chBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('ch', String(state.vol));
+  });
+  $('libBack').addEventListener('click', () => showLibrary('vol'));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      toggleVolMenu(false);
-      toggleSettings(false);
+    if (e.key === 'Escape' && libOpen) {
+      if (libKind === 'ch') showLibrary('vol');
+      else hideLibrary();
     }
   });
-
-  volButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      toggleVolMenu(false);
-      toggleSettings(false);
-      switchVolume(btn.dataset.vol);
-    });
+  $('markAllBtn').addEventListener('click', () => {
+    if (libVol === String(state.vol)) {
+      chapters().forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    } else {
+      (window.ALYA_BUNDLE?.vols?.[libVol]?.chapters || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    }
+    buildList(libVol);
+    markTocRead();
   });
+  $('clearAllBtn').addEventListener('click', () => {
+    LS.set('read:' + libVol, []);
+    buildList(libVol);
+    markTocRead();
+  });
+
+  function syncPickers() {
+    $('volLabel').textContent = volTitle[String(state.vol)] || 'Cilt ' + state.vol;
+    const ch = chapters()[state.chapter];
+    $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -231,7 +342,7 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa alt-dizin uyumlu göreli dosya yolu */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
   function imgSrc(p, vol) {
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
@@ -324,13 +435,6 @@
       if (res.ok) book = await res.json();
     } catch {}
 
-    if (!book) {
-      try {
-        const staticRes = await fetch('books/' + encodeURIComponent(v) + '.json');
-        if (staticRes.ok) book = await staticRes.json();
-      } catch {}
-    }
-
     // 2) gömülü tam paket (çevrimdışı / file:// yedeği)
     if (!book) book = bundleBook(v);
 
@@ -397,23 +501,17 @@
     });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
+    syncPickers();
     markTocRead();
-    render();
     measureChrome();
+    render();
   }
 
-  // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
+  // içindekilerde okunmuş bölümleri işaretle
   function markTocRead() {
-    const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
-      const ch = chapters()[i];
-      if (ch && ch.pending) {
-        li.classList.remove('is-read');
-        continue;
-      }
-      const end = chapterRange(i)[1];
-      li.classList.toggle('is-read', max >= end);
+      li.classList.toggle('is-read', isRead(String(state.vol), i));
     }
   }
 
@@ -423,8 +521,7 @@
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading =
-      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Ara Bölüm|Kısa Hikâye|Ek Hikâye|Ek Öykü|Yazarın Notu|Yazarın Sonsözü|Başlangıç)\b/.test(t);
+    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Ara Bölüm|Kısa Hikâye|Başlangıç)\b/.test(t);
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
@@ -463,20 +560,6 @@
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => scheduleProgress(), { once: true });
-    img.addEventListener(
-      'error',
-      () => {
-        fig.hidden = true;
-        if (
-          fig.parentElement &&
-          fig.parentElement.classList.contains('pg-art') &&
-          !fig.parentElement.classList.contains('has-text')
-        ) {
-          fig.parentElement.hidden = true;
-        }
-      },
-      { once: true }
-    );
     fig.appendChild(img);
     if (caption) {
       const cap = document.createElement('figcaption');
@@ -545,20 +628,16 @@
         proseWrap.className = 'orig-prose';
         for (const line of p.en) {
           const el = document.createElement('p');
-          if (/^[“"—–-]/.test(line)) el.className = 'dialog';
           el.textContent = line;
           proseWrap.appendChild(el);
         }
         sec.appendChild(proseWrap);
       } else if (p.tr && p.tr.length) {
         for (const line of p.tr) {
-          sec.appendChild(renderParagraph(line));
+          const el = document.createElement('p');
+          el.textContent = line;
+          sec.appendChild(el);
         }
-      } else {
-        const note = document.createElement('p');
-        note.className = 'empty-note';
-        note.textContent = 'Bu sayfa için tarama görseli bulunmuyor.';
-        sec.appendChild(note);
       }
     }
     reader.appendChild(sec);
@@ -583,7 +662,6 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
-    if ($('navCount')) $('navCount').textContent = 's. ' + n;
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
     paintProgress();
@@ -650,18 +728,16 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true || (p.tr.length === 0 && pageHasAvailableImage(p));
+        const isIllustration =
+          (p.art === true && pageHasAvailableImage(p)) ||
+          (p.tr.length === 0 && pageHasAvailableImage(p));
         if (isIllustration) {
-          if (!pageHasAvailableImage(p)) {
-            if (p.tr.length === 0) continue;
-          } else {
-            sec.classList.add('pg-art');
-            if (p.tr.length) sec.classList.add('has-text');
-            sec.appendChild(figureFor(p, true));
-            if (p.tr.length === 0) {
-              frag.appendChild(sec);
-              continue;
-            }
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(figureFor(p, true));
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
           }
         }
 
@@ -695,6 +771,7 @@
 
     // durum satırı
     $('pageRange').value = idx + 1;
+    syncPickers();
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = ch.pending
       ? 'beklemede'
@@ -766,7 +843,6 @@
     }
     if (seen && seen !== state.page) {
       state.page = seen;
-      if ($('navCount')) $('navCount').textContent = 's. ' + seen;
       LS.set('page', seen);
       LS.set('page:' + state.vol, seen);
       const prevMax = LS.get('max:' + state.vol, 0);
@@ -796,13 +872,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && !p.pending && p.art && pageHasAvailableImage(p)) imgs.push(imgSrc(p));
+      if (p && p.art && !p.pending && pageHasAvailableImage(p)) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
     if (nxt && !nxt.pending) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && !p.pending && p.art && pageHasAvailableImage(p)) imgs.push(imgSrc(p));
+        if (p && p.art && !p.pending && pageHasAvailableImage(p)) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
@@ -835,43 +911,29 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
   });
-  $('modeText').addEventListener('click', () => {
-    state.mode = 'text';
-    render();
-  });
-  $('modePage').addEventListener('click', () => {
-    state.mode = 'page';
-    render();
-  });
-
-  function toggleToc(open) {
-    const panel = $('tocPanel');
-    const nextOpen = open === undefined ? panel.hidden : open;
-    if (nextOpen) {
-      if ($('volMenu') && !$('volMenu').hidden) {
-        $('volMenu').hidden = true;
-        $('volBtn')?.setAttribute('aria-expanded', 'false');
-      }
-      if ($('settingsPanel') && !$('settingsPanel').hidden) {
-        $('settingsPanel').hidden = true;
-        $('settingsBtn')?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    panel.hidden = !nextOpen;
-    $('tocBtn').setAttribute('aria-expanded', String(nextOpen));
-    syncBackdrop();
+  function syncModeButtons() {
+    $('modeText').classList.toggle('is-on', state.mode === 'text');
+    $('modePage').classList.toggle('is-on', state.mode === 'page');
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
-  $('tocBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleToc();
-  });
-  document.addEventListener('click', (e) => {
-    if (!$('tocPanel').hidden && !$('tocPanel').contains(e.target)) toggleToc(false);
-  });
+  function switchMode(mode) {
+    if (state.mode === mode) return;
+    state.mode = mode;
+    syncModeButtons();
+    render();
+    const rEl = $('reader');
+    rEl.classList.remove('is-switching');
+    void rEl.offsetWidth;
+    rEl.classList.add('is-switching');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  $('modeText').addEventListener('click', () => switchMode('text'));
+  $('modePage').addEventListener('click', () => switchMode('page'));
+
+  function toggleToc() {}
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    measureChrome();
     applyTheme();
     LS.set('theme', state.theme);
   });
@@ -931,7 +993,6 @@
 
   applyTheme();
   applySize();
-  measureChrome();
   load().catch((err) => {
     reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
   });
