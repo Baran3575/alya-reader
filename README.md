@@ -39,8 +39,8 @@ scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
 |---|---|
 | `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.083 paragraf |
 | `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.294 paragraf |
-| `data5/paragraphs_final.json` | **Cilt 5 Türkçe çeviri** — 275 sayfa, 3.175 paragraf |
-| `data6/paragraphs_final.json` | **Cilt 6 Türkçe çeviri** — 278 sayfa, 3.420 paragraf |
+| `data5/paragraphs_final.json` | **Cilt 5 Türkçe çeviri** — 275 sayfa, 3.134 paragraf |
+| `data6/paragraphs_final.json` | **Cilt 6 Türkçe çeviri** — 278 sayfa, 3.391 paragraf |
 | `data*/source.json` | İngilizce kaynak katmanı (salt okunur) |
 | `data*/chapters.json` | Bölüm başlıklarının Türkçesi |
 | `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
