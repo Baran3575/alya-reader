@@ -28,6 +28,7 @@ npm run build:site      # dist/ altında statik site (.nojekyll + bundles/* + pa
 | `public/bundles/art/{4,4.5}/*.webp` & `public/pages5..12/*.webp` | İllüstrasyon görselleri, kaydırma sırasında `IntersectionObserver` ile istek üzerine yüklenir | WebP ikili varlıklar |
 
 - Okuyucu aktif cildi **bellek içi `Map`** → **`CacheStorage` (`alya-v4`) / `bundles/book-<cilt>.json`** → **`bundles/book-<cilt>.js` (`file://` yedeği)** → `api/book` sırasıyla çözer; **"Orijinal"** modunda ise `bundles/bundle-en-<cilt>.json` parçasını yalnızca ihtiyaç duyulduğunda tembel olarak indirip önbelleğe alır.
+- Geliştirme sunucusu (`node server.js`), `data*/` dizinlerindeki `paragraphs_final.json` ve `source.json` dosyalarını `mtime` duyarlı olarak izleyip `/bundles/manifest.js`, `/bundles/book-<cilt>.json` ve `/bundles/bundle-en-<cilt>.json` uç noktalarını canlı içerik özetiyle (`?v=<hash>`) sunar; elle çeviri sırasında yeniden derleme yapmadan güncel metin anında görüntülenir.
 - `window.localStorage` yalnızca hafif okuma konumu, okundu işaretleri ve arayüz ayarlarını (`page`, `page:<cilt>`, `max:<cilt>`, `read:<cilt>`, `vol`, `mode`, `theme`, `size`, toplam `< 5 KB`) saklar; eski `alya4:book:*` kayıtları açılışta otomatik temizlenir.
 - `public/sw.js` service worker’ı kabuğu, `bundles/` paketlerini ve `.webp` görsellerini `self.registration.scope` altında (hem kök dizinde hem GitHub Pages `/<repo>/` alt yollarında) `CacheStorage`’a yazar.
 

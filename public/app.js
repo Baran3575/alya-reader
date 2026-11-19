@@ -461,8 +461,14 @@
   }
 
   function hasFullScans(vol) {
-    if (state.book && typeof state.book.fullScans === 'boolean') return state.book.fullScans;
-    const entry = manifest().volumes && manifest().volumes[vol || state.vol];
+    const k = String(vol || state.vol);
+    if (state.book && k === String(state.vol) && typeof state.book.fullScans === 'boolean') {
+      return state.book.fullScans;
+    }
+    if (bookCache.has(k) && typeof bookCache.get(k).fullScans === 'boolean') {
+      return bookCache.get(k).fullScans;
+    }
+    const entry = manifest().volumes && manifest().volumes[k];
     return Boolean(entry && entry.fullScans);
   }
 

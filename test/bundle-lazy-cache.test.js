@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const assert = require('assert');
-const { buildBook, buildBookEn, VOLUMES, VOLUME_KEYS } = require('../server.js');
+const { buildBook, buildBookEn, getBook, getBookEn, getManifest, VOLUMES, VOLUME_KEYS } = require('../server.js');
 
 const ROOT = path.join(__dirname, '..');
 const PUB = path.join(ROOT, 'public');
@@ -106,6 +106,25 @@ function testServerBuildBookSeparatesEn() {
   assert(v4.pages.every((p) => !('en' in p)), 'server.js buildBook(4) must omit p.en');
   assert(v45.pages.every((p) => !('en' in p)), 'server.js buildBook(4.5) must omit p.en');
   assert(Array.isArray(v4En.pages['14']) && v4En.pages['14'].length > 0, 'buildBookEn(4) must preserve English text');
+
+  // Verify live server.js getManifest() / getBook() / getBookEn() match build_bundle.js output byte-for-byte
+  const liveManifest = getManifest();
+  assert(liveManifest && liveManifest.manifest, 'server.js getManifest() must return live manifest');
+  assert.strictEqual(
+    liveManifest.body.toString('utf8'),
+    fs.readFileSync(path.join(BUNDLES_DIR, 'manifest.js'), 'utf8'),
+    'server.js live /bundles/manifest.js must match scripts/build_bundle.js output byte-for-byte',
+  );
+  assert.strictEqual(
+    getBook('4.5').json.toString('utf8'),
+    fs.readFileSync(path.join(BUNDLES_DIR, 'book-4.5.json'), 'utf8'),
+    'server.js live /bundles/book-4.5.json must match prebuilt book-4.5.json',
+  );
+  assert.strictEqual(
+    getBookEn('4.5').json.toString('utf8'),
+    fs.readFileSync(path.join(BUNDLES_DIR, 'bundle-en-4.5.json'), 'utf8'),
+    'server.js live /bundles/bundle-en-4.5.json must match prebuilt bundle-en-4.5.json',
+  );
 
   // Measure size reduction vs including English source paragraphs across all 11 volumes
   const withEnAll = {};
