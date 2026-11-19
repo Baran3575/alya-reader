@@ -1,4 +1,63 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const inner = t.slice(open + 1, close);
+      if (!inner) {
+        el.appendChild(d.createTextNode('{}'));
+        pos = close + 1;
+        continue;
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
 
@@ -105,8 +164,63 @@
 
   const volSelectEl = $('volSelect');
   if (volSelectEl) {
-    volSelectEl.addEventListener('change', (e) => switchVolume(e.target.value));
+    volSelectEl.addEventListener('change', (e) => {
+      toggleToc(false);
+      toggleSettings(false);
+      switchVolume(e.target.value);
+    });
   }
+
+  /* alt sayfa perdeleri: mobilde içerik kararması ve dışarı dokunma */
+  function syncBackdrop() {
+    const backdrop = $('sheetBackdrop');
+    if (!backdrop) return;
+    const anyOpen = ['tocPanel', 'settingsPanel'].some((id) => {
+      const el = $(id);
+      return el && !el.hidden;
+    });
+    backdrop.hidden = !anyOpen;
+    requestAnimationFrame(() => backdrop.classList.toggle('is-open', anyOpen));
+  }
+
+  function measureChrome() {
+    const bar = document.querySelector('.bar');
+    const nav = document.querySelector('.nav');
+    if (bar && bar.offsetHeight) {
+      document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px');
+    }
+    if (nav && nav.offsetHeight) {
+      document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+    }
+  }
+
+  function toggleSettings(open) {
+    const panel = $('settingsPanel');
+    if (!panel) return;
+    const next = open === undefined ? panel.hidden : open;
+    panel.hidden = !next;
+    $('settingsBtn')?.setAttribute('aria-expanded', String(!panel.hidden));
+    syncBackdrop();
+  }
+  $('settingsBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSettings();
+  });
+  document.addEventListener('click', (e) => {
+    const set = $('settingsPanel');
+    const btn = $('settingsBtn');
+    if (set && !set.hidden && !set.contains(e.target) && (!btn || !btn.contains(e.target))) {
+      toggleSettings(false);
+    }
+  });
+  $('sheetBackdrop')?.addEventListener('click', () => {
+    toggleToc(false);
+    toggleSettings(false);
+  });
+  window.addEventListener('resize', measureChrome);
+  window.addEventListener('orientationchange', () => {
+    if (typeof setTimeout === 'function') setTimeout(measureChrome, 120);
+  });
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -390,9 +504,7 @@
               () => {
                 fig.remove();
                 for (const line of p.tr) {
-                  const el = document.createElement('p');
-                  el.textContent = line;
-                  sec.appendChild(el);
+                  sec.appendChild(renderParagraph(line));
                 }
               },
               { once: true }
@@ -411,9 +523,7 @@
         sec.appendChild(proseWrap);
       } else if (p.tr && p.tr.length) {
         for (const line of p.tr) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          sec.appendChild(el);
+          sec.appendChild(renderParagraph(line));
         }
       }
     }
@@ -519,10 +629,7 @@
         const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
         for (const t of paras) {
           if (!t) continue;
-          const el = document.createElement('p');
-          if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-          el.textContent = t;
-          sec.appendChild(el);
+          sec.appendChild(renderParagraph(t));
         }
         frag.appendChild(sec);
       }
@@ -564,6 +671,7 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
 
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
+    if ($('navCount')) $('navCount').textContent = 's. ' + targetPage;
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
     if (!ch.pending) {
@@ -684,6 +792,7 @@
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
   $('modeBtn').addEventListener('click', () => {
     state.mode = state.mode === 'text' ? 'page' : 'text';
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
   });
   $('modeText').addEventListener('click', () => {
@@ -700,6 +809,7 @@
     const nextOpen = open === undefined ? panel.hidden : open;
     panel.hidden = !nextOpen;
     $('tocBtn').setAttribute('aria-expanded', String(nextOpen));
+    syncBackdrop();
   }
   $('tocBtn').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -711,7 +821,8 @@
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    applyTheme();
+    measureChrome();
+  applyTheme();
     LS.set('theme', state.theme);
   });
   $('fontUp').addEventListener('click', () => {
@@ -735,6 +846,7 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
+      toggleSettings(false);
       return toggleToc(false);
     }
     if (e.target.matches('input, select, textarea')) return;

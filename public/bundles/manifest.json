@@ -19,7 +19,7 @@
       "slug": "4",
       "label": "Cilt 4",
       "file": "bundles/vol-4.json",
-      "hash": "a32b378291d7",
+      "hash": "2501f9e6440f",
       "total": 282,
       "chapters": 13
     },
@@ -28,7 +28,7 @@
       "slug": "5",
       "label": "Cilt 5",
       "file": "bundles/vol-5.json",
-      "hash": "705458f4fa60",
+      "hash": "29c1c118e7d0",
       "total": 257,
       "chapters": 14
     },
@@ -37,7 +37,7 @@
       "slug": "6",
       "label": "Cilt 6",
       "file": "bundles/vol-6.json",
-      "hash": "22e170c8a2db",
+      "hash": "8ff337cbefde",
       "total": 262,
       "chapters": 16
     },
@@ -46,7 +46,7 @@
       "slug": "7",
       "label": "Cilt 7",
       "file": "bundles/vol-7.json",
-      "hash": "ec497ad01c79",
+      "hash": "392d71c4b86a",
       "total": 278,
       "chapters": 15
     },
@@ -55,7 +55,7 @@
       "slug": "8",
       "label": "Cilt 8",
       "file": "bundles/vol-8.json",
-      "hash": "0663108a6a97",
+      "hash": "3664a5d3575d",
       "total": 269,
       "chapters": 14
     },
@@ -64,7 +64,7 @@
       "slug": "9",
       "label": "Cilt 9",
       "file": "bundles/vol-9.json",
-      "hash": "1b3327e1e4f3",
+      "hash": "05003c38c830",
       "total": 256,
       "chapters": 14
     },
@@ -73,7 +73,7 @@
       "slug": "10",
       "label": "Cilt 10",
       "file": "bundles/vol-10.json",
-      "hash": "1eaeaedb7bed",
+      "hash": "d983ffe80fdf",
       "total": 249,
       "chapters": 13
     },
@@ -82,7 +82,7 @@
       "slug": "11",
       "label": "Cilt 11",
       "file": "bundles/vol-11.json",
-      "hash": "7dd7806c2c0a",
+      "hash": "727603b954f8",
       "total": 312,
       "chapters": 12
     },
@@ -91,7 +91,7 @@
       "slug": "12",
       "label": "Cilt 12",
       "file": "bundles/vol-12.json",
-      "hash": "50fe60a06f57",
+      "hash": "e7b37a48d3b9",
       "total": 74,
       "chapters": 4
     },
@@ -100,7 +100,7 @@
       "slug": "4-5",
       "label": "Cilt 4.5",
       "file": "bundles/vol-4-5.json",
-      "hash": "adde542f5d57",
+      "hash": "b6605389b2e5",
       "total": 347,
       "chapters": 14
     },
@@ -109,7 +109,7 @@
       "slug": "9-5",
       "label": "Cilt 9.5",
       "file": "bundles/vol-9-5.json",
-      "hash": "b2d86c26cbee",
+      "hash": "46896188a724",
       "total": 180,
       "chapters": 17
     }

@@ -12,12 +12,16 @@
   <div class="progress"><span id="progressBar"></span></div>
 
   <header class="bar">
-    <a class="brand" href="#" id="homeBtn">
-      <span class="brand-title">Alya Bazen Duygularını Rusça Saklar</span>
-      <span class="brand-sub" id="brandSub">Cilt 4 · Türkçe</span>
-    </a>
+    <div class="bar-row bar-top">
+      <a class="brand" href="#" id="homeBtn">
+        <span class="brand-title">Alya Bazen Duygularını Rusça Saklar</span>
+        <span class="brand-sub" id="brandSub">Cilt 4 · Türkçe</span>
+      </a>
+      <span class="pct" id="chPct" title="Bölüm içi ilerleme">%0</span>
+      <button class="icon" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settingsPanel" title="Görünüm ayarları">Aa</button>
+    </div>
 
-    <nav class="tools">
+    <nav class="bar-row bar-tools tools">
       <select id="volSelect" class="select vol-select" aria-label="Cilt seçimi">
         <option value="4">Cilt 4</option>
         <option value="4.5">Cilt 4.5</option>
@@ -31,23 +35,40 @@
         <option value="11">Cilt 11</option>
         <option value="12">Cilt 12</option>
       </select>
-      <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
+
+      <button class="pill toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
         <span id="tocLabel">Bölüm</span>
         <span class="caret">▾</span>
       </button>
-      <div class="seg" role="group" aria-label="Görünüm">
+
+      <div class="seg seg-mode" role="group" aria-label="Görünüm">
         <button id="modeText" class="seg-btn is-on" type="button">Çeviri</button>
         <button id="modePage" class="seg-btn" type="button">Orijinal</button>
       </div>
-      <button class="icon" id="fontDown" type="button" title="Yazıyı küçült">A−</button>
-      <button class="icon" id="fontUp" type="button" title="Yazıyı büyüt">A+</button>
-      <span class="pct" id="chPct" title="Bölüm içi ilerleme">%0</span>
       <button class="icon mode-compact" id="modeBtn" type="button">Çeviri</button>
-      <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
     </nav>
   </header>
 
+  <div class="settings-panel" id="settingsPanel" hidden>
+    <div class="set-row">
+      <span class="set-label">Yazı boyutu</span>
+      <div class="set-actions">
+        <button class="icon" id="fontDown" type="button" title="Yazıyı küçült">A−</button>
+        <button class="icon" id="fontUp" type="button" title="Yazıyı büyüt">A+</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">Tema</span>
+      <div class="set-actions">
+        <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+
   <div class="toc-panel" id="tocPanel" hidden>
+    <span class="sheet-grip" aria-hidden="true"></span>
     <p class="toc-head">İçindekiler</p>
     <ul class="toc-list" id="tocList"></ul>
   </div>
@@ -62,6 +83,7 @@
       <div class="nav-ch">
         <span class="nav-ch-name" id="navChapter">Bölüm 1</span>
         <span class="nav-ch-pages" id="navPages">s. 1–8</span>
+        <span class="nav-count" id="navCount"></span>
       </div>
       <input id="pageRange" type="range" min="1" max="13" value="1" aria-label="Bölüm" />
     </div>
