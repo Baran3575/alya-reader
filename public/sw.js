@@ -1,6 +1,6 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
 // Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
+const VERSION = 'alya-v4';
 const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
 
 self.addEventListener('install', (e) => {

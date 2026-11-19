@@ -9,6 +9,11 @@ on:
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'
       - 'scripts/fix_boundaries.js'
+      - 'scripts/fix_frontmatter.js'
+      - 'scripts/merge.js'
+      - 'scripts/translate3.js'
+      - 'scripts/patch.js'
+      - 'scripts/patches.json'
       - '.github/workflows/qc.yml'
   pull_request:
   workflow_dispatch:

@@ -398,6 +398,7 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
 
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
+    state.page = targetPage;
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
     const prevMax2 = LS.get('max:' + state.vol, 0);
