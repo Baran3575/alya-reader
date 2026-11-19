@@ -38,7 +38,7 @@ const TR_STRONG = [
   'lanet', 'kahretsin', 'cehennem', 'sikerim', 'pezevenk', 'kaltağın',
   'lan', 'ulan', 'sıçtık', 'sıçtım', 'zırva', 'palavra', 'hay',
   'kahrolası', 'lanet olası', 'siktiriboktan', 'sahtekâr', 'düpedüz',
-  'Allah’ın belası', "Allah'ın belası", 'düzenbaz', 'adi', 'bela',
+  'düzenbaz', 'adi', 'bela',
 ];
 // Yumuşatma işaretleri: argo yerine geçmiş zayıf sözcükler.
 const TR_WEAK = [

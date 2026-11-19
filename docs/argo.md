@@ -39,8 +39,9 @@ damn/hell` gibi hafif küfürler yalnızca **not** olarak listelenir: "What the 
 | fucking | sikindirik · kahrolası · lanet olası · düpedüz |
 | cunt | orospu · orospu çocuğu (ağır hakaret) |
 | bullshit | boktan bahane · palavra · zırva · saçmalık |
+| cheat (ilişki) | sahtekâr · düzenbaz |
 | shit / crap | bok · kahretsin · zırva |
-| damn fucking … | senin o Allah’ın belası … · lanet olası … (ton uyumu: ağır + dublaj dili karıştırılmaz) |
+| damn fucking … | **lanet siktiriboktan …** (damn=lanet, fucking=siktiriboktan, birebir) |
 | cheat / deceiver | sahtekâr · düzenbaz · aldatıcı (ilişki bağlamında) |
 | victim mentality | mağdur edebiyatı · kurban psikolojisi |
 
@@ -60,3 +61,15 @@ sözcükle karşılanmaz; konuşanın tonuna ve cümlenin ritmine göre seçilir
 | "That bald cunt!" | O kel pislik! | O kel orospu! |
 | "your damn fucking fault" | kahrolası hatan | siktiriboktan hatan |
 | "Don't give me that shit!" | Bana bu saçmalığı söyleme! | Bana bok yedirme! |
+
+## Kural: kaynağa sadakat
+
+- Küfür **birebir** çevrilir: kaynakta "damn fucking" varsa çeviride de iki ayrı
+  küfür karşılığı bulunur (`lanet siktiriboktan`), biri düşürülmez.
+- Kaynakta olmayan kültürel ekleme yapılmaz ("Allah'ın belası", "anası ağlayacak"
+  gibi ifadeler **yasak**; bunlar kaynakta yok).
+- **Büyük harf**: kaynak ALL CAPS değilse çeviri de büyük harf kullanmaz. Örn.
+  İngilizce `No…` → `Hayır…` (HAYIR değil); yalnızca gerçek bağırma
+  ("ABSOLUTELY FUCKING NOT") büyük harfle kalır.
+- Bu iki kural `npm test` içinde `scripts/qc/caps.js --check` ve
+  `scripts/qc/argo.js --check` ile ölçülür.

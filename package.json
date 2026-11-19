@@ -9,7 +9,7 @@
     "translate": "node scripts/translate_llm.js",
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
-    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/fidelity.test.js && node scripts/qc/argo.js --check && node scripts/qc/cli.js --strict --check-regression",
+    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/fidelity.test.js && node scripts/qc/argo.js --check && node scripts/qc/caps.js --check && node scripts/qc/cli.js --strict --check-regression",
     "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",
@@ -31,7 +31,8 @@
     "fix:style:dry": "node scripts/fix_style.js --dry",
     "clean": "node scripts/qc/clean.js --md",
     "fix:dialog": "node scripts/fix_split_dialog.js",
-    "fix:quotes": "node scripts/fix_nested_quotes.js"
+    "fix:quotes": "node scripts/fix_nested_quotes.js",
+    "caps": "node scripts/qc/caps.js --md"
   },
   "keywords": [
     "alya",
