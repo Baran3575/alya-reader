@@ -114,15 +114,22 @@
 
   /* ---------------- cilt ---------------- */
   let loadSeq = 0;
-  function switchVolume(v) {
-    if (v === state.vol) return;
+  function switchVolume(v, targetChapter) {
+    if (v === state.vol) {
+      if (typeof targetChapter === 'number') goChapter(targetChapter);
+      return Promise.resolve();
+    }
     LS.set('page:' + state.vol, state.page);
     state.vol = v;
     LS.set('vol', v);
     state.page = LS.get('page:' + v, 1);
-    load().catch((err) => {
-      reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
-    });
+    return load()
+      .then(() => {
+        if (typeof targetChapter === 'number') goChapter(targetChapter);
+      })
+      .catch((err) => {
+        reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
+      });
   }
 
   function measureChrome() {
@@ -154,150 +161,192 @@
     LS.set('read:' + vol, [...set].sort((x, y) => x - y));
   }
   function readCount(vol) {
-    return readSet(vol).length;
+    return readSet(vol);
   }
 
-  const sheet = $('sheet');
-  let sheetKind = 'vol';
-  let savedScroll = 0;
+  const libView = $('libView');
+  const libList = $('libList');
+  const readerEl = $('reader');
+  let libKind = 'vol';
+  let libVol = String(state.vol);
+  let libOpen = false;
 
-  function openSheet(kind) {
-    sheetKind = kind;
-    savedScroll = window.scrollY || 0;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    sheet.hidden = false;
-    $('sheetActions').hidden = kind !== 'ch';
-    $('volBtn').setAttribute('aria-expanded', String(kind === 'vol'));
-    $('chBtn').setAttribute('aria-expanded', String(kind === 'ch'));
-    buildSheet();
-    sheet.querySelector('.sheet-body').scrollTop = 0;
-    $('sheetClose').focus({ preventScroll: true });
+  function showLibrary(kind, volumeKey) {
+    libKind = kind;
+    libVol = String(volumeKey || state.vol);
+    libOpen = true;
+    libView.hidden = false;
+    readerEl.hidden = true;
+    $('volBtn').setAttribute('aria-expanded', 'true');
+    $('chBtn').setAttribute('aria-expanded', 'true');
+    $('libActions').hidden = kind !== 'ch';
+    $('libBack').hidden = !(kind === 'ch' && volumeKey);
+    buildList(libVol);
+    window.scrollTo(0, 0);
+    measureChrome();
   }
 
-  function closeSheet() {
-    sheet.hidden = true;
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
+  function hideLibrary() {
+    libOpen = false;
+    libView.hidden = true;
+    readerEl.hidden = false;
     $('volBtn').setAttribute('aria-expanded', 'false');
     $('chBtn').setAttribute('aria-expanded', 'false');
-    window.scrollTo(0, savedScroll);
+    measureChrome();
   }
 
-  function buildSheet() {
-    const body = $('sheetBody');
-    body.innerHTML = '';
-    if (sheetKind === 'vol') {
-      $('sheetTitle').textContent = 'Cilt seç';
+  function buildList(volumeKey) {
+    libList.innerHTML = '';
+    if (libKind === 'vol') {
+      $('libTitle').textContent = 'Ciltler';
       for (const key of VOLUME_ORDER) {
         const metaInfo = volTotal(key);
         const total = metaInfo.total || 0;
-        const count = volTitle[key] || 'Cilt ' + key;
-        const read = readCount(key);
+        const read = readCount(key).length;
         const ongoingVol = Boolean(metaInfo.ongoing || key === '12');
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'row' + (String(state.vol) === key ? ' is-current' : '');
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
 
-        const rowMain = document.createElement('span');
-        rowMain.className = 'row-main';
-        const rowTitle = document.createElement('span');
-        rowTitle.className = 'row-title';
-        rowTitle.textContent = count;
-        const rowMeta = document.createElement('span');
-        rowMeta.className = 'row-meta';
-        const metaParts = [];
-        if (total) metaParts.push(total + ' bölüm');
-        if (ongoingVol) metaParts.push('devam ediyor');
-        if (read) metaParts.push(read + ' okundu');
-        rowMeta.textContent = metaParts.join(' · ');
-        rowMain.append(rowTitle, rowMeta);
+        const numEl = document.createElement('span');
+        numEl.className = 'lib-num';
+        numEl.textContent = key;
 
-        const rowDot = document.createElement('span');
-        rowDot.className = read ? 'row-dot is-on' : 'row-dot';
-        rowDot.setAttribute('aria-hidden', 'true');
-        if (read) rowDot.textContent = '✓';
+        const infoEl = document.createElement('span');
+        infoEl.className = 'lib-info';
+        const nameEl = document.createElement('span');
+        nameEl.className = 'lib-name';
+        nameEl.textContent = volTitle[key] || 'Cilt ' + key;
+        const metaEl = document.createElement('span');
+        metaEl.className = 'lib-meta';
+        metaEl.textContent =
+          total + ' bölüm · ' + read + '/' + total + ' okundu' + (ongoingVol ? ' · devam ediyor' : '');
+        infoEl.append(nameEl, metaEl);
 
-        row.append(rowMain, rowDot);
-        row.addEventListener('click', () => {
-          closeSheet();
-          switchVolume(key);
-        });
-        body.appendChild(row);
+        const goEl = document.createElement('span');
+        goEl.className = 'lib-go';
+        goEl.setAttribute('aria-hidden', 'true');
+        goEl.textContent = '›';
+
+        card.append(numEl, infoEl, goEl);
+        card.addEventListener('click', () => showLibrary('ch', key));
+        libList.appendChild(card);
       }
       return;
     }
 
-    const ch = chapters()[state.chapter];
-    const native = isChapterNative();
-    $('sheetTitle').textContent =
-      (volTitle[String(state.vol)] || 'Cilt ' + state.vol) +
-      (isOngoing() ? ' (Devam Ediyor)' : '') +
-      (ch ? ' · ' + ch.label : '');
-    const list = chapters();
+    const vKey = String(volumeKey || state.vol);
+    const metaInfo = volTotal(vKey);
+    $('libTitle').textContent =
+      (volTitle[vKey] || 'Cilt ' + vKey) + (metaInfo.ongoing || vKey === '12' ? ' (Devam Ediyor)' : '');
+    const list =
+      vKey === String(state.vol)
+        ? chapters()
+        : (window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[vKey] && window.ALYA_BUNDLE.vols[vKey].chapters) || [];
+    chListFor(vKey, list);
+  }
+
+  function chListFor(volumeKey, list) {
+    libList.innerHTML = '';
+    const vInfo = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[volumeKey];
+    const native = volumeKey === String(state.vol) ? isChapterNative() : Boolean(vInfo && vInfo.chapterNative);
     list.forEach((c, i) => {
-      const [s, e] = chapterRange(i);
-      const read = isRead(String(state.vol), i);
-      const wrap = document.createElement('div');
-      wrap.className = 'row' + (i === state.chapter ? ' is-current' : '') + (read ? ' is-read' : '');
+      const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
+      const title = c.title || '';
+      const read = isRead(volumeKey, i);
+      const range = c.pending
+        ? 'yakında'
+        : !native && volumeKey === String(state.vol) && c.page
+        ? (() => {
+            const [st, en] = chapterRange(i);
+            return st === en ? 's. ' + st : 's. ' + st + '–' + en;
+          })()
+        : '';
+      const row = document.createElement('div');
+      row.className =
+        'lib-row' +
+        (read ? ' is-read' : '') +
+        (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
 
       const main = document.createElement('button');
       main.type = 'button';
-      main.className = 'row-main';
-      const rTitle = document.createElement('span');
-      rTitle.className = 'row-title';
-      rTitle.textContent = c.label + (c.title ? ' · ' + c.title : '');
-      const rMeta = document.createElement('span');
-      rMeta.className = 'row-meta';
-      rMeta.textContent = c.pending
-        ? 'yakında'
-        : native
-        ? 'Bölüm ' + (i + 1)
-        : s === e
-        ? 's. ' + s
-        : 's. ' + s + '–' + e;
-      main.append(rTitle, rMeta);
+      main.className = 'lib-main';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'lib-name';
+      nameSpan.textContent = label;
+      main.appendChild(nameSpan);
+      if (title && title !== label) {
+        const subSpan = document.createElement('span');
+        subSpan.className = 'lib-sub';
+        subSpan.textContent = title;
+        main.appendChild(subSpan);
+      }
+      if (range) {
+        const metaSpan = document.createElement('span');
+        metaSpan.className = 'lib-meta';
+        metaSpan.textContent = range;
+        main.appendChild(metaSpan);
+      }
       main.addEventListener('click', () => {
-        closeSheet();
-        goChapter(i);
+        hideLibrary();
+        if (volumeKey !== String(state.vol)) {
+          switchVolume(volumeKey, i);
+        } else {
+          goChapter(i);
+        }
       });
 
       const check = document.createElement('button');
       check.type = 'button';
-      check.className = 'row-check' + (read ? ' is-on' : '');
+      check.className = 'lib-check' + (read ? ' is-on' : '');
       check.setAttribute('aria-pressed', String(read));
-      check.setAttribute('aria-label', c.label + ' okundu');
+      check.setAttribute('aria-label', label + ' okundu');
       check.textContent = '✓';
       check.addEventListener('click', () => {
-        const next = !isRead(String(state.vol), i);
-        setRead(String(state.vol), i, next);
+        const next = !isRead(volumeKey, i);
+        setRead(volumeKey, i, next);
         check.classList.toggle('is-on', next);
         check.setAttribute('aria-pressed', String(next));
-        wrap.classList.toggle('is-read', next);
+        row.classList.toggle('is-read', next);
         markTocRead();
       });
 
-      wrap.append(main, check);
-      body.appendChild(wrap);
+      row.append(main, check);
+      libList.appendChild(row);
     });
   }
 
-  $('volBtn').addEventListener('click', () => openSheet('vol'));
-  $('chBtn').addEventListener('click', () => openSheet('ch'));
-  $('sheetClose').addEventListener('click', closeSheet);
+  $('volBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('vol');
+  });
+  $('chBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('ch', String(state.vol));
+  });
+  $('libBack').addEventListener('click', () => showLibrary('vol'));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+    if (e.key === 'Escape' && libOpen) {
+      if (libKind === 'ch') showLibrary('vol');
+      else hideLibrary();
+    }
   });
   $('markAllBtn').addEventListener('click', () => {
-    chapters().forEach((c, i) => {
-      if (!c.pending) setRead(String(state.vol), i, true);
-    });
-    buildSheet();
+    if (libVol === String(state.vol)) {
+      chapters().forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    } else {
+      (window.ALYA_BUNDLE?.vols?.[libVol]?.chapters || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    }
+    buildList(libVol);
     markTocRead();
   });
   $('clearAllBtn').addEventListener('click', () => {
-    LS.set('read:' + state.vol, []);
-    buildSheet();
+    LS.set('read:' + libVol, []);
+    buildList(libVol);
     markTocRead();
   });
 

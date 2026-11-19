@@ -280,6 +280,11 @@ function polishVolume(volKey, { dry = false } = {}) {
   const data = JSON.parse(rawOrigFile);
   const glossary = loadGlossary();
 
+  const qualityPatchFile = path.join(ROOT, 'data', 'quality', `v${volKey}.json`);
+  const manualPages = fs.existsSync(qualityPatchFile)
+    ? new Set(Object.keys(JSON.parse(fs.readFileSync(qualityPatchFile, 'utf8'))))
+    : new Set();
+
   const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
   const patches = volKey === '4' && fs.existsSync(patchesFile)
     ? JSON.parse(fs.readFileSync(patchesFile, 'utf8'))
@@ -289,6 +294,7 @@ function polishVolume(volKey, { dry = false } = {}) {
   let changed = 0;
 
   for (const [pg, arr] of Object.entries(data)) {
+    if (manualPages.has(pg)) continue;
     const nextArr = [];
     for (let i = 0; i < arr.length; i++) {
       const orig = arr[i];
@@ -322,11 +328,11 @@ function polishVolume(volKey, { dry = false } = {}) {
   );
 
   if (!dry) {
-    const isMultiline = rawOrigFile.includes('\n ');
-    const serialized = isMultiline ? JSON.stringify(data, null, 1) : JSON.stringify(data);
+    const indent = rawOrigFile.includes('\n  ') ? 2 : rawOrigFile.includes('\n ') ? 1 : 0;
+    const serialized = indent ? JSON.stringify(data, null, indent) : JSON.stringify(data);
     fs.writeFileSync(filePath, rawOrigFile.endsWith('\n') ? serialized + '\n' : serialized);
     if (patches) {
-      fs.writeFileSync(patchesFile, JSON.stringify(patches, null, 1) + '\n');
+      fs.writeFileSync(patchesFile, JSON.stringify(patches, null, 2) + '\n');
     }
   }
   return { before: beforeEval, after: afterEval, changed };
