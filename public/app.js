@@ -1,4 +1,71 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+    'Sapık.': 'Razvratnik.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const rawInner = t.slice(open + 1, close);
+      const inner = rawInner.trim();
+      if (!inner) {
+        el.appendChild(d.createTextNode(t.slice(open, close + 1)));
+        pos = close + 1;
+        continue;
+      }
+      if (/^\s/.test(rawInner) && open > 0 && !/\s$/.test(t.slice(0, open))) {
+        el.appendChild(d.createTextNode(' '));
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      if (/\s$/.test(rawInner) && close + 1 < t.length && !/^\s/.test(t[close + 1])) {
+        el.appendChild(d.createTextNode(' '));
+      }
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
   const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
@@ -323,9 +390,8 @@
         sec.appendChild(proseWrap);
       } else if (p.tr && p.tr.length) {
         for (const line of p.tr) {
-          const el = document.createElement('p');
-          appendParagraphText(el, line);
-          sec.appendChild(el);
+          if (!line) continue;
+          sec.appendChild(renderParagraph(line));
         }
       }
     }
@@ -365,34 +431,6 @@
     LS.set('page:' + state.vol, target);
     render();
     prefetch(chapterIndex(target));
-  }
-
-  function appendParagraphText(el, text) {
-    if (text.indexOf('{') === -1) {
-      el.appendChild(document.createTextNode(text));
-      return;
-    }
-    const re = /\{([^{}]+)\}/g;
-    let lastIndex = 0;
-    let match;
-    while ((match = re.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-      }
-      const inner = match[1].trim();
-      if (inner) {
-        const em = document.createElement('em');
-        em.className = 'ru-whisper';
-        em.appendChild(document.createTextNode(inner));
-        el.appendChild(em);
-      } else {
-        el.appendChild(document.createTextNode(match[0]));
-      }
-      lastIndex = re.lastIndex;
-    }
-    if (lastIndex < text.length) {
-      el.appendChild(document.createTextNode(text.slice(lastIndex)));
-    }
   }
 
   /* ---------------- çizim (bölüm akışı) ---------------- */
@@ -456,16 +494,10 @@
           }
         }
 
-        let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
         for (const t of paras) {
           if (!t) continue;
-          const el = document.createElement('p');
-          if (/^[“"—–{-]/.test(t)) el.className = 'dialog';
-          appendParagraphText(el, t);
-          if (el.firstChild && el.firstChild.nodeType === 1 && el.firstChild.classList.contains('ru-whisper')) {
-            el.classList.add('ru-start');
-          }
-          sec.appendChild(el);
+          sec.appendChild(renderParagraph(t));
         }
         frag.appendChild(sec);
       }

@@ -29,7 +29,7 @@ Sessiz, kitap gibi bir okuma arayüzü. Amaç: dikkat dağıtmayan tipografi, ko
 - Satır yüksekliği **1.72**, paragraf arası `0.95em`, ilk satır girintisi yok (blok aralığı tercih edilir).
 - Metin ölçüsü (measure) `--maxw: 34rem` — 60–70 karakter.
 - Bölüm başlığı `h1`: 1.35rem, harf aralığı hafif daraltılmış, altında ince çizgi.
-- Diyalog paragrafları sola hizalı, tırnak işaretiyle veya `{` ile başlar; söylenen Rusça fısıltılar `{…}` (italik, `--fg-soft`), iç ses `(…)` biçiminde.
+- Diyalog paragrafları sola hizalı, açılış tırnağıyla (`“…”`) veya Rusça replikle (`{…}`) başlar; sözlü Rusça diyalog `{…}` (italik, `--fg-soft`), iç ses / iç monolog ise `(…)` biçiminde.
 
 ## 4. Düzen
 

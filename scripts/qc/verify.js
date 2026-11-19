@@ -4,6 +4,8 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const CORNER_QUOTE_RE = /[『』「」]/g;
+const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
 const ALLOWED_BRACE_NAMES_RE = /^(?:Masaa*chika|Mashachika|Chika|Kuze|Alya|Alisa|Masha|Maria|Yuki|Ayano|Sayaka|Chisaki|Touya|Nonoa|Sarashina|Kujou|Kimishima|Suou|Shuou|Saa|Onii|Uwaa*h|Nee)(?:-(?:kun|chan|san|sama|senpai))?$/i;
 const BRACE_EN_ORTHO_RE = /[qwx]|ch|sh|th|wh|ph|gh|ck|wr|kn|oo|ee|ea|oa|ou|ow|aw|ew|tion|sion|ness|ment|able|ible|ight|ould|ing$|ed$/i;
 const BRACE_EN_WORDS = new Set([
@@ -19,18 +21,25 @@ const BRACE_EN_WORDS = new Set([
   'specific', 'specifically',
 ]);
 
-function hasUnbalancedBraces(text) {
+function hasUnbalancedDelim(str, open, close) {
   let depth = 0;
-  for (const ch of text) {
-    if (ch === '{') {
-      if (depth > 0) return true;
+  let prev = '';
+  for (const ch of str) {
+    if (ch === open) {
       depth++;
-    } else if (ch === '}') {
-      if (depth === 0) return true;
+      if (depth > 1) return true;
+    } else if (ch === close) {
+      if (prev === open) return true;
       depth--;
+      if (depth < 0) return true;
     }
+    prev = ch;
   }
   return depth !== 0;
+}
+
+function hasUnbalancedBraces(text) {
+  return hasUnbalancedDelim(text, '{', '}');
 }
 
 function findDuplicateGlossesInText(text) {
@@ -85,19 +94,24 @@ function runVerify(filePath) {
   let unbalQ = 0;
   let unbalP = 0;
   let unbalB = 0;
+  let unbalS = 0;
   let dupGloss = 0;
   let braceEn = 0;
   for (const x of paras) {
     if ((x.t.match(/[“”]/g) || []).length % 2) unbalQ++;
     if ((x.t.match(/\(/g) || []).length !== (x.t.match(/\)/g) || []).length) unbalP++;
-    if (hasUnbalancedBraces(x.t)) unbalB++;
+    if (hasUnbalancedDelim(x.t, '{', '}')) unbalB++;
+    if (hasUnbalancedDelim(x.t, '[', ']')) unbalS++;
     dupGloss += findDuplicateGlossesInText(x.t).length;
     braceEn += findBraceEnglishInText(x.t).length;
   }
   row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
   row('  ', unbalP, 'dengesiz parantez');
   row('  ', unbalB, 'dengesiz süslü parantez');
+  row('  ', unbalS, 'dengesiz köşeli parantez');
   row('  ', dupGloss, 'yinelenen köşeli açıklama');
+  row('  ', count(CORNER_QUOTE_RE), 'Japonca köşe tırnağı');
+  row('  ', count(CYRILLIC_RE), 'Kiril kalıntısı');
   row('  ', paras.filter((x) => !x.t.trim()).length, 'boş paragraf');
 
   row('2. doğal ifade', countW('Ancak'), '"Ancak"');
@@ -145,6 +159,7 @@ if (require.main === module) {
 
 module.exports = {
   runVerify,
+  hasUnbalancedDelim,
   hasUnbalancedBraces,
   findDuplicateGlossesInText,
   findBraceEnglishInText,

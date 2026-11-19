@@ -112,29 +112,25 @@ function testIntentionalTranslatorNote() {
   }
 }
 
-function testIntentionalUnbalancedBraces() {
-  console.log('Testing intentional unbalanced {} braces defect...');
-  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
-  const orig = fs.readFileSync(v4Path, 'utf8');
-  try {
-    const data = JSON.parse(orig);
-    data['14'][0] += ' {Ona dokunan… Tek bir kişi bile… Olmadı!';
-    fs.writeFileSync(v4Path, JSON.stringify(data));
-
-    const res = runCLI(['--volume', '4', '--strict'], false);
-    assert.strictEqual(res.code, 1, 'Should exit code 1');
-    assert(res.out.includes('dengesiz süslü parantez'), 'Diagnostics must mention unbalanced braces');
-    console.log('  ✓ Unbalanced {} braces caught with code 1');
-  } finally {
-    fs.writeFileSync(v4Path, orig);
-  }
-}
-
 function testIntentionalDuplicateGloss() {
-  console.log('Testing duplicate [gloss] brackets vs allowed Cyrillic glosses and phone messages...');
+  console.log('Testing duplicate [gloss] brackets vs allowed phone messages and Cyrillic helper exemption...');
+  const { findDuplicateGlossesInText } = require(path.join(ROOT, 'scripts', 'qc', 'verify.js'));
+  const { validatePatches } = require(PATCH_SCRIPT);
   const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
+    const baseData = JSON.parse(orig);
+    assert.strictEqual(
+      findDuplicateGlossesInText('“Ты красивая.” [Sen daha güzelsin]').length,
+      0,
+      'Direct helper must ignore Cyrillic quote + [gloss]'
+    );
+    assert.strictEqual(
+      validatePatches({ '14.0': '“Maymun!” [Seni maymun!]' }, baseData).ok,
+      false,
+      'Patch validator must reject duplicate [gloss] after non-Cyrillic quote'
+    );
+
     const data = JSON.parse(orig);
     data['14'][0] += ' “Maymun, dön de dağına git!” [Dön de dağına git, seni maymun!]';
     fs.writeFileSync(v4Path, JSON.stringify(data));
@@ -144,12 +140,12 @@ function testIntentionalDuplicateGloss() {
     assert(failRes.out.includes('yinelenen köşeli açıklama'), 'Diagnostics must mention duplicate gloss');
 
     const allowedData = JSON.parse(orig);
-    allowedData['14'][0] += ' “Ты красивая.” [Sen daha güzelsin] [Merhaba~ Mesaj geldi.]';
+    allowedData['14'].push('[Merhaba~ Mesaj geldi.]');
     fs.writeFileSync(v4Path, JSON.stringify(allowedData));
 
     const okRes = runCLI(['--volume', '4', '--strict'], true);
-    assert.strictEqual(okRes.code, 0, 'Cyrillic quote + [gloss] and phone messages must pass');
-    console.log('  ✓ Duplicate [gloss] caught while Cyrillic glosses and phone messages pass');
+    assert.strictEqual(okRes.code, 0, 'Standalone [phone message] brackets must pass');
+    console.log('  ✓ Duplicate [gloss] caught while standalone phone messages pass');
   } finally {
     fs.writeFileSync(v4Path, orig);
   }
@@ -157,9 +153,17 @@ function testIntentionalDuplicateGloss() {
 
 function testIntentionalBraceEnglish() {
   console.log('Testing {Overwrite} defect vs allowed character names like {Masaachika}...');
+  const { validatePatches } = require(PATCH_SCRIPT);
   const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
+    const baseData = JSON.parse(orig);
+    assert.strictEqual(
+      validatePatches({ '14.0': '(Ama bir dakika, {Overwrite} ne demek acaba…?)' }, baseData).ok,
+      false,
+      'Patch validator must reject untranslated English inside braces'
+    );
+
     const data = JSON.parse(orig);
     data['14'][0] += ' (Ama bir dakika, {Overwrite} ne demek acaba…?)';
     fs.writeFileSync(v4Path, JSON.stringify(data));
@@ -169,11 +173,11 @@ function testIntentionalBraceEnglish() {
     assert(failRes.out.includes('süslü parantezde İngilizce'), 'Diagnostics must mention English inside braces');
 
     const allowedData = JSON.parse(orig);
-    allowedData['14'][0] += ' {Masaachika} {Masaaachika!}';
+    allowedData['14'][0] += ' {Masaachika} {Masaaachika!} {Shuou Mashachika?}';
     fs.writeFileSync(v4Path, JSON.stringify(allowedData));
 
     const okRes = runCLI(['--volume', '4', '--strict'], true);
-    assert.strictEqual(okRes.code, 0, '{Masaachika} must be allowed');
+    assert.strictEqual(okRes.code, 0, '{Masaachika} and {Shuou Mashachika?} must be allowed');
     console.log('  ✓ {Overwrite} caught while character names like {Masaachika} pass');
   } finally {
     fs.writeFileSync(v4Path, orig);
@@ -257,14 +261,215 @@ function testSchemaValidation() {
   }
 }
 
+function createMockDocument() {
+  function makeNode(nodeType, tagName, text) {
+    const node = {
+      nodeType,
+      tagName: tagName || null,
+      className: '',
+      title: '',
+      dataset: {},
+      childNodes: [],
+      appendChild(child) {
+        this.childNodes.push(child);
+        return child;
+      },
+      get textContent() {
+        if (this.nodeType === 3) return text;
+        return this.childNodes.map((c) => c.textContent).join('');
+      },
+      set innerHTML(_v) {
+        throw new Error('Unsafe innerHTML assignment is forbidden in renderParagraph');
+      },
+    };
+    return node;
+  }
+  return {
+    createElement(tag) {
+      return makeNode(1, String(tag).toUpperCase(), '');
+    },
+    createTextNode(str) {
+      return makeNode(3, '#text', String(str));
+    },
+  };
+}
+
+function testRussianDialogueDomRendering() {
+  console.log('Testing safe {…} Russian dialogue DOM rendering and XSS safety...');
+  const { renderParagraph } = require(path.join(ROOT, 'public', 'app.js'));
+  const doc = createMockDocument();
+
+  // 1. Brace-initial Russian line strips braces and gets .dialog + .dialog-ru
+  const pBrace = renderParagraph('{Denizanasından korkuyorum! Masa-kun, yardım et!}', doc);
+  assert.strictEqual(pBrace.tagName, 'P');
+  assert.strictEqual(pBrace.className, 'dialog dialog-ru', 'Brace-initial line must get dialog and dialog-ru');
+  assert.strictEqual(pBrace.childNodes.length, 1);
+  assert.strictEqual(pBrace.childNodes[0].tagName, 'SPAN');
+  assert.strictEqual(pBrace.childNodes[0].className, 'ru-dialog');
+  assert.strictEqual(pBrace.textContent, 'Denizanasından korkuyorum! Masa-kun, yardım et!');
+  assert(!pBrace.textContent.includes('{') && !pBrace.textContent.includes('}'), 'Raw braces must be stripped');
+
+  // 2. Quote-initial line with inline {…} keeps .dialog (without .dialog-ru)
+  const pQuote = renderParagraph('“Geçen gün Rusça {onlara dokunabilirsin} dememiş miydin…?”', doc);
+  assert.strictEqual(pQuote.className, 'dialog', 'Quote-initial line must keep standard .dialog');
+  assert.strictEqual(pQuote.childNodes.length, 3);
+  assert.strictEqual(pQuote.childNodes[1].tagName, 'SPAN');
+  assert.strictEqual(pQuote.childNodes[1].className, 'ru-dialog');
+  assert.strictEqual(pQuote.childNodes[1].textContent, 'onlara dokunabilirsin');
+
+  // 3. Romanized tooltip data on {Sen daha güzelsin.} and {Sapık.}
+  const pRoma = renderParagraph('{Sen daha güzelsin.} Bu fısıltı kayboldu.', doc);
+  assert.strictEqual(pRoma.childNodes[0].dataset.ru, 'Ty krasivaya.');
+  assert.strictEqual(pRoma.childNodes[0].title, 'Ty krasivaya.');
+  const pRoma2 = renderParagraph('{Sapık.}', doc);
+  assert.strictEqual(pRoma2.childNodes[0].dataset.ru, 'Razvratnik.');
+  assert.strictEqual(pRoma2.childNodes[0].title, 'Razvratnik.');
+
+  // 4. XSS payload inside and outside {…} never invokes innerHTML or creates unexpected elements
+  const xssInput = '{<img src=x onerror=alert(1)>} & <script>alert("xss")</script>';
+  const pXss = renderParagraph(xssInput, doc);
+  assert.strictEqual(pXss.childNodes.length, 2);
+  assert.strictEqual(pXss.childNodes[0].tagName, 'SPAN');
+  assert.strictEqual(pXss.childNodes[0].childNodes.length, 1);
+  assert.strictEqual(pXss.childNodes[0].childNodes[0].nodeType, 3, 'Span child must be a pure TextNode');
+  assert.strictEqual(pXss.childNodes[0].textContent, '<img src=x onerror=alert(1)>');
+  assert.strictEqual(pXss.childNodes[1].nodeType, 3, 'Trailing content must be a pure TextNode');
+  assert.strictEqual(pXss.childNodes[1].textContent, ' & <script>alert("xss")</script>');
+
+  // 5. Unmatched '{' falls back safely to plain text via createTextNode (standalone and before valid span)
+  const pUnmatched = renderParagraph('{Kapanmamış süslü parantez', doc);
+  assert.strictEqual(pUnmatched.className, 'dialog dialog-ru');
+  assert.strictEqual(pUnmatched.childNodes.length, 1);
+  assert.strictEqual(pUnmatched.childNodes[0].nodeType, 3);
+  assert.strictEqual(pUnmatched.textContent, '{Kapanmamış süslü parantez');
+
+  const pMixedUnmatched = renderParagraph('{açık {Merhaba}', doc);
+  assert.strictEqual(pMixedUnmatched.childNodes.length, 2);
+  assert.strictEqual(pMixedUnmatched.childNodes[0].nodeType, 3);
+  assert.strictEqual(pMixedUnmatched.childNodes[0].textContent, '{açık ');
+  assert.strictEqual(pMixedUnmatched.childNodes[1].tagName, 'SPAN');
+  assert.strictEqual(pMixedUnmatched.childNodes[1].textContent, 'Merhaba');
+
+  // 6. Parenthetical (…) inner monologue and whitespace-padded { … } spans
+  const pThought = renderParagraph('(Ondan hiç nefret etmiyordum.)', doc);
+  assert.strictEqual(pThought.className, '');
+  assert.strictEqual(pThought.childNodes.length, 1);
+  assert.strictEqual(pThought.childNodes[0].nodeType, 3);
+  assert.strictEqual(pThought.textContent, '(Ondan hiç nefret etmiyordum.)');
+
+  const pPadded = renderParagraph('{Sanki evli bir çiftmişiz gibi, değil mi? } (…Aynen öyle.)', doc);
+  assert.strictEqual(pPadded.childNodes[0].tagName, 'SPAN');
+  assert.strictEqual(pPadded.childNodes[0].textContent, 'Sanki evli bir çiftmişiz gibi, değil mi?');
+  assert.strictEqual(pPadded.textContent, 'Sanki evli bir çiftmişiz gibi, değil mi? (…Aynen öyle.)');
+
+  const pEmpty = renderParagraph('{   }', doc);
+  assert.strictEqual(pEmpty.childNodes.length, 1);
+  assert.strictEqual(pEmpty.childNodes[0].nodeType, 3);
+  assert.strictEqual(pEmpty.textContent, '{   }');
+
+  // 7. Bundle and bundle-art integrity check
+  const artStat = fs.statSync(path.join(ROOT, 'public', 'bundle-art.js'));
+  assert(artStat.size > 1000000, 'public/bundle-art.js must retain embedded WebP data URIs');
+  const bundleContent = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8');
+  assert(bundleContent.includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}'), 'bundle.js must contain repaired 149.4');
+  assert(bundleContent.includes('{Üzerine yazabilir miyim}'), 'bundle.js must contain repaired 89.7');
+  assert(bundleContent.includes('{Sen daha güzelsin.}'), 'bundle.js must contain repaired 267.2');
+  const bundleMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
+  assert(bundleMatch, 'bundle.js must define window.ALYA_BUNDLE');
+  const bundleJson = JSON.parse(bundleMatch[1]);
+  for (const [volKey, book] of Object.entries(bundleJson.vols)) {
+    for (const pg of book.pages) {
+      for (const line of pg.tr) {
+        assert(!/[『』「」]/.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain corner brackets`);
+        assert(!/\p{Script=Cyrillic}/u.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain Cyrillic`);
+      }
+    }
+  }
+
+  console.log('  ✓ Safe {…} DOM spans, tooltip metadata, unmatched brace fallback, bundle integrity, and XSS resistance verified');
+}
+
+function testIntentionalUnbalancedDelimiters() {
+  console.log('Testing unbalanced {…} and […] delimiter checks in CLI and patch validator...');
+  const { validatePatches } = require(PATCH_SCRIPT);
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const baseData = JSON.parse(orig);
+
+    // 1. Unbalanced {…}
+    const dBrace = JSON.parse(orig);
+    dBrace['14'][0] += ' {Kapanmamış Rusça cümle';
+    fs.writeFileSync(v4Path, JSON.stringify(dBrace));
+    const resBrace = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resBrace.code, 1);
+    assert(resBrace.out.includes('dengesiz süslü parantez'), 'Must report unbalanced curly brace');
+
+    // 2. Unbalanced […]
+    const dBracket = JSON.parse(orig);
+    dBracket['14'][0] += ' [Kapanmamış köşeli parantez';
+    fs.writeFileSync(v4Path, JSON.stringify(dBracket));
+    const resBracket = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resBracket.code, 1);
+    assert(resBracket.out.includes('dengesiz köşeli parantez'), 'Must report unbalanced square bracket');
+
+    // 3. Patch validation rejects unbalanced {…} and […] and reversed delimiters
+    assert.strictEqual(validatePatches({ '14.0': '{Açık kaldı' }, baseData).ok, false);
+    assert.strictEqual(validatePatches({ '14.0': '}Ters süslü{' }, baseData).ok, false);
+    assert.strictEqual(validatePatches({ '14.0': '[Açık köşeli' }, baseData).ok, false);
+    assert.strictEqual(validatePatches({ '14.0': ']Ters köşeli[' }, baseData).ok, false);
+
+    console.log('  ✓ Unbalanced {…} and […] delimiters caught with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testIntentionalCornerQuotesAndCyrillic() {
+  console.log('Testing leaked 『』「」 corner brackets and Cyrillic checks...');
+  const { validatePatches } = require(PATCH_SCRIPT);
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const baseData = JSON.parse(orig);
+
+    // 1. Leaked Japanese corner brackets 『…』
+    const dCorner = JSON.parse(orig);
+    dCorner['14'][0] += ' 『Japonca tırnak sızıntısı』';
+    fs.writeFileSync(v4Path, JSON.stringify(dCorner));
+    const resCorner = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resCorner.code, 1);
+    assert(resCorner.out.includes('Japonca köşe tırnağı'), 'Must report leaked corner brackets');
+
+    // 2. Leaked Cyrillic characters
+    const dCyr = JSON.parse(orig);
+    dCyr['14'][0] += ' “Ты красивая.”';
+    fs.writeFileSync(v4Path, JSON.stringify(dCyr));
+    const resCyr = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resCyr.code, 1);
+    assert(resCyr.out.includes('Kiril kalıntısı'), 'Must report Cyrillic residue');
+
+    // 3. Patch validation rejects 『』「」 and Cyrillic
+    assert.strictEqual(validatePatches({ '14.0': '『Test』' }, baseData).ok, false);
+    assert.strictEqual(validatePatches({ '14.0': '「Test」' }, baseData).ok, false);
+    assert.strictEqual(validatePatches({ '14.0': '“Привет”' }, baseData).ok, false);
+
+    console.log('  ✓ Leaked 『』「」 and Cyrillic text caught with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
+  testRussianDialogueDomRendering();
   testTurkishDotlessCharacters();
   testIntentionalEnglishResidue();
   testIntentionalUnclosedQuote();
   testIntentionalTranslatorNote();
-  testIntentionalUnbalancedBraces();
+  testIntentionalUnbalancedDelimiters();
+  testIntentionalCornerQuotesAndCyrillic();
   testIntentionalDuplicateGloss();
   testIntentionalBraceEnglish();
   testPatchValidationAndRegression();

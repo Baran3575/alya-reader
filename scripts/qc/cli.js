@@ -12,11 +12,11 @@ const fs = require('fs');
 const path = require('path');
 const {
   runVerify,
-  hasUnbalancedBraces,
+  hasUnbalancedDelim,
   findDuplicateGlossesInText,
   findBraceEnglishInText,
 } = require('./verify');
-const { evaluateData } = require('./quality');
+const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
 const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
@@ -36,7 +36,7 @@ const VOLUMES = Object.fromEntries(
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar (yalnızca salt okunur Cilt 4 / 4.5)
 const KNOWN_PAGE_SPLIT_QUOTES = {
   '4': new Set([
-    '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
+    '31.1', '36.0', '54.13', '55.14', '115.14', '156.5', '172.9',
     '173.4', '175.14', '190.13', '196.13', '197.7', '217.8', '233.6', '234.6',
     '235.1', '254.14',
   ]),
@@ -54,7 +54,10 @@ const ZERO_TOLERANCE = [
   'bitişik/imla hatası',
   'düz tırnak',
   'dengesiz süslü parantez',
+  'dengesiz köşeli parantez',
   'yinelenen köşeli açıklama',
+  'Japonca köşe tırnağı',
+  'Kiril kalıntısı',
   'boş paragraf',
   'İngilizce kalıntı',
   'süslü parantezde İngilizce',
@@ -154,12 +157,29 @@ function findTranslatorNotesDetails(data) {
   return matches;
 }
 
-function findUnbalancedBracesDetails(data) {
+function findUnbalancedDelimDetails(data, open, close) {
   const matches = [];
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
-      if (hasUnbalancedBraces(text)) {
+      if (hasUnbalancedDelim(text, open, close)) {
         matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findUnbalancedBracesDetails(data) {
+  return findUnbalancedDelimDetails(data, '{', '}');
+}
+
+function findPatternDetails(data, re) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(re);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: m, text: text.slice(0, 100) });
       }
     });
   }
@@ -278,9 +298,15 @@ function main() {
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
         } else if (row[2].includes('dengesiz süslü parantez')) {
-          details = findUnbalancedBracesDetails(data);
+          details = findUnbalancedDelimDetails(data, '{', '}');
+        } else if (row[2].includes('dengesiz köşeli parantez')) {
+          details = findUnbalancedDelimDetails(data, '[', ']');
         } else if (row[2].includes('yinelenen köşeli açıklama')) {
           details = findDuplicateGlossDetails(data);
+        } else if (row[2].includes('Japonca köşe tırnağı')) {
+          details = findPatternDetails(data, /[『』「」]/g);
+        } else if (row[2].includes('Kiril kalıntısı')) {
+          details = findPatternDetails(data, /\p{Script=Cyrillic}+/gu);
         } else if (row[2].includes('süslü parantezde İngilizce')) {
           details = findBraceEnglishDetails(data);
         }
@@ -431,7 +457,13 @@ function main() {
         '"?." kalıbı',
         'bitişik/imla hatası',
         'düz tırnak',
+        'dengesiz süslü parantez',
+        'dengesiz köşeli parantez',
+        'yinelenen köşeli açıklama',
+        'Japonca köşe tırnağı',
+        'Kiril kalıntısı',
         'İngilizce kalıntı',
+        'süslü parantezde İngilizce',
         'çevirmen notu',
       ];
       for (const k of displayKeys) {
@@ -471,7 +503,9 @@ module.exports = {
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findUnbalancedDelimDetails,
   findUnbalancedBracesDetails,
+  findPatternDetails,
   findDuplicateGlossDetails,
   findBraceEnglishDetails,
   generateMarkdownSummary,
