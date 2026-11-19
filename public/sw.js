@@ -1,6 +1,6 @@
-// Çevrimdışı önbellek: kabuk dosyaları + gömülü illüstrasyon paketi + kitap verisi.
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + gömülü illüstrasyon paketi + kitap verisi.
 // GitHub Pages alt dizini (/alya-reader/) ve yerel kök dizin altında self.registration.scope ile çalışır.
-const VERSION = 'alya-60432ce8488c';
+const VERSION = 'alya-8f8bcfcc540f';
 const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 function scopeBase() {
@@ -45,10 +45,10 @@ self.addEventListener('fetch', (e) => {
   if (!url.pathname.startsWith(basePath)) return;
   const relPath = url.pathname.slice(basePath.length);
 
-  // görseller, gömülü paketler ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  // görseller (Cilt 4–12 pages*/), statik kitap JSON'ları (books/*.json), gömülü paketler ve API: önce önbellek
   const cacheFirst =
-    relPath.startsWith('pages/') ||
-    relPath.startsWith('pages45/') ||
+    /^pages\d*\//.test(relPath) ||
+    /^books\/[0-9.]+\.json$/.test(relPath) ||
     relPath === 'api/book' ||
     relPath === 'bundle.js' ||
     relPath === 'bundle-art.js';

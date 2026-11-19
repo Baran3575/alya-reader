@@ -1,10 +1,10 @@
-name: Deploy GitHub Pages
+name: Deploy Reader to GitHub Pages
 
 on:
   push:
     branches:
-      - master
       - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -18,9 +18,9 @@ concurrency:
 
 jobs:
   build:
-    name: QC Gate & Stage Pages Artifact
+    name: Build & Verify Static Reader (Vols 4–12)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,28 +33,24 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Run patch dry-run and QC test suite
+      - name: Run patch dry-run and QC test suite across all volumes
         run: |
           node scripts/patch.js --dry-run
           npm test
 
-      - name: Rebuild static bundles
-        run: npm run build
-
-      - name: Stage public artifact without backup files
+      - name: Build & verify staged Pages artifact
         run: |
-          rm -rf _site
-          mkdir -p _site
-          cp -R public/. _site/
-          find _site -type f -name '*.bak' -delete
-          rm -rf _site/pages _site/pages45
-          test -f _site/index.html
-          test -f _site/style.css
-          test -f _site/app.js
-          test -f _site/bundle.js
-          test -f _site/bundle-art.js
-          test -f _site/sw.js
-          if find _site -name '*.bak' | grep -q .; then
+          npm run build:site
+          rm -rf dist/pages dist/pages45
+          find dist -type f -name '*.bak' -delete
+          test -f dist/.nojekyll
+          test -f dist/index.html
+          test -f dist/style.css
+          test -f dist/app.js
+          test -f dist/bundle.js
+          test -f dist/bundle-art.js
+          test -f dist/sw.js
+          if find dist -name '*.bak' | grep -q .; then
             echo "Backup (.bak) files found in staged Pages artifact" >&2
             exit 1
           fi
@@ -62,10 +58,10 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: './dist'
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 5

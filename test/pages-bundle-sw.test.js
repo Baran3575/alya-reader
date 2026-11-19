@@ -46,8 +46,9 @@ function testCleanCheckoutPreservesIllustrationsAndStampsSw() {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-clean-checkout-'));
   try {
     fs.copyFileSync(path.join(ROOT, 'server.js'), path.join(tmpDir, 'server.js'));
-    fs.mkdirSync(path.join(tmpDir, 'scripts'), { recursive: true });
+    fs.mkdirSync(path.join(tmpDir, 'scripts', 'lib'), { recursive: true });
     fs.copyFileSync(path.join(ROOT, 'scripts', 'build_bundle.js'), path.join(tmpDir, 'scripts', 'build_bundle.js'));
+    fs.copyFileSync(path.join(ROOT, 'scripts', 'lib', 'volumes.js'), path.join(tmpDir, 'scripts', 'lib', 'volumes.js'));
     copyDirRecursive(path.join(ROOT, 'data'), path.join(tmpDir, 'data'));
     copyDirRecursive(path.join(ROOT, 'data45'), path.join(tmpDir, 'data45'));
     copyDirRecursive(path.join(ROOT, 'public'), path.join(tmpDir, 'public'));
@@ -235,6 +236,39 @@ async function testSubpathServiceWorker() {
   assert(artRes && artRes.body.startsWith('cached:'), 'bundle-art.js must resolve from cacheFirst offline');
   assert.strictEqual(networkHits.length, 0, 'cacheFirst hit must not hit network');
 
+  // 3b. Cache-first for multi-volume WebP illustrations (pages5/*) and static books/*.json
+  networkOnline = true;
+  let vol5ImgPromise;
+  listeners.fetch({
+    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/pages5/001.webp' },
+    respondWith: (p) => { vol5ImgPromise = p; },
+  });
+  await vol5ImgPromise;
+  let bookJsonPromise;
+  listeners.fetch({
+    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/books/9.5.json' },
+    respondWith: (p) => { bookJsonPromise = p; },
+  });
+  await bookJsonPromise;
+
+  networkOnline = false;
+  networkHits.length = 0;
+  let vol5OfflinePromise;
+  listeners.fetch({
+    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/pages5/001.webp' },
+    respondWith: (p) => { vol5OfflinePromise = p; },
+  });
+  const vol5OfflineRes = await vol5OfflinePromise;
+  assert(vol5OfflineRes && vol5OfflineRes.body.startsWith('net:'), 'pages5/001.webp must resolve from cacheFirst offline');
+  let bookJsonOfflinePromise;
+  listeners.fetch({
+    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/books/9.5.json' },
+    respondWith: (p) => { bookJsonOfflinePromise = p; },
+  });
+  const bookJsonOfflineRes = await bookJsonOfflinePromise;
+  assert(bookJsonOfflineRes && bookJsonOfflineRes.body.startsWith('net:'), 'books/9.5.json must resolve from cacheFirst offline');
+  assert.strictEqual(networkHits.length, 0, 'Multi-volume cacheFirst hits must not hit network');
+
   // 4. Offline navigation fallback to ./index.html under /alya-reader/
   let navResponsePromise;
   listeners.fetch({
@@ -330,10 +364,34 @@ async function testLocalApiBookEndpoint() {
   console.log('  ✓ Local /api/book endpoint verified');
 }
 
+function testBuildSiteDistStaging() {
+  console.log('Testing scripts/build_site.js staged dist/ across all 11 volumes...');
+  const { VOLUME_KEYS } = require('../scripts/lib/volumes');
+  execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build_site.js')], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  const distDir = path.join(ROOT, 'dist');
+  assert(fs.existsSync(path.join(distDir, '.nojekyll')), 'dist/.nojekyll must exist');
+  for (const shellFile of ['index.html', 'style.css', 'app.js', 'bundle.js', 'bundle-art.js', 'sw.js']) {
+    assert(fs.existsSync(path.join(distDir, shellFile)), `dist/${shellFile} must exist`);
+  }
+  assert(!fs.existsSync(path.join(distDir, 'pages')), 'dist/pages must not be staged');
+  assert(!fs.existsSync(path.join(distDir, 'pages45')), 'dist/pages45 must not be staged');
+  for (const k of VOLUME_KEYS) {
+    const bookPath = path.join(distDir, 'books', `${k}.json`);
+    assert(fs.existsSync(bookPath), `dist/books/${k}.json must exist`);
+    const book = JSON.parse(fs.readFileSync(bookPath, 'utf8'));
+    assert.strictEqual(book.scansAvailable, false, `dist/books/${k}.json scansAvailable must be false`);
+  }
+  console.log('  ✓ Staged dist/ verified across all 11 volumes');
+}
+
 async function run() {
   console.log('=== Starting Pages, Bundle Art & Subpath SW Verification Tests ===\n');
   testBackupExclusionAndPackageConfig();
   testCleanCheckoutPreservesIllustrationsAndStampsSw();
+  testBuildSiteDistStaging();
   await testSubpathServiceWorker();
   testWorkflowAndReaderContract();
   await testLocalApiBookEndpoint();

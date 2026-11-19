@@ -1,70 +1,81 @@
-// Tarayıcıya gömülecek veri paketi: Türkçe + İngilizce + bölümler (iki cilt).
-// Sunucuya ihtiyaç duymadan okuma için public/bundle.js üretir.
+// Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir
+// ve public/sw.js önbellek sürümünü (VERSION) deterministik olarak damgalar.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
 const { buildBook } = require('../server.js');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 const SW_OUT = path.join(ROOT, 'public', 'sw.js');
-const IMG_DIRS = { '4': 'public/pages/', '4.5': 'public/pages45/' };
-
-const vols = {
-  4: buildBook({ dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') }),
-  '4.5': buildBook({ dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') }),
-};
-
-// sayfa görsellerini de paketle: tam tarama klasörü mevcutsa scansAvailable = true
-const IMG_BUDGET = 0; // 0 = görselleri gömme, göreli yoldan yükle
-for (const [k, book] of Object.entries(vols)) {
-  const prefix = /^4\.5$/.test(k) ? 'pages45/' : 'pages/';
-  const scanDir = path.join(ROOT, IMG_DIRS[k]);
-  let allScansPresent = fs.existsSync(scanDir);
-  for (const p of book.pages) {
-    const fileName = String(p.n).padStart(3, '0') + '.webp';
-    p.img = prefix + fileName;
-    if (allScansPresent && !fs.existsSync(path.join(scanDir, fileName))) {
-      allScansPresent = false;
-    }
-  }
-  book.scansAvailable = Boolean(allScansPresent);
-}
 
 function loadExistingArt(filePath) {
   if (!fs.existsSync(filePath)) return {};
   const src = fs.readFileSync(filePath, 'utf8');
   const ctx = { window: {} };
-  vm.runInNewContext(src, ctx);
+  vm.runInNewContext(src, ctx, { timeout: 2000 });
   if (!ctx.window.ALYA_ART || typeof ctx.window.ALYA_ART !== 'object') {
     throw new Error('Mevcut bundle-art.js içinde geçerli window.ALYA_ART bulunamadı');
   }
   return ctx.window.ALYA_ART;
 }
 
-// illüstrasyon sayfalarının görselleri de gömülür (data URI) — temiz kurulumda mevcut gömülü görseller korunur
 const prevArt = loadExistingArt(ART_OUT);
+const vols = {};
 const art = {};
+
 for (const k of Object.keys(prevArt)) {
   if (prevArt[k] && typeof prevArt[k] === 'object') {
     art[k] = { ...prevArt[k] };
   }
 }
-for (const [k, book] of Object.entries(vols)) {
-  if (!art[k]) art[k] = {};
+
+for (const k of VOLUME_KEYS) {
+  const cfg = VOLUMES[k];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
+
+  const book = buildBook({
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+  });
+
+  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
+  // ve tam tarama klasörü mevcutsa scansAvailable = true işaretle
+  const scanDir = path.join(ROOT, cfg.imgDir);
+  let allScansPresent = fs.existsSync(scanDir);
   for (const p of book.pages) {
-    if (!p.art) continue;
-    const pageKey = String(p.n).padStart(3, '0');
-    const f = path.join(ROOT, IMG_DIRS[k], pageKey + '.webp');
-    if (!fs.existsSync(f)) continue;
-    const b64 = fs.readFileSync(f).toString('base64');
-    art[k][pageKey] = 'data:image/webp;base64,' + b64;
+    const fileName = String(p.n).padStart(3, '0') + '.webp';
+    p.img = cfg.relImgPrefix + fileName;
+    if (allScansPresent && !fs.existsSync(path.join(scanDir, fileName))) {
+      allScansPresent = false;
+    }
+  }
+  book.scansAvailable = Boolean(allScansPresent);
+  vols[k] = book;
+
+  // Cilt 4 ve 4.5 için ham görsel klasörü gitignore'da olduğundan mevcut gömülü data URI'leri koru
+  if (k === '4' || k === '4.5') {
+    if (!art[k]) art[k] = {};
+    if (fs.existsSync(scanDir)) {
+      for (const p of book.pages) {
+        if (!p.art) continue;
+        const pad = String(p.n).padStart(3, '0');
+        const f = path.join(scanDir, `${pad}.webp`);
+        if (fs.existsSync(f)) {
+          art[k][pad] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64');
+        }
+      }
+    }
   }
 }
 
+// Temiz kurulumda hiçbir gömülü veya beklenen illüstrasyonun kaybolmadığını doğrula
 const missingArt = [];
 for (const [k, map] of Object.entries(prevArt)) {
   for (const [pageKey, uri] of Object.entries(map || {})) {
@@ -76,13 +87,23 @@ for (const [k, map] of Object.entries(prevArt)) {
   }
 }
 for (const [k, book] of Object.entries(vols)) {
+  const cfg = VOLUMES[k];
   for (const p of book.pages) {
     if (!p.art) continue;
     const pageKey = String(p.n).padStart(3, '0');
-    const uri = art[k] && art[k][pageKey];
-    if (typeof uri !== 'string' || !uri.startsWith('data:image/')) {
-      const label = 'Cilt ' + k + ' s.' + pageKey;
-      if (!missingArt.includes(label)) missingArt.push(label);
+    if (k === '4' || k === '4.5') {
+      const uri = art[k] && art[k][pageKey];
+      if (typeof uri !== 'string' || !uri.startsWith('data:image/')) {
+        const label = 'Cilt ' + k + ' s.' + pageKey;
+        if (!missingArt.includes(label)) missingArt.push(label);
+      }
+    } else {
+      const diskPath = path.join(ROOT, cfg.imgDir, `${pageKey}.webp`);
+      const uri = art[k] && art[k][pageKey];
+      if (!fs.existsSync(diskPath) && (typeof uri !== 'string' || !uri.startsWith('data:image/'))) {
+        const label = 'Cilt ' + k + ' s.' + pageKey;
+        if (!missingArt.includes(label)) missingArt.push(label);
+      }
     }
   }
 }
@@ -118,8 +139,14 @@ if (fs.existsSync(SW_OUT)) {
     fs.writeFileSync(SW_OUT, updatedSw);
   }
 }
-console.log('illüstrasyon:', Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0), 'görsel |',
-  (artBody.length / 1048576).toFixed(2), 'MB');
+
+console.log(
+  'illüstrasyon (gömülü Cilt 4/4.5):',
+  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  'görsel |',
+  (artBody.length / 1048576).toFixed(2),
+  'MB',
+);
 const kb = (body.length / 1024).toFixed(0);
 console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
 for (const [k, b] of Object.entries(vols)) {

@@ -1,6 +1,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
+  const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
 
   const LS = {
     get(k, d) {
@@ -18,13 +19,21 @@
     },
   };
 
+  // URL sorgusu (?vol=9.5 veya #vol=12) ile doğrudan cilt/sayfa açma desteği
+  const urlParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const initialUrlVol = urlParams.get('vol') || urlParams.get('v') || hashParams.get('vol') || hashParams.get('v');
+  const initialUrlPage = Number(
+    urlParams.get('page') || urlParams.get('p') || hashParams.get('page') || hashParams.get('p') || 0,
+  );
+
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
-    page: LS.get('page', 1),
+    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: LS.get('vol', '4'),
+    vol: initialUrlVol || LS.get('vol', '4'),
     book: null,
     chapter: 0,
   };
@@ -36,10 +45,14 @@
     state.vol = v;
     LS.set('vol', v);
     state.page = LS.get('page:' + v, 1);
-    load().catch(() => {});
+    load().catch((err) => {
+      reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
+    });
   }
-  $('vol4').addEventListener('click', () => switchVolume('4'));
-  $('vol45').addEventListener('click', () => switchVolume('4.5'));
+
+  volButtons.forEach((btn) => {
+    btn.addEventListener('click', () => switchVolume(btn.dataset.vol));
+  });
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -70,7 +83,7 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa taranmış dosya yolu (mevcutsa) */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa mevcut taranmış/illüstrasyon göreli dosya yolu */
   function embeddedArt(p, vol) {
     if (!p) return '';
     const key = String(p.n).padStart(3, '0');
@@ -82,22 +95,28 @@
     return Boolean(embeddedArt(p, vol));
   }
 
+  const memBooks = new Map();
+
   function canLoadScan(p, vol) {
-    if (!p) return false;
+    if (!p || p.pending) return false;
     if (hasArt(p, vol)) return true;
-    const targetVol = vol || state.vol;
-    const book = state.book && targetVol === state.vol ? state.book : bundleBook(targetVol);
-    return Boolean(book && book.scansAvailable && p.img);
+    const targetVol = String(vol || state.vol);
+    const relImg = String(p.img || '').replace(/^\/+/, '');
+    if (!relImg) return false;
+    // Cilt 5–12 illüstrasyon WebP dosyaları doğrudan public/pages<vol>/ altında yayınlanır
+    if (p.art && targetVol !== '4' && targetVol !== '4.5') return true;
+    const book = (state.book && targetVol === state.vol ? state.book : null) || memBooks.get(targetVol) || bundleBook(targetVol);
+    return Boolean(book && book.scansAvailable);
   }
 
   function imgSrc(p, vol) {
     const artUri = embeddedArt(p, vol);
     if (artUri) return artUri;
-    if (canLoadScan(p, vol)) return p.img;
+    if (canLoadScan(p, vol)) return String(p.img || '').replace(/^\/+/, '');
     return '';
   }
 
-  /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
+  /* veri kaynakları: bellek -> gömülü paket -> önbellek -> statik JSON -> sunucu API */
   function bundleBook(v) {
     const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
     return b || null;
@@ -111,20 +130,31 @@
   }
 
   async function readBook(v) {
-    const cached = cachedBook(v);
-    if (cached) return cached;
+    if (memBooks.has(v)) return memBooks.get(v);
     const embedded = bundleBook(v);
     if (embedded) {
-      LS.set('book:' + v, embedded);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
+      memBooks.set(v, embedded);
       return embedded;
     }
-    const res = await fetch('api/book?v=' + encodeURIComponent(v));
-    const book = await res.json();
+    const cached = cachedBook(v);
+    if (cached) {
+      memBooks.set(v, cached);
+      return cached;
+    }
+
+    let book = null;
     try {
-      LS.set('book:' + v, book);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-    } catch (e) {}
+      const staticRes = await fetch('books/' + encodeURIComponent(v) + '.json');
+      if (staticRes.ok) book = await staticRes.json();
+    } catch {}
+
+    if (!book) {
+      const res = await fetch('api/book?v=' + encodeURIComponent(v));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      book = await res.json();
+    }
+
+    memBooks.set(v, book);
     return book;
   }
 
@@ -134,8 +164,13 @@
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
-    $('vol4').classList.toggle('is-on', state.vol === '4');
-    $('vol45').classList.toggle('is-on', state.vol === '4.5');
+    volButtons.forEach((btn) => {
+      const active = btn.dataset.vol === state.vol;
+      btn.classList.toggle('is-on', active);
+      if (active && typeof btn.scrollIntoView === 'function') {
+        btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
@@ -146,6 +181,7 @@
       const li = document.createElement('li');
       li.dataset.page = ch.page;
       li.dataset.idx = i;
+      if (ch.pending) li.classList.add('is-pending');
       const btn = document.createElement('button');
       btn.type = 'button';
       const lab = document.createElement('span');
@@ -157,7 +193,7 @@
       const pg = document.createElement('span');
       pg.className = 'ch-page';
       const [s, e] = chapterRange(i);
-      pg.textContent = s === e ? s : s + '–' + e;
+      pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
         toggleToc(false);
@@ -177,21 +213,27 @@
     const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
+      const ch = chapters()[i];
+      if (ch && ch.pending) {
+        li.classList.remove('is-read');
+        continue;
+      }
       const end = chapterRange(i)[1];
       li.classList.toggle('is-read', max >= end);
     }
   }
+
   /* ---------------- metin temizliği ---------------- */
   function cleanHeading(paras, ch) {
     const out = paras.slice();
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Başlangıç)\b/.test(t);
+    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Ara Bölüm|Kısa Hikâye|Başlangıç)\b/.test(t);
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
-    } else {
+    } else if (ch.title) {
       const i = t.indexOf(ch.title);
       if (i >= 0) {
         const rest = t.slice(i + ch.title.length).replace(/^[:\s"”]+/, '');
@@ -202,11 +244,27 @@
     return out;
   }
 
+  function createPendingNotice(ch) {
+    const box = document.createElement('div');
+    box.className = 'pending-card';
+    const badge = document.createElement('p');
+    badge.className = 'pending-badge';
+    badge.textContent = 'Çeviri Beklemede · [Translation In Progress]';
+    const desc = document.createElement('p');
+    desc.className = 'pending-desc';
+    desc.textContent =
+      ch.statusNote ||
+      'Bu bölümün İngilizce kaynak çevirisi henüz yayınlanmadı ([Translation In Progress]). Kaynak metin tamamlandığında Türkçe çevirisi eklenecektir.';
+    box.append(badge, desc);
+    return box;
+  }
+
   function nextArtTarget(fromPage) {
     if (!state.book || !Array.isArray(state.book.pages)) return null;
-    const ahead = state.book.pages.find((pg) => pg.n > fromPage && hasArt(pg));
+    const isArtPage = (pg) => (pg.art || hasArt(pg)) && canLoadScan(pg);
+    const ahead = state.book.pages.find((pg) => pg.n > fromPage && isArtPage(pg));
     if (ahead) return { page: ahead.n, wrapped: false };
-    const first = state.book.pages.find((pg) => pg.n !== fromPage && hasArt(pg));
+    const first = state.book.pages.find((pg) => pg.n !== fromPage && isArtPage(pg));
     if (first) return { page: first.n, wrapped: true };
     return null;
   }
@@ -332,9 +390,25 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) {
+
+    if (ch.pending || (p && p.pending)) {
+      sec.appendChild(createPendingNotice(ch));
+    } else if (p) {
       const fig = figureFor(p, false);
-      sec.appendChild(fig || scanFallbackCard(p));
+      if (fig) {
+        sec.appendChild(fig);
+      } else if (state.vol !== '4' && state.vol !== '4.5' && p.en && p.en.length) {
+        const proseWrap = document.createElement('div');
+        proseWrap.className = 'orig-prose';
+        for (const line of p.en) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          proseWrap.appendChild(el);
+        }
+        sec.appendChild(proseWrap);
+      } else {
+        sec.appendChild(scanFallbackCard(p));
+      }
     }
     reader.appendChild(sec);
 
@@ -361,7 +435,9 @@
     const [startPage, endPage] = chapterRange(idx);
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('navPages').textContent = ch.pending
+      ? 'beklemede'
+      : startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = n <= 1;
     $('nextBtn').disabled = n >= state.book.total;
     $('tocLabel').textContent = ch.label;
@@ -374,10 +450,12 @@
 
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
-    const prevMax = LS.get('max:' + state.vol, 0);
-    if (n > prevMax) {
-      LS.set('max:' + state.vol, n);
-      markTocRead();
+    if (!ch.pending) {
+      const prevMax = LS.get('max:' + state.vol, 0);
+      if (n > prevMax) {
+        LS.set('max:' + state.vol, n);
+        markTocRead();
+      }
     }
     LS.set('mode', state.mode);
     paintProgress();
@@ -422,49 +500,58 @@
       if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
     const mins = Math.max(1, Math.round(words / 240));
-    meta.textContent =
-      'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
-      ' · ' + pages + ' sayfa · ~' + mins + ' dk';
+    meta.textContent = ch.pending
+      ? 'Durum: Kaynak çeviri devam ediyor'
+      : 'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' + pages + ' sayfa · ~' + mins + ' dk';
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
-    const frag = document.createDocumentFragment();
-    for (let n = startPage; n <= endPage; n++) {
-      const p = state.book.pages[n - 1];
-      if (!p) continue;
-      const sec = document.createElement('section');
-      sec.className = 'pg';
-      sec.dataset.page = p.n;
-
-      if (p.tr.length === 0 && !canLoadScan(p)) {
-        continue;
-      }
-
-      const isIllustration = (p.tr.length === 0 || p.art === true) && canLoadScan(p);
-      if (isIllustration) {
-        const fig = figureFor(p, true);
-        if (fig) {
-          sec.classList.add('pg-art');
-          if (p.tr.length) sec.classList.add('has-text');
-          sec.appendChild(fig);
-        }
-        if (p.tr.length === 0) {
-          frag.appendChild(sec);
+    if (ch.pending) {
+      reader.appendChild(createPendingNotice(ch));
+    } else {
+      const frag = document.createDocumentFragment();
+      for (let n = startPage; n <= endPage; n++) {
+        const p = state.book.pages[n - 1];
+        if (!p) continue;
+        if (p.pending) {
+          frag.appendChild(createPendingNotice(ch));
           continue;
         }
-      }
+        if (p.tr.length === 0 && !canLoadScan(p)) {
+          continue;
+        }
 
-      let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
-      for (const t of paras) {
-        if (!t) continue;
-        const el = document.createElement('p');
-        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-        el.textContent = t;
-        sec.appendChild(el);
+        const sec = document.createElement('section');
+        sec.className = 'pg';
+        sec.dataset.page = p.n;
+
+        const isIllustration = (p.tr.length === 0 || p.art === true) && canLoadScan(p);
+        if (isIllustration) {
+          const fig = figureFor(p, true);
+          if (fig) {
+            sec.classList.add('pg-art');
+            if (p.tr.length) sec.classList.add('has-text');
+            sec.appendChild(fig);
+          }
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
+          }
+        }
+
+        let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        for (const t of paras) {
+          if (!t) continue;
+          const el = document.createElement('p');
+          if (/^[“"—–-]/.test(t)) el.className = 'dialog';
+          el.textContent = t;
+          sec.appendChild(el);
+        }
+        frag.appendChild(sec);
       }
-      frag.appendChild(sec);
+      reader.appendChild(frag);
     }
-    reader.appendChild(frag);
 
     // bölüm sonu
     const last = idx === chapters().length - 1;
@@ -487,7 +574,9 @@
     // durum satırı
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('navPages').textContent = ch.pending
+      ? 'beklemede'
+      : startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = idx <= 0;
     $('nextBtn').disabled = last;
     $('tocLabel').textContent = ch.label;
@@ -501,8 +590,10 @@
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
-    const prevMax2 = LS.get('max:' + state.vol, 0);
-    if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    if (!ch.pending) {
+      const prevMax2 = LS.get('max:' + state.vol, 0);
+      if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    }
     markTocRead();
     LS.set('mode', state.mode);
 
@@ -581,18 +672,18 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0) && canLoadScan(p)) {
+      if (p && !p.pending && (p.art || p.tr.length === 0) && canLoadScan(p)) {
         const src = imgSrc(p);
-        if (src) imgs.push(src);
+        if (src && !src.startsWith('data:')) imgs.push(src);
       }
     }
     const nxt = chapters()[idx + 1];
-    if (nxt) {
+    if (nxt && !nxt.pending) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0) && canLoadScan(p)) {
+        if (p && !p.pending && (p.art || p.tr.length === 0) && canLoadScan(p)) {
           const src = imgSrc(p);
-          if (src) imgs.push(src);
+          if (src && !src.startsWith('data:')) imgs.push(src);
         }
       }
     }
@@ -616,9 +707,6 @@
   }
   const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
   const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
-  function goto(n) {
-    goChapter(chapterIndex(n), n);
-  }
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);
@@ -696,7 +784,7 @@
       tx = e.touches[0].clientX;
       ty = e.touches[0].clientY;
     },
-    { passive: true }
+    { passive: true },
   );
   document.addEventListener(
     'touchend',
@@ -707,7 +795,7 @@
         dx < 0 ? next() : prev();
       }
     },
-    { passive: true }
+    { passive: true },
   );
 
   applyTheme();
