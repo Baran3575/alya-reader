@@ -4,7 +4,7 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
-const ALLOWED_BRACE_NAMES_RE = /^(?:Masaa*chika|Kuze|Alya|Alisa|Masha|Maria|Yuki|Ayano|Sayaka|Chisaki|Touya|Nonoa|Sarashina|Kujou|Kimishima|Suou|Saa|Onii)(?:-(?:kun|chan|san|sama|senpai))?$/i;
+const ALLOWED_BRACE_NAMES_RE = /^(?:Masaa*chika|Mashachika|Chika|Kuze|Alya|Alisa|Masha|Maria|Yuki|Ayano|Sayaka|Chisaki|Touya|Nonoa|Sarashina|Kujou|Kimishima|Suou|Shuou|Saa|Onii|Uwaa*h|Nee)(?:-(?:kun|chan|san|sama|senpai))?$/i;
 const BRACE_EN_ORTHO_RE = /[qwx]|ch|sh|th|wh|ph|gh|ck|wr|kn|oo|ee|ea|oa|ou|ow|aw|ew|tion|sion|ness|ment|able|ible|ight|ould|ing$|ed$/i;
 const BRACE_EN_WORDS = new Set([
   'overwrite', 'please', 'sorry', 'never', 'really', 'great', 'cool', 'promise',
