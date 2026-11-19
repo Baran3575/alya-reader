@@ -25,7 +25,10 @@
     "pretest": "node scripts/fix_quality.js && node scripts/insert_notes.js && node scripts/build_bundle.js",
     "fix:quality": "node scripts/fix_quality.js",
     "fix:quality:dry": "node scripts/fix_quality.js --dry",
-    "fidelity": "node scripts/qc/fidelity.js"
+    "fidelity": "node scripts/qc/fidelity.js",
+    "deep": "node scripts/qc/deep.js",
+    "fix:style": "node scripts/fix_style.js",
+    "fix:style:dry": "node scripts/fix_style.js --dry"
   },
   "keywords": [
     "alya",

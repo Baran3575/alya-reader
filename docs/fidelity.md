@@ -10,7 +10,7 @@ sayılar, uzunluk oranı, paragraf oranı. 100 = yapı birebir, <70 = inceleme g
 | 6 | 245 | 89.3 | 1 |
 | 7 | 260 | 89.4 | 0 |
 | 8 | 251 | 89.7 | 0 |
-| 9 | 239 | 89.9 | 0 |
+| 9 | 239 | 89.8 | 0 |
 | 10 | 231 | 89.7 | 0 |
 | 11 | 295 | 89.8 | 0 |
 | 12 | 45 | 89.9 | 0 |
@@ -73,11 +73,11 @@ sayılar, uzunluk oranı, paragraf oranı. 100 = yapı birebir, <70 = inceleme g
 
 | Sayfa | Puan | Bulgu |
 | ---: | ---: | --- |
+| 14 | 82 | diyalog -1 |
 | 91 | 82 | diyalog -1 |
 | 96 | 82 | diyalog -1 |
 | 97 | 82 | diyalog -1 |
 | 110 | 82 | diyalog -1 |
-| 141 | 82 | diyalog -1 |
 
 ### Cilt 10
 
