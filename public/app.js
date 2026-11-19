@@ -8,6 +8,8 @@
     const el = d.createElement('p');
     if (/^[“"—–{-]/.test(t)) {
       el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    } else if (/^[(\[]/.test(t)) {
+      el.className = 'thought';
     }
     let pos = 0;
     while (pos < t.length) {
@@ -36,6 +38,7 @@
         pos = close + 1;
         continue;
       }
+      el.appendChild(d.createTextNode('{'));
       const span = d.createElement('span');
       span.className = 'ru-dialog';
       span.appendChild(d.createTextNode(inner));
@@ -45,6 +48,7 @@
         span.title = roma;
       }
       el.appendChild(span);
+      el.appendChild(d.createTextNode('}'));
       pos = close + 1;
     }
     return el;
@@ -135,118 +139,153 @@
     LS.set('read:' + vol, [...set].sort((x, y) => x - y));
   }
   function readCount(vol) {
-    return readSet(vol).length;
+    return readSet(vol);
   }
 
-  const sheet = $('sheet');
-  let sheetKind = 'vol';
-  let savedScroll = 0;
+  const libView = $('libView');
+  const libList = $('libList');
+  const readerEl = $('reader');
+  let libKind = 'vol';
+  let libVol = String(state.vol);
+  let libOpen = false;
 
-  function openSheet(kind) {
-    sheetKind = kind;
-    savedScroll = window.scrollY || 0;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    sheet.hidden = false;
-    $('sheetActions').hidden = kind !== 'ch';
-    $('volBtn').setAttribute('aria-expanded', String(kind === 'vol'));
-    $('chBtn').setAttribute('aria-expanded', String(kind === 'ch'));
-    buildSheet();
-    sheet.querySelector('.sheet-body').scrollTop = 0;
-    $('sheetClose').focus({ preventScroll: true });
+  function showLibrary(kind, volumeKey) {
+    libKind = kind;
+    libVol = String(volumeKey || state.vol);
+    libOpen = true;
+    libView.hidden = false;
+    readerEl.hidden = true;
+    $('volBtn').setAttribute('aria-expanded', 'true');
+    $('chBtn').setAttribute('aria-expanded', 'true');
+    $('libActions').hidden = kind !== 'ch';
+    $('libBack').hidden = !(kind === 'ch' && volumeKey);
+    buildList(volumeKey);
+    window.scrollTo(0, 0);
+    measureChrome();
   }
 
-  function closeSheet() {
-    sheet.hidden = true;
-    document.documentElement.style.overflow = '';
-    document.body.style.overflow = '';
+  function hideLibrary() {
+    libOpen = false;
+    libView.hidden = true;
+    readerEl.hidden = false;
     $('volBtn').setAttribute('aria-expanded', 'false');
     $('chBtn').setAttribute('aria-expanded', 'false');
-    window.scrollTo(0, savedScroll);
+    measureChrome();
   }
 
-  function buildSheet() {
-    const body = $('sheetBody');
-    body.innerHTML = '';
-    if (sheetKind === 'vol') {
-      $('sheetTitle').textContent = 'Cilt seç';
+  function buildList(volumeKey) {
+    libList.innerHTML = '';
+    if (libKind === 'vol') {
+      $('libTitle').textContent = 'Ciltler';
       for (const key of Object.keys(volTitle)) {
-        const total = (volTotal(key) || {}).total || 0;
-        const count = volTitle[key];
-        const read = readCount(key);
-        const row = document.createElement('button');
-        row.type = 'button';
-        row.className = 'row' + (String(state.vol) === key ? ' is-current' : '');
-        row.innerHTML =
-          '<span class="row-main"><span class="row-title">' + count + '</span>' +
-          '<span class="row-meta">' + (total ? total + ' bölüm' : '') +
-          (read ? ' · ' + read + ' okundu' : '') + '</span></span>' +
-          (read ? '<span class="row-dot is-on" aria-hidden="true">✓</span>' : '<span class="row-dot" aria-hidden="true"></span>');
-        row.addEventListener('click', () => {
-          closeSheet();
-          switchVolume(key);
-        });
-        body.appendChild(row);
+        const total = (window.ALYA_BUNDLE?.vols?.[key]?.chapters || []).length;
+        const read = readCount(key).length;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
+        card.innerHTML =
+          '<span class="lib-num">' + key + '</span>' +
+          '<span class="lib-info">' +
+          '<span class="lib-name">Cilt ' + key + '</span>' +
+          '<span class="lib-meta">' + total + ' bölüm · ' + read + '/' + total + ' okundu</span>' +
+          '</span>' +
+          '<span class="lib-go" aria-hidden="true">›</span>';
+        card.addEventListener('click', () => showLibrary('ch', key));
+        libList.appendChild(card);
       }
       return;
     }
 
-    const ch = chapters()[state.chapter];
-    $('sheetTitle').textContent = volTitle[String(state.vol)] + (ch ? ' · ' + ch.label : '');
-    const list = chapters();
+    $('libTitle').textContent = 'Cilt ' + volumeKey;
+    const list = (volumeKey === String(state.vol) ? chapters() : (window.ALYA_BUNDLE?.vols?.[volumeKey]?.chapters || []));
+    chListFor(volumeKey, list);
+  }
+
+  function chListFor(volumeKey, list) {
+    libList.innerHTML = '';
     list.forEach((c, i) => {
-      const [s, e] = chapterRange(i);
-      const read = isRead(String(state.vol), i);
-      const wrap = document.createElement('div');
-      wrap.className = 'row' + (i === state.chapter ? ' is-current' : '') + (read ? ' is-read' : '');
+      const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
+      const title = c.title || '';
+      const read = isRead(volumeKey, i);
+      const range =
+        volumeKey === String(state.vol) && c.page
+          ? (() => {
+              const [st, en] = chapterRange(i);
+              return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+            })()
+          : '';
+      const row = document.createElement('div');
+      row.className = 'lib-row' + (read ? ' is-read' : '') +
+        (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
 
       const main = document.createElement('button');
       main.type = 'button';
-      main.className = 'row-main';
+      main.className = 'lib-main';
       main.innerHTML =
-        '<span class="row-title">' + c.label + (c.title ? ' · ' + c.title : '') + '</span>' +
-        '<span class="row-meta">' + (c.pending ? 'yakında' : s === e ? 's. ' + s : 's. ' + s + '–' + e) + '</span>';
+        '<span class="lib-name">' + label + '</span>' +
+        (title && title !== label ? '<span class="lib-sub">' + title + '</span>' : '') +
+        (range ? '<span class="lib-meta">' + range + '</span>' : '');
       main.addEventListener('click', () => {
-        closeSheet();
-        goChapter(i);
+        if (volumeKey !== String(state.vol)) {
+          switchVolume(volumeKey);
+          setTimeout(() => goChapter(i), 60);
+        } else {
+          goChapter(i);
+        }
+        hideLibrary();
       });
 
       const check = document.createElement('button');
       check.type = 'button';
-      check.className = 'row-check' + (read ? ' is-on' : '');
+      check.className = 'lib-check' + (read ? ' is-on' : '');
       check.setAttribute('aria-pressed', String(read));
-      check.setAttribute('aria-label', c.label + ' okundu');
+      check.setAttribute('aria-label', label + ' okundu');
       check.textContent = '✓';
       check.addEventListener('click', () => {
-        const next = !isRead(String(state.vol), i);
-        setRead(String(state.vol), i, next);
+        const next = !isRead(volumeKey, i);
+        setRead(volumeKey, i, next);
         check.classList.toggle('is-on', next);
         check.setAttribute('aria-pressed', String(next));
-        wrap.classList.toggle('is-read', next);
+        row.classList.toggle('is-read', next);
         markTocRead();
       });
 
-      wrap.append(main, check);
-      body.appendChild(wrap);
+      row.append(main, check);
+      libList.appendChild(row);
     });
   }
 
-  $('volBtn').addEventListener('click', () => openSheet('vol'));
-  $('chBtn').addEventListener('click', () => openSheet('ch'));
-  $('sheetClose').addEventListener('click', closeSheet);
+  $('volBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('vol');
+  });
+  $('chBtn').addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('ch', String(state.vol));
+  });
+  $('libBack').addEventListener('click', () => showLibrary('vol'));
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+    if (e.key === 'Escape' && libOpen) {
+      if (libKind === 'ch') showLibrary('vol');
+      else hideLibrary();
+    }
   });
   $('markAllBtn').addEventListener('click', () => {
-    chapters().forEach((c, i) => {
-      if (!c.pending) setRead(String(state.vol), i, true);
-    });
-    buildSheet();
+    if (libVol === String(state.vol)) {
+      chapters().forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    } else {
+      (window.ALYA_BUNDLE?.vols?.[libVol]?.chapters || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    }
+    buildList(libVol);
     markTocRead();
   });
   $('clearAllBtn').addEventListener('click', () => {
-    LS.set('read:' + state.vol, []);
-    buildSheet();
+    LS.set('read:' + libVol, []);
+    buildList(libVol);
     markTocRead();
   });
 
@@ -832,16 +871,19 @@
     $('modePage').classList.toggle('is-on', state.mode === 'page');
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
-  $('modeText').addEventListener('click', () => {
-    state.mode = 'text';
+  function switchMode(mode) {
+    if (state.mode === mode) return;
+    state.mode = mode;
     syncModeButtons();
     render();
-  });
-  $('modePage').addEventListener('click', () => {
-    state.mode = 'page';
-    syncModeButtons();
-    render();
-  });
+    const readerEl = $('reader');
+    readerEl.classList.remove('is-switching');
+    void readerEl.offsetWidth;
+    readerEl.classList.add('is-switching');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  $('modeText').addEventListener('click', () => switchMode('text'));
+  $('modePage').addEventListener('click', () => switchMode('page'));
 
   function toggleToc() {} // sade arayüzde ayrı panel yok (bölüm seçici <select>)
 

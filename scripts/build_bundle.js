@@ -12,15 +12,25 @@ const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 
 function loadExistingArtBundle() {
-  if (!fs.existsSync(ART_OUT)) return {};
-  try {
-    const code = fs.readFileSync(ART_OUT, 'utf8');
-    const sandbox = { window: {} };
-    vm.runInNewContext(code, sandbox, { timeout: 2000 });
-    return sandbox.window.ALYA_ART || {};
-  } catch {
-    return {};
+  const out = {};
+  if (fs.existsSync(ART_OUT)) {
+    try {
+      const code = fs.readFileSync(ART_OUT, 'utf8');
+      const sandbox = { window: {} };
+      vm.runInNewContext(code, sandbox, { timeout: 2000 });
+      Object.assign(out, sandbox.window.ALYA_ART || {});
+    } catch {}
   }
+  for (const k of ['4', '4.5']) {
+    if (out[k] && Object.keys(out[k]).length) continue;
+    const chunkPath = path.join(ROOT, 'public', 'books', `art-${k}.json`);
+    if (fs.existsSync(chunkPath)) {
+      try {
+        out[k] = JSON.parse(fs.readFileSync(chunkPath, 'utf8'));
+      } catch {}
+    }
+  }
+  return out;
 }
 
 const existingArt = loadExistingArtBundle();

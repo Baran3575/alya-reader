@@ -9,7 +9,7 @@ const { VOLUME_KEYS, VOLUMES, resolveVolume, parseVolumeArg } = require('../scri
 const { isSkippedSourceUrl, normalizeFlipBookUrl, parseSearchConfigJs } = require('../scripts/ingest/adapters/fliphtml5');
 const { solveAnubisHash, parseAnubisChallenge } = require('../scripts/ingest/lib/anubis');
 const { isTranslationInProgress, parseChapterHeadingMeta } = require('../scripts/ingest/adapters/secreftls12');
-const { cleanOcrText } = require('../scripts/ingest/adapters/glucosetl95');
+const { cleanOcrText, mergeCrossPageParagraphs } = require('../scripts/ingest/adapters/glucosetl95');
 const { polish, balanceCurlyQuotes } = require('../scripts/merge');
 const { notes, naturalize } = require('../scripts/naturalize');
 const { normalizeWhisperBraces, refineLiteraryTurkish } = require('../scripts/translate_llm');
@@ -70,7 +70,17 @@ function testAnubisSolverAndOcrCleanup() {
   assert.strictEqual(cleaned[0], '“Right…?”');
   assert.strictEqual(cleaned[1], '“No, I don’t think I am wrong.”');
   assert.strictEqual(cleaned.length, 2, 'Standalone page numbers must be stripped');
-  console.log('   ✓ Anubis PoW solver and OCR cleanup verified');
+
+  const stitchedBlocks = mergeCrossPageParagraphs(
+    [
+      { isIllustration: false, paragraphs: ['“Wait, isn’t that cat'] },
+      { isIllustration: false, paragraphs: ['looking right at us?”', 'Masachika nodded slowly.'] },
+    ],
+    "Right, Let's Go to a Cat Café"
+  );
+  assert.strictEqual(stitchedBlocks.length, 2);
+  assert.strictEqual(stitchedBlocks[0].text, '“Wait, isn’t that cat looking right at us?”');
+  console.log('   ✓ Anubis PoW solver, OCR cleanup, and paginate.js ingestion stitching verified');
 }
 
 function testPostProcessorsAndTranslatorHelpers() {

@@ -12,7 +12,7 @@ const { fetchWithAnubis } = require('../lib/anubis');
 const { listDriveFolder, downloadDriveBuffer } = require('../lib/gdrive');
 const { ensureDir, readCacheJson, writeCacheJson } = require('../lib/cache');
 const { isFullPageIllustration, writeWebp, getImageDimensions } = require('../lib/webp');
-const { paginateSections } = require('../lib/paginate');
+const { paginateSections, shouldStitchAcrossPages, joinCrossPageParagraphs } = require('../lib/paginate');
 
 const execFileAsync = promisify(execFile);
 
@@ -302,16 +302,15 @@ function mergeCrossPageParagraphs(pageBlocks, storyTitle) {
         }
       }
 
-      // Önceki sayfanın son paragrafı cümle ortasında kesildiyse birleştir
+      // Önceki sayfanın son paragrafı cümle/tırnak/parantez ortasında kesildiyse ortak dikiş yardımcısıyla birleştir
       const prevItem = allParas[allParas.length - 1];
       if (
         i === 0 &&
         prevItem &&
         prevItem.type === 'para' &&
-        !/[.!?"”’…)~—]$/.test(prevItem.text) &&
-        /^[a-z0-9,;:]/.test(p)
+        shouldStitchAcrossPages(prevItem.text, p)
       ) {
-        prevItem.text = `${prevItem.text} ${p}`.replace(/\s+/g, ' ').trim();
+        prevItem.text = joinCrossPageParagraphs(prevItem.text, p);
       } else {
         allParas.push({ type: 'para', text: p });
       }
@@ -414,5 +413,6 @@ module.exports = {
   DEFAULT_V95_STORIES,
   discoverGlucoseV95Manifest,
   cleanOcrText,
+  mergeCrossPageParagraphs,
   ingestGlucose95,
 };
