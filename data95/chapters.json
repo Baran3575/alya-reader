@@ -1,0 +1,125 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "8": "Peki, Hadi Kedi Kafeye Gidelim",
+    "31": "Tamam hadi havuza gidelim",
+    "79": "Yeterli Değilse Kendimi Daha Sarılabilir Hale Getireceğim",
+    "87": "Animasyon Mağazası Memuru Normie Otaku Olmanın Hayalini Kuruyor",
+    "96": "Alya’nın İlk Kelime Sahtekarlığı Oyunu",
+    "101": "Bir Adamın Rüyası",
+    "109": "Hizmetçi Her Şeyi Gördü",
+    "117": "Donna Yarışmayı Buldozerle Geçiyor",
+    "123": "Tavşan Paniği!",
+    "133": "Dostça (?) Uyumluluk Okuma Üçlü",
+    "141": "Sensei~, Başkan ve Başkan Yardımcısı Her Fırsatta Rom-Com’daymış gibi Davranmaya Devam Ediyorlar~!",
+    "147": "Burası Vücut Geliştirme Kulübü mü, Yoksa Başka Bir Şey mi?",
+    "154": "Not: Masachika Değerlendirme Hakkında İyi Değildir",
+    "160": "Görünüşe göre Yuki-chan ve Ayano-chan Çocuksu Masumiyetlerine Dönmüşler",
+    "166": "Sensei~, Başkan ve Başkan Yardımcısı Yaralı Birinin Önünde Bile Romantik Komedideymiş Gibi Davranmaya Devam Ediyorlar~!",
+    "173": "Kulüp Faaliyetleri Kabile Amaçlı Değildir"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Kısa Hikâye 1",
+      "title": "Peki, Hadi Kedi Kafeye Gidelim",
+      "enTitle": "Right, Let's Go to a Cat Café",
+      "startPage": 8
+    },
+    {
+      "label": "Kısa Hikâye 2",
+      "title": "Tamam hadi havuza gidelim",
+      "enTitle": "Right, Let's Go to the Pool",
+      "startPage": 31
+    },
+    {
+      "label": "Kısa Hikâye 3",
+      "title": "Yeterli Değilse Kendimi Daha Sarılabilir Hale Getireceğim",
+      "enTitle": "I'll Make Myself More Huggable If It Ain't Enough",
+      "startPage": 79
+    },
+    {
+      "label": "Kısa Hikâye 4",
+      "title": "Animasyon Mağazası Memuru Normie Otaku Olmanın Hayalini Kuruyor",
+      "enTitle": "Animate Store Clerk Dreams of Being a Normie Otaku",
+      "startPage": 87
+    },
+    {
+      "label": "Kısa Hikâye 5",
+      "title": "Alya’nın İlk Kelime Sahtekarlığı Oyunu",
+      "enTitle": "Alya's First Word Imposter Game",
+      "startPage": 96
+    },
+    {
+      "label": "Kısa Hikâye 6",
+      "title": "Bir Adamın Rüyası",
+      "enTitle": "A Man's Dream",
+      "startPage": 101
+    },
+    {
+      "label": "Kısa Hikâye 7",
+      "title": "Hizmetçi Her Şeyi Gördü",
+      "enTitle": "The Maid's Seen It All",
+      "startPage": 109
+    },
+    {
+      "label": "Kısa Hikâye 8",
+      "title": "Donna Yarışmayı Buldozerle Geçiyor",
+      "enTitle": "The Donna Bulldozes Through the Competition",
+      "startPage": 117
+    },
+    {
+      "label": "Kısa Hikâye 9",
+      "title": "Tavşan Paniği!",
+      "enTitle": "Bunny Panic!!!",
+      "startPage": 123
+    },
+    {
+      "label": "Kısa Hikâye 10",
+      "title": "Dostça (?) Uyumluluk Okuma Üçlü",
+      "enTitle": "A Friendly (?) Compatibility Reading Threesome",
+      "startPage": 133
+    },
+    {
+      "label": "Kısa Hikâye 11",
+      "title": "Sensei~, Başkan ve Başkan Yardımcısı Her Fırsatta Rom-Com’daymış gibi Davranmaya Devam Ediyorlar~!",
+      "enTitle": "Sensei~, Prez and Vice Prez Keep Acting Like They're in Some Rom-Com at Every Opportunity~!",
+      "startPage": 141
+    },
+    {
+      "label": "Kısa Hikâye 12",
+      "title": "Burası Vücut Geliştirme Kulübü mü, Yoksa Başka Bir Şey mi?",
+      "enTitle": "Is This a Bodybuilding Club, or Something?",
+      "startPage": 147
+    },
+    {
+      "label": "Kısa Hikâye 13",
+      "title": "Not: Masachika Değerlendirme Hakkında İyi Değildir",
+      "enTitle": "Note: Masachika Ain't Good at Appraisals",
+      "startPage": 154
+    },
+    {
+      "label": "Kısa Hikâye 14",
+      "title": "Görünüşe göre Yuki-chan ve Ayano-chan Çocuksu Masumiyetlerine Dönmüşler",
+      "enTitle": "Looks Like Yuki-chan and Ayano-chan Have Returned to Their Childish Innocence",
+      "startPage": 160
+    },
+    {
+      "label": "Kısa Hikâye 15",
+      "title": "Sensei~, Başkan ve Başkan Yardımcısı Yaralı Birinin Önünde Bile Romantik Komedideymiş Gibi Davranmaya Devam Ediyorlar~!",
+      "enTitle": "Sensei~, Prez and Vice Prez Keep Acting Like They're in Some Rom-Com Even in Front of Someone Injured~!",
+      "startPage": 166
+    },
+    {
+      "label": "Kısa Hikâye 16",
+      "title": "Kulüp Faaliyetleri Kabile Amaçlı Değildir",
+      "enTitle": "Club Activities Aren't Meant to Be Tribal",
+      "startPage": 173
+    }
+  ]
+}

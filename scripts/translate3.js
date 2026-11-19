@@ -1,14 +1,12 @@
-// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data/bilingual.json
-// Kullanım: node scripts/translate3.js
+// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data<vol>/bilingual.json
+// Kullanım: node scripts/translate3.js [--volume <v>]
 const fs = require('fs');
 const path = require('path');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, 'data/source.json');
-const OUT = path.join(ROOT, 'data/bilingual.json');
-
+const DEEPL_KEY_PATH = path.join(ROOT, '.deepl-key');
 const DEEPL_KEY =
-  process.env.DEEPL_KEY || (fs.existsSync(path.join(ROOT, '.deepl-key')) ? fs.readFileSync(path.join(ROOT, '.deepl-key'), 'utf8').trim() : '');
+  process.env.DEEPL_KEY || (fs.existsSync(DEEPL_KEY_PATH) ? fs.readFileSync(DEEPL_KEY_PATH, 'utf8').trim() : '');
 const G_URL = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=tr';
 const D_URL = 'https://api-free.deepl.com/v2/translate';
 const UA =
@@ -28,7 +26,7 @@ function paragraphs(text) {
     if (cur.length) {
       const prev = cur[cur.length - 1];
       const prevEnds = endPunct.test(prev);
-      const newDialogue = ln.startsWith('"');
+      const newDialogue = ln.startsWith('"') || ln.startsWith('“');
       const shortPrev = prev.length < 48 && prevEnds;
       if (prevEnds && (newDialogue || shortPrev)) {
         blocks.push(cur.join(' '));
@@ -128,7 +126,15 @@ async function deepl(texts) {
   }
 }
 
-async function runTranslate() {
+async function runTranslate(volKey = parseVolumeArg(process.argv.slice(2), '4')) {
+  const volCfg = resolveVolume(volKey);
+  if (!volCfg) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
+  const SRC = volCfg.sourceFile;
+  const OUT = volCfg.bilingualFile;
+
   const pages = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   let done = {};
   if (fs.existsSync(OUT)) {
@@ -148,7 +154,7 @@ async function runTranslate() {
     }
     paras.forEach((t, i) => items.push({ key, i, t, n: paras.length }));
   }
-  console.log('çevrilecek paragraf:', items.length, '| DeepL anahtarı:', DEEPL_KEY ? 'var' : 'yok');
+  console.log(`Cilt ${volCfg.key} | çevrilecek paragraf: ${items.length} | DeepL anahtarı: ${DEEPL_KEY ? 'var' : 'yok'}`);
 
   const SIZE = 20;
   const batches = [];
@@ -195,7 +201,7 @@ async function runTranslate() {
 
     if (b % 4 === 0 || b === batches.length) {
       fs.writeFileSync(OUT, JSON.stringify(done));
-      console.log(`grup ${b}/${batches.length} — ${Object.keys(done).length}/282 sayfa`);
+      console.log(`grup ${b}/${batches.length} — ${Object.keys(done).length}/${pages.length} sayfa`);
     }
     await sleep(200);
   }

@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { paragraphs: splitSourceParagraphs } = require('./translate3');
 const { score, evaluateData } = require('./qc/quality');
-const { hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./qc/verify');
+const { hasUnbalancedDelim, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./qc/verify');
 const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc/qc6_typography');
 const { validatePatches } = require('./patch');
 
@@ -172,16 +172,23 @@ function validateCandidate({ key, vol = '4', enText = '', origTr, candidateTr })
     errors.push(`Kapanmamış kıvrık tırnak (toplam ${curlyCount}).`);
   }
 
-  // 3. Parantez ve süslü parantez (Rusça fısıltı) dengesi
+  // 3. Parantez, süslü parantez (Rusça fısıltı) ve köşeli parantez dengesi + köşe tırnağı / Kiril yasağı
   const openP = (candidateTr.match(/\(/g) || []).length;
   const closeP = (candidateTr.match(/\)/g) || []).length;
   if (openP !== closeP) {
     errors.push(`Dengesiz parantez (${openP} açılış, ${closeP} kapanış).`);
   }
-  const openBrace = (candidateTr.match(/\{/g) || []).length;
-  const closeBrace = (candidateTr.match(/\}/g) || []).length;
-  if (openBrace !== closeBrace) {
-    errors.push(`Dengesiz süslü parantez (${openBrace}/${closeBrace}).`);
+  if (hasUnbalancedDelim(candidateTr, '{', '}')) {
+    errors.push('Dengesiz süslü parantez ({…}) içeriyor.');
+  }
+  if (hasUnbalancedDelim(candidateTr, '[', ']')) {
+    errors.push('Dengesiz köşeli parantez ([…]) içeriyor.');
+  }
+  if (/[『』「」]/.test(candidateTr)) {
+    errors.push('Japonca köşe tırnağı (『』「」) içeriyor.');
+  }
+  if (/\p{Script=Cyrillic}/u.test(candidateTr)) {
+    errors.push('Kiril karakteri içeriyor.');
   }
 
   // 4. Sıfır tolerans kontrolleri (ayrık ek, -yyor, küçük harf başlangıç, İngilizce kalıntı, ÇN)

@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -10,30 +10,28 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./verify');
+const { runVerify, hasUnbalancedDelim, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches, getPatchFilesForVolume } = require('../patch');
 const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc6_typography');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
-const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
-const VOLUMES = {
-  '4': {
-    tr: 'data/paragraphs_final.json',
-    chapters: 'data/chapters.json',
-    label: 'Cilt 4',
-    maxAvgStrict: 0.12,
-    maxFlaggedShareStrict: 0.005,
-  },
-  '4.5': {
-    tr: 'data45/paragraphs_final.json',
-    chapters: 'data45/chapters.json',
-    label: 'Cilt 4.5',
-    maxAvgStrict: 0.12,
-    maxFlaggedShareStrict: 0.005,
-  },
-};
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => [
+    k,
+    {
+      tr: REGISTRY[k].finalRel,
+      chapters: path.relative(ROOT, REGISTRY[k].titlesFile),
+      label: REGISTRY[k].label,
+      maxAvgStrict: REGISTRY[k].maxAvgStrict,
+      ...(REGISTRY[k].maxFlaggedShareStrict !== undefined
+        ? { maxFlaggedShareStrict: REGISTRY[k].maxFlaggedShareStrict }
+        : {}),
+    },
+  ])
+);
 
 // Sayfa bölünmesinden kaynaklanan gerçek tek sayıda tırnak içeren paragraflar
 const KNOWN_PAGE_SPLIT_QUOTES = {
@@ -56,6 +54,10 @@ const ZERO_TOLERANCE = [
   'ters kıvrık tırnak',
   'ayrık tırnak eki',
   'dengesiz parantez',
+  'dengesiz süslü parantez',
+  'dengesiz köşeli parantez',
+  'Japonca köşe tırnağı',
+  'Kiril kalıntısı',
   '-yyor fiil hatası',
   'küçük harfle başlayan cümle',
   'boş paragraf',
@@ -70,7 +72,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = [...VOLUME_KEYS];
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -150,6 +152,31 @@ function findTranslatorNotesDetails(data) {
     arr.forEach((text, i) => {
       if (re.test(text)) {
         matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findUnbalancedDelimDetails(data, open, close) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      if (hasUnbalancedDelim(text, open, close)) {
+        matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findPatternDetails(data, re) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(re);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: m, text: text.slice(0, 100) });
       }
     });
   }
@@ -241,6 +268,10 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('dengesiz süslü parantez')) {
+          details = findUnbalancedDelimDetails(data, '{', '}');
+        } else if (row[2].includes('dengesiz köşeli parantez')) {
+          details = findUnbalancedDelimDetails(data, '[', ']');
         } else if (row[2].includes('dengesiz parantez')) {
           for (const [pg, arr] of Object.entries(data)) {
             arr.forEach((t, i) => {
@@ -249,6 +280,10 @@ function main() {
               if (op !== cp) details.push(`s${pg}.${i} (${op}/${cp}): ${t.slice(0, 90)}`);
             });
           }
+        } else if (row[2].includes('Japonca köşe tırnağı')) {
+          details = findPatternDetails(data, /[『』「」]/g);
+        } else if (row[2].includes('Kiril kalıntısı')) {
+          details = findPatternDetails(data, /\p{Script=Cyrillic}+/gu);
         } else if (row[2].includes('ayrık tırnak eki')) {
           for (const [pg, arr] of Object.entries(data)) {
             arr.forEach((t, i) => {
@@ -296,10 +331,24 @@ function main() {
       if (fs.existsSync(chPath)) {
         try {
           const chObj = JSON.parse(fs.readFileSync(chPath, 'utf8'));
+          const tocEntries = [];
+          if (Array.isArray(chObj.chapters)) {
+            for (const c of chObj.chapters) {
+              if (c && typeof c.title === 'string') tocEntries.push([c.label || 'Bölüm', c.title]);
+            }
+          } else if (chObj.titles && typeof chObj.titles === 'object') {
+            for (const [ck, cv] of Object.entries(chObj.titles)) {
+              if (typeof cv === 'string') tocEntries.push([ck, cv]);
+            }
+          } else {
+            for (const [ck, cv] of Object.entries(chObj)) {
+              if (typeof cv === 'string') tocEntries.push([ck, cv]);
+            }
+          }
           const tocCalques = [];
-          for (const [ck, cv] of Object.entries(chObj)) {
+          for (const [ck, cv] of tocEntries) {
             const sc = score(0, 0, `${ck}: ${cv}`);
-            if (sc.score >= 3 || /(?<!\p{L})(?:ben|sen|o|biz|siz|onlar|benim|senin|onun|bizim|sizin|onların)\s+tarafından(?!\p{L})/giu.test(String(cv))) {
+            if (sc.score >= 3 || /(?<!\p{L})(?:ben|sen|o|biz|siz|onlar|benim|senin|onun|bizim|sizin|onların)\s+tarafından(?!\p{L})/giu.test(cv)) {
               tocCalques.push(`${ck}: ${cv}`);
             }
           }
@@ -326,7 +375,7 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (her iki cilt için düz ve sürümlü yama haritaları)
+    // 4. Yama Doğrulama ve Regresyon (düz ve sürümlü yama haritaları)
     const patchFiles = getPatchFilesForVolume(vol);
     for (const patchesFile of patchFiles) {
       if (fs.existsSync(patchesFile)) {
@@ -426,7 +475,6 @@ function main() {
 
   const markdownSummary = generateMarkdownSummary(result, violations, { strict, checkRegression });
 
-  // GitHub Actions Step Summary desteği
   if (process.env.GITHUB_STEP_SUMMARY) {
     try {
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary + '\n\n');
@@ -472,6 +520,10 @@ function main() {
         ['ters kıvrık tırnak', 'ters kıvrık tırnak'],
         ['ayrık tırnak eki', 'ayrık tırnak eki'],
         ['dengesiz parantez', 'dengesiz parantez'],
+        ['dengesiz süslü parantez', 'dengesiz süslü parantez'],
+        ['dengesiz köşeli parantez', 'dengesiz köşeli parantez'],
+        ['Japonca köşe tırnağı', 'Japonca köşe tırnağı'],
+        ['Kiril kalıntısı', 'Kiril kalıntısı'],
         ['-yyor fiil hatası', '-yyor fiil hatası'],
         ['küçük harf başlangıç', 'küçük harfle başlayan cümle'],
         ['İngilizce kalıntı', 'İngilizce kalıntı'],
@@ -508,9 +560,13 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findUnbalancedDelimDetails,
+  findPatternDetails,
   generateMarkdownSummary,
 };

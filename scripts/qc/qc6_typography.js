@@ -2,7 +2,7 @@
 const { load, save } = require('./lib');
 
 const DETACHED_QUOTE_SUFFIX_RE =
-  /([”’])\s+(?:(nın|nin|nun|nün|ın|in|un|ün|yı|yi|yu|yü|nı|ni|nu|nü|ndan|nden|dan|den|tan|ten|ndaki|ndeki|daki|deki|nda|nde|ta|te|yla|yle|ları|leri|ların|lerin|lara|lere|lardan|lerden|lık|lik|luk|lük|a|e|ı|i|u|ü|na)(?!\p{L})|(ya|ye)(?!\p{L})(?!\s+da(?!\p{L})))/gu;
+  /(?<=[\p{L}\p{N}])([”’])\s+(?:(nın|nin|nun|nün|ın|in|un|ün|yı|yi|yu|yü|nı|ni|nu|nü|ndan|nden|dan|den|tan|ten|ndaki|ndeki|daki|deki|nda|nde|ta|te|yla|yle|ları|leri|ların|lerin|lara|lere|lardan|lerden|lık|lik|luk|lük|a|e|ı|i|u|ü|na)(?!\p{L})|(ya|ye)(?!\p{L})(?!\s+da(?!\p{L})))/gu;
 
 function reattachQuoteSuffixes(text) {
   return text.replace(DETACHED_QUOTE_SUFFIX_RE, (m, q, s1, s2) => q + (s1 || s2));
@@ -11,8 +11,16 @@ function reattachQuoteSuffixes(text) {
 function orientCurlyQuotes(text) {
   let t = text;
 
-  // 1) Japonca köşeli tırnak sonundaki kaçak çift tırnağı düzelt: 「... “ -> 「...」
+  // 1) Japonca köşe tırnaklarını (yarım kalmış «「... “» dahil) dışta “...”, iç alıntıda ‘...’ olacak biçimde dönüştür
   t = t.replace(/「([^「」\n]*?)\s*[“”"]/gu, '「$1」');
+  t = t.replace(/『([^『』\n]*?)\s*[“”"]/gu, '『$1』');
+  t = t.replace(/[「『]([^「」『』\n]*?)[」』]/gu, (m, body, offset, full) => {
+    const prefix = full.slice(0, offset);
+    const dqCount = (prefix.match(/[“”"]/g) || []).length;
+    const trimmed = body.trim();
+    return dqCount % 2 === 1 ? `‘${trimmed}’` : `“${trimmed}”`;
+  });
+  t = t.replace(/[「『]/gu, '‘').replace(/[」』]/gu, '’');
 
   // 2) İki cümle arasında bitişmiş kapanış+açılış tırnağını ayır: olurdu.“” Bu -> olurdu.” “Bu
   t = t.replace(/([.!?…])[“”"]{2}\s*(?=[\p{L}\p{N}])/gu, '$1” “');
@@ -20,6 +28,7 @@ function orientCurlyQuotes(text) {
   // 3) Koro/çoklu tırnak yığınlarını tek temiz çift tırnağa indirge: “”“ Affedersiniz.”” -> “Affedersiniz.”
   t = t.replace(/^(?:[“”"\u201e]\s*){2,}([^“”"\u201e\n]+?)(?:\s*[“”"\u201e]){2,}$/gu, (m, body) => '“' + body.trim() + '”');
   t = t.replace(/(^|\s)(?:[“”"\u201e]\s*){2,}([^“”"\u201e\n]+?)(?:\s*[“”"\u201e]){2,}(?=$|\s|[.,!?;:])/gu, (m, pre, body) => pre + '“' + body.trim() + '”');
+  t = t.replace(/“{2,}/gu, '“').replace(/”{2,}/gu, '”');
 
   // 4) Tek tırnak / kesme işareti bağlamsal yönlendirme
   const chars = [...t];

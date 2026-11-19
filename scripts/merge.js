@@ -1,12 +1,11 @@
 // DeepL + Google çevirilerini birleştirir, terim/isim sözlüğü ve noktalama düzeltmesi yapar.
-// Çıktı: data/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
+// Çıktı: data<vol>/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
+// Kullanım: node scripts/merge.js [--volume <v>]
 const fs = require('fs');
 const path = require('path');
 const { orientCurlyQuotes } = require('./qc/qc6_typography');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
-const IN = path.join(ROOT, 'data/bilingual.json');
-const OUT = path.join(ROOT, 'data/paragraphs_final.json');
 const GLOSSARY_FILE = path.join(ROOT, 'data/glossary.json');
 
 const EN_LEFTOVER = /\b(the|and|you|your|was|were|with|that|this|have|has|she|her|his|they|their|from|what|would|could|just|because|about|there|then|when|which|into|been|being|are|but|for|him|how|does|did|of|on|to|so|if|we|my|me|or|an)\b/gi;
@@ -36,18 +35,52 @@ const DEFAULT_GLOSSARY = {
 function loadGlossary() {
   if (fs.existsSync(GLOSSARY_FILE)) {
     try {
-      return { ...DEFAULT_GLOSSARY, ...JSON.parse(fs.readFileSync(GLOSSARY_FILE, 'utf8')) };
+      const raw = JSON.parse(fs.readFileSync(GLOSSARY_FILE, 'utf8'));
+      const clean = {};
+      for (const [k, v] of Object.entries(raw)) {
+        if (!k.startsWith('_') && typeof v === 'string') clean[k] = v;
+      }
+      return { ...DEFAULT_GLOSSARY, ...clean };
     } catch {}
   }
   return DEFAULT_GLOSSARY;
 }
 
-function polish(text, glossary) {
-  let t = text;
+function balanceCurlyQuotes(text) {
+  let t = String(text || '')
+    .replace(/['\u2018\u02bc`]/g, '\u2019')
+    .replace(/[\u201e\u00ab]/g, '\u201c')
+    .replace(/\u00bb/g, '\u201d');
+
+  const hasStraightDouble = t.includes('"');
+  const openCount = (t.match(/\u201c/g) || []).length;
+  const closeCount = (t.match(/\u201d/g) || []).length;
+
+  if (!hasStraightDouble && openCount === closeCount) {
+    return t;
+  }
+
+  // Sıralı çiftleme: tüm çift tırnakları (“ ” ") dengeli açılış/kapanış çiftlerine dönüştür
+  let open = true;
+  t = t.replace(/["\u201c\u201d]/g, () => {
+    const ch = open ? '\u201c' : '\u201d';
+    open = !open;
+    return ch;
+  });
+
+  // Tek sayıda çift tırnak kaldıysa paragraf sonunda kapat
+  if (!open) {
+    t = t.trimEnd() + '\u201d';
+  }
+  return t;
+}
+
+function polish(text, glossary = loadGlossary()) {
+  let t = String(text || '');
 
   // 1) isim / terim tutarlılığı (kelime sınırlarıyla)
   for (const [from, to] of Object.entries(glossary)) {
-    if (from === to) continue;
+    if (from === to || from.startsWith('_')) continue;
     const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
     t = t.replace(re, to);
   }
@@ -58,16 +91,21 @@ function polish(text, glossary) {
     if (t) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   }
 
-  // 3) noktalama / boşluk düzeltmeleri ve bağlamsal kıvrık tırnak yönlendirme
+  // 3) noktalama / boşluk, Rusça fısıltı ayracı {...} ve bağlamsal kıvrık tırnak düzeltmeleri
   t = t
+    .replace(/\{\s+/g, '{')
+    .replace(/\s+\}/g, '}')
+    .replace(/(?<=[\p{L}\p{N},.;:!?…”])\{/gu, ' {')
+    .replace(/\}(?=[\p{L}\p{N}“])/gu, '} ')
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')
-    .replace(/…\./g, '…')
+    .replace(/\.{2,}/g, '…')
+    .replace(/…\.+/g, '…')
+    .replace(/([!?])\.+/g, '$1')
     .replace(/\u2013/g, '—')
     .replace(/\b(\d+)\.\s*Bölüm\b/g, 'Bölüm $1')
     .replace(/\b(\d+)\.\s*Kısım\b/g, 'Kısım $1')
-    .replace(/\.{4,}/g, '…')
     .replace(/\s+—\s+/g, ' — ')
     .replace(/\(\s+/g, '(')
     .replace(/\s+\)/g, ')')
@@ -76,17 +114,6 @@ function polish(text, glossary) {
   t = orientCurlyQuotes(t);
   return t.trim();
 }
-
-function score(text) {
-  if (!text) return -1;
-  const leftovers = (text.match(EN_LEFTOVER) || []).length;
-  const words = text.split(/\s+/).length;
-  return -leftovers / Math.max(words, 1);
-}
-
-// Cümle sonu var mı (kesilmiş metin tespiti için)
-const ENDS = /[.!?"”…~)\]»]$/;
-const endsOk = (t) => ENDS.test((t || '').trim());
 
 // DeepL varsayılan; Google yalnızca DeepL belirgin şekilde kırpılmışsa/bozuksa devreye girer
 function preferGoogle(d, g) {
@@ -99,7 +126,14 @@ function preferGoogle(d, g) {
 }
 
 if (require.main === module) {
-  const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
+  const volKey = parseVolumeArg(process.argv.slice(2), '4');
+  const volCfg = resolveVolume(volKey);
+  if (!volCfg) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
+
+  const data = JSON.parse(fs.readFileSync(volCfg.bilingualFile, 'utf8'));
   const glossary = loadGlossary();
   const out = {};
   let pickedD = 0;
@@ -119,9 +153,14 @@ if (require.main === module) {
     });
   }
 
-  fs.writeFileSync(OUT, JSON.stringify(out));
+  fs.writeFileSync(volCfg.finalFile, JSON.stringify(out));
   const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-  console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya: data/paragraphs_final.json');
+  console.log(`Cilt ${volCfg.key} | paragraf: ${total} | DeepL: ${pickedD} | Google: ${pickedG} | dosya: ${volCfg.finalRel}`);
 }
 
-module.exports = { polish, loadGlossary, preferGoogle };
+module.exports = {
+  polish,
+  balanceCurlyQuotes,
+  loadGlossary,
+  preferGoogle,
+};
