@@ -2,6 +2,7 @@
 // Çıktı: data/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
 const fs = require('fs');
 const path = require('path');
+const { orientCurlyQuotes } = require('../scripts/qc/qc6_typography');
 
 const ROOT = path.join(__dirname, '..');
 const IN = path.join(ROOT, 'data45/bilingual.json');
@@ -47,7 +48,7 @@ function polish(text, glossary) {
   // 1) isim / terim tutarlılığı (kelime sınırlarıyla)
   for (const [from, to] of Object.entries(glossary)) {
     if (from === to) continue;
-    const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
+    const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
     t = t.replace(re, to);
   }
 
@@ -57,14 +58,12 @@ function polish(text, glossary) {
     if (t) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   }
 
-  // 3) noktalama / boşluk düzeltmeleri
+  // 3) noktalama / boşluk düzeltmeleri ve bağlamsal kıvrık tırnak yönlendirme
   t = t
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')
     .replace(/…\./g, '…')
-    .replace(/\u2019/g, "'")
-    .replace(/[\u201c\u201d\u201e]/g, '"')
     .replace(/\u2013/g, '—')
     .replace(/\b(\d+)\.\s*Bölüm\b/g, 'Bölüm $1')
     .replace(/\b(\d+)\.\s*Kısım\b/g, 'Kısım $1')
@@ -74,6 +73,7 @@ function polish(text, glossary) {
     .replace(/\s+\)/g, ')')
     .trim();
 
+  t = orientCurlyQuotes(t);
   return t.trim();
 }
 

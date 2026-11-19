@@ -10,29 +10,39 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify } = require('./verify');
+const { runVerify, hasInvertedCurlyQuotes, countLowercaseStarts, loadGlossaryTypos } = require('./verify');
 const { evaluateData, score } = require('./quality');
-const { validatePatches } = require('../patch');
+const { validatePatches, getPatchFilesForVolume } = require('../patch');
+const { DETACHED_QUOTE_SUFFIX_RE } = require('./qc6_typography');
 
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
 const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '4': {
+    tr: 'data/paragraphs_final.json',
+    chapters: 'data/chapters.json',
+    label: 'Cilt 4',
+    maxAvgStrict: 0.12,
+    maxFlaggedShareStrict: 0.005,
+  },
+  '4.5': {
+    tr: 'data45/paragraphs_final.json',
+    chapters: 'data45/chapters.json',
+    label: 'Cilt 4.5',
+    maxAvgStrict: 0.12,
+    maxFlaggedShareStrict: 0.005,
+  },
 };
 
-// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
+// Sayfa bölünmesinden kaynaklanan gerçek tek sayıda tırnak içeren paragraflar
 const KNOWN_PAGE_SPLIT_QUOTES = {
   '4': new Set([
-    '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
-    '173.4', '175.14', '190.13', '196.13', '197.7', '217.8', '233.6', '234.6',
-    '235.1', '254.14',
+    '31.1', '36.0', '54.13', '55.14', '115.14', '172.9',
+    '175.14', '190.13', '196.13', '217.8', '254.14',
   ]),
   '4.5': new Set([
-    '12.2', '25.7', '32.5', '33.2', '47.3', '50.3', '67.4', '122.0',
-    '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
-    '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
+    '25.7', '197.4',
   ]),
 };
 
@@ -41,7 +51,13 @@ const ZERO_TOLERANCE = [
   'noktalama öncesi boşluk',
   '"?." kalıbı',
   'bitişik/imla hatası',
+  'sözlük/özel ad hatası',
   'düz tırnak',
+  'ters kıvrık tırnak',
+  'ayrık tırnak eki',
+  'dengesiz parantez',
+  '-yyor fiil hatası',
+  'küçük harfle başlayan cümle',
   'boş paragraf',
   'İngilizce kalıntı',
   'çevirmen notu',
@@ -225,8 +241,78 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('dengesiz parantez')) {
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              const op = (t.match(/\(/g) || []).length;
+              const cp = (t.match(/\)/g) || []).length;
+              if (op !== cp) details.push(`s${pg}.${i} (${op}/${cp}): ${t.slice(0, 90)}`);
+            });
+          }
+        } else if (row[2].includes('ayrık tırnak eki')) {
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              const m = t.match(DETACHED_QUOTE_SUFFIX_RE);
+              if (m) details.push(`s${pg}.${i}: ${m.join(', ')}`);
+            });
+          }
+        } else if (row[2].includes('-yyor')) {
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              const m = t.match(/\S*yyor\S*/giu);
+              if (m) details.push(`s${pg}.${i}: ${m.join(', ')}`);
+            });
+          }
+        } else if (row[2].includes('küçük harfle başlayan cümle')) {
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              if (countLowercaseStarts(t) > 0) details.push(`s${pg}.${i}: ${t.slice(0, 90)}`);
+            });
+          }
+        } else if (row[2].includes('ters kıvrık tırnak')) {
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              if (hasInvertedCurlyQuotes(t)) details.push(`s${pg}.${i}: ${t.slice(0, 90)}`);
+            });
+          }
+        } else if (row[2].includes('sözlük/özel ad hatası')) {
+          const gTypos = loadGlossaryTypos();
+          for (const [pg, arr] of Object.entries(data)) {
+            arr.forEach((t, i) => {
+              for (const g of gTypos) {
+                const m = t.match(g.re);
+                if (m) details.push(`s${pg}.${i}: ${g.from} -> ${g.to}`);
+              }
+            });
+          }
         }
         hardFails.push({ label: row[2], value: row[1], details });
+      }
+    }
+
+    // 2b. Bölüm başlıkları (TOC) çeviri kalıbı denetimi
+    if (cfg.chapters) {
+      const chPath = path.resolve(ROOT, cfg.chapters);
+      if (fs.existsSync(chPath)) {
+        try {
+          const chObj = JSON.parse(fs.readFileSync(chPath, 'utf8'));
+          const tocCalques = [];
+          for (const [ck, cv] of Object.entries(chObj)) {
+            const sc = score(0, 0, `${ck}: ${cv}`);
+            if (sc.score >= 3 || /(?<!\p{L})(?:ben|sen|o|biz|siz|onlar|benim|senin|onun|bizim|sizin|onların)\s+tarafından(?!\p{L})/giu.test(String(cv))) {
+              tocCalques.push(`${ck}: ${cv}`);
+            }
+          }
+          if (tocCalques.length > 0) {
+            hardFails.push({
+              label: 'bölüm başlığı çeviri kalıbı (TOC)',
+              value: tocCalques.length,
+              details: tocCalques,
+            });
+          }
+        } catch (e) {
+          hardFails.push({ label: 'chapters.json hatası', value: e.message });
+        }
       }
     }
 
@@ -240,16 +326,16 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
-    if (vol === '4') {
-      const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
+    // 4. Yama Doğrulama ve Regresyon (her iki cilt için düz ve sürümlü yama haritaları)
+    const patchFiles = getPatchFilesForVolume(vol);
+    for (const patchesFile of patchFiles) {
       if (fs.existsSync(patchesFile)) {
         try {
           const patches = JSON.parse(fs.readFileSync(patchesFile, 'utf8'));
           const patchRes = validatePatches(patches, data, { dryRun: true });
           if (!patchRes.ok) {
             hardFails.push({
-              label: 'geçersiz yama formatı / regresyonu',
+              label: `geçersiz yama formatı / regresyonu (${path.relative(ROOT, patchesFile)})`,
               value: patchRes.errors.length,
               details: patchRes.errors,
             });
@@ -261,13 +347,20 @@ function main() {
     }
 
     // 5. Kalite Puanı Eşik ve Regresyon Kapısı
+    const flaggedShare = q.total > 0 ? q.flagged / q.total : 0;
     if (strict) {
-      // Strict Mod Gating (Requirement 3: average score below 0.20 for Vol 4)
       if (cfg.maxAvgStrict !== undefined && q.avg > cfg.maxAvgStrict) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
           value: q.avg,
           baseline: cfg.maxAvgStrict,
+        });
+      }
+      if (cfg.maxFlaggedShareStrict !== undefined && flaggedShare > cfg.maxFlaggedShareStrict) {
+        hardFails.push({
+          label: 'yüksek kusur oranı 3+ puan (strict limit aşıldı)',
+          value: `${(flaggedShare * 100).toFixed(2)}% (${q.flagged}/${q.total})`,
+          baseline: `<=${(cfg.maxFlaggedShareStrict * 100).toFixed(2)}%`,
         });
       }
       if (base.avg !== undefined && q.avg > base.avg + 0.01) {

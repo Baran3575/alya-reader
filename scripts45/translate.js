@@ -171,13 +171,14 @@ async function deepl(texts) {
     }
 
     let d = new Array(texts.length).fill('');
-    if (!quotaOut && DEEPL_KEY) {
+    if (DEEPL_KEY) {
       try {
         d = await deepl(texts);
       } catch (e) {
-        if (e.fatal || /kota/i.test(e.message)) {
-          quotaOut = true;
-          console.log('!! DeepL kotası doldu, kalanlar Google ile:', e.message);
+        if (e.fatal || /kota|456/i.test(e.message)) {
+          fs.writeFileSync(OUT, JSON.stringify(done));
+          console.error('!! HATA: DeepL kotası doldu (HTTP 456). Yalnızca Google yedek çevirisine düşülmemesi için işlem durduruldu:', e.message);
+          process.exit(1);
         } else {
           d = new Array(texts.length).fill('');
         }

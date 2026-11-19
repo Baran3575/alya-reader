@@ -2,6 +2,7 @@
 // Çıktı: data/paragraphs_final.json  ({ "1": ["paragraf", ...], ... })
 const fs = require('fs');
 const path = require('path');
+const { orientCurlyQuotes } = require('./qc/qc6_typography');
 
 const ROOT = path.join(__dirname, '..');
 const IN = path.join(ROOT, 'data/bilingual.json');
@@ -47,7 +48,7 @@ function polish(text, glossary) {
   // 1) isim / terim tutarlılığı (kelime sınırlarıyla)
   for (const [from, to] of Object.entries(glossary)) {
     if (from === to) continue;
-    const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
+    const re = new RegExp('(?<![\\p{L}\\p{N}])' + from.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&') + '(?![\\p{L}\\p{N}])', 'gu');
     t = t.replace(re, to);
   }
 
@@ -57,14 +58,12 @@ function polish(text, glossary) {
     if (t) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   }
 
-  // 3) noktalama / boşluk düzeltmeleri
+  // 3) noktalama / boşluk düzeltmeleri ve bağlamsal kıvrık tırnak yönlendirme
   t = t
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')
     .replace(/…\./g, '…')
-    .replace(/\u2019/g, "'")
-    .replace(/[\u201c\u201d\u201e]/g, '"')
     .replace(/\u2013/g, '—')
     .replace(/\b(\d+)\.\s*Bölüm\b/g, 'Bölüm $1')
     .replace(/\b(\d+)\.\s*Kısım\b/g, 'Kısım $1')
@@ -74,6 +73,7 @@ function polish(text, glossary) {
     .replace(/\s+\)/g, ')')
     .trim();
 
+  t = orientCurlyQuotes(t);
   return t.trim();
 }
 
@@ -98,26 +98,30 @@ function preferGoogle(d, g) {
   return ld >= 2 && lg === 0;
 }
 
-const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
-const glossary = loadGlossary();
-const out = {};
-let pickedD = 0;
-let pickedG = 0;
+if (require.main === module) {
+  const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
+  const glossary = loadGlossary();
+  const out = {};
+  let pickedD = 0;
+  let pickedG = 0;
 
-for (const [page, paras] of Object.entries(data)) {
-  if (!Array.isArray(paras)) continue;
-  out[page] = paras.map((p) => {
-    const d = (p && p.d) || '';
-    const g = (p && p.g) || '';
-    let chosen = d;
-    if (!d) chosen = g;
-    else if (g && preferGoogle(d, g)) chosen = g;
-    if (chosen === d && d) pickedD++;
-    else if (chosen === g && g) pickedG++;
-    return polish(chosen, glossary);
-  });
+  for (const [page, paras] of Object.entries(data)) {
+    if (!Array.isArray(paras)) continue;
+    out[page] = paras.map((p) => {
+      const d = (p && p.d) || '';
+      const g = (p && p.g) || '';
+      let chosen = d;
+      if (!d) chosen = g;
+      else if (g && preferGoogle(d, g)) chosen = g;
+      if (chosen === d && d) pickedD++;
+      else if (chosen === g && g) pickedG++;
+      return polish(chosen, glossary);
+    });
+  }
+
+  fs.writeFileSync(OUT, JSON.stringify(out));
+  const total = Object.values(out).reduce((a, b) => a + b.length, 0);
+  console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya: data/paragraphs_final.json');
 }
 
-fs.writeFileSync(OUT, JSON.stringify(out));
-const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya: data/paragraphs_final.json');
+module.exports = { polish, loadGlossary, preferGoogle };

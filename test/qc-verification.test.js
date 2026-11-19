@@ -189,6 +189,122 @@ function testSchemaValidation() {
   }
 }
 
+function testPostProcessorRepairs() {
+  console.log('Testing post-processor repairs (-yyor, lowercase starts, "O" starts, quotes/suffixes, parens, HTTP 456)...');
+  const { convertFormal } = require('../scripts/qc/qc4_verbs');
+  const { naturalize } = require('../scripts/naturalize');
+  const { processPageStarts } = require('../scripts/qc/qc10_starts');
+  const { orientCurlyQuotes, reattachQuoteSuffixes } = require('../scripts/qc/qc6_typography');
+  const { cleanPunctuation } = require('../scripts/qc/qc1_punctuation');
+  const { isQuotaError } = require('../scripts/translate3');
+
+  // 1. -yyor verb repair & explicit verb ordering
+  assert.strictEqual(convertFormal('Birçok tanık bulunmaktadır.'), 'Birçok tanık bulunuyor.');
+  assert.strictEqual(convertFormal('Hâlâ pişmanlık duymaktadır ve konuşmaktadır.'), 'Hâlâ pişmanlık duyuyor ve konuşuyor.');
+  assert.strictEqual(convertFormal('bulunuyyor ve duyuyyor'), 'bulunuyor ve duyuyor');
+
+  // 2. Keep uppercase letters after stops in naturalize.js
+  const nat = naturalize('“Hadi ama! İstemeden bakışlarım kaydı.” Bunun nedeni neydi? İstemeden dişlerini sıktı.');
+  assert(!/[.!?]\s+[a-zçğıöşü]/u.test(nat), `Expected uppercase after stops, got: ${nat}`);
+
+  // 3. No "O" pronoun injection in qc10_starts.js; repairs legacy O’nin
+  const starts = processPageStarts([
+    'Alisa pencereden dışarı baktı.',
+    'Alisa ardından sessizce iç çekti.',
+    'O’nin sesi titriyordu.',
+  ]);
+  assert.strictEqual(starts.paragraphs[1], 'Alisa ardından sessizce iç çekti.');
+  assert.strictEqual(starts.paragraphs[2], 'Onun sesi titriyordu.');
+
+  // 4. Context-aware curly quotes & detached suffixes (preserving standalone ” ne and ” ya da)
+  assert.strictEqual(
+    orientCurlyQuotes('「Soryaa~! “ “Evet, klişe,” diye geçirdi.'),
+    '「Soryaa~!」 “Evet, klişe,” diye geçirdi.'
+  );
+  assert.strictEqual(
+    orientCurlyQuotes('“”“ Affedersiniz.””'),
+    '“Affedersiniz.”'
+  );
+  assert.strictEqual(
+    reattachQuoteSuffixes('“otaku hobileri” nin anlamı'),
+    '“otaku hobileri”nin anlamı'
+  );
+  assert.strictEqual(
+    reattachQuoteSuffixes('onun “ciddiyetinin” ne anlama geldiğini ve “olmaz” ya da “olur” dedi'),
+    'onun “ciddiyetinin” ne anlama geldiğini ve “olmaz” ya da “olur” dedi'
+  );
+
+  // 5. Unbalanced-parenthesis lines are still cleaned by qc1_punctuation.js
+  const cleanedUnbal = cleanPunctuation('(Bu iç monologda çift nokta.. var , değil mi?');
+  assert(!cleanedUnbal.includes('..') && !cleanedUnbal.includes(' ,'), `Punctuation should still clean unbalanced parens: ${cleanedUnbal}`);
+
+  // 6. DeepL HTTP 456 detection
+  assert.strictEqual(isQuotaError(new Error('DeepL HTTP 456: Quota exceeded')), true);
+  assert.strictEqual(isQuotaError(new Error('DeepL HTTP 500')), false);
+
+  console.log('  ✓ Post-processor repairs verified');
+}
+
+function testCalqueScoringAndStrictZeroToleranceGates() {
+  console.log('Testing calque scoring, glossary typos, unbalanced parens, detached suffixes, lowercase starts, and -yyor gates...');
+  const { score } = require('../scripts/qc/quality');
+  const { validateCandidate } = require('../scripts/rewrite_cohorts');
+
+  // Pronoun "tarafından" passive calque, "Bunun"/"Ancak" clusters, TOC calque
+  const sTaraf = score('1', 0, 'Masachika onun tarafından çağrıldı.');
+  assert(sTaraf.score >= 2, 'Pronoun tarafından passive must be penalized');
+
+  const sCluster = score('1', 0, 'Bunun sebebi belliydi. Ancak kimse konuşmadı. Bunun üzerine sustu.');
+  assert(sCluster.score >= 2, 'Bunun/Ancak cluster must be penalized');
+
+  const sToc = score('1', 0, 'Ben senin tarafından bir zorba olarak adlandırılmak istemiyorum');
+  assert(sToc.score >= 2, 'TOC passive calque must be penalized');
+
+  // Candidate guardrail checks (negation, numbers, parens, glossary)
+  const badNeg = validateCandidate({
+    vol: '4',
+    key: '14.0',
+    enText: 'She smiled warmly at her older brother across the bright room.',
+    origTr: 'Aydınlık odanın karşısından ağabeyine sıcak bir tebessümle gülümsedi.',
+    candidateTr: 'Aydınlık odanın karşısından ağabeyine hiç gülümsemedi.',
+  });
+  assert.strictEqual(badNeg.ok, false, 'Negation flip must be rejected');
+
+  const badNum = validateCandidate({
+    vol: '4',
+    key: '14.0',
+    enText: '3 girls stood quietly in front of the school gate.',
+    origTr: 'Okul kapısının önünde 3 kız sessizce duruyordu.',
+    candidateTr: 'Okul kapısının önünde beş kız sessizce duruyordu.',
+  });
+  assert.strictEqual(badNum.ok, false, 'Number mismatch must be rejected');
+
+  // Strict CLI zero-tolerance checks for -yyor, lowercase starts, detached suffixes, unbalanced parens, glossary typos
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  const cases = [
+    { label: '-yyor verb', patch: ' Orada bulunuyyor.', expectText: '-yyor' },
+    { label: 'lowercase start', patch: '. ancak kimse gelmedi.', expectText: 'küçük harfle başlayan cümle' },
+    { label: 'detached suffix', patch: ' “otaku” nin sesi duyuldu.', expectText: 'ayrık tırnak eki' },
+    { label: 'unbalanced parenthesis', patch: ' (Bu parantez kapanmadı.', expectText: 'dengesiz parantez' },
+    { label: 'glossary typo', patch: ' Merhaba Kuzye-kun dedi.', expectText: 'sözlük/özel ad hatası' },
+  ];
+
+  for (const c of cases) {
+    try {
+      const data = JSON.parse(orig);
+      data['14'][0] += c.patch;
+      fs.writeFileSync(v4Path, JSON.stringify(data));
+      const res = runCLI(['--volume', '4', '--strict'], false);
+      assert.strictEqual(res.code, 1, `${c.label} should fail strict CLI`);
+      assert(res.out.includes(c.expectText), `Diagnostics for ${c.label} should include "${c.expectText}", got:\n${res.out}`);
+    } finally {
+      fs.writeFileSync(v4Path, orig);
+    }
+  }
+  console.log('  ✓ Calque scoring, candidate guardrails, and strict zero-tolerance gates verified');
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -199,6 +315,8 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
+  testPostProcessorRepairs();
+  testCalqueScoringAndStrictZeroToleranceGates();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 

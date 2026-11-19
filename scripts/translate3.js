@@ -93,6 +93,10 @@ async function google(texts) {
   }
 }
 
+function isQuotaError(err) {
+  return Boolean(err && (err.fatal || err.status === 456 || /kota|456/i.test(String(err.message || ''))));
+}
+
 async function deepl(texts) {
   for (let a = 0; a < 4; a++) {
     try {
@@ -111,7 +115,7 @@ async function deepl(texts) {
           preserve_formatting: true,
         }),
       });
-      if (r.status === 456) throw Object.assign(new Error('DeepL kotası doldu'), { fatal: true });
+      if (r.status === 456) throw Object.assign(new Error('DeepL kotası doldu (HTTP 456)'), { fatal: true, status: 456 });
       if (!r.ok) throw new Error('DeepL HTTP ' + r.status);
       const data = await r.json();
       const out = data.translations.map((t) => t.text);
@@ -124,7 +128,7 @@ async function deepl(texts) {
   }
 }
 
-(async () => {
+async function runTranslate() {
   const pages = JSON.parse(fs.readFileSync(SRC, 'utf8'));
   let done = {};
   if (fs.existsSync(OUT)) {
@@ -150,11 +154,24 @@ async function deepl(texts) {
   const batches = [];
   for (let i = 0; i < items.length; i += SIZE) batches.push(items.slice(i, i + SIZE));
 
-  let quotaOut = false;
   let b = 0;
   for (const batch of batches) {
     b++;
     const texts = batch.map((x) => x.t);
+
+    let d = new Array(texts.length).fill('');
+    if (DEEPL_KEY) {
+      try {
+        d = await deepl(texts);
+      } catch (e) {
+        if (isQuotaError(e)) {
+          fs.writeFileSync(OUT, JSON.stringify(done));
+          console.error('!! HATA: DeepL kotası doldu (HTTP 456). Yalnızca Google yedek çevirisine düşülmemesi için işlem durduruldu:', e.message);
+          process.exit(1);
+        }
+        d = new Array(texts.length).fill('');
+      }
+    }
 
     let g = [];
     try {
@@ -166,20 +183,6 @@ async function deepl(texts) {
           g.push((await google([t]))[0] || '');
         } catch {
           g.push('');
-        }
-      }
-    }
-
-    let d = new Array(texts.length).fill('');
-    if (!quotaOut && DEEPL_KEY) {
-      try {
-        d = await deepl(texts);
-      } catch (e) {
-        if (e.fatal || /kota/i.test(e.message)) {
-          quotaOut = true;
-          console.log('!! DeepL kotası doldu, kalanlar Google ile:', e.message);
-        } else {
-          d = new Array(texts.length).fill('');
         }
       }
     }
@@ -198,4 +201,10 @@ async function deepl(texts) {
   }
   fs.writeFileSync(OUT, JSON.stringify(done));
   console.log('bitti');
-})();
+}
+
+if (require.main === module) {
+  runTranslate();
+}
+
+module.exports = { paragraphs, isQuotaError, deepl };
