@@ -212,7 +212,10 @@ function testPostProcessorRepairs() {
   // 2b. Cross-page sentence continuations (idx === 0 after unfinished previous page) are allowed
   const { isCrossPageContinuation, countLowercaseStarts } = require('../scripts/qc/verify');
   const contBook = {
-    '18': ['Şüphelendiği için nasıl cevap vereceğini tartıyordu; çünkü Sayaka’yı'],
+    '18': [
+      'Şüphelendiği için nasıl cevap vereceğini tartıyordu; çünkü Sayaka’yı',
+      'ÇN: Sayfa sonuna eklenen çevirmen notu cümle sonu sayılmamalıdır.',
+    ],
     '19': ['yeni öğrenci konseyi başkanlığı seçiminde potansiyel bir rakip olarak görüyordu.'],
     '20': ['küçük harfle başlayan yeni paragraf.'],
   };

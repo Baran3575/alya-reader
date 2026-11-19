@@ -68,7 +68,14 @@ function isCrossPageContinuation(bookData, sortedPages, pageIndex, paraIndex) {
   if (paraIndex !== 0 || pageIndex <= 0) return false;
   const prevArr = bookData[sortedPages[pageIndex - 1]] || [];
   if (!Array.isArray(prevArr) || prevArr.length === 0) return false;
-  const prevLast = String(prevArr[prevArr.length - 1] || '').trim();
+  let prevLast = '';
+  for (let j = prevArr.length - 1; j >= 0; j--) {
+    const s = String(prevArr[j] || '').trim();
+    if (s && !/^ÇN\s*:/u.test(s)) {
+      prevLast = s;
+      break;
+    }
+  }
   if (!prevLast) return false;
   return !/[.!?][”’)\]}]*$/u.test(prevLast);
 }
