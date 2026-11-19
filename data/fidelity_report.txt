@@ -50,4 +50,4 @@ cümle EN 10157 / TR 7243
   s48  eksik: Yuki  fazla: -
   s49  eksik: Yuki  fazla: -
 
-[5] Tırnak (diyalog) dengesi: EN 2102 / TR 2152
+[5] Tırnak (diyalog) dengesi: EN 2102 / TR 2151
