@@ -76,6 +76,9 @@ const LITERARY_RULES = [
   [/(?<!\p{L})yumuşak nasılsa(?!\p{L})/giu, 'yumuşakça'],
   [/(?<!\p{L})kaba bir şekilde(?!\p{L})/giu, 'kabaca'],
   [/(?<!\p{L})zarif bir şekilde(?!\p{L})/giu, 'zarifçe'],
+  [/(?<!\p{L})iyi bir şekilde(?!\p{L})/giu, 'iyice'],
+  [/(?<!\p{L})iyi bir yolunu bulup(?!\p{L})/giu, 'iyice'],
+  [/(?<!\p{L})kötü bir şekilde(?!\p{L})/giu, 'kötü biçimde'],
   [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, 'uygun biçimde'],
   [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, 'hiçbir biçimde'],
   [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü|sız|siz|suz|süz|sal|sel|ik|ük|uk|ak|ek)) bir şekilde(?!\p{L})/gu, '$1 biçimde'],
@@ -86,6 +89,7 @@ const LITERARY_RULES = [
   [/(?<!\p{L})söz konusu(?!\p{L})/giu, (m) => (m[0] === 'S' ? 'Bahsedilen' : 'bahsedilen')],
   [/(?<!\p{L})olmasına rağmen(?!\p{L})/giu, 'olsa da'],
   [/(?<!\p{L})açısından(?!\p{L})/giu, 'bakımından'],
+  [/(?<!\p{L})konusundaki(?!\p{L})/giu, 'hakkındaki'],
   [/(?<!\p{L})konusunda(?!\p{L})/giu, 'hakkında'],
   [/(?<!\p{L})yönelik(?!\p{L})/giu, 'dair'],
   [/(?<!\p{L})(?:adeta|âdeta)(?!\p{L})/giu, (m) => (m[0] === 'A' || m[0] === 'Â' ? 'Resmen' : 'resmen')],
@@ -128,7 +132,7 @@ function splitOverlongSentences(text) {
     }
     // Tırnak içinde konuşma bölünmesin diye yalnızca dengeli tırnaklı yan cümle bağlaçlarında böl
     const splitRe =
-      /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra)\s+/iu;
+      /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|bu arada|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra|hem de)\s+/iu;
     const m = splitRe.exec(s);
     if (m && m.index > 35) {
       const left = s.slice(0, m.index).trim();

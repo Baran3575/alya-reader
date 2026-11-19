@@ -24,6 +24,8 @@ const VOLUMES = {
   '6': { tr: 'data6/paragraphs_final.json', label: 'Cilt 6', maxAvgStrict: 0.20 },
   '7': { tr: 'data7/paragraphs_final.json', label: 'Cilt 7', maxAvgStrict: 0.20 },
   '8': { tr: 'data8/paragraphs_final.json', label: 'Cilt 8', maxAvgStrict: 0.20 },
+  '9': { tr: 'data9/paragraphs_final.json', label: 'Cilt 9', maxAvgStrict: 0.20 },
+  '9.5': { tr: 'data95/paragraphs_final.json', label: 'Cilt 9.5', maxAvgStrict: 0.20 },
 };
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
