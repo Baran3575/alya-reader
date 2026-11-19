@@ -8,6 +8,8 @@
   --muted: #8b857c;
   --line: #2a2825;
   --accent: #c7924a;
+  --fg-strong: #fbf8f4;
+  --thought: #a89f95;
   --reader-size: 1.06rem;
 }
 
@@ -19,6 +21,8 @@ html[data-theme='light'] {
   --muted: #6d6660;
   --line: #e0dbd2;
   --accent: #9a6520;
+  --fg-strong: #0f0e0d;
+  --thought: #5d564e;
 }
 
 * {
@@ -184,13 +188,22 @@ main {
   margin: 0 0 0.95em;
   font-size: var(--reader-size);
   line-height: 1.72;
+  color: var(--fg-soft);
   text-wrap: pretty;
 }
-.reader p.dialog {
-  color: var(--fg-soft);
+/* konuşma: beyaz */
+.reader p.dialog,
+.reader p.dialog-ru {
+  color: var(--fg-strong);
 }
+/* iç düşünce: yumuşak arka planla uyumlu, geri planda */
+.reader p.thought {
+  color: var(--thought);
+}
+/* Rusça replikler: {} korunur, vurgu rengi */
 .reader .ru-dialog {
   color: var(--accent);
+  font-style: italic;
 }
 
 .reader figure.page-img {
@@ -598,5 +611,31 @@ input[type='range']::-moz-range-thumb {
     transform: translateX(-50%);
     border: 1px solid var(--line);
     border-radius: 14px;
+  }
+}
+
+/* ---------- Çeviri/Orijinal geçişi ---------- */
+.seg-btn {
+  transition: background-color 140ms ease, color 140ms ease;
+}
+@keyframes mode-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.reader.is-switching {
+  animation: mode-in 200ms ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reader.is-switching {
+    animation: none;
+  }
+  .seg-btn {
+    transition: none;
   }
 }
