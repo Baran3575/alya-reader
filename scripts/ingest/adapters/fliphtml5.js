@@ -163,7 +163,20 @@ function isCreditsOrTocPage(rawText) {
   const t = String(rawText || '').trim();
   if (!t) return true;
   if (/Table of Contents/i.test(t)) return true;
-  if (/Glucose Translations/i.test(t) && t.length < 700) return true;
+  if (/^(?:About\s+the\s+Translators|Fan\s+Translator['’]?s?\s+Note|References|Translation\s+Notes?)\b/im.test(t)) {
+    return true;
+  }
+  // Çok sayfalı dipnot devam sayfası (Japonca kanji/kana açıklaması + küçük harfle/açıklamayla başlayan sayfa)
+  if (
+    /[\u3040-\u30ff\u4e00-\u9fff]/.test(t) &&
+    /(?:literally\s+mean|kanji|hiragana|katakana|translates\s+to|fan\s+tl|in\s+japanese)/i.test(t) &&
+    !/^[“"‘'A-Z]/.test(t)
+  ) {
+    return true;
+  }
+  if (/Glucose Translations/i.test(t) && t.replace(/Glucose\s+Translations\s*\d*/gi, '').trim().length < 220) {
+    return true;
+  }
   if (/(?:Translated by|Proofread by|Edited by|Cover art by|All rights reserved|KADOKAWA CORPORATION)/i.test(t) && t.length < 900) {
     return true;
   }
@@ -184,14 +197,20 @@ function cleanFlipPageText(rawText) {
   const cleaned = [];
   for (let i = 0; i < lines.length; i++) {
     let ln = lines[i];
-    // Sayfa üst/alt numarası
+    // Sayfa üst/alt numarası veya "Glucose Translations 35" altbilgisi
     if (/^(?:Page\s+)?\d{1,3}$/i.test(ln) && (i === 0 || i === lines.length - 1)) continue;
-    // Sayfa altı dipnot tanımları: [1] ..., * ..., veya 1 or if translated literally...
-    if (/^\[\d+\]\s*:?\s+/.test(ln)) continue;
+    if (/^Glucose\s+Translations(?:\s+\d+)?$/i.test(ln)) continue;
+    ln = ln.replace(/\s*Glucose\s+Translations(?:\s+\d+)?\s*$/i, '').trim();
+    if (!ln) continue;
+
+    // Sayfa altı çok satırlı dipnot bloğu başladığında ([1] ..., References, TN: ...) sayfa sonuna kadar kes
+    if (/^\[\d+\]\s*:?\s+/.test(ln) || /^(?:References|Translation\s+Notes?)$/i.test(ln)) {
+      break;
+    }
     if (/^(?:TN|T\/N|TL\s*Note)\s*:/i.test(ln)) continue;
-    if (/^\*+\s+/.test(ln) && i >= lines.length - 3) continue;
+    if (/^\*+\s+/.test(ln) && i >= lines.length - 3) break;
     if (/^(?:\d+\s+)?(?:or\s+if\s+translated\s+literally|lit\.|literally\s*,|in\s+japanese\s*,)/i.test(ln) && i >= lines.length - 3) {
-      continue;
+      break;
     }
     // Satır içi dipnot imlerini ([1], [2]) temizle
     ln = ln.replace(/\[\d+\]/g, '').replace(/[ \t]{2,}/g, ' ').trim();

@@ -1,19 +1,19 @@
 {
   "titles": {
     "1": "İllüstrasyonlar",
-    "8": "Buna rağmen Yuki hâlâ bir çocuktu",
-    "12": "Ve Her Şey Uyluk Oldu",
-    "32": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
-    "52": "Ve Hepsi Hiçbir Şeye Dönüştü",
+    "9": "Buna rağmen Yuki hâlâ bir çocuktu",
+    "13": "Ve Her Şey Uyluk Oldu",
+    "33": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
+    "53": "Ve Hepsi Hiçbir Şeye Dönüştü",
     "71": "Ve Masachika Bir Karar Verdi",
     "89": "Ve Sonra Kanun Gerçek Oldu",
-    "121": "Ve Alisa Güvenle Taşındı",
-    "152": "Ve suçlu ortaya çıktı",
-    "181": "Ve Böylece Tohumlar Ekildi",
-    "200": "Ve böylece ikisi karşı karşıya geldi",
-    "226": "Böylece Kendim Oldum",
-    "235": "Soğuk Bir Adamın Kalbi",
-    "253": "Sonsöz"
+    "118": "Ve Alisa Güvenle Taşındı",
+    "149": "Ve suçlu ortaya çıktı",
+    "177": "Ve Böylece Tohumlar Ekildi",
+    "196": "Ve böylece ikisi karşı karşıya geldi",
+    "221": "Böylece Kendim Oldum",
+    "228": "Soğuk Bir Adamın Kalbi",
+    "246": "Sonsöz"
   },
   "chapters": [
     {
@@ -26,25 +26,25 @@
       "label": "Prolog",
       "title": "Buna rağmen Yuki hâlâ bir çocuktu",
       "enTitle": "Even So, Yuki Was Still A Child",
-      "startPage": 8
+      "startPage": 9
     },
     {
       "label": "Bölüm 1",
       "title": "Ve Her Şey Uyluk Oldu",
       "enTitle": "And Everything Became Thighs",
-      "startPage": 12
+      "startPage": 13
     },
     {
       "label": "Bölüm 2",
       "title": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
       "enTitle": "And So The Child And His Mother’s Eyes Met",
-      "startPage": 32
+      "startPage": 33
     },
     {
       "label": "Bölüm 3",
       "title": "Ve Hepsi Hiçbir Şeye Dönüştü",
       "enTitle": "And It All Became Nothing",
-      "startPage": 52
+      "startPage": 53
     },
     {
       "label": "Bölüm 4",
@@ -62,43 +62,43 @@
       "label": "Bölüm 6",
       "title": "Ve Alisa Güvenle Taşındı",
       "enTitle": "And Alisa Moved Along Safely",
-      "startPage": 121
+      "startPage": 118
     },
     {
       "label": "Bölüm 7",
       "title": "Ve suçlu ortaya çıktı",
       "enTitle": "And The Culprit Was Exposed",
-      "startPage": 152
+      "startPage": 149
     },
     {
       "label": "Bölüm 8",
       "title": "Ve Böylece Tohumlar Ekildi",
       "enTitle": "And So The Seeds Were Sown",
-      "startPage": 181
+      "startPage": 177
     },
     {
       "label": "Bölüm 9",
       "title": "Ve böylece ikisi karşı karşıya geldi",
       "enTitle": "And So The Two Faced Each Other",
-      "startPage": 200
+      "startPage": 196
     },
     {
       "label": "Epilog",
       "title": "Böylece Kendim Oldum",
       "enTitle": "So I Became Myself",
-      "startPage": 226
+      "startPage": 221
     },
     {
       "label": "Yan Hikâye",
       "title": "Soğuk Bir Adamın Kalbi",
       "enTitle": "The Heart Of A Cold Man",
-      "startPage": 235
+      "startPage": 228
     },
     {
       "label": "Sonsöz",
       "title": "Sonsöz",
       "enTitle": "Afterword",
-      "startPage": 253
+      "startPage": 246
     }
   ]
 }

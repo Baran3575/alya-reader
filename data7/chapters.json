@@ -13,8 +13,8 @@
     "226": "Rastlamak",
     "242": "At Yarışması",
     "259": "Bu",
-    "269": "Çocukluk Arkadaşı Olduğu Zamanlardan",
-    "274": "Sonsöz"
+    "268": "Çocukluk Arkadaşı Olduğu Zamanlardan",
+    "273": "Sonsöz"
   },
   "chapters": [
     {
@@ -99,13 +99,13 @@
       "label": "Yan Hikâye",
       "title": "Çocukluk Arkadaşı Olduğu Zamanlardan",
       "enTitle": "From When She Was Just a Childhood Friend",
-      "startPage": 269
+      "startPage": 268
     },
     {
       "label": "Sonsöz",
       "title": "Sonsöz",
       "enTitle": "Afterword",
-      "startPage": 274
+      "startPage": 273
     }
   ]
 }

@@ -3,14 +3,14 @@
     "1": "İllüstrasyonlar",
     "12": "Küçük Kardeş Modu, Etkinleştir",
     "17": "Ezici Sevimliliğimin Karşısında Titreyin!",
-    "39": "Ayano Havaya Karışıyor",
-    "53": "Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var?",
-    "72": "Alisa’nın Beynini Defalarca Yok Etmek",
-    "105": "Sır Paylaşım Oturumu Başlıyor",
-    "130": "Patronlar Perde Arkasından Ortaya Çıkıyor",
-    "152": "Kötü öğretir",
+    "38": "Ayano Havaya Karışıyor",
+    "52": "Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var?",
+    "71": "Alisa’nın Beynini Defalarca Yok Etmek",
+    "104": "Sır Paylaşım Oturumu Başlıyor",
+    "129": "Patronlar Perde Arkasından Ortaya Çıkıyor",
+    "150": "Kötü öğretir",
     "172": "Meryem Ana, Hizmetçi ve Yarık",
-    "198": "Perde Yükseliyor",
+    "199": "Perde Yükseliyor",
     "218": "Kraliçe",
     "234": "İhanet"
   },
@@ -37,37 +37,37 @@
       "label": "Bölüm 2",
       "title": "Ayano Havaya Karışıyor",
       "enTitle": "Ayano Blends Into the Air",
-      "startPage": 39
+      "startPage": 38
     },
     {
       "label": "Bölüm 3",
       "title": "Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var?",
       "enTitle": "We’re Just Cuddlin’ in Bed and Talking ’Bout Love; Got a Problem With That?",
-      "startPage": 53
+      "startPage": 52
     },
     {
       "label": "Bölüm 4",
       "title": "Alisa’nın Beynini Defalarca Yok Etmek",
       "enTitle": "Destroying Alisa’s Brain Time and Time Again",
-      "startPage": 72
+      "startPage": 71
     },
     {
       "label": "Bölüm 5",
       "title": "Sır Paylaşım Oturumu Başlıyor",
       "enTitle": "The Secret-Sharing Session Begins",
-      "startPage": 105
+      "startPage": 104
     },
     {
       "label": "Bölüm 6",
       "title": "Patronlar Perde Arkasından Ortaya Çıkıyor",
       "enTitle": "The Bosses Emerge from Behind the Scenes",
-      "startPage": 130
+      "startPage": 129
     },
     {
       "label": "Bölüm 7",
       "title": "Kötü öğretir",
       "enTitle": "Evil Teaches",
-      "startPage": 152
+      "startPage": 150
     },
     {
       "label": "Bölüm 8",
@@ -79,7 +79,7 @@
       "label": "Bölüm 9",
       "title": "Perde Yükseliyor",
       "enTitle": "The Curtain Rises",
-      "startPage": 198
+      "startPage": 199
     },
     {
       "label": "Bölüm 10",

@@ -5,15 +5,15 @@
     "12": "İlk Aşk",
     "32": "Yalan",
     "60": "Saflık",
-    "85": "Maruz",
-    "104": "Kaos",
-    "137": "Oyun",
-    "179": "Müzik",
+    "86": "Maruz",
+    "106": "Kaos",
+    "139": "Oyun",
+    "180": "Müzik",
     "212": "Dostluk",
     "230": "Nimet",
     "249": "İtiraf",
-    "263": "Tövbe",
-    "266": "Sonsöz"
+    "262": "Tövbe",
+    "265": "Sonsöz"
   },
   "chapters": [
     {
@@ -50,25 +50,25 @@
       "label": "Bölüm 4",
       "title": "Maruz",
       "enTitle": "Exposed",
-      "startPage": 85
+      "startPage": 86
     },
     {
       "label": "Bölüm 5",
       "title": "Kaos",
       "enTitle": "Chaos",
-      "startPage": 104
+      "startPage": 106
     },
     {
       "label": "Bölüm 6",
       "title": "Oyun",
       "enTitle": "Game",
-      "startPage": 137
+      "startPage": 139
     },
     {
       "label": "Bölüm 7",
       "title": "Müzik",
       "enTitle": "Music",
-      "startPage": 179
+      "startPage": 180
     },
     {
       "label": "Bölüm 8",
@@ -92,13 +92,13 @@
       "label": "Epilog",
       "title": "Tövbe",
       "enTitle": "Repentance",
-      "startPage": 263
+      "startPage": 262
     },
     {
       "label": "Sonsöz",
       "title": "Sonsöz",
       "enTitle": "Afterword",
-      "startPage": 266
+      "startPage": 265
     }
   ]
 }
