@@ -70,12 +70,31 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
-  function imgSrc(p, vol) {
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa taranmış dosya yolu (mevcutsa) */
+  function embeddedArt(p, vol) {
+    if (!p) return '';
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
-    if (pack && pack[key]) return pack[key];
-    return p.img;
+    return (pack && pack[key]) || '';
+  }
+
+  function hasArt(p, vol) {
+    return Boolean(embeddedArt(p, vol));
+  }
+
+  function canLoadScan(p, vol) {
+    if (!p) return false;
+    if (hasArt(p, vol)) return true;
+    const targetVol = vol || state.vol;
+    const book = state.book && targetVol === state.vol ? state.book : bundleBook(targetVol);
+    return Boolean(book && book.scansAvailable && p.img);
+  }
+
+  function imgSrc(p, vol) {
+    const artUri = embeddedArt(p, vol);
+    if (artUri) return artUri;
+    if (canLoadScan(p, vol)) return p.img;
+    return '';
   }
 
   /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
@@ -183,11 +202,75 @@
     return out;
   }
 
+  function nextArtTarget(fromPage) {
+    if (!state.book || !Array.isArray(state.book.pages)) return null;
+    const ahead = state.book.pages.find((pg) => pg.n > fromPage && hasArt(pg));
+    if (ahead) return { page: ahead.n, wrapped: false };
+    const first = state.book.pages.find((pg) => pg.n !== fromPage && hasArt(pg));
+    if (first) return { page: first.n, wrapped: true };
+    return null;
+  }
+
+  function scanFallbackCard(p) {
+    const card = document.createElement('div');
+    card.className = 'scan-fallback';
+
+    const kicker = document.createElement('p');
+    kicker.className = 'scan-fallback-kicker';
+    kicker.textContent = 'Sayfa ' + p.n + ' · Tarama görseli gömülü değil';
+
+    const title = document.createElement('p');
+    title.className = 'scan-fallback-title';
+    title.textContent =
+      p.tr && p.tr.length > 0
+        ? 'Bu sayfanın tam tarama görseli çevrimdışı pakette yer almıyor.'
+        : 'Bu kapak veya dizin sayfasının taraması çevrimdışı pakette yer almıyor.';
+
+    const desc = document.createElement('p');
+    desc.className = 'scan-fallback-body';
+    desc.textContent =
+      p.tr && p.tr.length > 0
+        ? 'Yalnızca kitap içi illüstrasyonlar pakete gömülüdür. Sayfanın Türkçe metnini Çeviri görünümünde okuyabilir veya sonraki illüstrasyona geçebilirsiniz.'
+        : 'Yalnızca kitap içi illüstrasyonlar pakete gömülüdür. Bölüm akışına Çeviri görünümünden dönebilir veya sonraki illüstrasyona geçebilirsiniz.';
+
+    const actions = document.createElement('div');
+    actions.className = 'scan-fallback-actions';
+
+    const textBtn = document.createElement('button');
+    textBtn.type = 'button';
+    textBtn.className = 'scan-fallback-btn scan-fallback-btn--primary';
+    textBtn.textContent = 'Çeviri görünümüne geç';
+    textBtn.addEventListener('click', () => {
+      state.mode = 'text';
+      LS.set('mode', 'text');
+      render();
+    });
+    actions.appendChild(textBtn);
+
+    const artTarget = nextArtTarget(p.n);
+    if (artTarget) {
+      const nextArtBtn = document.createElement('button');
+      nextArtBtn.type = 'button';
+      nextArtBtn.className = 'scan-fallback-btn';
+      nextArtBtn.textContent = artTarget.wrapped
+        ? 'İlk illüstrasyon · s. ' + artTarget.page + ' ↺'
+        : 'Sonraki illüstrasyon · s. ' + artTarget.page + ' →';
+      nextArtBtn.addEventListener('click', () => goPage(artTarget.page));
+      actions.appendChild(nextArtBtn);
+    }
+
+    card.append(kicker, title, desc, actions);
+    return card;
+  }
+
   function figureFor(p, caption) {
+    if (!canLoadScan(p)) return null;
+    const src = imgSrc(p);
+    if (!src) return null;
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = imgSrc(p);
+    img.src = src;
     img.alt = 'Sayfa ' + p.n;
     img.loading = 'lazy';
     img.decoding = 'async';
@@ -199,7 +282,7 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => openLightbox(src, 'Sayfa ' + p.n));
     return fig;
   }
 
@@ -249,7 +332,10 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false));
+    if (p) {
+      const fig = figureFor(p, false);
+      sec.appendChild(fig || scanFallbackCard(p));
+    }
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -272,8 +358,28 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
+    const [startPage, endPage] = chapterRange(idx);
+    $('pageRange').value = idx + 1;
+    $('navChapter').textContent = ch.label;
+    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('prevBtn').disabled = n <= 1;
+    $('nextBtn').disabled = n >= state.book.total;
+    $('tocLabel').textContent = ch.label;
+    for (const li of $('tocList').children) {
+      li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
+    }
+    $('modeText').classList.toggle('is-on', false);
+    $('modePage').classList.toggle('is-on', true);
+    $('modeBtn').textContent = 'Orijinal';
+
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
+    const prevMax = LS.get('max:' + state.vol, 0);
+    if (n > prevMax) {
+      LS.set('max:' + state.vol, n);
+      markTocRead();
+    }
+    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -330,17 +436,18 @@
       sec.className = 'pg';
       sec.dataset.page = p.n;
 
-      if (state.mode === 'page') {
-        sec.appendChild(figureFor(p, true));
-        frag.appendChild(sec);
+      if (p.tr.length === 0 && !canLoadScan(p)) {
         continue;
       }
 
-      const isIllustration = p.tr.length === 0 || p.art === true;
+      const isIllustration = (p.tr.length === 0 || p.art === true) && canLoadScan(p);
       if (isIllustration) {
-        sec.classList.add('pg-art');
-        if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true));
+        const fig = figureFor(p, true);
+        if (fig) {
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(fig);
+        }
         if (p.tr.length === 0) {
           frag.appendChild(sec);
           continue;
@@ -474,13 +581,19 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && (p.art || p.tr.length === 0) && canLoadScan(p)) {
+        const src = imgSrc(p);
+        if (src) imgs.push(src);
+      }
     }
     const nxt = chapters()[idx + 1];
     if (nxt) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && (p.art || p.tr.length === 0) && canLoadScan(p)) {
+          const src = imgSrc(p);
+          if (src) imgs.push(src);
+        }
       }
     }
     imgs.slice(0, 4).forEach((src) => {

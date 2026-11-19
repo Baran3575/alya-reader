@@ -1,0 +1,78 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: QC Gate & Stage Pages Artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Run patch dry-run and QC test suite
+        run: |
+          node scripts/patch.js --dry-run
+          npm test
+
+      - name: Rebuild static bundles
+        run: npm run build
+
+      - name: Stage public artifact without backup files
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp -R public/. _site/
+          find _site -type f -name '*.bak' -delete
+          rm -rf _site/pages _site/pages45
+          test -f _site/index.html
+          test -f _site/style.css
+          test -f _site/app.js
+          test -f _site/bundle.js
+          test -f _site/bundle-art.js
+          test -f _site/sw.js
+          if find _site -name '*.bak' | grep -q .; then
+            echo "Backup (.bak) files found in staged Pages artifact" >&2
+            exit 1
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

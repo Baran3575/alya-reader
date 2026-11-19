@@ -7,3 +7,4 @@ data45/back_en.json
 *.pid
 .deepl-key
 .stitch/captures/
+*.bak

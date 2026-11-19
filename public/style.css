@@ -766,11 +766,16 @@ figure.page-img.zoom img {
   font: inherit;
   font-size: 0.9rem;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 0.42rem 0.9rem;
+  min-height: 40px;
+  padding: 0.42rem 0.95rem;
   cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+.pg-nav-btn:hover:not(:disabled) {
+  border-color: var(--muted);
 }
 .pg-nav-btn:disabled {
   opacity: 0.4;
@@ -782,6 +787,73 @@ figure.page-img.zoom img {
   font-variant-numeric: tabular-nums;
   min-width: 5.5rem;
   text-align: center;
+}
+
+.scan-fallback {
+  margin: 0.6rem 0 0.4rem;
+  padding: 1.5rem 1.35rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+.reader .scan-fallback-kicker {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.55rem;
+  padding-left: 0;
+}
+.reader .scan-fallback-title {
+  font-family: Georgia, 'Noto Serif', 'Times New Roman', serif;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 0.55rem;
+  padding-left: 0;
+}
+.reader .scan-fallback-body {
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  color: var(--fg-soft);
+  margin: 0 0 1.15rem;
+  padding-left: 0;
+}
+.scan-fallback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.scan-fallback-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.45rem 0.95rem;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--fg);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.scan-fallback-btn:hover {
+  border-color: var(--muted);
+  background: color-mix(in srgb, var(--fg) 6%, transparent);
+}
+.scan-fallback-btn--primary {
+  background: var(--bg);
+}
+.scan-fallback-btn:focus-visible,
+.pg-nav-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* --- tek sayfa çeviri akışı --- */

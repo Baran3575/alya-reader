@@ -1,11 +1,28 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
-// Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+// Çevrimdışı önbellek: kabuk dosyaları + gömülü illüstrasyon paketi + kitap verisi.
+// GitHub Pages alt dizini (/alya-reader/) ve yerel kök dizin altında self.registration.scope ile çalışır.
+const VERSION = 'alya-27bfa1f73fb3';
+const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
+
+function scopeBase() {
+  return (self.registration && self.registration.scope) || new URL('./', self.location.href).href;
+}
+
+function scopeUrl(rel) {
+  return new URL(rel, scopeBase()).href;
+}
+
+function scopePathname() {
+  const p = new URL(scopeBase()).pathname;
+  return p.endsWith('/') ? p : p + '/';
+}
 
 self.addEventListener('install', (e) => {
+  const shellUrls = SHELL.map((rel) => scopeUrl(rel));
   e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(shellUrls))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -24,33 +41,41 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  const basePath = scopePathname();
+  if (!url.pathname.startsWith(basePath)) return;
+  const relPath = url.pathname.slice(basePath.length);
+
+  // görseller, gömülü paketler ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
-    url.pathname === '/api/book' ||
-    url.pathname === '/bundle.js';
+    relPath.startsWith('pages/') ||
+    relPath.startsWith('pages45/') ||
+    relPath === 'api/book' ||
+    relPath === 'bundle.js' ||
+    relPath === 'bundle-art.js';
 
   if (cacheFirst) {
     e.respondWith(
-      caches.match(req).then(
-        (hit) =>
-          hit ||
-          fetch(req)
-            .then((res) => {
-              if (res && res.ok) {
-                const copy = res.clone();
-                caches.open(VERSION).then((c) => c.put(req, copy));
-              }
-              return res;
-            })
-            .catch(() => hit),
+      caches.open(VERSION).then((cache) =>
+        cache.match(req).then(
+          (hit) =>
+            hit ||
+            fetch(req)
+              .then((res) => {
+                if (res && res.ok) {
+                  cache.put(req, res.clone());
+                }
+                return res;
+              })
+              .catch(() => hit || (typeof Response !== 'undefined' ? Response.error() : undefined)),
+        ),
       ),
     );
     return;
   }
 
-  // kabuk: önce ağ, düşerse önbellek
+  // kabuk: önce ağ, düşerse önbellek veya gezinme isteklerinde ./index.html
+  const fallbackIndex = scopeUrl('./index.html');
+  const isDocRequest = req.mode === 'navigate' || relPath === '' || relPath === 'index.html';
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -60,6 +85,14 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() =>
+        caches.open(VERSION).then((cache) =>
+          cache.match(req).then((hit) => {
+            if (hit) return hit;
+            if (isDocRequest) return cache.match(fallbackIndex);
+            return typeof Response !== 'undefined' ? Response.error() : undefined;
+          }),
+        ),
+      ),
   );
 });
