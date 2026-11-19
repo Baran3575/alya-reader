@@ -647,7 +647,33 @@ function testCrossPageContinuationWordRatio() {
   const res = evaluateFidelity(mockSrc, mockTr, { volume: '4.5', minRatio: 0.55, minWordsForRatio: 15 });
   assert.strictEqual(res.droppedParaPages.length, 0, 'Cross-page carry must not flag dropped paragraph');
   assert.strictEqual(res.lowRatioPages.length, 0, 'Cross-page carry must adjust effective English word count');
-  console.log('  ✓ Cross-page continuation word-ratio adjustment verified');
+
+  // Verify ellipsis lowercase line-wrap + inline dialogue+narration merge (like Vol 4.5 p.83)
+  const mockInlineSrc = [
+    {
+      page: 83,
+      text: '“Ah--yes!”\nAlisa accepted the offer without much thought. As a result, from now on Alisa and Ayano will undergo a long and painful training journey together, ...\nbut that’s a story for another time',
+    },
+  ];
+  const mockInlineTr = {
+    '83': [
+      '“Ah— evet!” Alisa teklifi fazla düşünmeden kabul etti. Sonuç olarak bundan sonra Alisa ve Ayano birlikte uzun ve acılı bir eğitim yolculuğuna çıkacaklardı… ama o başka bir hikâye.',
+    ],
+  };
+  const resInline = evaluateFidelity(mockInlineSrc, mockInlineTr, { volume: '4.5', minRatio: 0.55, minWordsForRatio: 15 });
+  assert.strictEqual(resInline.droppedParaPages.length, 0, 'Inline quote+narration merge with intact ratio/quotes must not false-positive');
+
+  const resDroppedQuote = evaluateFidelity(
+    mockInlineSrc,
+    {
+      '83': [
+        'Alisa teklifi fazla düşünmeden kabul etti. Sonuç olarak bundan sonra Alisa ve Ayano birlikte uzun ve acılı bir eğitim yolculuğuna çıkacaklardı… ama o başka bir hikâye.',
+      ],
+    },
+    { volume: '4.5', minRatio: 0.55, minWordsForRatio: 15 }
+  );
+  assert.strictEqual(resDroppedQuote.droppedParaPages.length, 1, 'Dropping the dialogue quote must still flag dropped paragraph');
+  console.log('  ✓ Cross-page continuation and inline quote+narration merge checks verified');
 }
 
 function runAll() {

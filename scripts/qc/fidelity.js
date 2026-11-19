@@ -87,13 +87,15 @@ function evaluateFidelity(src, tr, options = {}) {
       }
     }
 
-    // Account for intra-page parenthetical merges (fix_boundaries.js)
+    // Account for intra-page parenthetical merges (fix_boundaries.js) and ellipsis/comma lowercase line wraps
     const mergedEnParas = [...enParas];
     for (let i = 0; i < mergedEnParas.length - 1; i++) {
-      if (
+      const parentheticalMerge =
         opens(mergedEnParas[i]) > closes(mergedEnParas[i]) &&
-        closes(mergedEnParas[i + 1]) > opens(mergedEnParas[i + 1])
-      ) {
+        closes(mergedEnParas[i + 1]) > opens(mergedEnParas[i + 1]);
+      const lowercaseWrapMerge =
+        /(?:\.\.\.|…|,)\s*$/.test(mergedEnParas[i]) && /^\p{Ll}/u.test(mergedEnParas[i + 1]);
+      if (parentheticalMerge || lowercaseWrapMerge) {
         mergedEnParas[i] = mergedEnParas[i] + ' ' + mergedEnParas[i + 1];
         mergedEnParas.splice(i + 1, 1);
         i--;
@@ -125,6 +127,16 @@ function evaluateFidelity(src, tr, options = {}) {
     const wEn = Math.max(1, words(enClean) - carriedWords);
     const wTr = words(t);
     const ratio = wEn ? wTr / wEn : 1;
+
+    // Account for human-translated inline merges of standalone dialogue + narration when word/quote coverage holds
+    const enPureQuotes = mergedEnParas.filter((s) => /^\s*["“][^"”]+["”]\s*$/.test(s)).length;
+    const enCombinedQuoteNarr = mergedEnParas.filter((s) => /^\s*["“][^"”]+["”]\s+\p{L}/u.test(s)).length;
+    const trCombinedQuoteNarr = trArr.filter((s) => /^\s*“[^”]+”\s+\p{L}/u.test(s)).length;
+    const inlineQuoteMerges =
+      ratio >= minRatio && Math.round(quotes(t)) >= Math.round(quotes(enClean))
+        ? Math.min(enPureQuotes, Math.max(0, trCombinedQuoteNarr - enCombinedQuoteNarr))
+        : 0;
+    const effectiveTrParas = trArr.length + inlineQuoteMerges;
 
     const missing = NAMES.filter(
       (n) =>
@@ -165,7 +177,7 @@ function evaluateFidelity(src, tr, options = {}) {
       if (wEn >= minWordsForRatio && ratio > maxRatio) {
         highRatioPages.push(row);
       }
-      if (trArr.length < minExpectedParas) {
+      if (effectiveTrParas < minExpectedParas) {
         droppedParaPages.push(row);
       }
     }

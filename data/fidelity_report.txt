@@ -1,8 +1,8 @@
 SADAKAT RAPORU — Cilt 4
-sayfa: 269 | kelime EN 69972 / TR 49737 | ortalama TR/EN kelime oranı: 71.9%
+sayfa: 269 | kelime EN 70019 / TR 49737 | ortalama TR/EN kelime oranı: 71.8%
 cümle EN 10157 / TR 7253
 
-[1] Kısa kalan sayfalar (<%72): 140
+[1] Kısa kalan sayfalar (<%72): 141
   s194  56%  EN 199 → TR 112
   s237  58%  EN 12 → TR 7
   s 47  58%  EN 286 → TR 167
