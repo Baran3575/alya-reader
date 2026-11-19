@@ -1,12 +1,57 @@
 {
  "4": {
   "avg": 0.15,
-  "flagged": 24,
-  "paragraphs": 3076
+  "flagged": 23,
+  "paragraphs": 3083
+ },
+ "5": {
+  "avg": 0.09,
+  "flagged": 22,
+  "paragraphs": 2792
+ },
+ "6": {
+  "avg": 0.05,
+  "flagged": 15,
+  "paragraphs": 3019
+ },
+ "7": {
+  "avg": 0.06,
+  "flagged": 15,
+  "paragraphs": 3258
+ },
+ "8": {
+  "avg": 0.06,
+  "flagged": 20,
+  "paragraphs": 3126
+ },
+ "9": {
+  "avg": 0.07,
+  "flagged": 20,
+  "paragraphs": 2697
+ },
+ "10": {
+  "avg": 0.12,
+  "flagged": 47,
+  "paragraphs": 2623
+ },
+ "11": {
+  "avg": 0.07,
+  "flagged": 23,
+  "paragraphs": 3116
+ },
+ "12": {
+  "avg": 0.07,
+  "flagged": 1,
+  "paragraphs": 475
  },
  "4.5": {
-  "avg": 0.27,
-  "flagged": 53,
+  "avg": 0.09,
+  "flagged": 14,
   "paragraphs": 2281
+ },
+ "9.5": {
+  "avg": 0.05,
+  "flagged": 14,
+  "paragraphs": 1928
  }
 }

@@ -1,0 +1,104 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "8": "Sihirbazım",
+    "11": "Bu Adamlar Bu İşe Çok Girmiş",
+    "31": "Bir Otaku’nun Romantizmi",
+    "58": "Ben Bunu Daha Ciddiye Aldım",
+    "82": "Dürüst olmak gerekirse, Kalbim Oldukça Dalgalandı",
+    "103": "Bir biçimde Daha İyi Hissediyorum",
+    "127": "Savaş Gücü Önemlidir, Değil mi?",
+    "158": "Şiddet Herşeyi Çözer",
+    "188": "Verim Vermezse Yoktur",
+    "204": "Sözümü Tutacağım",
+    "224": "Ona Teşekkür Etmek İstiyorum ve Şunu Söylemek İstiyorum:",
+    "244": "Şimdi, Sadece Şu Anda",
+    "263": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Sihirbazım",
+      "enTitle": "My Wizard",
+      "startPage": 8
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Bu Adamlar Bu İşe Çok Girmiş",
+      "enTitle": "These Guys Are Way Too Into This",
+      "startPage": 11
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bir Otaku’nun Romantizmi",
+      "enTitle": "An Otaku’s Romance",
+      "startPage": 31
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Ben Bunu Daha Ciddiye Aldım",
+      "enTitle": "I Took It More Seriously Than The",
+      "startPage": 58
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Dürüst olmak gerekirse, Kalbim Oldukça Dalgalandı",
+      "enTitle": "Honestly, My Heart Wavered Quite A",
+      "startPage": 82
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Bir biçimde Daha İyi Hissediyorum",
+      "enTitle": "I’m Feeling Better, In A Way",
+      "startPage": 103
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Savaş Gücü Önemlidir, Değil mi?",
+      "enTitle": "Combat Strength Is Important, Right?",
+      "startPage": 127
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Şiddet Herşeyi Çözer",
+      "enTitle": "Violence Solves Everything",
+      "startPage": 158
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Verim Vermezse Yoktur",
+      "enTitle": "If It Doesn’t Yield, Then There’s No",
+      "startPage": 188
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Sözümü Tutacağım",
+      "enTitle": "I’ll Keep My Word",
+      "startPage": 204
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "Ona Teşekkür Etmek İstiyorum ve Şunu Söylemek İstiyorum:",
+      "enTitle": "I Want To Thank Her And Say",
+      "startPage": 224
+    },
+    {
+      "label": "Epilog",
+      "title": "Şimdi, Sadece Şu Anda",
+      "enTitle": "Now, Only At This Moment",
+      "startPage": 244
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 263
+    }
+  ]
+}

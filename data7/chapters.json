@@ -1,0 +1,111 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "7": "Bu",
+    "14": "Yeniden Birleşme",
+    "42": "Bu Türe İhtiyacımız Yoktu",
+    "69": "Dur Bir Dakika, Cowlick’im Az Önce Yaptı",
+    "99": "Yüzyılın En Büyük Duygusu",
+    "128": "Bir Karakter Yaratacaksanız,",
+    "161": "Kalbe Zarar Veren Senpai ve",
+    "185": "Büyük Bir Yuvarlanan Top Muhtemelen",
+    "210": "Gerçekten Büyüdün, Değil mi?",
+    "226": "Rastlamak",
+    "242": "At Yarışması",
+    "259": "Bu",
+    "269": "Çocukluğundan Beri",
+    "274": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Bu",
+      "enTitle": "This Is",
+      "startPage": 7
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Yeniden Birleşme",
+      "enTitle": "Reunion",
+      "startPage": 14
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bu Türe İhtiyacımız Yoktu",
+      "enTitle": "We Didn’t Need This Kind of",
+      "startPage": 42
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Dur Bir Dakika, Cowlick’im Az Önce Yaptı",
+      "enTitle": "Wait a Minute, Did My Cowlick Just",
+      "startPage": 69
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Yüzyılın En Büyük Duygusu",
+      "enTitle": "The Century’s Greatest Sense of",
+      "startPage": 99
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Bir Karakter Yaratacaksanız,",
+      "enTitle": "If You’re Gonna Create a Character,",
+      "startPage": 128
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Kalbe Zarar Veren Senpai ve",
+      "enTitle": "The Senpai Who’s Bad for the Heart and",
+      "startPage": 161
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Büyük Bir Yuvarlanan Top Muhtemelen",
+      "enTitle": "A Big Rolling Ball Would Probably",
+      "startPage": 185
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Gerçekten Büyüdün, Değil mi?",
+      "enTitle": "You’ve Really Grown Up, Haven’t You?",
+      "startPage": 210
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Rastlamak",
+      "enTitle": "Encounter",
+      "startPage": 226
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "At Yarışması",
+      "enTitle": "The Horseback Competition",
+      "startPage": 242
+    },
+    {
+      "label": "Epilog",
+      "title": "Bu",
+      "enTitle": "This Is",
+      "startPage": 259
+    },
+    {
+      "label": "Yan Hikâye",
+      "title": "Çocukluğundan Beri",
+      "enTitle": "From When She Was Just a Childhood",
+      "startPage": 269
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 274
+    }
+  ]
+}

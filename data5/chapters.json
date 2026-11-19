@@ -1,0 +1,104 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "5": "Rastlamak",
+    "16": "Kavuşma ve Veda",
+    "31": "Bunun bir rüya olması şu anlama gelmez:",
+    "53": "O Yolda Ne Yapacaktı?",
+    "78": "Bir Erkeğin Allığına Kim İhtiyaç Duyar?",
+    "101": "Rus Dere veya Açığa Çıkan Aşk",
+    "124": "Gerçekten Bunda Suçlu Olmadığımı Düşünüyorum",
+    "149": "Üzgünüm, Suçluyum",
+    "174": "Erkeklerin Yüzü Bu yüzden Kızarır…",
+    "190": "Bu Adamlar Çok Güçlü Değil mi?",
+    "208": "İrade ve Gurur",
+    "231": "Kazanan…",
+    "246": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Rastlamak",
+      "enTitle": "Encounter",
+      "startPage": 5
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Kavuşma ve Veda",
+      "enTitle": "Reunion And Farewell",
+      "startPage": 16
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bunun bir rüya olması şu anlama gelmez:",
+      "enTitle": "Just Because It’s A Dream Doesn’t Mean",
+      "startPage": 31
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "O Yolda Ne Yapacaktı?",
+      "enTitle": "What Was He Going To Do On The",
+      "startPage": 53
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Bir Erkeğin Allığına Kim İhtiyaç Duyar?",
+      "enTitle": "Who Needs A Man’s Blush?",
+      "startPage": 78
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Rus Dere veya Açığa Çıkan Aşk",
+      "enTitle": "Russian Dere, or Exposed Love For",
+      "startPage": 101
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Gerçekten Bunda Suçlu Olmadığımı Düşünüyorum",
+      "enTitle": "I Really Think I’m Not Guilty of This",
+      "startPage": 124
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Üzgünüm, Suçluyum",
+      "enTitle": "I’m Sorry, I’m Guilty",
+      "startPage": 149
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Erkeklerin Yüzü Bu yüzden Kızarır…",
+      "enTitle": "That’s Why Men Blush…",
+      "startPage": 174
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Bu Adamlar Çok Güçlü Değil mi?",
+      "enTitle": "Aren’t These Guys Too Strong?",
+      "startPage": 190
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "İrade ve Gurur",
+      "enTitle": "Willpower and Pride",
+      "startPage": 208
+    },
+    {
+      "label": "Bölüm 11",
+      "title": "Kazanan…",
+      "enTitle": "The Winner Is…",
+      "startPage": 231
+    },
+    {
+      "label": "Epilog",
+      "title": "Sonsöz",
+      "enTitle": "Epilog",
+      "startPage": 246
+    }
+  ]
+}

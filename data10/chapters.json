@@ -1,0 +1,97 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "12": "Küçük Kardeş Modu, Etkinleştir",
+    "17": "Eziciliğimden Önce Titreme",
+    "39": "Ayano Havaya Karışıyor",
+    "53": "Biz sadece yatakta sarılıyoruz ve konuşuyoruz",
+    "72": "Alisa’nın Beyin Zamanını ve Zamanını Yok Etmek",
+    "105": "Sır Paylaşım Oturumu Başlıyor",
+    "130": "Patronlar Arkadan Çıkıyor",
+    "152": "Kötü öğretir",
+    "172": "Meryem Ana, Hizmetçi ve Yarık",
+    "198": "Perde Yükseliyor",
+    "218": "Kraliçe",
+    "234": "İhanet"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Küçük Kardeş Modu, Etkinleştir",
+      "enTitle": "Li’l Sister Mode, Activate",
+      "startPage": 12
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Eziciliğimden Önce Titreme",
+      "enTitle": "Tremble Before My Overwhelming",
+      "startPage": 17
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Ayano Havaya Karışıyor",
+      "enTitle": "Ayano Blends Into the Air",
+      "startPage": 39
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Biz sadece yatakta sarılıyoruz ve konuşuyoruz",
+      "enTitle": "We’re Just Cuddlin’ in Bed and Talking",
+      "startPage": 53
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Alisa’nın Beyin Zamanını ve Zamanını Yok Etmek",
+      "enTitle": "Destroying Alisa’s Brain Time and Time",
+      "startPage": 72
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Sır Paylaşım Oturumu Başlıyor",
+      "enTitle": "The Secret-Sharing Session Begins",
+      "startPage": 105
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Patronlar Arkadan Çıkıyor",
+      "enTitle": "The Bosses Emerge from Behind the",
+      "startPage": 130
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Kötü öğretir",
+      "enTitle": "Evil Teaches",
+      "startPage": 152
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Meryem Ana, Hizmetçi ve Yarık",
+      "enTitle": "The Virgin Mary, the Maid, and the Slit",
+      "startPage": 172
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Perde Yükseliyor",
+      "enTitle": "The Curtain Rises",
+      "startPage": 198
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "Kraliçe",
+      "enTitle": "The Queen",
+      "startPage": 218
+    },
+    {
+      "label": "Epilog",
+      "title": "İhanet",
+      "enTitle": "Betrayal",
+      "startPage": 234
+    }
+  ]
+}
