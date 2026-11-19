@@ -48,7 +48,10 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
   const finPath = path.join(rootDir, cfg.dataDir, 'paragraphs_final.json');
   if (!fs.existsSync(finPath)) return null;
 
-  const fin = JSON.parse(fs.readFileSync(finPath, 'utf8'));
+  const rawOrig = fs.readFileSync(finPath, 'utf8');
+  const fin = JSON.parse(rawOrig);
+  const origSerialized = JSON.stringify(fin);
+  const isPretty = rawOrig.includes('\n ');
   const chaptersPath = path.join(rootDir, cfg.dataDir, 'chapters.json');
   const bilPath = path.join(rootDir, cfg.dataDir, 'bilingual.json');
   const srcPath = path.join(rootDir, cfg.dataDir, 'source.json');
@@ -103,7 +106,9 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
     fin[String(tocPage)] = ['İçindekiler', ...rows, ...(cfg.tocSuffix || [])];
   }
 
-  fs.writeFileSync(finPath, JSON.stringify(fin));
+  if (JSON.stringify(fin) !== origSerialized) {
+    fs.writeFileSync(finPath, (isPretty ? JSON.stringify(fin, null, 1) : JSON.stringify(fin)) + '\n');
+  }
   return { vol: String(vol), skipped: [...skipSet], tocPage };
 }
 

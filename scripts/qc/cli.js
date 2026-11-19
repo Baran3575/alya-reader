@@ -10,8 +10,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify, URL_TOKEN_RE, FAN_TL_SPAM_RE } = require('./verify');
-const { evaluateData } = require('./quality');
+const { runVerify, hasUnbalancedDelim, URL_TOKEN_RE, FAN_TL_SPAM_RE } = require('./verify');
+const { evaluateData, score } = require('./quality');
 const { checkCoverageGates } = require('./fidelity');
 const { validatePatches } = require('../patch');
 const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
@@ -64,6 +64,10 @@ const ZERO_TOLERANCE = [
   '"?." kalıbı',
   'bitişik/imla hatası',
   'düz tırnak',
+  'dengesiz süslü parantez',
+  'dengesiz köşeli parantez',
+  'Japonca köşe tırnağı',
+  'Kiril kalıntısı',
   'boş paragraf',
   'İngilizce kalıntı',
   'çevirmen notu',
@@ -218,6 +222,31 @@ function findFanTlSpamDetails(data) {
   return matches;
 }
 
+function findUnbalancedDelimDetails(data, open, close) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      if (hasUnbalancedDelim(text, open, close)) {
+        matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findPatternDetails(data, re) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(re);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: m, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
 function generateMarkdownSummary(result, violations, options) {
   const lines = [];
   lines.push('### Çeviri Kalite Kapısı Raporu (QC Matrix)');
@@ -310,6 +339,14 @@ function main() {
           details = findTranslatorNotesDetails(data);
         } else if (row[2].includes('fan-TL spam')) {
           details = findFanTlSpamDetails(data);
+        } else if (row[2].includes('dengesiz süslü parantez')) {
+          details = findUnbalancedDelimDetails(data, '{', '}');
+        } else if (row[2].includes('dengesiz köşeli parantez')) {
+          details = findUnbalancedDelimDetails(data, '[', ']');
+        } else if (row[2].includes('Japonca köşe tırnağı')) {
+          details = findPatternDetails(data, /[『』「」]/g);
+        } else if (row[2].includes('Kiril kalıntısı')) {
+          details = findPatternDetails(data, /\p{Script=Cyrillic}+/gu);
         }
         hardFails.push({ label: row[2], value: row[1], details });
       }
@@ -519,6 +556,10 @@ function main() {
         '"?." kalıbı',
         'bitişik/imla hatası',
         'düz tırnak',
+        'dengesiz süslü parantez',
+        'dengesiz köşeli parantez',
+        'Japonca köşe tırnağı',
+        'Kiril kalıntısı',
         'İngilizce kalıntı',
         'çevirmen notu',
         'fan-TL spam',
@@ -564,5 +605,7 @@ module.exports = {
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
   findFanTlSpamDetails,
+  findUnbalancedDelimDetails,
+  findPatternDetails,
   generateMarkdownSummary,
 };

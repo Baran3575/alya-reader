@@ -7,11 +7,16 @@ const path = require('path');
 const { score } = require('./qc/quality');
 const { words: countWords, cleanSourceProse, isUsablePage, isSkippedCreditPage, isTocPage } = require('./qc/fidelity');
 const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
+const { hasUnbalancedDelim } = require('./qc/verify');
+
+const ROOT = path.join(__dirname, '..');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
 const URL_TOKEN_RE = /https?:\s*\/\/\S+/gi;
 const FAN_TL_SPAM_RE = /(?:glucosetl|discord\s*\.\s*gg|novelupdates|lightnovelreader|Goldenagato|mp4directs|zerobooks)/gi;
+const CORNER_QUOTE_RE = /[『』「」]/;
+const CYRILLIC_RE = /\p{Script=Cyrillic}/u;
 
 function validatePatches(patches, data, options = {}) {
   const errors = [];
@@ -64,6 +69,22 @@ function validatePatches(patches, data, options = {}) {
     // 3. Sıfır tolerans format kontrolleri
     if (/["']/.test(text)) {
       errors.push(`Yama metninde düz tırnak/kesme bulundu: "${key}" -> lütfen kıvrık tırnak (“ ” ’) kullanın.`);
+    }
+
+    if (hasUnbalancedDelim(text, '{', '}')) {
+      errors.push(`Yama metninde dengesiz süslü parantez ({…}) bulundu: "${key}"`);
+    }
+
+    if (hasUnbalancedDelim(text, '[', ']')) {
+      errors.push(`Yama metninde dengesiz köşeli parantez ([…]) bulundu: "${key}"`);
+    }
+
+    if (CORNER_QUOTE_RE.test(text)) {
+      errors.push(`Yama metninde Japonca köşe tırnağı (『』「」) bulundu: "${key}"`);
+    }
+
+    if (CYRILLIC_RE.test(text)) {
+      errors.push(`Yama metninde Kiril karakteri bulundu: "${key}"`);
     }
 
     if (TN_RE.test(text)) {

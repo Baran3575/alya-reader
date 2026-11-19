@@ -37,8 +37,21 @@ function isTocPage(p) {
   return /^Table of contents\b/i.test(String((p && p.text) || '').trim());
 }
 
+function isOcrNoiseLine(line) {
+  const t = String(line || '').trim();
+  if (t.length < 20) return false;
+  const letters = (t.match(/\p{L}/gu) || []).length;
+  if (t.length > 30 && letters / t.length < 0.45) return true;
+  const ws = t.split(/\s+/).filter((w) => /\p{L}/u.test(w));
+  const tiny = ws.filter((w) => w.replace(/[^\p{L}]/gu, '').length <= 2).length;
+  return ws.length >= 12 && tiny / ws.length > 0.65;
+}
+
 function cleanSourceProse(text) {
   return String(text || '')
+    .split('\n')
+    .filter((line) => !isOcrNoiseLine(line))
+    .join('\n')
     .replace(/Page\s+\d+/gi, '')
     .replace(
       /(Goldenagato|mp4directs|jnovels|zerobooks|glucosetl|discord\.gg|novelupdates|lightnovelreader|Download all your Favorite|Stay up to date On Light Novels|Join our Discord).*$/gim,

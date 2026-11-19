@@ -81,7 +81,9 @@ function buildBook(opt = {}) {
     const key = String(p.page);
     const rawText = String(p.text || '');
     const isPending = Boolean(p.pending);
-    const skip = !isPending && SKIP_CREDIT_RE.test(rawText);
+    const skip =
+      !isPending &&
+      (SKIP_CREDIT_RE.test(rawText) || (dataDir === 'data' && p.page === 12));
     const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = rawText
       .split('\n')
@@ -261,8 +263,8 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktası (/books/<v>.json veya /books/v<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);

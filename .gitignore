@@ -9,3 +9,7 @@ data45/back_en.json
 .stitch/captures/
 .cache/
 dist/
+
+# üretilen cilt parçaları (npm run build:bundle)
+public/books/*
+!public/books/art-*.json
