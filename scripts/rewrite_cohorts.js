@@ -19,7 +19,7 @@ const ROOT = path.join(__dirname, '..');
 // scripts/qc/audit_meaning.js ile uyumlu olumsuzluk ve sayı denetimi kalıpları
 const NEG_EN = /\b(not|n't|n’t|no|never|none|nothing|nobody|nowhere|neither|nor|cannot|can't|can’t|won't|won’t|don't|don’t|doesn't|doesn’t|didn't|didn’t|isn't|isn’t|aren't|aren’t|wasn't|wasn’t|weren't|weren’t|couldn't|couldn’t|wouldn't|wouldn’t|shouldn't|shouldn’t|hardly|barely|scarcely|without)\b/i;
 const NEG_TR =
-  /(?<!\p{L})(değil|değildi|değildir|yok|yoktu|yoktur|asla|hiç|hiçbir|hiçbiri|kimse|ne\s+[\p{L}\s]{1,30}\s+ne\s+de|olmaz|olmuyor|olmadan|olmadığı|olmayacak|edemez|yapamaz|bilemez)(?!\p{L})|(?:ma|me|mı|mi|mu|mü)(?:dı|di|du|dü|mış|miş|muş|müş|yacak|yecek|yor|yordu|mak|mek|dan|den|madan|meden)(?!\p{L})|(?:amaz|emez|maz|mez|madı|medi|madım|medim|madın|medin|madık|medik|sız|siz|suz|süz|sızca|sizce)(?!\p{L})/giu;
+  /(?<!\p{L})(değil|değildi|değildir|yok|yoktu|yoktur|asla|hiç|hiçbir|hiçbiri|kimse|ne\s+[\p{L}\s]{1,30}\s+ne\s+de|olmaz|olmuyor|olmadan|olmadığı|olmayacak|edemez|yapamaz|bilemez)(?!\p{L})|(?:ma|me|mı|mi|mu|mü)(?:dı|di|du|dü|mış|miş|muş|müş|yacak|yecek|yor|yordu|mak|mek|dan|den|madan|meden)(?!\p{L})|(?:amaz|emez|maz|mez|madı|medi|madım|medim|madın|medin|madık|medik|madınız|mediniz|sız|siz|suz|süz|sızca|sizce)(?!\p{L})/iu;
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;

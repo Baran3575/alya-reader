@@ -1,5 +1,5 @@
 // Automated verification of QC CLI, Schema, and Regression Gating
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
@@ -278,6 +278,50 @@ function testCalqueScoringAndStrictZeroToleranceGates() {
     candidateTr: 'Okul kapısının önünde beş kız sessizce duruyordu.',
   });
   assert.strictEqual(badNum.ok, false, 'Number mismatch must be rejected');
+
+  // audit_meaning.js stateless negation + number checks across consecutive lines
+  const { auditMeaning } = require('../scripts/qc/audit_meaning');
+  const meaningRows = auditMeaning(
+    [
+      {
+        page: 1,
+        text: [
+          'She did not say anything while walking down the quiet corridor.',
+          'He never looked back as he stepped out into the pouring rain.',
+          'They waited 15 minutes in front of the station entrance.',
+        ].join('\n'),
+      },
+    ],
+    {
+      '1': [
+        'Sessiz koridorda yürürken hiçbir şey söylemedi.',
+        'Sağanak yağmurun altına adım atarken arkasına asla bakmadı.',
+        'İstasyon girişinin önünde yirmi dakika beklediler.',
+      ],
+    }
+  );
+  assert.strictEqual(meaningRows.length, 1, 'Consecutive valid negations must not false-positive; only missing 15 should flag');
+  assert.strictEqual(meaningRows[0].type, 'number');
+
+  // qc9_variety.js case-government check (genitive -> peşinden, ablative -> sonra)
+  const tmpVarFile = path.join(ROOT, 'data', '_tmp_qc9_test.json');
+  try {
+    fs.writeFileSync(
+      tmpVarFile,
+      JSON.stringify({ '1': ['Sessizliğin ardından konuştu. Yemekten ardından kalktı. Selamlaşmanın ardından ayrıldı.'] })
+    );
+    const r = spawnSync(process.execPath, [path.join(ROOT, 'scripts/qc/qc9_variety.js')], {
+      cwd: ROOT,
+      env: { ...process.env, ALYA_TR_FILE: tmpVarFile },
+      encoding: 'utf8',
+    });
+    assert.strictEqual(r.status, 0);
+    const outVar = JSON.parse(fs.readFileSync(tmpVarFile, 'utf8'))['1'][0];
+    assert(!/nın sonra|nin sonra/u.test(outVar), `Genitive + sonra must never be generated: ${outVar}`);
+    assert(outVar.includes('peşinden'), `Genitive + ardından should alternate to peşinden: ${outVar}`);
+  } finally {
+    if (fs.existsSync(tmpVarFile)) fs.unlinkSync(tmpVarFile);
+  }
 
   // Strict CLI zero-tolerance checks for -yyor, lowercase starts, detached suffixes, unbalanced parens, glossary typos
   const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');

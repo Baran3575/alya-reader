@@ -2,7 +2,7 @@
 const { run } = require('./lib');
 
 const SYN = {
-  ardından: ['sonra', 'peşinden', 'ardından'],
+  ardından: ['peşinden', 'ardından'],
   'bir şekilde': ['bir biçimde', 'öyle', 'bir şekilde'],
   gerçekten: ['cidden', 'hakikaten', 'gerçekten'],
   sadece: ['yalnızca', 'sadece'],

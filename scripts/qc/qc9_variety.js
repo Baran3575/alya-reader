@@ -15,7 +15,10 @@ for (const pg of Object.keys(data)) {
     });
     out = out.replace(/([a-zçğıöşü]+)\s+ardından(?!\p{L})/gu, (m, w) => {
       st.ard++;
-      return st.ard % 2 ? w + ' sonra' : m;
+      if (!(st.ard % 2)) return m;
+      if (/(?:dan|den|tan|ten)$/iu.test(w)) return w + ' sonra';
+      if (/(?:nın|nin|nun|nün|ın|in|un|ün)$/iu.test(w)) return w + ' peşinden';
+      return m;
     });
     // "bir şekilde": ikinci ve sonraki kullanımları at (aynı paragrafta)
     let c = 0;
