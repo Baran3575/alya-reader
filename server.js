@@ -25,10 +25,6 @@ const TR_CHAPTER = {
   epilogue: 'Sonsöz',
   afterword: 'Sonsöz',
   interlude: 'Ara Bölüm',
-  'author’s note': 'Yazarın Notu',
-  "author's note": 'Yazarın Notu',
-  'bookwalker ss': 'Ek Hikâye',
-  'afterword ss': 'Ek Hikâye',
 };
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
@@ -60,32 +56,6 @@ const VOLUMES = Object.fromEntries(
     ];
   })
 );
-
-function matchChapterHeading(first) {
-  const m = first.match(
-    /^(Prologue|Epilogue|Afterword\s+SS|Afterword|Bookwalker\s+SS|Author[’']s\s+Note|Interlude|Chapter\s+(\d+))(?:\s*[:–—-]\s*(.*)|\s*$)/i
-  );
-  if (!m) return null;
-  if (m[2]) {
-    return {
-      key: 'Chapter ' + m[2],
-      label: 'Bölüm ' + m[2],
-      rest: (m[3] || '').trim(),
-    };
-  }
-  const raw = m[1].replace(/\s+/g, ' ').trim();
-  const low = raw.toLowerCase();
-  let key = raw;
-  if (low === 'prologue') key = 'Prologue';
-  else if (low === 'epilogue') key = 'Epilogue';
-  else if (low === 'afterword') key = 'Afterword';
-  else if (low === 'afterword ss') key = 'Afterword SS';
-  else if (low === 'bookwalker ss') key = 'Bookwalker SS';
-  else if (low === 'interlude') key = 'Interlude';
-  else if (low === "author's note" || low === 'author’s note') key = 'Author’s Note';
-  const label = TR_CHAPTER[low] || raw;
-  return { key, label, rest: (m[3] || '').trim() };
-}
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
@@ -127,7 +97,6 @@ function buildBook(opt = {}) {
         tr: isPending ? [] : trParas,
         en: isPending ? [] : enParas,
         art,
-        hasImg: hasDiskImg,
       };
       if (isPending) item.pending = true;
       return item;
@@ -138,15 +107,12 @@ function buildBook(opt = {}) {
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    const cleanText = String(p.text || '')
+    const cleanLen = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
-      .trim();
-    const cleanLen = cleanText.length;
-    const isNoteOnly =
-      cleanLen > 0 && /^(?:\[\d+\]\s*:|P\.\s*S\.|Fan-translated by\b)/i.test(cleanText);
-    const art = p.page > 3 && cleanLen < 220 && !isNoteOnly;
+      .trim().length;
+    const art = p.page > 3 && cleanLen < 220;
 
     return {
       n: p.page,
@@ -178,12 +144,14 @@ function buildBook(opt = {}) {
     chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
     for (const p of pages) {
       const first = (p.en[0] || '').replace(/\s+/g, ' ');
-      const hit = matchChapterHeading(first);
-      if (!hit) continue;
-      if (hit.rest || titlesMeta[hit.key]) {
-        const title = titlesMeta[hit.key] || hit.rest.slice(0, 70) || hit.label;
-        chapters.push({ page: p.n, label: hit.label, title });
-      }
+      const m = first.match(/^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+(\d+))\s*[:–—-]/i);
+      if (!m) continue;
+      const isNum = !!m[2];
+      const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+      const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
+      const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
+      const title = titlesMeta[key] || rest.slice(0, 70);
+      chapters.push({ page: p.n, label, title });
     }
   }
 
@@ -270,50 +238,13 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Statik cilt dizini manifesti (/books/index.json)
-  if (pathname === '/books/index.json') {
-    const volumes = [];
-    for (const k of VOLUME_KEYS) {
-      try {
-        const b = getBook(k).book;
-        volumes.push({
-          id: k,
-          short: k,
-          label: b.volume,
-          total: b.total,
-          chapters: b.chapters.length,
-          hasPending: b.chapters.some((c) => c.pending),
-          file: `books/v${k}.json`,
-        });
-      } catch {}
-    }
-    const body = Buffer.from(JSON.stringify({ version: 'dev', volumes }));
-    return send(req, res, 200, MIME['.json'], body);
-  }
-
-  // Statik JSON uç noktası (/books/v<v>.json veya /books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);
       return send(req, res, 200, MIME['.json'], loaded.json);
     } catch {}
-  }
-
-  // Gömülü illüstrasyon parçası (/books/art-<v>.json) disk üzerinde yoksa bundle-art.js içinden sun
-  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
-  if (artJsonMatch) {
-    const diskArt = path.join(PUB, 'books', `art-${artJsonMatch[1]}.json`);
-    if (!fs.existsSync(diskArt)) {
-      try {
-        const vm = require('vm');
-        const artCode = fs.readFileSync(path.join(PUB, 'bundle-art.js'), 'utf8');
-        const sb = { window: {} };
-        vm.runInNewContext(artCode, sb, { timeout: 2000 });
-        const pack = sb.window.ALYA_ART && sb.window.ALYA_ART[artJsonMatch[1]];
-        if (pack) return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(pack)));
-      } catch {}
-    }
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -350,4 +281,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { VOLUMES, VOLUME_KEYS, VOLUME_ORDER: VOLUME_KEYS, buildBook, getBook, start };
+module.exports = { VOLUMES, VOLUME_KEYS, buildBook, getBook, start };

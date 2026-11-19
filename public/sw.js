@@ -1,24 +1,11 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + cilt bazlı kitap/sanat verisi.
-// Hem kök dizinde (/) hem de GitHub Pages alt-dizininde (/alya-reader/) çalışır.
-const VERSION = 'alya-v6';
-const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle.js'];
-
-function scopeUrl(rel) {
-  return new URL(rel, self.registration.scope).href;
-}
-
-function relativeToScope(url) {
-  const scopePath = new URL(self.registration.scope).pathname;
-  if (!url.pathname.startsWith(scopePath)) return null;
-  return url.pathname.slice(scopePath.length);
-}
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
+// Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
+const VERSION = 'alya-v4';
+const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches
-      .open(VERSION)
-      .then((c) => c.addAll(SHELL_REL.map(scopeUrl)).catch(() => {}))
-      .then(() => self.skipWaiting()),
+    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
   );
 });
 
@@ -37,44 +24,43 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  const rel = relativeToScope(url);
-  if (rel === null) return;
-
-  // görseller (Cilt 4–12 pages*/) ve cilt/sanat paketleri (books/index.json hariç): önce önbellek, sonra ağ
+  // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
-    /^pages\d*\//.test(rel) ||
-    (/^books\/(?:v?[0-9.]+|art-[0-9.]+)\.json$/.test(rel) && rel !== 'books/index.json') ||
-    rel === 'api/book' ||
-    rel === 'bundle.js' ||
-    rel === 'bundle-art.js';
+    /\/pages\d*\//.test(url.pathname) ||
+    /\/books\/[0-9.]+\.json$/.test(url.pathname) ||
+    url.pathname.endsWith('/api/book') ||
+    url.pathname.endsWith('/bundle.js') ||
+    url.pathname.endsWith('/bundle-art.js');
 
   if (cacheFirst) {
     e.respondWith(
-      caches.open(VERSION).then(async (cache) => {
-        const hit = await cache.match(req);
-        if (hit) return hit;
-        try {
-          const res = await fetch(req);
-          if (res.ok) cache.put(req, res.clone());
-          return res;
-        } catch (err) {
-          return new Response('', { status: 504 });
-        }
-      }),
+      caches.match(req).then(
+        (hit) =>
+          hit ||
+          fetch(req)
+            .then((res) => {
+              if (res && res.ok) {
+                const copy = res.clone();
+                caches.open(VERSION).then((c) => c.put(req, copy));
+              }
+              return res;
+            })
+            .catch(() => hit),
+      ),
     );
     return;
   }
 
-  // kabuk ve manifest: önce ağ, düşerse önbellek
+  // kabuk: önce ağ, düşerse önbellek
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res.ok) {
+        if (res && res.ok) {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(req, copy));
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match(scopeUrl('index.html')))),
+      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html'))),
   );
 });

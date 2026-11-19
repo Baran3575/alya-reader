@@ -11,7 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { runVerify, hasUnbalancedDelim } = require('./verify');
-const { evaluateData } = require('./quality');
+const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
 const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
@@ -56,12 +56,6 @@ const ZERO_TOLERANCE = [
   'İngilizce kalıntı',
   'çevirmen notu',
 ];
-
-function orderedResultKeys(obj) {
-  const canonical = VOLUME_KEYS.filter((k) => Object.prototype.hasOwnProperty.call(obj, k));
-  const extra = Object.keys(obj).filter((k) => !canonical.includes(k));
-  return [...canonical, ...extra];
-}
 
 function parseArgs() {
   const args = process.argv.slice(2);
@@ -190,7 +184,7 @@ function generateMarkdownSummary(result, violations, options) {
   lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Durum |');
   lines.push('|---|---|---|---|---|---|');
 
-  for (const vol of orderedResultKeys(result)) {
+  for (const vol of Object.keys(result)) {
     const r = result[vol];
     const status = r.fails.length === 0 ? '✓ Başarılı' : `✗ Başarısız (${r.fails.length} ihlal)`;
     const baseAvg = r.baseline && r.baseline.avg !== undefined ? r.baseline.avg.toFixed(2) : '-';
@@ -375,9 +369,7 @@ function main() {
   }
 
   if (update) {
-    const orderedBaseline = {};
-    for (const k of orderedResultKeys(baseline)) orderedBaseline[k] = baseline[k];
-    fs.writeFileSync(BASELINE_FILE, JSON.stringify(orderedBaseline, null, 1) + '\n');
+    fs.writeFileSync(BASELINE_FILE, JSON.stringify(baseline, null, 1) + '\n');
     console.log('✓ Taban çizgisi güncellendi: data/qc_baseline.json');
   }
 
@@ -407,7 +399,7 @@ function main() {
       )
     );
   } else {
-    for (const vol of orderedResultKeys(result)) {
+    for (const vol of Object.keys(result)) {
       const r = result[vol];
       console.log('\n== ' + r.label + ' (' + r.file + ')');
       console.log(

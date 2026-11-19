@@ -1,6 +1,6 @@
 # Alya Bazen Duygularını Rusça Saklar — Cilt 4 – 12 (Türkçe Web Okuyucu)
 
-Japon light novel serisi *Alya Sometimes Hides Her Feelings in Russian* (*Roshidere*) için **Cilt 4, 4.5, 5, 6, 7, 8, 9, 9.5, 10, 11 ve 12**’yi (toplam 11 cilt) temiz illüstrasyonlar ve akıcı edebî Türkçe çeviriyle sunan sade, çevrimdışı ve GitHub Pages destekli web okuyucu.
+Japon light novel serisi *Alya Sometimes Hides Her Feelings in Russian* (*Roshidere*) için **Cilt 4, 4.5, 5, 6, 7, 8, 9, 9.5, 10, 11 ve 12**’yi (toplam 11 cilt) temiz illüstrasyonlar ve edebî Türkçe çeviriyle sunan sade, çevrimdışı destekli web okuyucu.
 
 ## Çalıştırma
 
@@ -36,26 +36,20 @@ node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 
 | Cilt | Kaynak Adaptörü | Açıklama |
 |---|---|---|
-| **Cilt 4 & 4.5** | Kanonik depo arşivi | Salt okunur kaynak katmanı + edebî düzeltmeli çeviri + gömülü WebP sanat paketi |
+| **Cilt 4 & 4.5** | Kanonik depo arşivi | Salt okunur kaynak katmanı + gömülü WebP sanat paketi |
 | **Cilt 5 – 10** | `fliphtml5.js` | FlipHTML5 & AnyFlip `search_config.js` metin dizini (Scribd Fastly ve WASM `deString.js` atlanır, katalog URL’leri normalize edilir) + GlucoseTL arşivlerinden filigransız WebP illüstrasyonlar |
 | **Cilt 9.5** | `glucosetl95.js` | GlucoseTL Anubis SHA-256 PoW (`difficulty: 4`) çözümü + 7 renkli illüstrasyon + 16 kısa hikâye PNG klasörünün görsel LLM / yerel Tesseract OCR dökümü (~1.400 kr/sayfa) |
 | **Cilt 11** | `epub11.js` | Google Drive EPUB paketi (22 XHTML + gömülü illüstrasyonlar, ~1.400 kr/sayfa) |
 | **Cilt 12** | `secreftls12.js` | SecreFTLs REST API (`Illustrations`, `Prologue`, `Chapter 1` tam çeviri + `Chapter 2` `[Translation In Progress]` için uydurma metin üretmeden `pending: true` durumu) |
 
-## Statik (GitHub Pages) ve Sunucusuz (`file://`) Okuma
-
-- HTTP / GitHub Pages üzerinde okuyucu yalnızca seçili cildin hafif JSON paketini (`books/<cilt>.json` + `books/index.json`) indirir; çevrimdışı veya `file://` modunda ise `public/bundle.js` (`window.ALYA_BUNDLE`) ve `public/bundle-art.js` (`window.ALYA_ART`) yedek paketlerine otomatik geçer.
-- `public/sw.js` service worker’ı hem kök dizinde (`/`) hem de GitHub Pages proje alt-dizininde (`/alya-reader/`) kabuk dosyalarını, sayfa görsellerini ve cilt paketlerini önbelleğe alır.
-- Geniş ekranlarda 11 ciltlik hızlı sekme şeridi, dar ekranlarda ve mobilde ise `44px+` dokunma hedefli kitap menüsü (`Cilt` açılır paneli) otomatik devreye girer.
-
 ## Sürekli Doğrulama ve Kalite Kapısı (QC)
 
-Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, çevirmen notu `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` test paketini ve sıkı QC kapısını çalıştırıp `dist/` statik okuyucusunu GitHub Pages’e yayınlar.
+Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, çevirmen notu `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` statik okuyucuyu GitHub Pages’e yayınlar.
 
 ```bash
 npm test                                               # tüm birim/entegrasyon testleri + 11 cilt sıkı QC kapısı
 node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sıkı kalite ve regresyon kontrolü
-node scripts/patch.js --dry-run                        # Cilt 4 el yaması şema ve regresyon doğrulaması
+node scripts/patch.js --dry-run                        # el yaması şema ve regresyon doğrulaması
 ```
 
 ### Arayüz
