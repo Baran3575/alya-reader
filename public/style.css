@@ -326,6 +326,25 @@ main {
   hanging-punctuation: first allow-end;
 }
 
+.reader p.dialog.dialog-ru {
+  /* açılış tırnağı olmayan Rusça diyalog satırlarında negatif girintiyi sıfırla */
+  text-indent: 0;
+  hanging-punctuation: allow-end;
+}
+
+.reader .ru-dialog {
+  font-style: italic;
+  color: var(--fg-soft);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--muted) 42%, transparent);
+  text-underline-offset: 0.22em;
+}
+
+.reader .ru-dialog[title] {
+  cursor: help;
+}
+
 /* ---------- görsel yakınlaştırma ---------- */
 .lightbox {
   position: fixed;
