@@ -34,8 +34,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run unit, manifest, and pipeline test suite
-        run: npm run test:suite
+      - name: Build volume chunks and run test suite
+        run: npm run build:bundle && npm run test:suite
 
       - name: Read enabled volume IDs from data/volumes.json
         id: manifest
