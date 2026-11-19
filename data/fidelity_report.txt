@@ -1,6 +1,6 @@
 SADAKAT RAPORU — Cilt 4
 sayfa: 269 | kelime EN 70111 / TR 51535 | ortalama TR/EN kelime oranı: 74.2%
-cümle EN 10953 / TR 7243
+cümle EN 10157 / TR 7243
 
 [1] Kısa kalan sayfalar (<%72): 102
   s 47  58%  EN 286 → TR 167
@@ -50,4 +50,4 @@ cümle EN 10953 / TR 7243
   s48  eksik: Yuki  fazla: -
   s49  eksik: Yuki  fazla: -
 
-[5] Tırnak (diyalog) dengesi: EN 2157 / TR 2152
+[5] Tırnak (diyalog) dengesi: EN 2102 / TR 2152

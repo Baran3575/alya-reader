@@ -1,7 +1,7 @@
 // EN kaynağı ile TR çevirisi arasında sayfa bazlı sadakat ölçümü
 const fs = require('fs');
 const path = require('path');
-const { sourceParagraphs, NOISE_LINE_RE, TN_BLOCK_RE } = require('../../mt/paragraphs');
+const { sourceParagraphs, isOcrNoise, NOISE_LINE_RE, TN_BLOCK_RE } = require('../../mt/paragraphs');
 
 const ROOT = path.join(__dirname, '..', '..');
 
@@ -21,7 +21,7 @@ function cleanSourceForFidelity(raw) {
   return String(raw || '')
     .replace(TN_BLOCK_RE, ' ')
     .split('\n')
-    .filter((ln) => !NOISE_LINE_RE.test(ln))
+    .filter((ln) => !NOISE_LINE_RE.test(ln) && !isOcrNoise(ln))
     .join('\n')
     .replace(/Goldenagato\s*\|\s*mp4directs\.com/gi, ' ')
     .replace(/Page\s+\d+/gi, ' ')

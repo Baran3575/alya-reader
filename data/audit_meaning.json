@@ -64,11 +64,27 @@
   "t": "Alisa, kısa bir süre önce yaşanan olayları hatırlayınca yanakları kızardı."
  },
  {
+  "page": 195,
+  "i": 6,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Şey… Genelde gece sütyeni giyerim, biliyor musun? Ne var ki bugün getirmeyi unuttum…”"
+ },
+ {
+  "page": 211,
+  "i": 1,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "…"
+ },
+ {
   "page": 271,
   "i": 0,
   "en": true,
   "tr": false,
-  "mode": "exact",
+  "mode": "proportional",
   "t": "“Ara Masachika-chan, dışarı mı çıkıyorsun?”"
  }
 ]

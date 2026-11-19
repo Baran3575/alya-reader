@@ -18,10 +18,11 @@ function isOcrNoise(text) {
   const letters = (t.match(/\p{L}/gu) || []).length;
   if (letters / t.length < 0.25 && t.length > 30) return true;
   const junkSymbols = (t.match(/[\\/|<>@=~^_]/g) || []).length;
-  if (junkSymbols >= 3) {
+  if (junkSymbols >= 1) {
     const words = t.split(/\s+/).filter((w) => /\p{L}/u.test(w));
     const short = words.filter((w) => w.replace(/[^\p{L}]/gu, '').length <= 2).length;
-    if (words.length >= 6 && short / words.length > 0.5) return true;
+    if (junkSymbols >= 3 && words.length >= 6 && short / words.length > 0.5) return true;
+    if (words.length >= 6 && short / words.length >= 0.75) return true;
   }
   return false;
 }

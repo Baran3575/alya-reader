@@ -4,19 +4,19 @@
   "flagged": 23,
   "paragraphs": 3118,
   "usablePages": 269,
-  "negMismatches": 9
+  "negMismatches": 11
  },
  "5": {
   "avg": 0.08,
   "flagged": 19,
-  "paragraphs": 2806,
+  "paragraphs": 2815,
   "usablePages": 240,
   "negMismatches": 15
  },
  "6": {
   "avg": 0.05,
   "flagged": 11,
-  "paragraphs": 2963,
+  "paragraphs": 2970,
   "usablePages": 245,
   "negMismatches": 13
  },
@@ -65,15 +65,15 @@
  "4.5": {
   "avg": 0.09,
   "flagged": 14,
-  "paragraphs": 2284,
+  "paragraphs": 2288,
   "usablePages": 332,
-  "negMismatches": 14
+  "negMismatches": 13
  },
  "9.5": {
   "avg": 0.04,
   "flagged": 9,
   "paragraphs": 1918,
-  "usablePages": 167,
+  "usablePages": 168,
   "negMismatches": 6
  }
 }
