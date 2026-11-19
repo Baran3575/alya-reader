@@ -9,6 +9,7 @@ const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 const { polish, balanceCurlyQuotes, loadGlossary } = require('./merge');
 const { naturalize, notes } = require('./naturalize');
 const { ensureDir } = require('./ingest/lib/cache');
+const { detectChapterHeading, stitchParagraphEntries } = require('./ingest/lib/paginate');
 
 const CACHE_DIR = path.join(ROOT, '.cache', 'translate');
 const DEEPL_KEY_PATH = path.join(ROOT, '.deepl-key');
@@ -615,16 +616,34 @@ async function translateVolume(volKey, opts = {}) {
   const finalOut = {};
   const pageEntries = [];
 
-  for (const p of sourcePages) {
+  const chapterStartPages = new Set();
+  if (fs.existsSync(volCfg.titlesFile)) {
+    try {
+      const meta = JSON.parse(fs.readFileSync(volCfg.titlesFile, 'utf8'));
+      for (const ch of meta.chapters || []) {
+        if (ch && ch.startPage) chapterStartPages.add(String(ch.startPage));
+      }
+    } catch {}
+  }
+
+  const rawEntries = sourcePages.map((p) => {
     const key = String(p.page);
     if (p.pending || !p.text || !String(p.text).trim()) {
-      finalOut[key] = [];
-      continue;
+      return { key, usable: false, isChapterStart: false, paras: [] };
     }
     const paras = extractSourceParagraphs(p.text);
-    finalOut[key] = new Array(paras.length).fill('');
-    paras.forEach((txt, idx) => {
-      pageEntries.push({ pageKey: key, paraIdx: idx, text: txt });
+    const isChapterStart = chapterStartPages.has(key) || detectChapterHeading(p.text);
+    return { key, usable: paras.length > 0, isChapterStart, paras };
+  });
+
+  if (opts.stitchPages !== false) {
+    stitchParagraphEntries(rawEntries);
+  }
+
+  for (const entry of rawEntries) {
+    finalOut[entry.key] = new Array(entry.paras.length).fill('');
+    entry.paras.forEach((txt, idx) => {
+      pageEntries.push({ pageKey: entry.key, paraIdx: idx, text: txt });
     });
   }
 

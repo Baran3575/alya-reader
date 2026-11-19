@@ -122,6 +122,8 @@ function polish(text, glossary = loadGlossary()) {
 
   // 3) noktalama / boşluk, Rusça fısıltı ayracı {...} ve kıvrık tipografi düzeltmeleri
   t = t
+    .replace(/[\u300E\u300C]\s*/g, '‘')
+    .replace(/\s*[\u300F\u300D]/g, '’')
     .replace(/\{\s+/g, '{')
     .replace(/\s+\}/g, '}')
     .replace(/(?<=[\p{L}\p{N},.;:!?…”])\{/gu, ' {')

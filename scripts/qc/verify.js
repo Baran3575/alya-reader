@@ -4,6 +4,25 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const CORNER_QUOTE_RE = /[『』「」]/g;
+const CYRILLIC_RE = /\p{Script=Cyrillic}+/gu;
+
+function hasUnbalancedDelim(str, open, close) {
+  let depth = 0;
+  let prev = '';
+  for (const ch of str) {
+    if (ch === open) {
+      depth++;
+      if (depth > 1) return true;
+    } else if (ch === close) {
+      if (prev === open) return true;
+      depth--;
+      if (depth < 0) return true;
+    }
+    prev = ch;
+  }
+  return depth !== 0;
+}
 
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
@@ -24,12 +43,20 @@ function runVerify(filePath) {
   row('  ', count(/["']/g), 'düz tırnak');
   let unbalQ = 0;
   let unbalP = 0;
+  let unbalB = 0;
+  let unbalS = 0;
   for (const x of paras) {
     if ((x.t.match(/[“”]/g) || []).length % 2) unbalQ++;
     if ((x.t.match(/\(/g) || []).length !== (x.t.match(/\)/g) || []).length) unbalP++;
+    if (hasUnbalancedDelim(x.t, '{', '}')) unbalB++;
+    if (hasUnbalancedDelim(x.t, '[', ']')) unbalS++;
   }
   row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
   row('  ', unbalP, 'dengesiz parantez');
+  row('  ', unbalB, 'dengesiz süslü parantez');
+  row('  ', unbalS, 'dengesiz köşeli parantez');
+  row('  ', count(CORNER_QUOTE_RE), 'Japonca köşe tırnağı');
+  row('  ', count(CYRILLIC_RE), 'Kiril kalıntısı');
   row('  ', paras.filter((x) => !x.t.trim()).length, 'boş paragraf');
 
   row('2. doğal ifade', countW('Ancak'), '"Ancak"');
@@ -74,4 +101,4 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify };
+module.exports = { runVerify, hasUnbalancedDelim };

@@ -56,6 +56,10 @@ function curlyQuotesAndApostrophes(text) {
 }
 
 const RULES = [
+  // Japonca köşe tırnağı sızıntılarını tek kıvrık tırnağa çevir
+  ['köşe tırnağı dönüşümü', /[\u300E\u300C]/g, '‘'],
+  ['köşe tırnağı kapanışı', /[\u300F\u300D]/g, '’'],
+  ['köşe tırnağı iç boşluk', /‘\s+|\s+’/g, (m) => (m.startsWith('‘') ? '‘' : '’')],
   // düz tırnak ve kesme işaretlerini kıvrık tipografiye çevir
   ['kıvrık tırnak/kesme', /["']/g, null],
   // kapanış tırnağından sonra kopmuş Türkçe ekleri birleştir
