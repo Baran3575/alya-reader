@@ -9,7 +9,7 @@
     "translate": "node scripts/translate_llm.js",
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
-    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/fidelity.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/fidelity.test.js && node scripts/qc/argo.js --check && node scripts/qc/cli.js --strict --check-regression",
     "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",

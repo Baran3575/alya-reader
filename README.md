@@ -53,6 +53,7 @@ npm run fidelity                                       # metne sadakat raporu (c
 npm run deep                                           # bölüm bazlı derin denetim (kelime seçimi, gramer, noktalama, ani düşüş)
 npm run fix:style -- --dry                             # yazım/noktalama onarımı (deneme), --vol 4 ile tek cilt
 npm run clean                                          # nesnel kusur taraması -> docs/clean-list.md (0 olmalı)
+npm run argo            # argo/sertlik sadakati: kaynak küfür çeviride yumuşatılmış mı
 npm run fix:dialog                                     # sayfa sonunda yarım kalan replikleri birleştirir
 npm run fix:quotes                                     # iç içe alıntı açılışlarını onarır
 npm run fidelity -- --vol 4 --top 12 --md              # tek cilt, en kötü 12 sayfa, docs/fidelity.md üret

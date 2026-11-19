@@ -68,6 +68,12 @@ for (const fix of fixes) {
     console.log(`✓ s.${page}[${hit}] paragraf silindi ${quality[page] ? '(kalite)' : '(final)'}`);
     continue;
   }
+  if (Array.isArray(fix.replace)) {
+    arr.splice(hit, 1, ...fix.replace);
+    ok++;
+    console.log(`✓ s.${page}[${hit}] ${fix.replace.length} paragrafa bölündü`);
+    continue;
+  }
   arr[hit] = before === fix.find ? fix.replace : before.replace(fix.find, fix.replace);
   ok++;
   console.log(`✓ s.${page}[${hit}] ${quality[page] ? '(kalite)' : '(final)'}`);
