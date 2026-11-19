@@ -245,10 +245,14 @@ function testRussianDialogueDomRendering() {
   assert.strictEqual(pQuote.childNodes[1].className, 'ru-dialog');
   assert.strictEqual(pQuote.childNodes[1].textContent, 'onlara dokunabilirsin');
 
-  // 3. Romanized tooltip data on {Sen daha güzelsin.}
+  // 3. Romanized tooltip data on {Sen daha güzelsin.} and multi-volume Russian lines
   const pRoma = renderParagraph('{Sen daha güzelsin.} Bu fısıltı kayboldu.', doc);
   assert.strictEqual(pRoma.childNodes[0].dataset.ru, 'Ty krasivaya.');
   assert.strictEqual(pRoma.childNodes[0].title, 'Ty krasivaya.');
+  assert.strictEqual(renderParagraph('“Ee? {Metanet.}”', doc).childNodes[1].dataset.ru, 'Stoykost.');
+  assert.strictEqual(renderParagraph('{Senin sayende, Alya.}', doc).childNodes[0].dataset.ru, 'Blagodarya tebe, Alya.');
+  assert.strictEqual(renderParagraph('{Ben de.} diye sessizce fısıldadı.', doc).childNodes[0].dataset.ru, 'I ya tozhe.');
+  assert.strictEqual(renderParagraph('{Seni sapık.}', doc).childNodes[0].dataset.ru, 'Razvratnik.');
 
   // 4. XSS payload inside and outside {…} never invokes innerHTML or creates unexpected elements
   const xssInput = '{<img src=x onerror=alert(1)>} & <script>alert("xss")</script>';
