@@ -43,13 +43,19 @@ jobs:
         run: |
           node scripts/volumes.js --source-files | xargs git diff --exit-code --
 
+      - name: Stage clean public/ directory
+        run: |
+          rm -rf /tmp/pages-public
+          cp -R ./public /tmp/pages-public
+          rm -f /tmp/pages-public/*.bak
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       - name: Upload public/ artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './public'
+          path: '/tmp/pages-public'
 
   deploy:
     name: Deploy to GitHub Pages

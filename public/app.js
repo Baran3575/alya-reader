@@ -168,15 +168,22 @@
     return book;
   }
 
+  let loadSeq = 0;
+
   async function load() {
+    const seq = ++loadSeq;
     const manifest = await readManifest();
+    if (seq !== loadSeq) return;
     if (manifest && manifest.volumes && !manifest.volumes[state.vol]) {
       state.vol = manifest.defaultVolume || (manifest.order && manifest.order[0]) || '4';
       LS.set('vol', state.vol);
     }
     syncVolSelect();
 
-    state.book = await readBook(state.vol);
+    const targetVol = state.vol;
+    const book = await readBook(targetVol);
+    if (seq !== loadSeq || targetVol !== state.vol) return;
+    state.book = book;
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
