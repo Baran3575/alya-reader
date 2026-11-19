@@ -564,20 +564,49 @@ input[type='range']::-moz-range-thumb {
     line-height: 1.72;
   }
 }
-/* cilt seçici */
+/* cilt seçici (11 cilt, masaüstü + mobil yatay kaydırmalı) */
+.seg[hidden],
+.mode-compact[hidden],
+.seg-btn[hidden] {
+  display: none !important;
+}
+.seg-vol {
+  max-width: min(48vw, 31rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 1;
+}
+.seg-vol::-webkit-scrollbar {
+  display: none;
+}
 .seg-vol .seg-btn {
-  padding: 0.32rem 0.52rem;
-  font-size: 0.74rem;
-  min-width: 2.05rem;
+  padding: 0.32rem 0.48rem;
+  font-size: 0.73rem;
+  min-width: 1.95rem;
   text-align: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.seg-vol .seg-btn.is-ongoing::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 @media (max-width: 640px) {
   .seg.seg-vol {
     display: inline-flex;
+    max-width: 44vw;
   }
   .seg-vol .seg-btn {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.7rem;
+    padding: 0.3rem 0.42rem;
+    font-size: 0.69rem;
+    min-width: 1.75rem;
   }
 }
 

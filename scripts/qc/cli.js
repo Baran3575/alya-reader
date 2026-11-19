@@ -20,6 +20,8 @@ const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 const VOLUMES = {
   '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
   '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '5': { tr: 'data5/paragraphs_final.json', label: 'Cilt 5', maxAvgStrict: 0.20 },
+  '6': { tr: 'data6/paragraphs_final.json', label: 'Cilt 6', maxAvgStrict: 0.20 },
 };
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar

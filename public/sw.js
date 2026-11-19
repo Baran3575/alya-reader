@@ -1,11 +1,14 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
-// Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+// Çevrimdışı önbellek: kabuk dosyaları + cilt JSON paketleri + illüstrasyonlar + sayfa görselleri.
+// Hem kök dizinde (localhost) hem de GitHub Pages alt yolunda (/alya-reader/) çalışır.
+const VERSION = 'alya-v4';
+const SHELL_REL = ['./', './index.html', './style.css', './app.js', './bundle.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(SHELL_REL).catch(() => {}))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -14,7 +17,7 @@ self.addEventListener('activate', (e) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+      .then(() => self.clients.claim())
   );
 });
 
@@ -24,12 +27,19 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  const scopePath = new URL(self.registration.scope).pathname;
+  const relPath = url.pathname.startsWith(scopePath)
+    ? url.pathname.slice(scopePath.length)
+    : url.pathname.replace(/^\/+/, '');
+
+  // Cilt paketleri, illüstrasyonlar ve sayfa görselleri: önce önbellek, yoksa ağ (ve önbelleğe yaz)
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
-    url.pathname === '/api/book' ||
-    url.pathname === '/bundle.js';
+    relPath.startsWith('art/') ||
+    /^pages[^/]*\//.test(relPath) ||
+    /^volumes\/[^/]+\.json$/.test(relPath) ||
+    relPath === 'api/book' ||
+    relPath === 'api/catalog' ||
+    relPath === 'bundle.js';
 
   if (cacheFirst) {
     e.respondWith(
@@ -44,13 +54,13 @@ self.addEventListener('fetch', (e) => {
               }
               return res;
             })
-            .catch(() => hit),
-      ),
+            .catch(() => hit)
+      )
     );
     return;
   }
 
-  // kabuk: önce ağ, düşerse önbellek
+  // Kabuk dosyaları: önce ağ, düşerse çevrimdışı önbellek
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -60,6 +70,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
   );
 });

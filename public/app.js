@@ -14,7 +14,21 @@
     set(k, v) {
       try {
         localStorage.setItem('alya4:' + k, JSON.stringify(v));
-      } catch {}
+        return true;
+      } catch {
+        // 11 ciltlik önbellek tarayıcı kotasını doldurursa eski cilt önbelleklerini temizle
+        try {
+          for (const key of Object.keys(localStorage)) {
+            if (key.startsWith('alya4:book:') || key.startsWith('alya4:bookver:')) {
+              localStorage.removeItem(key);
+            }
+          }
+          localStorage.setItem('alya4:' + k, JSON.stringify(v));
+          return true;
+        } catch {
+          return false;
+        }
+      }
     },
   };
 
@@ -24,22 +38,76 @@
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: LS.get('vol', '4'),
+    vol: String(LS.get('vol', '4')),
+    catalog: Array.isArray(window.ALYA_CATALOG) ? window.ALYA_CATALOG : [],
     book: null,
     chapter: 0,
   };
 
-  /* ---------------- cilt ---------------- */
+  const memBooks = new Map();
+
+  /* ---------------- dinamik cilt seçici ---------------- */
+  async function ensureCatalog() {
+    if (state.catalog.length > 0) return state.catalog;
+    try {
+      const res = await fetch('api/catalog');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.volumes) && data.volumes.length) {
+          state.catalog = data.volumes;
+          return state.catalog;
+        }
+      }
+    } catch {}
+    state.catalog = [
+      { key: '4', label: '4', volume: 'Cilt 4', file: 'volumes/4.json' },
+      { key: '4.5', label: '4.5', volume: 'Cilt 4.5', file: 'volumes/4.5.json' },
+    ];
+    return state.catalog;
+  }
+
+  function renderVolumeNav() {
+    const nav = $('volNav');
+    if (!nav) return;
+    nav.innerHTML = '';
+    for (const item of state.catalog) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'seg-btn' + (item.key === state.vol ? ' is-on' : '') + (item.ongoing ? ' is-ongoing' : '');
+      btn.dataset.vol = item.key;
+      btn.title = item.ongoing ? item.volume + ' (Devam Ediyor)' : item.volume;
+      btn.textContent = item.label || item.key;
+      btn.addEventListener('click', () => switchVolume(item.key));
+      nav.appendChild(btn);
+    }
+    syncActiveVolumeButton();
+  }
+
+  function syncActiveVolumeButton() {
+    const nav = $('volNav');
+    if (!nav) return;
+    let activeBtn = null;
+    for (const btn of nav.querySelectorAll('button[data-vol]')) {
+      const on = btn.dataset.vol === state.vol;
+      btn.classList.toggle('is-on', on);
+      if (on) activeBtn = btn;
+    }
+    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+      activeBtn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
+    }
+  }
+
   function switchVolume(v) {
     if (v === state.vol) return;
     LS.set('page:' + state.vol, state.page);
     state.vol = v;
     LS.set('vol', v);
     state.page = LS.get('page:' + v, 1);
-    load().catch(() => {});
+    syncActiveVolumeButton();
+    load().catch((err) => {
+      reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
+    });
   }
-  $('vol4').addEventListener('click', () => switchVolume('4'));
-  $('vol45').addEventListener('click', () => switchVolume('4.5'));
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -56,6 +124,7 @@
 
   /* ---------------- bölüm yardımcıları ---------------- */
   const chapters = () => state.book.chapters;
+  const isChapterNative = () => Boolean(state.book && state.book.chapterNative);
   const chapterIndex = (n) => {
     let idx = 0;
     chapters().forEach((c, k) => {
@@ -70,22 +139,33 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
-  function imgSrc(p, vol) {
+  function imgSrc(p, forScanMode = false) {
     const key = String(p.n).padStart(3, '0');
-    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
-    if (pack && pack[key]) return pack[key];
+    const pack = window.ALYA_ART && window.ALYA_ART[state.vol];
+    if (!forScanMode && pack && pack[key]) return pack[key];
+    if (forScanMode && p.scanImg) return p.scanImg;
     return p.img;
   }
 
-  /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
+  function catalogEntry(v) {
+    return state.catalog.find((c) => c.key === v) || null;
+  }
+
+  function volumeVersion(v) {
+    const entry = catalogEntry(v);
+    if (entry && entry.hash) return entry.hash;
+    return window.ALYA_BUNDLE_VERSION || 'dev';
+  }
+
   function bundleBook(v) {
     const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
     return b || null;
   }
 
   function cachedBook(v) {
-    const ver = window.ALYA_BUNDLE_VERSION || 'dev';
+    if (memBooks.has(v)) return memBooks.get(v);
+    const ver = volumeVersion(v);
+    if (ver === 'dev') return null;
     const hit = LS.get('bookver:' + v, null);
     if (!hit || hit !== ver) return null;
     return LS.get('book:' + v, null);
@@ -93,36 +173,83 @@
 
   async function readBook(v) {
     const cached = cachedBook(v);
-    if (cached) return cached;
+    if (cached) {
+      memBooks.set(v, cached);
+      return cached;
+    }
     const embedded = bundleBook(v);
     if (embedded) {
+      memBooks.set(v, embedded);
       LS.set('book:' + v, embedded);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
+      LS.set('bookver:' + v, volumeVersion(v));
       return embedded;
     }
-    const res = await fetch('api/book?v=' + encodeURIComponent(v));
-    const book = await res.json();
+
+    const entry = catalogEntry(v);
+    const volFile = (entry && entry.file) || 'volumes/' + encodeURIComponent(v) + '.json';
+    let book = null;
+
     try {
-      LS.set('book:' + v, book);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-    } catch (e) {}
+      const res = await fetch(volFile);
+      if (res.ok) book = await res.json();
+    } catch {}
+
+    if (!book) {
+      const res = await fetch('api/book?v=' + encodeURIComponent(v));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      book = await res.json();
+    }
+
+    memBooks.set(v, book);
+    LS.set('book:' + v, book);
+    LS.set('bookver:' + v, volumeVersion(v));
     return book;
   }
 
+  function syncModeControls() {
+    const native = isChapterNative();
+    const modeGroup = $('modeGroup');
+    const modePage = $('modePage');
+    const modeBtn = $('modeBtn');
+
+    if (native) {
+      state.mode = 'text';
+      if (modeGroup) modeGroup.hidden = true;
+      if (modePage) modePage.hidden = true;
+      if (modeBtn) modeBtn.hidden = true;
+    } else {
+      if (modeGroup) modeGroup.hidden = false;
+      if (modePage) modePage.hidden = false;
+      if (modeBtn) modeBtn.hidden = false;
+    }
+  }
+
   async function load() {
+    await ensureCatalog();
+    if (!catalogEntry(state.vol) && state.catalog.length > 0) {
+      state.vol = state.catalog[0].key;
+      LS.set('vol', state.vol);
+    }
+    renderVolumeNav();
+
     state.book = await readBook(state.vol);
+    syncModeControls();
+
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
-    $('brandSub').textContent = state.book.volume + ' · Türkçe';
-    $('vol4').classList.toggle('is-on', state.vol === '4');
-    $('vol45').classList.toggle('is-on', state.vol === '4.5');
+    const statusSuffix = state.book.ongoing ? ' · Türkçe · Devam Ediyor' : ' · Türkçe';
+    $('brandSub').textContent = state.book.volume + statusSuffix;
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
+    $('tocHead').textContent = state.book.ongoing
+      ? 'İçindekiler · ' + state.book.volume + ' (Devam Ediyor)'
+      : 'İçindekiler · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
 
     const list = $('tocList');
     list.innerHTML = '';
+    const native = isChapterNative();
     chapters().forEach((ch, i) => {
       const li = document.createElement('li');
       li.dataset.page = ch.page;
@@ -137,8 +264,12 @@
       ttl.textContent = ch.title;
       const pg = document.createElement('span');
       pg.className = 'ch-page';
-      const [s, e] = chapterRange(i);
-      pg.textContent = s === e ? s : s + '–' + e;
+      if (native) {
+        pg.textContent = '#' + (i + 1);
+      } else {
+        const [s, e] = chapterRange(i);
+        pg.textContent = s === e ? s : s + '–' + e;
+      }
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
         toggleToc(false);
@@ -162,20 +293,26 @@
       li.classList.toggle('is-read', max >= end);
     }
   }
+
   /* ---------------- metin temizliği ---------------- */
   function cleanHeading(paras, ch) {
     const out = paras.slice();
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Başlangıç)\b/.test(t);
+    const looksHeading =
+      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Sonsöz Notu|Yazarın Notu|Yazarın Sonsözü|Yan Hikâye|Özel Ek|Ek Hikâye|Anekdot|Ara Bölüm|Epilog|Prolog|Başlangıç|Kitap Yürüyücüsü|Bookwalker)\b/i.test(
+        t
+      );
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
+    } else if (t.length < 95 && !/[.!?]$/.test(t)) {
+      out.shift();
     } else {
       const i = t.indexOf(ch.title);
       if (i >= 0) {
-        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”]+/, '');
+        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”—–-]+/, '');
         if (rest.length > 40) out[0] = rest;
         else out.shift();
       }
@@ -183,23 +320,25 @@
     return out;
   }
 
-  function figureFor(p, caption) {
+  function figureFor(p, caption, forScanMode = false) {
+    const src = imgSrc(p, forScanMode);
+    const labelText = isChapterNative() ? 'İllüstrasyon' : 'Sayfa ' + p.n;
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = imgSrc(p);
-    img.alt = 'Sayfa ' + p.n;
+    img.src = src;
+    img.alt = labelText;
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => scheduleProgress(), { once: true });
     fig.appendChild(img);
-    if (caption) {
+    if (caption && !isChapterNative()) {
       const cap = document.createElement('figcaption');
       cap.className = 'img-cap';
-      cap.textContent = 'Sayfa ' + p.n;
+      cap.textContent = labelText;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => openLightbox(src, labelText));
     return fig;
   }
 
@@ -249,7 +388,7 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false));
+    if (p) sec.appendChild(figureFor(p, false, true));
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -272,6 +411,10 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
+    $('modeText').classList.toggle('is-on', false);
+    $('modePage').classList.toggle('is-on', true);
+    $('modeBtn').textContent = 'Orijinal';
+
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
     paintProgress();
@@ -291,11 +434,14 @@
   /* ---------------- çizim (bölüm akışı) ---------------- */
   function render() {
     if (!state.book) return;
-    if (state.mode === 'page') return renderPage();
+    syncModeControls();
+    if (state.mode === 'page' && !isChapterNative()) return renderPage();
+
     const idx = chapterIndex(state.page);
     state.chapter = idx;
     const ch = chapters()[idx];
     const [startPage, endPage] = chapterRange(idx);
+    const native = isChapterNative();
 
     reader.innerHTML = '';
 
@@ -303,22 +449,39 @@
     head.className = 'ch-head';
     const kicker = document.createElement('p');
     kicker.className = 'kicker';
-    kicker.textContent = ch.label;
+    kicker.textContent = state.book.ongoing ? ch.label + ' · Devam Eden Cilt' : ch.label;
     const h1 = document.createElement('h1');
     h1.className = 'chapter-title';
     h1.textContent = ch.title;
     const meta = document.createElement('p');
     meta.className = 'ch-meta';
+
     const pages = endPage - startPage + 1;
     let words = 0;
+    let artCount = 0;
     for (let n = startPage; n <= endPage; n++) {
       const pg = state.book.pages[n - 1];
-      if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
+      if (!pg) continue;
+      if (pg.art) artCount++;
+      if (pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
     const mins = Math.max(1, Math.round(words / 240));
-    meta.textContent =
-      'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
-      ' · ' + pages + ' sayfa · ~' + mins + ' dk';
+    if (native) {
+      meta.textContent =
+        words > 0
+          ? 'Bölüm ' + (idx + 1) + ' / ' + chapters().length + ' · ~' + mins + ' dk okuma'
+          : artCount + ' görsel · İllüstrasyon galerisi';
+    } else {
+      meta.textContent =
+        'Sayfa ' +
+        startPage +
+        (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' +
+        pages +
+        ' sayfa · ~' +
+        mins +
+        ' dk';
+    }
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
@@ -326,28 +489,25 @@
     for (let n = startPage; n <= endPage; n++) {
       const p = state.book.pages[n - 1];
       if (!p) continue;
+
+      const isIllustration = p.art === true && Boolean(imgSrc(p, false));
+      if (!isIllustration && (!p.tr || p.tr.length === 0)) continue;
+
       const sec = document.createElement('section');
       sec.className = 'pg';
       sec.dataset.page = p.n;
 
-      if (state.mode === 'page') {
-        sec.appendChild(figureFor(p, true));
-        frag.appendChild(sec);
-        continue;
-      }
-
-      const isIllustration = p.tr.length === 0 || p.art === true;
       if (isIllustration) {
         sec.classList.add('pg-art');
         if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true));
+        sec.appendChild(figureFor(p, true, false));
         if (p.tr.length === 0) {
           frag.appendChild(sec);
           continue;
         }
       }
 
-      let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+      const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
       for (const t of paras) {
         if (!t) continue;
         const el = document.createElement('p');
@@ -365,7 +525,11 @@
     foot.className = 'ch-end';
     const note = document.createElement('p');
     note.className = 'ch-end-note';
-    note.textContent = last ? '— Cilt sonu —' : '— Bölüm sonu —';
+    note.textContent = last
+      ? state.book.ongoing
+        ? '— Güncel çeviri sonu · Yeni bölümler yayınlandıkça eklenecektir —'
+        : '— Cilt sonu —'
+      : '— Bölüm sonu —';
     foot.appendChild(note);
     if (!last) {
       const b = document.createElement('button');
@@ -374,13 +538,28 @@
       b.textContent = 'Sonraki: ' + chapters()[idx + 1].label + ' · ' + chapters()[idx + 1].title + ' →';
       b.addEventListener('click', () => goChapter(idx + 1));
       foot.appendChild(b);
+    } else {
+      const curCatIdx = state.catalog.findIndex((c) => c.key === state.vol);
+      const nextVol = curCatIdx >= 0 ? state.catalog[curCatIdx + 1] : null;
+      if (nextVol) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ch-end-btn';
+        b.textContent = 'Sonraki cilt: ' + nextVol.volume + ' →';
+        b.addEventListener('click', () => switchVolume(nextVol.key));
+        foot.appendChild(b);
+      }
     }
     reader.appendChild(foot);
 
     // durum satırı
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('navPages').textContent = native
+      ? (idx + 1) + ' / ' + chapters().length
+      : startPage === endPage
+      ? 's. ' + startPage
+      : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = idx <= 0;
     $('nextBtn').disabled = last;
     $('tocLabel').textContent = ch.label;
@@ -397,9 +576,8 @@
     const prevMax2 = LS.get('max:' + state.vol, 0);
     if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
     markTocRead();
-    LS.set('mode', state.mode);
+    if (!native) LS.set('mode', state.mode);
 
-    // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
     const anchorPt = targetPage > startPage ? reader.querySelector('.pg[data-page="' + targetPage + '"]') : null;
     if (anchorPt) requestAnimationFrame(() => anchorPt.scrollIntoView({ block: 'start' }));
     else window.scrollTo({ top: 0, behavior: 'auto' });
@@ -419,7 +597,7 @@
 
   function paintProgress() {
     if (!state.book) return;
-    if (state.mode === 'page') {
+    if (state.mode === 'page' && !isChapterNative()) {
       const pct = state.page / state.book.total;
       $('progressBar').style.width = (pct * 100).toFixed(2) + '%';
       $('chPct').textContent = '%' + Math.round(pct * 100);
@@ -434,7 +612,7 @@
     pct = Math.min(1, Math.max(0, pct));
     $('progressBar').style.width = (pct * 100).toFixed(2) + '%';
     $('chPct').textContent = '%' + Math.round(pct * 100);
-    // ekranda görünen sayfayı hatırla (çeviri ↔ orijinal geçişi için)
+
     const mid = window.scrollY + window.innerHeight * 0.35;
     let seen = state.page;
     for (const el of reader.querySelectorAll('.pg[data-page]')) {
@@ -474,13 +652,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && p.art && imgSrc(p)) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
     if (nxt) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && p.art && imgSrc(p)) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
@@ -501,17 +679,17 @@
       if (el) el.scrollIntoView({ block: 'start' });
     }
   }
-  const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
-  const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
-  function goto(n) {
-    goChapter(chapterIndex(n), n);
-  }
+  const next = () =>
+    state.mode === 'page' && !isChapterNative() ? goPage(state.page + 1) : goChapter(state.chapter + 1);
+  const prev = () =>
+    state.mode === 'page' && !isChapterNative() ? goPage(state.page - 1) : goChapter(state.chapter - 1);
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);
   $('nextBtn').addEventListener('click', next);
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
   $('modeBtn').addEventListener('click', () => {
+    if (isChapterNative()) return;
     state.mode = state.mode === 'text' ? 'page' : 'text';
     render();
   });
@@ -520,6 +698,7 @@
     render();
   });
   $('modePage').addEventListener('click', () => {
+    if (isChapterNative()) return;
     state.mode = 'page';
     render();
   });
@@ -570,7 +749,7 @@
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
     else if (e.key === 't') $('themeBtn').click();
-    else if (e.key === 'v') (state.mode === 'text' ? $('modePage') : $('modeText')).click();
+    else if (e.key === 'v' && !isChapterNative()) (state.mode === 'text' ? $('modePage') : $('modeText')).click();
     else return;
     e.preventDefault();
   });
