@@ -90,7 +90,11 @@ for (const [k, book] of Object.entries(vols)) {
 }
 
 const raw = JSON.stringify({ vols: manifestVols });
-const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+const hasher = crypto.createHash('sha1').update(raw);
+for (const k of VOLUME_KEYS) {
+  if (vols[k]) hasher.update(JSON.stringify(vols[k]));
+}
+const hash = hasher.digest('hex').slice(0, 12);
 
 const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +

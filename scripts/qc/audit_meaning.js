@@ -108,16 +108,17 @@ function evaluateMeaning(src, tr, options = {}) {
       proportionalPages++;
       for (let i = 0; i < en.length; i++) {
         const j = Math.min(t.length - 1, Math.floor((i * t.length) / en.length));
-        const windowText = [t[Math.max(0, j - 1)], t[j], t[Math.min(t.length - 1, j + 1)]]
-          .filter(Boolean)
-          .join(' ');
+        const neighbors = [t[j], t[Math.max(0, j - 1)], t[Math.min(t.length - 1, j + 1)]].filter(Boolean);
+        const sampleTr = neighbors.find((s) => /\p{L}/u.test(s));
+        if (!sampleTr) continue;
+        const windowText = neighbors.join(' ');
         const e = hasEnNeg(en[i]);
         const m = hasTrNeg(windowText);
         if (e && en[i].length > 40) {
           comparableNegCount++;
           if (!m) {
             pageMissingNeg++;
-            rows.push({ page: p.page, i, en: e, tr: m, mode: 'proportional', t: t[j] });
+            rows.push({ page: p.page, i, en: e, tr: m, mode: 'proportional', t: sampleTr });
           }
         }
       }
