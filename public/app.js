@@ -1,4 +1,63 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const inner = t.slice(open + 1, close);
+      if (!inner) {
+        el.appendChild(d.createTextNode('{}'));
+        pos = close + 1;
+        continue;
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
   const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
@@ -453,13 +512,10 @@
 
         if (!isIllustration && p.tr.length === 0) continue;
 
-        let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
         for (const t of paras) {
           if (!t) continue;
-          const el = document.createElement('p');
-          if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-          el.textContent = t;
-          sec.appendChild(el);
+          sec.appendChild(renderParagraph(t));
         }
         frag.appendChild(sec);
       }

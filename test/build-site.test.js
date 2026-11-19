@@ -86,9 +86,10 @@ function testDynamicVolumeScalingAndHashRotation() {
     const dist1 = path.join(tmpRoot, 'dist1');
     const dist2 = path.join(tmpRoot, 'dist2');
     fs.mkdirSync(pubDir, { recursive: true });
-    for (const f of ['index.html', 'style.css', 'app.js', 'sw.js', 'app.js.bak']) {
+    for (const f of ['index.html', 'style.css', 'app.js', 'sw.js']) {
       fs.copyFileSync(path.join(ROOT, 'public', f), path.join(pubDir, f));
     }
+    fs.writeFileSync(path.join(pubDir, 'app.js.bak'), '// synthetic backup file');
     fs.writeFileSync(path.join(pubDir, 'bundle-art.js'), 'window.ALYA_ART={"4":{"004":"data:image/webp;base64,AAAA"}};\n');
     fs.mkdirSync(path.join(pubDir, 'pages'), { recursive: true });
     fs.writeFileSync(path.join(pubDir, 'pages', '001.webp'), 'scan');
@@ -336,6 +337,7 @@ async function testReadBookStaticFallbackOn404() {
       querySelector: () => makeElement(),
       querySelectorAll: () => [],
       createElement: () => makeElement(),
+      createTextNode: (t) => ({ textContent: String(t) }),
       createDocumentFragment: () => makeElement(),
       addEventListener() {},
     },

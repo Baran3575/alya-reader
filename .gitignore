@@ -6,6 +6,7 @@ data/back_en.json
 data45/back_en.json
 *.log
 *.pid
+*.bak
 .deepl-key
 .stitch/captures/
 .cache/

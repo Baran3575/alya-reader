@@ -16,7 +16,9 @@
     "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",
     "qc:v45": "node scripts/qc/cli.js --volume 4.5 --strict --check-regression",
     "patch:dry": "node scripts/patch.js --dry-run",
-    "patch:apply": "node scripts/patch.js"
+    "patch:apply": "node scripts/patch.js",
+    "fix:delim": "node scripts/fix_delim_junk.js",
+    "fix:delim:dry": "node scripts/fix_delim_junk.js --dry"
   },
   "keywords": [
     "alya",
