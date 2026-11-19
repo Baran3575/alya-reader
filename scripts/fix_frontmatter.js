@@ -1,6 +1,8 @@
 // Reklam, hayran künyesi ve OCR gürültüsü sayfalarını temizler; içindekiler sayfalarını chapters.json ile yeniden yazar.
 const fs = require('fs');
 const path = require('path');
+const { isOcrNoise } = require('./qc/verify');
+
 const ROOT = path.join(__dirname, '..');
 
 const LBL = (k) =>
@@ -38,4 +40,54 @@ if (fs.existsSync(fin45Path) && fs.existsSync(chapters45Path)) {
   fs.writeFileSync(fin45Path, JSON.stringify(fin45));
 }
 
-console.log('ön ve arka sayfalar düzeltildi (Cilt 4 & Cilt 4.5)');
+// Cilt 6, 7, 8, 9, 10: Glucose Translations / NaCl hayran çeviri künyesi ve Discord/doxx uyarı sayfaları
+const FAN_CREDIT_PAGES = {
+  data6: ['6'],
+  data7: ['5'],
+  data8: ['6'],
+  data9: ['7'],
+  data10: ['6', '7', '249'],
+};
+for (const [dir, pages] of Object.entries(FAN_CREDIT_PAGES)) {
+  const fp = path.join(ROOT, dir, 'paragraphs_final.json');
+  if (!fs.existsSync(fp)) continue;
+  const obj = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  for (const p of pages) {
+    if (Object.prototype.hasOwnProperty.call(obj, p)) obj[p] = [];
+  }
+  fs.writeFileSync(fp, JSON.stringify(obj));
+}
+
+// Cilt 9.5: siyah-beyaz illüstrasyon Tesseract OCR gürültüsü ve ters eğik çizgi kalıntıları
+const fin95Path = path.join(ROOT, 'data95/paragraphs_final.json');
+if (fs.existsSync(fin95Path)) {
+  const fin95 = JSON.parse(fs.readFileSync(fin95Path, 'utf8'));
+  const SHORT_OCR_JUNK = new Set([
+    '1S',
+    '2a',
+    '2P',
+    '88 ay',
+    '@: 7 ——“\\”',
+    '’ e I yasaları S',
+  ]);
+  for (const [pg, arr] of Object.entries(fin95)) {
+    if (!Array.isArray(arr)) continue;
+    fin95[pg] = arr
+      .map((t) =>
+        String(t)
+          .replace(/^“\\\.\s*/u, '“…')
+          .replace(/^“\\…/u, '“…')
+          .replace(/:\s*a\s*=\s*Ye\s+çiğ\s*-\s*Y\s+N\\\\[\s\S]*$/u, '…')
+      )
+      .filter((t) => {
+        if (!t.trim()) return false;
+        if (isOcrNoise(t)) return false;
+        if (SHORT_OCR_JUNK.has(t.trim())) return false;
+        if (pg === '131' && (t === 'Ben' || t === 'Vay be')) return false;
+        return true;
+      });
+  }
+  fs.writeFileSync(fin95Path, JSON.stringify(fin95));
+}
+
+console.log('ön/arka hayran künyesi ve OCR gürültüsü sayfaları düzeltildi (Cilt 4 – 10)');

@@ -259,7 +259,19 @@ function testArtFlagDetection() {
   } finally {
     fs.rmSync(tmpPub, { recursive: true, force: true });
   }
-  console.log('  ✓ Art flag detection and cover/tail rules verified');
+  // Structured volumes (5-12, 9.5): illustration pages with disk .webp have art: true & scan: true; prose pages omit scan
+  const b5 = buildBook({
+    volKey: '5',
+    dataDir: 'data5',
+    imgPrefix: '/pages5/',
+    volume: 'Cilt 5',
+    titlesFile: path.join(ROOT, 'data5', 'chapters.json'),
+  });
+  const b5Art = b5.pages.filter((p) => p.art);
+  const b5Prose = b5.pages.filter((p) => !p.art);
+  assert(b5Art.length >= 5 && b5Art.every((p) => p.scan === true), 'Vol 5 art pages must have scan: true');
+  assert(b5Prose.every((p) => !p.scan), 'Vol 5 prose pages without disk scans must omit scan');
+  console.log('  ✓ Art flag detection and cover/tail/structured-scan rules verified');
 }
 
 function testBundleArtPreservation() {
@@ -313,6 +325,22 @@ function testFrontmatterAndFanUrlLeaks() {
   assert.deepStrictEqual(d45['347'], [], 'Vol 4.5 page 347 translator afterword must be cleared');
   assert.strictEqual(d45['8'][0], 'İçindekiler', 'Vol 4.5 page 8 should start with İçindekiler');
   assert.strictEqual(d45['8'].length, 14, 'Vol 4.5 page 8 should list İçindekiler + 13 chapters');
+
+  // Verify fan credit pages in Vols 6-10 and OCR noise in Vol 9.5 are cleared
+  for (const [dir, pages] of [
+    ['data6', ['6']],
+    ['data7', ['5']],
+    ['data8', ['6']],
+    ['data9', ['7']],
+    ['data10', ['6', '7', '249']],
+  ]) {
+    const dv = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'paragraphs_final.json'), 'utf8'));
+    for (const p of pages) {
+      assert.deepStrictEqual(dv[p], [], `${dir} page ${p} fan credit/disclaimer must be cleared`);
+    }
+  }
+  const v95 = runCLI(['--volume', '9.5', '--strict', '--check-regression'], true);
+  assert(v95.out.includes('OCR gürültüsü            0'), 'Vol 9.5 must have zero OCR noise');
 
   try {
     // 1. Intentional fan URL / Discord leak
