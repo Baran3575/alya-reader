@@ -25,9 +25,12 @@ const ACR = new Set([
   'SSCB', 'BM', 'NATO', 'JR', 'OL', 'IS', 'AT', 'WD', 'BT', 'NM', 'TL', 'MMLC', 'FTL',
 ]);
 
+const { range } = require('./chapters.js');
+
 const args = process.argv.slice(2);
 const only = args.includes('--vol') ? args[args.indexOf('--vol') + 1] : null;
 const md = args.includes('--md');
+const chArg = args.includes('--bolum') ? args[args.indexOf('--bolum') + 1] : args.includes('--chapter') ? args[args.indexOf('--chapter') + 1] : null;
 
 const CAP_TR = /(?<![\p{L}ÇĞİÖŞÜçğıöşü])([A-ZÇĞİÖŞÜ]{2,})(?![\p{L}ÇĞİÖŞÜçğıöşü])/gu;
 const CAP_EN = /\b[A-Z]{2,}\b/g;
@@ -41,6 +44,10 @@ for (const [vol, [sf, tf]] of Object.entries(MAP)) {
   const tr = JSON.parse(fs.readFileSync(path.join(ROOT, tf), 'utf8'));
   for (let i = 0; i < srcArr.length; i++) {
     const page = String(i + 1);
+    if (chArg) {
+      const r = range(vol, chArg);
+      if (!r || i + 1 < r.from || i + 1 > r.to) continue;
+    }
     const arr = tr[page] || [];
     if (!arr.length) continue;
     const en = String(srcArr[i] && srcArr[i].text || '');

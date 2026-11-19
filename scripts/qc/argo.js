@@ -47,9 +47,15 @@ const TR_WEAK = [
   'zampara', 'kaba', 'saygısız', 'ahlaksız', 'kötü adam', 'kötü çocuk',
 ];
 
+// Yapay ("çeviri kokan") karşılıklar: kapıyı düşürmez, uyarı verir.
+const TR_ARTIFICIAL = ['siktiriboktan', 'sikindirik', 'amına koyayım', 'siktiğimin'];
+
+const { range } = require('./chapters.js');
+
 const args = process.argv.slice(2);
 const only = args.includes('--vol') ? args[args.indexOf('--vol') + 1] : null;
 const pageArg = args.includes('--page') ? Number(args[args.indexOf('--page') + 1]) : null;
+const chArg = args.includes('--bolum') ? args[args.indexOf('--bolum') + 1] : args.includes('--chapter') ? args[args.indexOf('--chapter') + 1] : null;
 const md = args.includes('--md');
 const topN = args.includes('--top') ? Number(args[args.indexOf('--top') + 1]) : 12;
 
@@ -89,6 +95,10 @@ for (const [vol, [sf, tf]] of Object.entries(MAP)) {
   for (let i = 0; i < srcArr.length; i++) {
     const page = i + 1;
     if (pageArg && page !== pageArg) continue;
+    if (chArg) {
+      const r = range(vol, chArg);
+      if (!r || page < r.from || page > r.to) continue;
+    }
     const en = unwrapEN(srcArr[i] && srcArr[i].text).replace(/\(TN:[\s\S]*?(?:\)|$)/gu, ' ');
     if (!en) continue;
     const arr = tr[String(page)] || [];
@@ -148,6 +158,18 @@ if (pageArg) {
 const total = rows.reduce((a, b) => a + b.deficit, 0);
 const hardCount = rows.filter((r) => r.hardDef > 0).length;
 const hardRows = rows.filter((r) => r.hardDef > 0);
+const artHits = [];
+for (const m of TR_ARTIFICIAL) {
+  const re = new RegExp(`(?<![\\p{L}])${m}(?![\\p{L}])`, 'giu');
+  for (const [vol, pair] of Object.entries(MAP)) {
+    const tr = JSON.parse(fs.readFileSync(path.join(ROOT, pair[1]), 'utf8'));
+    for (const [pg, arr] of Object.entries(tr)) {
+      if (only && vol !== only) continue;
+      for (const x of arr) if (re.test(String(x))) artHits.push(`C${vol} s.${pg}: ${m}`);
+    }
+  }
+}
+if (artHits.length) console.warn(`! Yapay küfür uyarısı (${artHits.length}): ${artHits.slice(0, 5).join(' · ')}`);
 if (args.includes('--check')) {
   if (hardRows.length) {
     console.error(`✗ Argo sadakati: ${hardRows.length} sayfada ağır hakaret yumuşatılmış`);

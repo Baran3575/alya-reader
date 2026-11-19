@@ -23,6 +23,8 @@ const args = process.argv.slice(2);
 const only = args.includes('--vol') ? args[args.indexOf('--vol') + 1] : null;
 const md = args.includes('--md');
 const pageArg = args.includes('--page') ? Number(args[args.indexOf('--page') + 1]) : null;
+const chArg = args.includes('--bolum') ? args[args.indexOf('--bolum') + 1] : args.includes('--chapter') ? args[args.indexOf('--chapter') + 1] : null;
+const { range } = require('./chapters.js');
 const EX = args.includes('--examples') ? Number(args[args.indexOf('--examples') + 1]) : 2;
 
 const NAMES = [
@@ -164,6 +166,10 @@ for (const vol of Object.keys(BOOKS)) {
     const to = ci + 1 < chapters.length ? Number(chapters[ci + 1].page) - 1 : maxPage;
     const chPages = pages.filter((p) => p > from && p <= to);
     if (!chPages.length) continue;
+    if (chArg) {
+      const r = range(vol, chArg);
+      if (!r || from + 1 !== r.chapter.from) continue;
+    }
 
     const stats = new Map(); // kural -> {n, ex:[]}
     let totalWords = 0;
@@ -289,7 +295,7 @@ for (const r of report) {
   } else {
     for (const c of r.chapters) {
       lines.push(
-        `${String(c.index).padStart(2)} ${c.title.slice(0, 40).padEnd(42)} s.${c.from}-${c.to}  ` +
+        `${String(c.index).padStart(2)} ${c.title.slice(0, 40).padEnd(42)} s.${c.from + 1}-${c.to}  ` +
           `kelime ${c.words}  cümle ${c.avgSentence.toFixed(1)}  sadakat ${c.fidAvg === null ? '—' : c.fidAvg.toFixed(0)}  ` +
           `kusur ${c.density}/100k`
       );
@@ -299,7 +305,7 @@ for (const r of report) {
   const interesting = r.chapters.filter((c) => c.dips.length || c.top.some((t) => t.ex.length));
   if (md) {
     for (const c of interesting) {
-      lines.push(`### Cilt ${r.vol} · ${c.index}. ${c.title} (s.${c.from}–${c.to})`);
+      lines.push(`### Cilt ${r.vol} · ${c.index}. ${c.title} (s.${c.from + 1}–${c.to})`);
       lines.push('');
       if (c.fidAvg !== null) {
         const wf = c.worstFid

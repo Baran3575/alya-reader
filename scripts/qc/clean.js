@@ -13,6 +13,8 @@ const ROOT = path.join(__dirname, '..', '..');
 const args = process.argv.slice(2);
 const only = args.includes('--vol') ? args[args.indexOf('--vol') + 1] : null;
 const md = args.includes('--md');
+const { range } = require('./chapters.js');
+const chArg = args.includes('--bolum') ? args[args.indexOf('--bolum') + 1] : args.includes('--chapter') ? args[args.indexOf('--chapter') + 1] : null;
 
 function pageText(arr) {
   return arr.filter((t) => !String(t).startsWith('ÇN:')).join('\n');
@@ -44,7 +46,9 @@ for (const vol of Object.keys(PAIRS)) {
   const pages = Object.keys(book).map(Number).sort((a, b) => a - b);
   const seen = new Map();
 
+  const cr = chArg ? range(vol, chArg) : null;
   for (const p of pages) {
+    if (cr && (p < cr.from || p > cr.to)) continue;
     const arr = book[String(p)];
     if (!Array.isArray(arr)) continue;
     arr.forEach((raw, i) => {

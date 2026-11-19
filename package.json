@@ -32,7 +32,9 @@
     "clean": "node scripts/qc/clean.js --md",
     "fix:dialog": "node scripts/fix_split_dialog.js",
     "fix:quotes": "node scripts/fix_nested_quotes.js",
-    "caps": "node scripts/qc/caps.js --md"
+    "caps": "node scripts/qc/caps.js --md",
+    "chapter": "node scripts/qc/chapter.js",
+    "next": "node scripts/qc/chapter.js --next"
   },
   "keywords": [
     "alya",

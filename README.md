@@ -82,3 +82,16 @@ karşılanmalı**; iki konuşma tek paragrafta birleştirilmez, cümle atlanmaz,
 - Cilt ya da bölüm düğmesine dokununca alttan liste açılır: ciltlerde bölüm/okundu sayısı, bölümlerde **bölüm adı + sayfa aralığı**.
 - Okundu sistemi elle: her bölüm satırındaki ✓ ile işaretlenir (`alya4:read:<cilt>`), "Hepsini okundu say" / "İşaretleri temizle" düğmeleri vardır. Otomatik işaretleme yok.
 - Alt çubuk: ‹ › düğmeleri, bölüm adı, sayfa aralığı, kaydırıcı. Görsele dokununca tam ekran.
+
+Bölüm bölüm ilerleme (sayfa sayfa değil):
+
+```
+npm run chapter                        # bölüm bazlı kalite tablosu
+npm run next                           # sıradaki sorunlu bölüm
+node scripts/qc/deep.js --vol 4 --bolum 8
+node scripts/qc/argo.js --vol 10 --bolum "Bölüm 8"
+node scripts/qc/caps.js --vol 9 --bolum 3
+node scripts/qc/clean.js --vol 4 --bolum 8
+```
+
+Ayrıntı: `docs/chapters.md`
