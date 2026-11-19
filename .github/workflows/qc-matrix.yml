@@ -54,8 +54,10 @@ jobs:
 
       - name: Resolve volume source path
         id: vol
+        env:
+          MATRIX_VOL: ${{ matrix.volume }}
         run: |
-          SRC_FILE=$(node -e "const v = require('./data/volumes.json').find(x => x.id === ${{ toJSON(matrix.volume) }}); console.log(v.dataDir + '/source.json');")
+          SRC_FILE=$(node -e 'const v = require("./data/volumes.json").find(x => String(x.id) === String(process.env.MATRIX_VOL)); console.log(v.dataDir + "/source.json");')
           echo "source_file=${SRC_FILE}" >> "$GITHUB_OUTPUT"
 
       - name: Ensure source file remains read-only
