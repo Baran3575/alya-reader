@@ -18,11 +18,11 @@
     </a>
 
     <nav class="tools">
-      <div class="seg seg-vol" role="group" aria-label="Cilt seçimi">
-        <button id="vol4" class="seg-btn is-on" type="button" title="Cilt 4">4</button>
-        <button id="vol45" class="seg-btn" type="button" title="Cilt 4.5">4.5</button>
-      </div>
-      <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
+      <button class="toc-btn vol-btn" id="volBtn" type="button" aria-haspopup="true" aria-controls="volPanel" aria-expanded="false">
+        <span id="volLabel">Cilt</span>
+        <span class="caret">▾</span>
+      </button>
+      <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-controls="tocPanel" aria-expanded="false">
         <span id="tocLabel">Bölüm</span>
         <span class="caret">▾</span>
       </button>
@@ -37,6 +37,11 @@
       <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
     </nav>
   </header>
+
+  <div class="toc-panel vol-panel" id="volPanel" hidden>
+    <p class="toc-head">Ciltler</p>
+    <ul class="toc-list vol-list" id="volList"></ul>
+  </div>
 
   <div class="toc-panel" id="tocPanel" hidden>
     <p class="toc-head">İçindekiler</p>

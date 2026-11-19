@@ -1,7 +1,7 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
+//   node scripts/qc/cli.js                         # Tüm etkin ciltler (data/volumes.json)
+//   node scripts/qc/cli.js --volume <cilt>         # Belirli cilt
 //   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
@@ -17,10 +17,18 @@ const { validatePatches } = require('../patch');
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
-const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
-};
+const MANIFEST = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'volumes.json'), 'utf8'));
+const VOLUMES = {};
+for (const entry of MANIFEST) {
+  const id = String(entry.id);
+  VOLUMES[id] = {
+    tr: `${entry.dataDir}/paragraphs_final.json`,
+    label: entry.label,
+    maxAvgStrict: entry.maxAvgStrict,
+    patchesFile: entry.patchesFile || '',
+    enabled: Boolean(entry.enabled),
+  };
+}
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
 const KNOWN_PAGE_SPLIT_QUOTES = {
@@ -54,7 +62,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = MANIFEST.filter((v) => v.enabled).map((v) => String(v.id));
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -240,9 +248,9 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
-    if (vol === '4') {
-      const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
+    // 4. Yama Doğrulama ve Regresyon (tanımlı patchesFile varsa)
+    if (cfg.patchesFile) {
+      const patchesFile = path.resolve(ROOT, cfg.patchesFile);
       if (fs.existsSync(patchesFile)) {
         try {
           const patches = JSON.parse(fs.readFileSync(patchesFile, 'utf8'));

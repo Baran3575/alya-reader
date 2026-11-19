@@ -26,6 +26,11 @@
   box-sizing: border-box;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 html,
 body {
   height: 100%;
@@ -67,8 +72,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6rem clamp(0.8rem, 3vw, 1.6rem);
+  gap: 0.8rem;
+  padding: 0.5rem clamp(0.8rem, 3vw, 1.6rem);
   background: var(--bar);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
@@ -77,10 +82,12 @@ body {
 .brand {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.1rem;
   text-decoration: none;
   color: inherit;
-  min-width: 0;
+  min-width: 40px;
+  min-height: 40px;
 }
 .brand-title {
   font-size: 0.82rem;
@@ -106,12 +113,15 @@ body {
 .toc-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  min-width: 40px;
   background: var(--bg-soft);
   color: var(--fg-soft);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 0.38rem 0.6rem;
+  padding: 0 0.65rem;
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
@@ -119,6 +129,9 @@ body {
   white-space: nowrap;
   overflow: hidden;
   transition: color 0.15s, border-color 0.15s;
+}
+.vol-btn {
+  max-width: 9rem;
 }
 .toc-btn:hover {
   color: var(--fg);
@@ -128,7 +141,8 @@ body {
   font-size: 0.62rem;
   color: var(--muted);
 }
-#tocLabel {
+#tocLabel,
+#volLabel {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -136,7 +150,7 @@ body {
 
 .toc-panel {
   position: fixed;
-  top: 54px;
+  top: 58px;
   right: clamp(0.8rem, 3vw, 1.6rem);
   z-index: 55;
   width: min(26rem, calc(100vw - 1.6rem));
@@ -168,6 +182,7 @@ body {
   grid-template-columns: 1fr auto;
   gap: 0.15rem 0.7rem;
   width: 100%;
+  min-height: 44px;
   text-align: left;
   background: transparent;
   border: 0;
@@ -182,6 +197,9 @@ body {
 }
 .toc-list .ch-label {
   grid-column: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.7rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -196,9 +214,11 @@ body {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
+  text-align: right;
   font-size: 0.72rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .toc-list li.is-current button {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
@@ -211,8 +231,25 @@ body {
   letter-spacing: 0.04em;
   text-transform: none;
 }
+.vol-list li.is-read .ch-label::after {
+  content: '';
+}
 .toc-list li.is-read .ch-title {
   color: var(--fg-soft);
+}
+.vol-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.46rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  text-transform: none;
+  line-height: 1.35;
 }
 
 .select {
@@ -249,7 +286,9 @@ body {
   color: var(--muted);
   font: inherit;
   font-size: 0.78rem;
-  padding: 0.38rem 0.7rem;
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0 0.7rem;
   cursor: pointer;
   transition: color 0.15s, background 0.15s;
 }
@@ -259,13 +298,17 @@ body {
 }
 
 .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   background: var(--bg-soft);
   color: var(--fg-soft);
   border-radius: 8px;
-  height: 30px;
-  min-width: 32px;
-  padding: 0 0.45rem;
+  min-height: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 0.5rem;
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
@@ -534,12 +577,20 @@ input[type='range']::-moz-range-thumb {
 }
 
 @media (max-width: 640px) {
+  .bar {
+    gap: 0.4rem;
+    padding: 0.45rem 0.65rem;
+  }
+  .tools {
+    gap: 0.3rem;
+  }
   .seg {
     display: none;
   }
   .mode-compact {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
   }
   .brand-sub {
     display: none;
@@ -547,11 +598,16 @@ input[type='range']::-moz-range-thumb {
   .brand-title {
     font-size: 0.76rem;
   }
-  .toc-btn {
-    max-width: 7.5rem;
+  .vol-btn {
+    max-width: 5.2rem;
+    padding: 0 0.45rem;
+  }
+  .toc-btn:not(.vol-btn) {
+    max-width: 5.8rem;
+    padding: 0 0.45rem;
   }
   .toc-panel {
-    top: 52px;
+    top: 56px;
     left: 0.5rem;
     right: 0.5rem;
     width: auto;
@@ -562,22 +618,6 @@ input[type='range']::-moz-range-thumb {
   }
   .reader p {
     line-height: 1.72;
-  }
-}
-/* cilt seçici */
-.seg-vol .seg-btn {
-  padding: 0.32rem 0.52rem;
-  font-size: 0.74rem;
-  min-width: 2.05rem;
-  text-align: center;
-}
-@media (max-width: 640px) {
-  .seg.seg-vol {
-    display: inline-flex;
-  }
-  .seg-vol .seg-btn {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.7rem;
   }
 }
 
@@ -641,12 +681,23 @@ figure.page-img.zoom img {
   text-align: center;
 }
 
+.ch-end .vol-badge {
+  margin: 0 0 0.65rem;
+}
+
 .ch-end-note {
   font-size: 0.75rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
   margin: 0 0 1rem;
+}
+
+.ch-end-note--partial {
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  line-height: 1.5;
 }
 
 .ch-end-btn {
@@ -718,7 +769,7 @@ figure.page-img.zoom img {
     font-size: 1.28rem;
   }
   .pct {
-    min-width: 2.2rem;
+    min-width: 1.9rem;
     font-size: 0.68rem;
   }
   .nav-ch-pages {

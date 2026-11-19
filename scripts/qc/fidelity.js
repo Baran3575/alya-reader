@@ -2,10 +2,12 @@
 const fs = require('fs');
 const path = require('path');
 const root = path.join(__dirname, '..', '..');
-const vol = process.argv[2] || '4';
-const pick = (a, b) => (vol === '4' ? a : b);
-const src = JSON.parse(fs.readFileSync(path.join(root, pick('data/source.json', 'data45/source.json')), 'utf8'));
-const tr = JSON.parse(fs.readFileSync(path.join(root, pick('data/paragraphs_final.json', 'data45/paragraphs_final.json')), 'utf8'));
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'data', 'volumes.json'), 'utf8'));
+const vol = String(process.argv[2] || (manifest.find((v) => v.enabled) || manifest[0]).id);
+const cfg = manifest.find((v) => String(v.id) === vol);
+if (!cfg) throw new Error('Bilinmeyen cilt: ' + vol);
+const src = JSON.parse(fs.readFileSync(path.join(root, cfg.dataDir, 'source.json'), 'utf8'));
+const tr = JSON.parse(fs.readFileSync(path.join(root, cfg.dataDir, 'paragraphs_final.json'), 'utf8'));
 
 const NAMES = ['Masachika', 'Kuze', 'Alisa', 'Alya', 'Maria', 'Masha', 'Yuki', 'Ayano', 'Sayaka', 'Touya', 'Chisaki', 'Nonoa', 'Kinjou', 'Mimiko', 'Sarashina', 'Kenzaki', 'Suou'];
 const words = (t) => (t.match(/[\p{L}\p{N}]+/gu) || []).length;
@@ -46,5 +48,5 @@ out.push(`\n[4] İsim sayısı uyuşmayan sayfalar: ${nameBad.length}`);
 nameBad.slice(0, 15).forEach((r) => out.push(`  s${r.page}  eksik: ${r.missing.join(',') || '-'}  fazla: ${r.extra.join(',') || '-'}`));
 out.push(`\n[5] Tırnak (diyalog) dengesi: EN ${rows.reduce((a, r) => a + r.dq, 0)} / TR ${rows.reduce((a, r) => a + r.dtq, 0)}`);
 
-fs.writeFileSync(path.join(root, pick('data/fidelity_report.txt', 'data45/fidelity_report.txt')), out.join('\n'));
+fs.writeFileSync(path.join(root, cfg.dataDir, 'fidelity_report.txt'), out.join('\n'));
 console.log(out.slice(0, 14).join('\n'));

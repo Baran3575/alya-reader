@@ -1,7 +1,7 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
 // Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+const VERSION = 'alya-v4';
+const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js', '/bundle-art.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -26,8 +26,7 @@ self.addEventListener('fetch', (e) => {
 
   // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
+    /^\/pages[^/]*\//.test(url.pathname) ||
     url.pathname === '/api/book' ||
     url.pathname === '/bundle.js';
 
@@ -60,6 +59,8 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() =>
+        caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('/index.html') : Response.error())),
+      ),
   );
 });
