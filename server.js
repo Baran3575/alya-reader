@@ -20,36 +20,109 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
+const TR_CHAPTER = {
+  prologue: 'Önsöz',
+  epilogue: 'Sonsöz',
+  afterword: 'Sonsöz',
+  interlude: 'Ara Bölüm',
+};
+
+const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+
+function inferVolKey(dataDir) {
+  if (!dataDir || dataDir === 'data') return '4';
+  if (dataDir === 'data45') return '4.5';
+  if (dataDir === 'data95') return '9.5';
+  return String(dataDir).replace(/^data/, '');
+}
+
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => {
+    if (k === '4') {
+      return [
+        '4',
+        {
+          key: '4',
+          volKey: '4',
+          dataDir: 'data',
+          imgPrefix: 'pages/',
+          artPrefix: 'bundles/art/4/',
+          volume: 'Cilt 4',
+          titlesFile: path.join(ROOT, 'data/chapters.json'),
+        },
+      ];
+    }
+    const suffix = k.replace('.', '');
+    const relPrefix = `pages${suffix}/`;
+    return [
+      k,
+      {
+        key: k,
+        volKey: k,
+        dataDir: `data${suffix}`,
+        imgPrefix: relPrefix,
+        artPrefix: k === '4.5' ? 'bundles/art/4.5/' : relPrefix,
+        volume: `Cilt ${k}`,
+        titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
+      },
+    ];
+  })
+);
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
-  const volKey = String(opt.volKey || (/45$/.test(dataDir) ? '4.5' : '4'));
-  const relImgPrefix = String(opt.imgPrefix || 'pages/').replace(/^\/+/, '');
-  const artRelDir = String(opt.artPrefix || 'bundles/art/' + volKey + '/').replace(/^\/+/, '');
-  const volume = opt.volume || 'Cilt 4';
-  const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
-  const fullScans = fs.existsSync(path.join(PUB, relImgPrefix, '001.webp'));
+  const volKey = String(opt.volKey || opt.key || inferVolKey(dataDir));
+  const defaultPrefix = volKey === '4' ? 'pages/' : `pages${volKey.replace('.', '')}/`;
+  const relImgPrefix = String(opt.imgPrefix || defaultPrefix).replace(/^\/+/, '');
+  const defaultArtPrefix =
+    volKey === '4' || volKey === '4.5' ? `bundles/art/${volKey}/` : relImgPrefix;
+  const artRelDir = String(opt.artPrefix || defaultArtPrefix).replace(/^\/+/, '');
+  const volume = opt.volume || `Cilt ${volKey}`;
+  const titlesFile = opt.titlesFile || path.join(ROOT, dataDir, 'chapters.json');
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
   const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
 
+  let titlesMeta = {};
+  try {
+    titlesMeta = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
+  } catch {}
+
+  const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
+  const fullScans = !hasStructuredChapters && fs.existsSync(path.join(PUB, relImgPrefix, '001.webp'));
+
   const pages = source.map((p) => {
     const key = String(p.page);
     const nnn = String(p.page).padStart(3, '0');
-    const trParas = Array.isArray(tr[key]) ? tr[key] : [];
+    const isPending = Boolean(p.pending);
+    const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = String(p.text || '')
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
 
-    // OCR'ı bozuk sayfaları (kapak, görsel sayfalar) metin saymayalım
+    if (hasStructuredChapters) {
+      const relImg = relImgPrefix + nnn + '.webp';
+      const hasDiskImg = fs.existsSync(path.join(PUB, relImg));
+      const cleanLen = String(p.text || '').replace(/\s+/g, ' ').trim().length;
+      const art = !isPending && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
+      const item = {
+        n: p.page,
+        img: relImg,
+        tr: isPending ? [] : trParas,
+        en: isPending ? [] : enParas,
+        art,
+      };
+      if (isPending) item.pending = true;
+      return item;
+    }
+
+    // Cilt 4 / Cilt 4.5 davranışı
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
     const cleanLen = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
@@ -62,69 +135,88 @@ function buildBook(opt = {}) {
     return {
       n: p.page,
       img,
-      tr: usable ? trParas.filter(Boolean) : [],
+      tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
     };
   });
 
-  // bölümleri ingilizce başlıklardan bul, Türkçe adları chapters.json'dan al
-  let titles = {};
-  try {
-    titles = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
-  } catch {}
-  const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
-  for (const p of pages) {
-    const first = (p.en[0] || '').replace(/\s+/g, ' ');
-    const m = first.match(/^(Prologue|Epilogue|Chapter\s+(\d+))\s*[:–—-]/i);
-    if (!m) continue;
-    const isNum = !!m[2];
-    const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
-    const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
-    const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
-    const title = titles[key] || rest.slice(0, 70);
-    chapters.push({ page: p.n, label, title });
+  let chapters = [];
+  if (hasStructuredChapters) {
+    chapters = titlesMeta.chapters.map((c) => {
+      const entry = {
+        page: c.startPage || c.page || 1,
+        label: c.label || 'Bölüm',
+        title: c.title || c.enTitle || '',
+      };
+      if (c.pending) {
+        entry.pending = true;
+        entry.statusNote = c.statusNote || 'Kaynak çeviri henüz tamamlanmadı ([Translation In Progress]).';
+      }
+      return entry;
+    });
+    if (chapters.length === 0 || chapters[0].page > 1) {
+      chapters.unshift({ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' });
+    }
+  } else {
+    chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
+    for (const p of pages) {
+      const first = (p.en[0] || '').replace(/\s+/g, ' ');
+      const m = first.match(/^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+(\d+))\s*[:–—-]/i);
+      if (!m) continue;
+      const isNum = !!m[2];
+      const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
+      const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
+      const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
+      const title = titlesMeta[key] || rest.slice(0, 70);
+      chapters.push({ page: p.n, label, title });
+    }
   }
 
-  for (const p of pages) {
-    delete p.en;
+  if (!opt.includeEn) {
+    for (const p of pages) {
+      delete p.en;
+    }
   }
 
   return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, fullScans, chapters, pages };
 }
 
-const VOLUMES = {
-  '4': {
-    volKey: '4',
-    dataDir: 'data',
-    imgPrefix: 'pages/',
-    artPrefix: 'bundles/art/4/',
-    volume: 'Cilt 4',
-    titlesFile: path.join(ROOT, 'data/chapters.json'),
-  },
-  '4.5': {
-    volKey: '4.5',
-    dataDir: 'data45',
-    imgPrefix: 'pages45/',
-    artPrefix: 'bundles/art/4.5/',
-    volume: 'Cilt 4.5',
-    titlesFile: path.join(ROOT, 'data45/chapters.json'),
-  },
-};
+function buildBookEn(opt = {}) {
+  const full = buildBook({ ...opt, includeEn: true });
+  const pages = {};
+  for (const p of full.pages) {
+    if (Array.isArray(p.en) && p.en.length > 0) {
+      pages[String(p.n)] = p.en;
+    }
+  }
+  return { volume: full.volume, total: full.total, pages };
+}
 
-function packBook(key) {
-  const b = buildBook(VOLUMES[key]);
-  const json = Buffer.from(JSON.stringify(b));
-  return { book: b, json, gzip: zlib.gzipSync(json) };
+function packPayload(obj) {
+  const json = Buffer.from(JSON.stringify(obj));
+  return { data: obj, json, gzip: zlib.gzipSync(json) };
 }
 
 const BOOKS = {};
 function getBook(key) {
-  if (!BOOKS[key]) BOOKS[key] = packBook(key);
-  return BOOKS[key];
+  const k = VOLUMES[key] ? key : '4';
+  if (!BOOKS[k]) {
+    const packed = packPayload(buildBook(VOLUMES[k]));
+    BOOKS[k] = { book: packed.data, json: packed.json, gzip: packed.gzip };
+  }
+  return BOOKS[k];
 }
 
-const book = getBook('4').book;
+const BOOKS_EN = {};
+function getBookEn(key) {
+  const k = VOLUMES[key] ? key : '4';
+  if (!BOOKS_EN[k]) {
+    const packed = packPayload(buildBookEn(VOLUMES[k]));
+    BOOKS_EN[k] = { bookEn: packed.data, json: packed.json, gzip: packed.gzip };
+  }
+  return BOOKS_EN[k];
+}
 
 function send(req, res, status, type, body, extra = {}) {
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache', ...extra };
@@ -165,22 +257,41 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  if (pathname === '/api/book') {
+  if (pathname === '/api/book' || pathname === '/api/book-en') {
     const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
-    const loaded = getBook(vKey);
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = acceptsGzip ? loaded.gzip : loaded.json;
-    const headers = {
-      'Content-Type': MIME['.json'],
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    };
-    if (acceptsGzip) {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Vary'] = 'Accept-Encoding';
+    try {
+      const loaded = pathname === '/api/book-en' ? getBookEn(vKey) : getBook(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
+      );
     }
-    res.writeHead(200, headers);
-    return res.end(req.method === 'HEAD' ? undefined : body);
+  }
+
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
+    try {
+      const loaded = getBook(bookJsonMatch[1]);
+      return send(req, res, 200, MIME['.json'], loaded.json);
+    } catch {}
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -194,7 +305,9 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     const type = MIME[ext] || 'application/octet-stream';
     const isImmutableImg = ext === '.webp' || ext === '.jpg' || ext === '.png';
-    const isVersionedChunk = pathname.startsWith('/bundles/book-') && Boolean(query.get('v'));
+    const isVersionedChunk =
+      (pathname.startsWith('/bundles/book-') || pathname.startsWith('/bundles/bundle-en-')) &&
+      Boolean(query.get('v'));
     const cache = isImmutableImg || isVersionedChunk
       ? 'public, max-age=31536000, immutable'
       : 'no-cache';
@@ -203,19 +316,20 @@ const server = http.createServer((req, res) => {
 });
 
 function start() {
-server.listen(PORT, () => {
-  console.log('Okuyucu hazır:  http://localhost:' + PORT);
-  console.log('Cilt 4       :', book.total, 'sayfa |', book.chapters.length, 'bölüm');
-  try {
-    const b45 = getBook('4.5').book;
-    console.log('Cilt 4.5     :', b45.total, 'sayfa |', b45.chapters.length, 'bölüm');
-  } catch {
-    console.log('Cilt 4.5     : henüz hazır değil');
-  }
-  console.log('Çeviri       : DeepL + Google (data/paragraphs_final.json, data45/paragraphs_final.json)');
-});
+  server.listen(PORT, () => {
+    console.log('Okuyucu hazır:  http://localhost:' + PORT);
+    for (const k of VOLUME_KEYS) {
+      const label = ('Cilt ' + k).padEnd(13);
+      try {
+        const b = getBook(k).book;
+        console.log(`${label}: ${b.total} sayfa | ${b.chapters.length} bölüm`);
+      } catch {
+        console.log(`${label}: henüz hazır değil`);
+      }
+    }
+  });
 }
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start, VOLUMES };
+module.exports = { VOLUMES, VOLUME_KEYS, buildBook, buildBookEn, getBook, getBookEn, start };

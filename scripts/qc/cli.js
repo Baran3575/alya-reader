@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -10,22 +10,28 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify } = require('./verify');
+const { runVerify, hasUnbalancedDelim } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
-const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
-const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
-};
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => [
+    k,
+    {
+      tr: REGISTRY[k].finalRel,
+      label: REGISTRY[k].label,
+      maxAvgStrict: 0.20,
+    },
+  ])
+);
 
-// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
+// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar (yalnızca salt okunur Cilt 4 / 4.5)
 const KNOWN_PAGE_SPLIT_QUOTES = {
   '4': new Set([
-    '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
+    '31.1', '36.0', '54.13', '55.14', '115.14', '156.5', '172.9',
     '173.4', '175.14', '190.13', '196.13', '197.7', '217.8', '233.6', '234.6',
     '235.1', '254.14',
   ]),
@@ -42,6 +48,10 @@ const ZERO_TOLERANCE = [
   '"?." kalıbı',
   'bitişik/imla hatası',
   'düz tırnak',
+  'dengesiz süslü parantez',
+  'dengesiz köşeli parantez',
+  'Japonca köşe tırnağı',
+  'Kiril kalıntısı',
   'boş paragraf',
   'İngilizce kalıntı',
   'çevirmen notu',
@@ -54,7 +64,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = [...VOLUME_KEYS];
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -134,6 +144,31 @@ function findTranslatorNotesDetails(data) {
     arr.forEach((text, i) => {
       if (re.test(text)) {
         matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findUnbalancedDelimDetails(data, open, close) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      if (hasUnbalancedDelim(text, open, close)) {
+        matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findPatternDetails(data, re) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(re);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: m, text: text.slice(0, 100) });
       }
     });
   }
@@ -225,6 +260,14 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('dengesiz süslü parantez')) {
+          details = findUnbalancedDelimDetails(data, '{', '}');
+        } else if (row[2].includes('dengesiz köşeli parantez')) {
+          details = findUnbalancedDelimDetails(data, '[', ']');
+        } else if (row[2].includes('Japonca köşe tırnağı')) {
+          details = findPatternDetails(data, /[『』「」]/g);
+        } else if (row[2].includes('Kiril kalıntısı')) {
+          details = findPatternDetails(data, /\p{Script=Cyrillic}+/gu);
         }
         hardFails.push({ label: row[2], value: row[1], details });
       }
@@ -240,7 +283,7 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
+    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için)
     if (vol === '4') {
       const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
       if (fs.existsSync(patchesFile)) {
@@ -262,7 +305,6 @@ function main() {
 
     // 5. Kalite Puanı Eşik ve Regresyon Kapısı
     if (strict) {
-      // Strict Mod Gating (Requirement 3: average score below 0.20 for Vol 4)
       if (cfg.maxAvgStrict !== undefined && q.avg > cfg.maxAvgStrict) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
@@ -333,7 +375,6 @@ function main() {
 
   const markdownSummary = generateMarkdownSummary(result, violations, { strict, checkRegression });
 
-  // GitHub Actions Step Summary desteği
   if (process.env.GITHUB_STEP_SUMMARY) {
     try {
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary + '\n\n');
@@ -375,6 +416,10 @@ function main() {
         '"?." kalıbı',
         'bitişik/imla hatası',
         'düz tırnak',
+        'dengesiz süslü parantez',
+        'dengesiz köşeli parantez',
+        'Japonca köşe tırnağı',
+        'Kiril kalıntısı',
         'İngilizce kalıntı',
         'çevirmen notu',
       ];
@@ -409,9 +454,13 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findUnbalancedDelimDetails,
+  findPatternDetails,
   generateMarkdownSummary,
 };

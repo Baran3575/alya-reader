@@ -1,4 +1,4 @@
-// Çevrimdışı önbellek: kabuk dosyaları + tembel cilt paketleri + WebP görseller.
+// Çevrimdışı önbellek: kabuk dosyaları + tembel cilt paketleri (TR & EN) + WebP görseller (Cilt 4–12).
 // Hem kök dizinde (http://localhost:3000/) hem de GitHub Pages alt yollarında (/<repo>/) çalışır.
 const VERSION = 'alya-v4';
 const SHELL = ['./', 'index.html', 'style.css', 'bundles/manifest.js', 'app.js'];
@@ -40,13 +40,15 @@ self.addEventListener('fetch', (e) => {
   const rel = scopeRelPath(url);
   if (rel === null) return;
 
-  // Cilt paketleri ve WebP görseller: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  // Cilt paketleri (book-* ve bundle-en-*) ve WebP görseller: önce önbellek, sonra ağ (ve önbelleğe yaz)
   const isManifest = rel === 'bundles/manifest.js';
   const cacheFirst =
     (!isManifest && rel.startsWith('bundles/')) ||
     rel.endsWith('.webp') ||
     /^pages[^/]*\//.test(rel) ||
-    rel === 'api/book';
+    /^books\/[0-9.]+\.json$/.test(rel) ||
+    rel === 'api/book' ||
+    rel === 'api/book-en';
 
   if (cacheFirst) {
     e.respondWith(
@@ -59,7 +61,9 @@ self.addEventListener('fetch', (e) => {
                 const copy = res.clone();
                 caches.open(VERSION).then(async (c) => {
                   try {
-                    if (rel.startsWith('bundles/book-') && url.search && typeof c.keys === 'function') {
+                    const isVersionedBundle =
+                      rel.startsWith('bundles/book-') || rel.startsWith('bundles/bundle-en-');
+                    if (isVersionedBundle && url.search && typeof c.keys === 'function') {
                       const existing = await c.keys();
                       await Promise.all(
                         existing

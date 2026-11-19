@@ -1,14 +1,16 @@
-// Tembel (lazy) cilt paketleri ve manifest üreticisi.
+// Tembel (lazy) cilt paketleri ve manifest üreticisi (Cilt 4 – 12).
 // Sunucuya ihtiyaç duymadan (GitHub Pages veya file://) okuma için:
 //   - public/bundles/manifest.js (< 10 KB)
-//   - public/bundles/book-<cilt>.json (fetch + CacheStorage için)
-//   - public/bundles/book-<cilt>.js (file:// yedek yükleyici)
-//   - public/bundles/art/<cilt>/<sayfa>.webp (illüstrasyon görselleri)
+//   - public/bundles/book-<cilt>.json (Türkçe + bölüm üstverisi, fetch + CacheStorage için)
+//   - public/bundles/book-<cilt>.js (file:// Türkçe yedek yükleyici)
+//   - public/bundles/bundle-en-<cilt>.json ("Orijinal" modu İngilizce metin parçası)
+//   - public/bundles/bundle-en-<cilt>.js (file:// İngilizce yedek yükleyici)
+//   - public/bundles/art/<cilt>/<sayfa>.webp (Cilt 4 ve 4.5 illüstrasyon görselleri)
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { buildBook, VOLUMES } = require('../server.js');
+const { buildBook, buildBookEn, VOLUMES, VOLUME_KEYS } = require('../server.js');
 
 const ROOT = path.join(__dirname, '..');
 const PUB = path.join(ROOT, 'public');
@@ -46,33 +48,46 @@ const hashAccumulator = crypto.createHash('sha1');
 let totalArtCount = 0;
 let totalArtBytes = 0;
 
-for (const [volKey, cfg] of Object.entries(VOLUMES)) {
+for (const volKey of VOLUME_KEYS) {
+  const cfg = VOLUMES[volKey];
+  if (!cfg) continue;
   const srcPath = path.join(ROOT, cfg.dataDir, 'source.json');
   const trPath = path.join(ROOT, cfg.dataDir, 'paragraphs_final.json');
   if (!fs.existsSync(srcPath) || !fs.existsSync(trPath)) continue;
 
   const relImgPrefix = String(cfg.imgPrefix || 'pages/').replace(/^\/+/, '');
-  const artRelDir = String(cfg.artPrefix || 'bundles/art/' + volKey + '/').replace(/^\/+/, '');
+  const usesBundledArt = volKey === '4' || volKey === '4.5';
+  const artRelDir = usesBundledArt ? `bundles/art/${volKey}/` : relImgPrefix;
   const outArtDir = path.join(PUB, artRelDir);
-  fs.mkdirSync(outArtDir, { recursive: true });
+  if (usesBundledArt) fs.mkdirSync(outArtDir, { recursive: true });
 
   const book = buildBook({ ...cfg, volKey });
+  const bookEn = buildBookEn({ ...cfg, volKey });
 
-  // Yerel sayfa taramaları mevcutsa illüstrasyon WebP dosyalarını güncelle
+  // Yerel sayfa taramaları mevcutsa illüstrasyon WebP dosyalarını güncelle ve doğrula
   for (const p of book.pages) {
     const nnn = String(p.n).padStart(3, '0');
     if (p.art) {
-      const localScan = path.join(PUB, relImgPrefix, nnn + '.webp');
-      const bundledArt = path.join(outArtDir, nnn + '.webp');
-      if (fs.existsSync(localScan)) {
-        fs.copyFileSync(localScan, bundledArt);
-      }
-      if (fs.existsSync(bundledArt)) {
-        p.img = artRelDir + nnn + '.webp';
-        totalArtCount += 1;
-        totalArtBytes += fs.statSync(bundledArt).size;
+      if (usesBundledArt) {
+        const localScan = path.join(PUB, relImgPrefix, nnn + '.webp');
+        const bundledArt = path.join(outArtDir, nnn + '.webp');
+        if (fs.existsSync(localScan)) {
+          fs.copyFileSync(localScan, bundledArt);
+        }
+        if (fs.existsSync(bundledArt)) {
+          p.img = artRelDir + nnn + '.webp';
+          totalArtCount += 1;
+          totalArtBytes += fs.statSync(bundledArt).size;
+        } else {
+          p.img = relImgPrefix + nnn + '.webp';
+        }
       } else {
         p.img = relImgPrefix + nnn + '.webp';
+        const diskImg = path.join(PUB, p.img);
+        if (fs.existsSync(diskImg)) {
+          totalArtCount += 1;
+          totalArtBytes += fs.statSync(diskImg).size;
+        }
       }
     } else {
       p.img = relImgPrefix + nnn + '.webp';
@@ -80,13 +95,19 @@ for (const [volKey, cfg] of Object.entries(VOLUMES)) {
     delete p.en;
   }
 
-  const jsonRel = 'bundles/book-' + volKey + '.json';
-  const jsRel = 'bundles/book-' + volKey + '.js';
+  const jsonRel = `bundles/book-${volKey}.json`;
+  const jsRel = `bundles/book-${volKey}.js`;
+  const enJsonRel = `bundles/bundle-en-${volKey}.json`;
+  const enJsRel = `bundles/bundle-en-${volKey}.js`;
+
   const rawJson = JSON.stringify(book);
+  const rawEnJson = JSON.stringify(bookEn);
   const volHash = crypto.createHash('sha1').update(rawJson).digest('hex').slice(0, 12);
-  hashAccumulator.update(volKey + ':' + volHash + ';');
+  const enHash = crypto.createHash('sha1').update(rawEnJson).digest('hex').slice(0, 12);
+  hashAccumulator.update(`${volKey}:${volHash}:${enHash};`);
 
   fs.writeFileSync(path.join(PUB, jsonRel), rawJson);
+  fs.writeFileSync(path.join(PUB, enJsonRel), rawEnJson);
 
   const jsBody =
     '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
@@ -97,34 +118,47 @@ for (const [volKey, cfg] of Object.entries(VOLUMES)) {
     ';\n';
   fs.writeFileSync(path.join(PUB, jsRel), jsBody);
 
+  const enJsBody =
+    '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
+    '(window.ALYA_EN_CHUNKS=window.ALYA_EN_CHUNKS||{})[' +
+    JSON.stringify(volKey) +
+    ']=' +
+    rawEnJson +
+    ';\n';
+  fs.writeFileSync(path.join(PUB, enJsRel), enJsBody);
+
   manifestVolumes[volKey] = {
     volume: book.volume,
     total: book.total,
     chapters: book.chapters.length,
     fullScans: Boolean(book.fullScans),
     hash: volHash,
+    enHash,
     json: jsonRel,
     js: jsRel,
+    enJson: enJsonRel,
+    enJs: enJsRel,
   };
 
   const paras = book.pages.reduce((acc, p) => acc + p.tr.length, 0);
+  const enPages = Object.keys(bookEn.pages).length;
   console.log(
-    '  Cilt ' + volKey + ':',
-    book.total,
-    'sayfa |',
-    paras,
-    'paragraf |',
-    book.chapters.length,
-    'bölüm |',
-    (Buffer.byteLength(rawJson) / 1024).toFixed(1) + ' KB',
+    `  Cilt ${volKey.padEnd(4)}:`,
+    `${String(book.total).padStart(3)} sayfa |`,
+    `${String(paras).padStart(4)} TR paragraf |`,
+    `${String(enPages).padStart(3)} EN sayfa |`,
+    `${String(book.chapters.length).padStart(2)} bölüm |`,
+    `TR ${(Buffer.byteLength(rawJson) / 1024).toFixed(1)} KB + EN ${(Buffer.byteLength(rawEnJson) / 1024).toFixed(1)} KB`
   );
 }
 
 const version = hashAccumulator.digest('hex').slice(0, 12);
-const defaultVol = manifestVolumes['4'] ? '4' : Object.keys(manifestVolumes)[0] || '4';
+const order = VOLUME_KEYS.filter((k) => Boolean(manifestVolumes[k]));
+const defaultVol = manifestVolumes['4'] ? '4' : order[0] || '4';
 const manifest = {
   version,
   defaultVol,
+  order,
   volumes: manifestVolumes,
 };
 
@@ -146,11 +180,11 @@ console.log(
   path.relative(ROOT, manifestPath),
   Buffer.byteLength(manifestBody) + ' B',
   '| sürüm:',
-  version,
+  version
 );
 console.log(
   'illüstrasyon:',
   totalArtCount,
   'WebP görsel |',
-  (totalArtBytes / 1048576).toFixed(2) + ' MB (istek üzerine tembel yüklenir)',
+  (totalArtBytes / 1048576).toFixed(2) + ' MB (istek üzerine tembel yüklenir)'
 );
