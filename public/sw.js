@@ -1,6 +1,6 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + gömülü illüstrasyon paketi + kitap verisi.
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + parçalı kitap/illüstrasyon verisi.
 // GitHub Pages alt dizini (/alya-reader/) ve yerel kök dizin altında self.registration.scope ile çalışır.
-const VERSION = 'alya-1da5484c7fb4';
+const VERSION = 'alya-f252eefbc416';
 const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 function scopeBase() {
@@ -45,10 +45,10 @@ self.addEventListener('fetch', (e) => {
   if (!url.pathname.startsWith(basePath)) return;
   const relPath = url.pathname.slice(basePath.length);
 
-  // görseller (Cilt 4–12 pages*/), statik kitap JSON'ları (books/*.json), gömülü paketler ve API: önce önbellek
+  // görseller (Cilt 4–12 pages*/), parçalı/statik kitap ve illüstrasyon JSON'ları (books/*.json), manifest ve API: önce önbellek
   const cacheFirst =
     /^pages\d*\//.test(relPath) ||
-    /^books\/[0-9.]+\.json$/.test(relPath) ||
+    /^books\/(?:v|art-)?[0-9.]+\.json$/.test(relPath) ||
     relPath === 'api/book' ||
     relPath === 'bundle.js' ||
     relPath === 'bundle-art.js';
@@ -73,7 +73,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // kabuk: önce ağ, düşerse önbellek veya gezinme isteklerinde ./index.html
+  // kabuk: önce ağ, düşerse önbellek veya gezinme isteklerinde kapsam içi ./index.html
   const fallbackIndex = scopeUrl('./index.html');
   const isDocRequest = req.mode === 'navigate' || relPath === '' || relPath === 'index.html';
   e.respondWith(

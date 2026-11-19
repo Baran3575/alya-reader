@@ -9,5 +9,7 @@ data45/back_en.json
 .stitch/captures/
 .cache/
 dist/
-_site/
-*.bak
+
+# üretilen cilt parçaları (npm run build:bundle); gömülü Cilt 4/4.5 illüstrasyonları korunur
+public/books/*
+!public/books/art-*.json

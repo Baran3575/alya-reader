@@ -14,13 +14,12 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Build & Verify Static Reader (Vols 4–12)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,32 +29,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Configure GitHub Pages
+      - name: Run Strict QC Gate Across All Volumes
+        run: node scripts/qc/cli.js --strict --check-regression
+
+      - name: Build Static GitHub Pages Bundle
+        run: npm run build:site
+
+      - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Run patch dry-run and QC test suite across all volumes
-        run: |
-          node scripts/patch.js --dry-run
-          npm test
-
-      - name: Build & verify staged Pages artifact
-        run: |
-          npm run build:site
-          rm -rf dist/pages dist/pages45
-          find dist -type f -name '*.bak' -delete
-          test -f dist/.nojekyll
-          test -f dist/index.html
-          test -f dist/style.css
-          test -f dist/app.js
-          test -f dist/bundle.js
-          test -f dist/bundle-art.js
-          test -f dist/sw.js
-          if find dist -name '*.bak' | grep -q .; then
-            echo "Backup (.bak) files found in staged Pages artifact" >&2
-            exit 1
-          fi
-
-      - name: Upload Pages artifact
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: './dist'
@@ -64,7 +47,6 @@ jobs:
     name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

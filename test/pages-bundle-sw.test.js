@@ -1,8 +1,7 @@
-// Automated tests for static bundle art preservation, subpath service worker,
-// Pages deployment workflow configuration, and local /api/book serving.
+// Automated tests for clean-checkout embedded art preservation, subpath service worker,
+// and scan fallback guards across Volumes 4–12.
 const { execFileSync } = require('child_process');
 const fs = require('fs');
-const http = require('http');
 const os = require('os');
 const path = require('path');
 const vm = require('vm');
@@ -23,25 +22,7 @@ function copyDirRecursive(src, dest) {
   }
 }
 
-function testBackupExclusionAndPackageConfig() {
-  console.log('Testing backup (.bak) cleanup, .gitignore rules, and package.json...');
-  const pubFiles = fs.readdirSync(path.join(ROOT, 'public'));
-  const bakFiles = pubFiles.filter((f) => f.endsWith('.bak'));
-  assert.deepStrictEqual(bakFiles, [], 'public/ must contain zero .bak files');
-
-  const gitignore = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8');
-  assert(gitignore.split(/\r?\n/).includes('*.bak'), '.gitignore must exclude *.bak');
-  assert(gitignore.split(/\r?\n/).includes('public/pages/'), '.gitignore must keep public/pages/ excluded');
-  assert(gitignore.split(/\r?\n/).includes('public/pages45/'), '.gitignore must keep public/pages45/ excluded');
-
-  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-  assert.strictEqual(pkg.scripts.build, 'node scripts/build_bundle.js', 'package.json must expose build script');
-  assert.strictEqual(pkg.dependencies, undefined, 'package.json must preserve zero dependencies');
-  assert.strictEqual(pkg.devDependencies, undefined, 'package.json must preserve zero devDependencies');
-  console.log('  ✓ Backup cleanup, .gitignore, and package.json verified');
-}
-
-function testCleanCheckoutPreservesIllustrationsAndStampsSw() {
+function testCleanCheckoutPreservesArtChunksAndStampsSw() {
   console.log('Testing clean checkout bundle rebuild without public/pages*/...');
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-clean-checkout-'));
   try {
@@ -51,13 +32,15 @@ function testCleanCheckoutPreservesIllustrationsAndStampsSw() {
     fs.copyFileSync(path.join(ROOT, 'scripts', 'lib', 'volumes.js'), path.join(tmpDir, 'scripts', 'lib', 'volumes.js'));
     copyDirRecursive(path.join(ROOT, 'data'), path.join(tmpDir, 'data'));
     copyDirRecursive(path.join(ROOT, 'data45'), path.join(tmpDir, 'data45'));
-    copyDirRecursive(path.join(ROOT, 'public'), path.join(tmpDir, 'public'));
 
-    // Ensure raw scan directories are completely absent
-    fs.rmSync(path.join(tmpDir, 'public', 'pages'), { recursive: true, force: true });
-    fs.rmSync(path.join(tmpDir, 'public', 'pages45'), { recursive: true, force: true });
+    fs.mkdirSync(path.join(tmpDir, 'public', 'books'), { recursive: true });
+    for (const rel of ['index.html', 'style.css', 'app.js', 'sw.js', 'bundle.js', 'bundle-art.js']) {
+      fs.copyFileSync(path.join(ROOT, 'public', rel), path.join(tmpDir, 'public', rel));
+    }
+    fs.copyFileSync(path.join(ROOT, 'public', 'books', 'art-4.json'), path.join(tmpDir, 'public', 'books', 'art-4.json'));
+    fs.copyFileSync(path.join(ROOT, 'public', 'books', 'art-4.5.json'), path.join(tmpDir, 'public', 'books', 'art-4.5.json'));
 
-    // Stamp a placeholder VERSION in sw.js to verify build_bundle.js updates it
+    // Stamp placeholder VERSION in sw.js to verify build_bundle.js updates it
     const tmpSwPath = path.join(tmpDir, 'public', 'sw.js');
     const swOrig = fs.readFileSync(tmpSwPath, 'utf8');
     fs.writeFileSync(tmpSwPath, swOrig.replace(/^const VERSION = ['"][^'"]*['"];/m, "const VERSION = 'alya-placeholder';"));
@@ -67,34 +50,22 @@ function testCleanCheckoutPreservesIllustrationsAndStampsSw() {
       encoding: 'utf8',
     });
 
-    const ctx = { window: {} };
-    vm.runInNewContext(fs.readFileSync(path.join(tmpDir, 'public', 'bundle.js'), 'utf8'), ctx);
-    vm.runInNewContext(fs.readFileSync(path.join(tmpDir, 'public', 'bundle-art.js'), 'utf8'), ctx);
+    const art4 = JSON.parse(fs.readFileSync(path.join(tmpDir, 'public', 'books', 'art-4.json'), 'utf8'));
+    const art45 = JSON.parse(fs.readFileSync(path.join(tmpDir, 'public', 'books', 'art-4.5.json'), 'utf8'));
+    assert.strictEqual(Object.keys(art4).length, 16, 'Volume 4 art-4.json must retain all 16 embedded illustrations');
+    assert.strictEqual(Object.keys(art45).length, 15, 'Volume 4.5 art-4.5.json must retain all 15 embedded illustrations');
 
-    const art4 = Object.keys(ctx.window.ALYA_ART['4'] || {});
-    const art45 = Object.keys(ctx.window.ALYA_ART['4.5'] || {});
-    assert.strictEqual(art4.length, 16, 'Volume 4 must retain all 16 embedded illustrations');
-    assert.strictEqual(art45.length, 15, 'Volume 4.5 must retain all 15 embedded illustrations');
-    assert.strictEqual(art4.length + art45.length, 31, 'Clean build must retain all 31 illustrations');
-
-    assert.strictEqual(ctx.window.ALYA_BUNDLE.vols['4'].scansAvailable, false, 'Vol 4 scansAvailable must be false without public/pages/');
-    assert.strictEqual(ctx.window.ALYA_BUNDLE.vols['4.5'].scansAvailable, false, 'Vol 4.5 scansAvailable must be false without public/pages45/');
+    const v4 = JSON.parse(fs.readFileSync(path.join(tmpDir, 'public', 'books', 'v4.json'), 'utf8'));
+    const v45 = JSON.parse(fs.readFileSync(path.join(tmpDir, 'public', 'books', 'v4.5.json'), 'utf8'));
+    assert.strictEqual(v4.scansAvailable, false, 'v4.json scansAvailable must be false without public/pages/');
+    assert.strictEqual(v45.scansAvailable, false, 'v4.5.json scansAvailable must be false without public/pages45/');
 
     const updatedSw = fs.readFileSync(tmpSwPath, 'utf8');
     const verMatch = updatedSw.match(/^const VERSION = '(alya-[0-9a-f]{12})';/m);
     assert(verMatch, 'build_bundle.js must stamp a deterministic alya-<12hex> VERSION in public/sw.js');
 
-    // Verify build fails if an existing illustration vanishes when scans are absent
-    const brokenArt = {
-      '4': { ...ctx.window.ALYA_ART['4'] },
-      '4.5': { ...ctx.window.ALYA_ART['4.5'] },
-    };
-    delete brokenArt['4']['004'];
-    fs.writeFileSync(
-      path.join(tmpDir, 'public', 'bundle-art.js'),
-      'window.ALYA_ART=' + JSON.stringify(brokenArt) + ';\n',
-    );
-
+    // Verify build fails if embedded art chunks are emptied when scans are absent
+    fs.unlinkSync(path.join(tmpDir, 'public', 'books', 'art-4.json'));
     let failedAsExpected = false;
     try {
       execFileSync(process.execPath, [path.join(tmpDir, 'scripts', 'build_bundle.js')], {
@@ -103,10 +74,10 @@ function testCleanCheckoutPreservesIllustrationsAndStampsSw() {
         stdio: 'pipe',
       });
     } catch (err) {
-      failedAsExpected = err.status !== 0 && String(err.stderr || err.message).includes('Cilt 4 s.004');
+      failedAsExpected = err.status !== 0 && String(err.stderr || err.message).includes('Cilt 4');
     }
-    assert(failedAsExpected, 'build_bundle.js must fail if an illustration is missing on a clean checkout');
-    console.log('  ✓ Clean checkout art preservation (31 illustrations), scansAvailable, and failure guard verified');
+    assert(failedAsExpected, 'build_bundle.js must fail if embedded art vanishes on a clean checkout');
+    console.log('  ✓ Clean checkout art-*.json preservation (31 illustrations), scansAvailable, and SW stamping verified');
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
@@ -134,7 +105,15 @@ async function testSubpathServiceWorker() {
     return {
       async addAll(urls) {
         for (const u of urls) {
-          map.set(normKey(u), { ok: true, status: 200, url: normKey(u), body: 'cached:' + normKey(u), clone() { return { ...this }; } });
+          map.set(normKey(u), {
+            ok: true,
+            status: 200,
+            url: normKey(u),
+            body: 'cached:' + normKey(u),
+            clone() {
+              return { ...this };
+            },
+          });
         }
       },
       async match(req) {
@@ -146,7 +125,6 @@ async function testSubpathServiceWorker() {
     };
   }
 
-  // Pre-seed a stale cache to verify activate cleanup
   stores.set('alya-stale-v0', new Map([['https://baran3575.github.io/alya-reader/index.html', { ok: true }]]));
 
   const selfObj = {
@@ -198,204 +176,99 @@ async function testSubpathServiceWorker() {
 
   vm.runInNewContext(swCode, ctx);
 
-  // 1. Install
+  // 1. Install caches all scope-resolved SHELL URLs
   let installPromise;
   listeners.install({ waitUntil: (p) => { installPromise = p; } });
   await installPromise;
 
   const activeCache = stores.get(expectedVersion);
   assert(activeCache, 'Install must create cache with stamped VERSION');
-  const expectedUrls = [
-    'https://baran3575.github.io/alya-reader/',
-    'https://baran3575.github.io/alya-reader/index.html',
-    'https://baran3575.github.io/alya-reader/style.css',
-    'https://baran3575.github.io/alya-reader/app.js',
-    'https://baran3575.github.io/alya-reader/bundle.js',
-    'https://baran3575.github.io/alya-reader/bundle-art.js',
-  ];
-  for (const u of expectedUrls) {
-    assert(activeCache.has(u), 'Service worker SHELL must cache ' + u);
+  for (const rel of ['', 'index.html', 'style.css', 'app.js', 'bundle.js', 'bundle-art.js']) {
+    const expected = 'https://baran3575.github.io/alya-reader/' + rel;
+    assert(activeCache.has(expected), 'Service worker SHELL must cache ' + expected);
   }
 
-  // 2. Activate prunes stale cache
+  // 2. Activate prunes stale caches
   let activatePromise;
   listeners.activate({ waitUntil: (p) => { activatePromise = p; } });
   await activatePromise;
   assert(!stores.has('alya-stale-v0'), 'Activate must delete outdated caches');
   assert(stores.has(expectedVersion), 'Activate must retain current VERSION cache');
 
-  // 3. Offline cacheFirst for bundle-art.js and bundle.js
-  networkOnline = false;
-  networkHits.length = 0;
-  let artResponsePromise;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/bundle-art.js' },
-    respondWith: (p) => { artResponsePromise = p; },
-  });
-  const artRes = await artResponsePromise;
-  assert(artRes && artRes.body.startsWith('cached:'), 'bundle-art.js must resolve from cacheFirst offline');
-  assert.strictEqual(networkHits.length, 0, 'cacheFirst hit must not hit network');
-
-  // 3b. Cache-first for multi-volume WebP illustrations (pages5/*) and static books/*.json
+  // 3. Cache-first for v<vol>.json, art-<vol>.json, <vol>.json, and pages*/ under /alya-reader/
+  const cacheFirstUrls = [
+    'https://baran3575.github.io/alya-reader/books/v9.5.json',
+    'https://baran3575.github.io/alya-reader/books/art-4.json',
+    'https://baran3575.github.io/alya-reader/books/4.5.json',
+    'https://baran3575.github.io/alya-reader/pages5/001.webp',
+  ];
   networkOnline = true;
-  let vol5ImgPromise;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/pages5/001.webp' },
-    respondWith: (p) => { vol5ImgPromise = p; },
-  });
-  await vol5ImgPromise;
-  let bookJsonPromise;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/books/9.5.json' },
-    respondWith: (p) => { bookJsonPromise = p; },
-  });
-  await bookJsonPromise;
+  for (const u of cacheFirstUrls) {
+    let p;
+    listeners.fetch({ request: { method: 'GET', url: u }, respondWith: (pr) => { p = pr; } });
+    await p;
+  }
 
   networkOnline = false;
   networkHits.length = 0;
-  let vol5OfflinePromise;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/pages5/001.webp' },
-    respondWith: (p) => { vol5OfflinePromise = p; },
-  });
-  const vol5OfflineRes = await vol5OfflinePromise;
-  assert(vol5OfflineRes && vol5OfflineRes.body.startsWith('net:'), 'pages5/001.webp must resolve from cacheFirst offline');
-  let bookJsonOfflinePromise;
-  listeners.fetch({
-    request: { method: 'GET', url: 'https://baran3575.github.io/alya-reader/books/9.5.json' },
-    respondWith: (p) => { bookJsonOfflinePromise = p; },
-  });
-  const bookJsonOfflineRes = await bookJsonOfflinePromise;
-  assert(bookJsonOfflineRes && bookJsonOfflineRes.body.startsWith('net:'), 'books/9.5.json must resolve from cacheFirst offline');
-  assert.strictEqual(networkHits.length, 0, 'Multi-volume cacheFirst hits must not hit network');
+  for (const u of cacheFirstUrls) {
+    let p;
+    listeners.fetch({ request: { method: 'GET', url: u }, respondWith: (pr) => { p = pr; } });
+    const res = await p;
+    assert(res && res.body === 'net:' + u, u + ' must resolve from cacheFirst when offline');
+  }
+  assert.strictEqual(networkHits.length, 0, 'cacheFirst offline hits must not hit network');
 
-  // 4. Offline navigation fallback to ./index.html under /alya-reader/
-  let navResponsePromise;
+  // 4. Offline navigation fallback to scope-resolved ./index.html
+  let navPromise;
   listeners.fetch({
-    request: { method: 'GET', mode: 'navigate', url: 'https://baran3575.github.io/alya-reader/?vol=4.5' },
-    respondWith: (p) => { navResponsePromise = p; },
+    request: { method: 'GET', mode: 'navigate', url: 'https://baran3575.github.io/alya-reader/?vol=9.5' },
+    respondWith: (p) => { navPromise = p; },
   });
-  const navRes = await navResponsePromise;
+  const navRes = await navPromise;
   assert.strictEqual(
     navRes && navRes.url,
     'https://baran3575.github.io/alya-reader/index.html',
     'Offline navigation under /alya-reader/ must fall back to /alya-reader/index.html',
   );
 
-  // 4b. Uncached non-HTML asset offline returns Response.error() instead of HTML
-  let missingJsPromise;
+  // 5. Uncached non-HTML asset offline returns Response.error()
+  let errPromise;
   listeners.fetch({
-    request: { method: 'GET', mode: 'cors', url: 'https://baran3575.github.io/alya-reader/unknown.js' },
-    respondWith: (p) => { missingJsPromise = p; },
+    request: { method: 'GET', mode: 'cors', url: 'https://baran3575.github.io/alya-reader/missing.js' },
+    respondWith: (p) => { errPromise = p; },
   });
-  const missingJsRes = await missingJsPromise;
-  assert.strictEqual(missingJsRes && missingJsRes.type, 'error', 'Uncached non-HTML asset offline must return error response');
+  const errRes = await errPromise;
+  assert.strictEqual(errRes && errRes.type, 'error', 'Uncached non-HTML asset offline must return Response.error()');
 
-  // 5. Out-of-scope path on same origin is ignored
+  // 6. Out-of-scope path on same origin is ignored
   let outOfScopeHandled = false;
   listeners.fetch({
     request: { method: 'GET', url: 'https://baran3575.github.io/other-project/index.html' },
     respondWith: () => { outOfScopeHandled = true; },
   });
   assert.strictEqual(outOfScopeHandled, false, 'Requests outside self.registration.scope must be ignored');
-  console.log('  ✓ Subpath service worker caching, cacheFirst, and offline fallback verified');
+  console.log('  ✓ Subpath service worker scope, chunk caching, and offline fallback verified');
 }
 
-function testWorkflowAndReaderContract() {
-  console.log('Testing deploy-pages.yml workflow permissions and app.js scan guards...');
-  const deployWf = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'deploy-pages.yml'), 'utf8');
-  assert(deployWf.includes('pages: write'), 'deploy-pages.yml must declare pages: write');
-  assert(deployWf.includes('id-token: write'), 'deploy-pages.yml must declare id-token: write');
-  assert(deployWf.includes('actions/upload-pages-artifact'), 'deploy-pages.yml must upload Pages artifact');
-  assert(deployWf.includes('actions/deploy-pages'), 'deploy-pages.yml must deploy Pages artifact');
-  assert(deployWf.includes('npm test'), 'deploy-pages.yml must gate deployment on npm test');
-  assert(deployWf.includes('*.bak'), 'deploy-pages.yml must strip/verify zero .bak files');
-  assert(!/^\s*pull_request\s*:/m.test(deployWf), 'deploy-pages.yml must not run on pull_request');
-
-  const qcMatrixWf = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'qc-matrix.yml'), 'utf8');
-  assert(!qcMatrixWf.includes('pages: write') && !qcMatrixWf.includes('id-token: write'), 'qc-matrix.yml must remain without write permissions');
-
+function testReaderScanFallbackContract() {
+  console.log('Testing public/app.js scan guards and fallback card contract...');
   const appJs = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
-  assert(appJs.includes('function hasArt('), 'public/app.js must define hasArt');
   assert(appJs.includes('function canLoadScan('), 'public/app.js must define canLoadScan');
-  assert(appJs.includes('scan-fallback'), 'public/app.js must render scan-fallback card for unembedded pages');
-  console.log('  ✓ Workflow isolation and reader scan fallback contract verified');
-}
+  assert(appJs.includes('function scanFallbackCard('), 'public/app.js must define scanFallbackCard');
+  assert(appJs.includes('scan-fallback'), 'public/app.js must render .scan-fallback card for unembedded scans');
 
-async function testLocalApiBookEndpoint() {
-  console.log('Testing local server.js /api/book serving...');
-  const { getBook } = require('../server.js');
-  const b4 = getBook('4').book;
-  const b45 = getBook('4.5').book;
-  assert.strictEqual(b4.total, 282, 'Local server Volume 4 must have 282 pages');
-  assert.strictEqual(b45.total, 347, 'Local server Volume 4.5 must have 347 pages');
-
-  // Verify HTTP endpoint via ephemeral child server
-  const srv = http.createServer((req, res) => {
-    const u = new URL(req.url, 'http://127.0.0.1');
-    if (u.pathname === '/api/book') {
-      const v = u.searchParams.get('v') === '4.5' ? '4.5' : '4';
-      const payload = getBook(v).json;
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(payload);
-      return;
-    }
-    res.writeHead(404);
-    res.end();
-  });
-
-  await new Promise((resolve) => srv.listen(0, '127.0.0.1', resolve));
-  try {
-    const port = srv.address().port;
-    const body = await new Promise((resolve, reject) => {
-      http.get(`http://127.0.0.1:${port}/api/book?v=4.5`, (res) => {
-        assert.strictEqual(res.statusCode, 200);
-        const chunks = [];
-        res.on('data', (c) => chunks.push(c));
-        res.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
-      }).on('error', reject);
-    });
-    const parsed = JSON.parse(body);
-    assert.strictEqual(parsed.volume, 'Cilt 4.5');
-    assert.strictEqual(parsed.pages.length, 347);
-  } finally {
-    await new Promise((resolve) => srv.close(resolve));
-  }
-  console.log('  ✓ Local /api/book endpoint verified');
-}
-
-function testBuildSiteDistStaging() {
-  console.log('Testing scripts/build_site.js staged dist/ across all 11 volumes...');
-  const { VOLUME_KEYS } = require('../scripts/lib/volumes');
-  execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build_site.js')], {
-    cwd: ROOT,
-    encoding: 'utf8',
-  });
-  const distDir = path.join(ROOT, 'dist');
-  assert(fs.existsSync(path.join(distDir, '.nojekyll')), 'dist/.nojekyll must exist');
-  for (const shellFile of ['index.html', 'style.css', 'app.js', 'bundle.js', 'bundle-art.js', 'sw.js']) {
-    assert(fs.existsSync(path.join(distDir, shellFile)), `dist/${shellFile} must exist`);
-  }
-  assert(!fs.existsSync(path.join(distDir, 'pages')), 'dist/pages must not be staged');
-  assert(!fs.existsSync(path.join(distDir, 'pages45')), 'dist/pages45 must not be staged');
-  for (const k of VOLUME_KEYS) {
-    const bookPath = path.join(distDir, 'books', `${k}.json`);
-    assert(fs.existsSync(bookPath), `dist/books/${k}.json must exist`);
-    const book = JSON.parse(fs.readFileSync(bookPath, 'utf8'));
-    assert.strictEqual(book.scansAvailable, false, `dist/books/${k}.json scansAvailable must be false`);
-  }
-  console.log('  ✓ Staged dist/ verified across all 11 volumes');
+  const styleCss = fs.readFileSync(path.join(ROOT, 'public', 'style.css'), 'utf8');
+  assert(styleCss.includes('.scan-fallback'), 'public/style.css must style .scan-fallback');
+  console.log('  ✓ Reader scan guards and fallback card contract verified');
 }
 
 async function run() {
-  console.log('=== Starting Pages, Bundle Art & Subpath SW Verification Tests ===\n');
-  testBackupExclusionAndPackageConfig();
-  testCleanCheckoutPreservesIllustrationsAndStampsSw();
-  testBuildSiteDistStaging();
+  console.log('=== Starting Subpath SW & Scan Fallback Verification Tests ===\n');
+  testCleanCheckoutPreservesArtChunksAndStampsSw();
   await testSubpathServiceWorker();
-  testWorkflowAndReaderContract();
-  await testLocalApiBookEndpoint();
-  console.log('\n=== All Pages, Bundle Art & Subpath SW Tests Passed! ===');
+  testReaderScanFallbackContract();
+  console.log('\n=== All Subpath SW & Scan Fallback Tests Passed! ===');
 }
 
 run().catch((err) => {

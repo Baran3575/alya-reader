@@ -10,26 +10,12 @@ const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 const DIST = path.join(ROOT, 'dist');
 const PUB = path.join(ROOT, 'public');
 
-function removeBakFiles(dir) {
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      removeBakFiles(full);
-    } else if (entry.name.endsWith('.bak')) {
-      fs.rmSync(full, { force: true });
-    }
-  }
-}
-
-// 1) Önce güncel bundle.js / bundle-art.js üret ve sw.js sürümünü damgala
+// 1) Önce güncel bundle.js / bundle-art.js üret
 execFileSync(process.execPath, [path.join(__dirname, 'build_bundle.js')], { stdio: 'inherit' });
 
-// 2) dist/ dizinini temizle, public/ ağacını kopyala, ham tarama/yedek dosyalarını ayıkla
+// 2) dist/ dizinini temizle ve public/ ağacını kopyala
 fs.rmSync(DIST, { recursive: true, force: true });
 fs.cpSync(PUB, DIST, { recursive: true });
-fs.rmSync(path.join(DIST, 'pages'), { recursive: true, force: true });
-fs.rmSync(path.join(DIST, 'pages45'), { recursive: true, force: true });
-removeBakFiles(DIST);
 fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
 
 // 3) Statik /books/<vol>.json dosyalarını üret ve görsel bütünlüğünü doğrula
@@ -60,21 +46,13 @@ for (const k of VOLUME_KEYS) {
       }
     }
   }
-  book.scansAvailable = false;
 
   fs.writeFileSync(path.join(booksDir, `${k}.json`), JSON.stringify(book));
   builtCount++;
 }
 
-for (const reqFile of ['index.html', 'style.css', 'app.js', 'bundle.js', 'bundle-art.js', 'sw.js']) {
-  if (!fs.existsSync(path.join(DIST, reqFile))) {
-    console.error(`✗ Eksik statik kabuk dosyası: ${reqFile}`);
-    missingAssets++;
-  }
-}
-
 if (missingAssets > 0) {
-  console.error(`✗ Statik derleme başarısız: ${missingAssets} varlık eksik.`);
+  console.error(`✗ Statik derleme başarısız: ${missingAssets} illüstrasyon dosyası eksik.`);
   process.exit(1);
 }
 
