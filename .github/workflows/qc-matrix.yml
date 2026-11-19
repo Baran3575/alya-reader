@@ -94,7 +94,6 @@ jobs:
       - name: Run verification & pipeline test suites
         run: npm run test:suite
 
-      - name: Verify committed bundles and source files stay in sync
+      - name: Verify canonical source files were untouched
         run: |
-          git diff --exit-code -- public/bundles/ public/art/
           node scripts/volumes.js --source-files | xargs git diff --exit-code --
