@@ -22,7 +22,9 @@
     "en:qc": "node scripts/qc/en_quality.js",
     "en:fix": "node scripts/fix_en_ocr.js",
     "en:ads": "node scripts/qc/en_ads.js",
-    "pretest": "node scripts/build_bundle.js"
+    "pretest": "node scripts/build_bundle.js",
+    "fix:quality": "node scripts/fix_quality.js",
+    "fix:quality:dry": "node scripts/fix_quality.js --dry"
   },
   "keywords": [
     "alya",
