@@ -8,6 +8,8 @@
     const el = d.createElement('p');
     if (/^[“"—–{-]/.test(t)) {
       el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    } else if (/^[(\[]/.test(t)) {
+      el.className = 'thought';
     }
     let pos = 0;
     while (pos < t.length) {
@@ -36,6 +38,7 @@
         pos = close + 1;
         continue;
       }
+      el.appendChild(d.createTextNode('{'));
       const span = d.createElement('span');
       span.className = 'ru-dialog';
       span.appendChild(d.createTextNode(inner));
@@ -45,6 +48,7 @@
         span.title = roma;
       }
       el.appendChild(span);
+      el.appendChild(d.createTextNode('}'));
       pos = close + 1;
     }
     return el;
@@ -127,6 +131,33 @@
   const memoryBooks = new Map();
 
   /* ---------------- cilt ---------------- */
+  const defaultVolOrder = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+  const volTitle = {
+    '4': 'Cilt 4',
+    '4.5': 'Cilt 4.5',
+    '5': 'Cilt 5',
+    '6': 'Cilt 6',
+    '7': 'Cilt 7',
+    '8': 'Cilt 8',
+    '9': 'Cilt 9',
+    '9.5': 'Cilt 9.5',
+    '10': 'Cilt 10',
+    '11': 'Cilt 11',
+    '12': 'Cilt 12',
+  };
+
+  function getVolOrder() {
+    if (state.manifest && Array.isArray(state.manifest.order) && state.manifest.order.length > 0) {
+      return state.manifest.order;
+    }
+    return defaultVolOrder;
+  }
+
+  function getVolLabel(key) {
+    const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[key];
+    return (meta && meta.label) || volTitle[key] || 'Cilt ' + key;
+  }
+
   function volSlug(v) {
     const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[v];
     if (meta && meta.slug) return meta.slug;
@@ -150,13 +181,18 @@
     sel.value = state.vol;
   }
 
-  function switchVolume(v) {
+  function switchVolume(v, targetPage) {
     const nextVol = String(v);
-    if (nextVol === state.vol) return;
+    if (nextVol === state.vol && targetPage === undefined) return;
     LS.set('page:' + state.vol, state.page);
     state.vol = nextVol;
     LS.set('vol', nextVol);
-    state.page = LS.get('page:' + nextVol, 1);
+    if (targetPage !== undefined && targetPage > 0) {
+      state.page = targetPage;
+      LS.set('page:' + nextVol, targetPage);
+    } else {
+      state.page = LS.get('page:' + nextVol, 1);
+    }
     load().catch((err) => {
       reader.innerHTML = '<p class="empty-note">Cilt ' + nextVol + ' yüklenemedi: ' + err.message + '</p>';
     });
@@ -165,62 +201,258 @@
   const volSelectEl = $('volSelect');
   if (volSelectEl) {
     volSelectEl.addEventListener('change', (e) => {
-      toggleToc(false);
-      toggleSettings(false);
+      hideLibrary();
       switchVolume(e.target.value);
     });
   }
 
-  /* alt sayfa perdeleri: mobilde içerik kararması ve dışarı dokunma */
-  function syncBackdrop() {
-    const backdrop = $('sheetBackdrop');
-    if (!backdrop) return;
-    const anyOpen = ['tocPanel', 'settingsPanel'].some((id) => {
-      const el = $(id);
-      return el && !el.hidden;
-    });
-    backdrop.hidden = !anyOpen;
-    requestAnimationFrame(() => backdrop.classList.toggle('is-open', anyOpen));
-  }
-
   function measureChrome() {
     const bar = document.querySelector('.bar');
-    const nav = document.querySelector('.nav');
-    if (bar && bar.offsetHeight) {
-      document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px');
-    }
-    if (nav && nav.offsetHeight) {
-      document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
-    }
+    if (!bar) return;
+    const h = bar.offsetHeight;
+    if (h > 20) document.documentElement.style.setProperty('--bar-h', h + 'px');
   }
-
-  function toggleSettings(open) {
-    const panel = $('settingsPanel');
-    if (!panel) return;
-    const next = open === undefined ? panel.hidden : open;
-    panel.hidden = !next;
-    $('settingsBtn')?.setAttribute('aria-expanded', String(!panel.hidden));
-    syncBackdrop();
-  }
-  $('settingsBtn')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleSettings();
-  });
-  document.addEventListener('click', (e) => {
-    const set = $('settingsPanel');
-    const btn = $('settingsBtn');
-    if (set && !set.hidden && !set.contains(e.target) && (!btn || !btn.contains(e.target))) {
-      toggleSettings(false);
-    }
-  });
-  $('sheetBackdrop')?.addEventListener('click', () => {
-    toggleToc(false);
-    toggleSettings(false);
-  });
   window.addEventListener('resize', measureChrome);
   window.addEventListener('orientationchange', () => {
     if (typeof setTimeout === 'function') setTimeout(measureChrome, 120);
   });
+
+  /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
+  function readSet(vol) {
+    const v = LS.get('read:' + vol, []);
+    return Array.isArray(v) ? v : [];
+  }
+  function isRead(vol, i) {
+    return readSet(vol).includes(i);
+  }
+  function setRead(vol, i, on) {
+    const set = new Set(readSet(vol));
+    if (on) set.add(i);
+    else set.delete(i);
+    LS.set('read:' + vol, [...set].sort((x, y) => x - y));
+  }
+  function readCount(vol) {
+    return readSet(vol);
+  }
+
+  const libView = $('libView');
+  const libList = $('libList');
+  const readerEl = $('reader');
+  let libKind = 'vol';
+  let libVol = String(state.vol);
+  let libOpen = false;
+  let libBuildSeq = 0;
+
+  function chapterRangeFor(book, i) {
+    const list = (book && book.chapters) || [];
+    if (!list[i]) return [1, 1];
+    const start = list[i].page;
+    const next = list[i + 1];
+    return [start, next ? next.page - 1 : book.total];
+  }
+
+  function showLibrary(kind, volumeKey) {
+    libKind = kind;
+    libVol = String(volumeKey || state.vol);
+    libOpen = true;
+    libView.hidden = false;
+    readerEl.hidden = true;
+    $('volBtn')?.setAttribute('aria-expanded', String(kind === 'vol'));
+    $('chBtn')?.setAttribute('aria-expanded', String(kind === 'ch'));
+    $('libActions').hidden = kind !== 'ch';
+    $('libBack').hidden = kind !== 'ch';
+    buildList(libVol);
+    window.scrollTo(0, 0);
+    measureChrome();
+  }
+
+  function hideLibrary() {
+    if (!libOpen && libView && libView.hidden) return;
+    libOpen = false;
+    if (libView) libView.hidden = true;
+    if (readerEl) readerEl.hidden = false;
+    $('volBtn')?.setAttribute('aria-expanded', 'false');
+    $('chBtn')?.setAttribute('aria-expanded', 'false');
+    measureChrome();
+  }
+
+  function buildList(volumeKey) {
+    const seq = ++libBuildSeq;
+    libList.innerHTML = '';
+    if (libKind === 'vol') {
+      $('libTitle').textContent = 'Ciltler';
+      for (const key of getVolOrder()) {
+        const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[key];
+        const cached = memoryBooks.get(key);
+        const total =
+          (meta && typeof meta.chapters === 'number' ? meta.chapters : 0) ||
+          (cached && cached.chapters ? cached.chapters.length : 0);
+        const read = readCount(key).length;
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
+
+        const num = document.createElement('span');
+        num.className = 'lib-num';
+        num.textContent = key;
+
+        const info = document.createElement('span');
+        info.className = 'lib-info';
+        const name = document.createElement('span');
+        name.className = 'lib-name';
+        name.textContent = getVolLabel(key);
+        const sub = document.createElement('span');
+        sub.className = 'lib-meta';
+        sub.textContent = total + ' bölüm · ' + read + '/' + total + ' okundu';
+        info.append(name, sub);
+
+        const go = document.createElement('span');
+        go.className = 'lib-go';
+        go.setAttribute('aria-hidden', 'true');
+        go.textContent = '›';
+
+        card.append(num, info, go);
+        card.addEventListener('click', () => showLibrary('ch', key));
+        libList.appendChild(card);
+      }
+      return;
+    }
+
+    const vKey = String(volumeKey || state.vol);
+    $('libTitle').textContent = getVolLabel(vKey);
+    if (vKey === String(state.vol) && state.book) {
+      chListFor(vKey, state.book);
+      return;
+    }
+    const cachedBook = memoryBooks.get(vKey);
+    if (cachedBook) {
+      chListFor(vKey, cachedBook);
+      return;
+    }
+    const loadingNote = document.createElement('p');
+    loadingNote.className = 'empty-note';
+    loadingNote.textContent = getVolLabel(vKey) + ' bölümleri yükleniyor…';
+    libList.appendChild(loadingNote);
+    readBook(vKey)
+      .then((book) => {
+        if (seq !== libBuildSeq || !libOpen || libKind !== 'ch') return;
+        chListFor(vKey, book);
+      })
+      .catch((err) => {
+        if (seq !== libBuildSeq || !libOpen || libKind !== 'ch') return;
+        libList.innerHTML = '';
+        const errEl = document.createElement('p');
+        errEl.className = 'empty-note';
+        errEl.textContent = getVolLabel(vKey) + ' yüklenemedi: ' + err.message;
+        libList.appendChild(errEl);
+      });
+  }
+
+  function chListFor(volumeKey, book) {
+    libList.innerHTML = '';
+    const list = (book && book.chapters) || [];
+    list.forEach((c, i) => {
+      const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
+      const title = c.title || '';
+      const read = isRead(volumeKey, i);
+      const range = c.page
+        ? (() => {
+            const [st, en] = chapterRangeFor(book, i);
+            return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+          })()
+        : '';
+      const row = document.createElement('div');
+      row.className =
+        'lib-row' +
+        (read ? ' is-read' : '') +
+        (c.pending ? ' is-pending' : '') +
+        (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'lib-main';
+      const nameEl = document.createElement('span');
+      nameEl.className = 'lib-name';
+      nameEl.textContent = label;
+      main.appendChild(nameEl);
+      if (title && title !== label) {
+        const subEl = document.createElement('span');
+        subEl.className = 'lib-sub';
+        subEl.textContent = title;
+        main.appendChild(subEl);
+      }
+      if (range) {
+        const metaEl = document.createElement('span');
+        metaEl.className = 'lib-meta';
+        metaEl.textContent = range;
+        main.appendChild(metaEl);
+      }
+      main.addEventListener('click', () => {
+        hideLibrary();
+        if (volumeKey !== String(state.vol)) {
+          switchVolume(volumeKey, c.page || 1);
+        } else {
+          goChapter(i);
+        }
+      });
+
+      const check = document.createElement('button');
+      check.type = 'button';
+      check.className = 'lib-check' + (read ? ' is-on' : '');
+      check.setAttribute('aria-pressed', String(read));
+      check.setAttribute('aria-label', label + ' okundu');
+      check.textContent = '✓';
+      check.addEventListener('click', () => {
+        const next = !isRead(volumeKey, i);
+        setRead(volumeKey, i, next);
+        check.classList.toggle('is-on', next);
+        check.setAttribute('aria-pressed', String(next));
+        row.classList.toggle('is-read', next);
+        markTocRead();
+      });
+
+      row.append(main, check);
+      libList.appendChild(row);
+    });
+  }
+
+  $('volBtn')?.addEventListener('click', () => {
+    if (libOpen && libKind === 'vol') hideLibrary();
+    else showLibrary('vol');
+  });
+  $('chBtn')?.addEventListener('click', () => {
+    if (libOpen) hideLibrary();
+    else showLibrary('ch', String(state.vol));
+  });
+  $('libBack')?.addEventListener('click', () => showLibrary('vol'));
+  $('markAllBtn')?.addEventListener('click', () => {
+    const applyMarkAll = (book) => {
+      ((book && book.chapters) || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+      buildList(libVol);
+      markTocRead();
+    };
+    if (libVol === String(state.vol) && state.book) {
+      applyMarkAll(state.book);
+    } else {
+      readBook(libVol).then(applyMarkAll).catch(() => {});
+    }
+  });
+  $('clearAllBtn')?.addEventListener('click', () => {
+    LS.set('read:' + libVol, []);
+    buildList(libVol);
+    markTocRead();
+  });
+
+  function syncPickers() {
+    if ($('volLabel')) $('volLabel').textContent = getVolLabel(String(state.vol));
+    if ($('volSelect')) $('volSelect').value = String(state.vol);
+    const ch = state.book ? chapters()[state.chapter] : null;
+    if ($('chLabel')) {
+      $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
+    }
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -244,11 +476,7 @@
     });
     return idx;
   };
-  const chapterRange = (i) => {
-    const start = chapters()[i].page;
-    const next = chapters()[i + 1];
-    return [start, next ? next.page - 1 : state.book.total];
-  };
+  const chapterRange = (i) => chapterRangeFor(state.book, i);
 
   /* ---------------- veri ---------------- */
   function imgSrc(p, vol) {
@@ -281,27 +509,28 @@
   }
 
   async function readBook(v) {
-    if (memoryBooks.has(v)) return memoryBooks.get(v);
+    const key = String(v);
+    if (memoryBooks.has(key)) return memoryBooks.get(key);
 
     const manifest = await readManifest();
-    const meta = manifest && manifest.volumes && manifest.volumes[v];
+    const meta = manifest && manifest.volumes && manifest.volumes[key];
     if (meta) {
-      const slug = meta.slug || volSlug(v);
+      const slug = meta.slug || volSlug(key);
       const query = meta.hash ? '?v=' + encodeURIComponent(meta.hash) : '';
       try {
         const res = await fetch('bundles/vol-' + slug + '.json' + query);
         if (res.ok) {
           const book = await res.json();
-          memoryBooks.set(v, book);
+          memoryBooks.set(key, book);
           return book;
         }
       } catch {}
     }
 
-    const res = await fetch('api/book?v=' + encodeURIComponent(v));
+    const res = await fetch('api/book?v=' + encodeURIComponent(key));
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const book = await res.json();
-    memoryBooks.set(v, book);
+    memoryBooks.set(key, book);
     return book;
   }
 
@@ -351,7 +580,7 @@
       pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
-        toggleToc(false);
+        hideLibrary();
         goChapter(i);
       });
       li.appendChild(btn);
@@ -359,22 +588,17 @@
     });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
+    syncPickers();
     markTocRead();
+    measureChrome();
     render();
   }
 
-  // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
+  // içindekilerde okunmuş bölümleri işaretle (elle okundu seti bazlı)
   function markTocRead() {
-    const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
-      const ch = chapters()[i];
-      if (ch && ch.pending) {
-        li.classList.remove('is-read');
-        continue;
-      }
-      const end = chapterRange(i)[1];
-      li.classList.toggle('is-read', max >= end);
+      li.classList.toggle('is-read', isRead(String(state.vol), i));
     }
   }
 
@@ -549,8 +773,18 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
+    syncPickers();
+    $('navChapter').textContent = ch.label;
+    $('navPages').textContent = 's. ' + n + ' / ' + state.book.total;
+    $('prevBtn').disabled = n <= 1;
+    $('nextBtn').disabled = n >= state.book.total;
+    $('modeText').classList.toggle('is-on', state.mode === 'text');
+    $('modePage').classList.toggle('is-on', state.mode === 'page');
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
+    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -656,6 +890,7 @@
 
     // durum satırı
     $('pageRange').value = idx + 1;
+    syncPickers();
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = ch.pending
       ? 'beklemede'
@@ -774,6 +1009,7 @@
   /* ---------------- gezinme ---------------- */
   function goChapter(i, anchorPage) {
     if (!state.book) return;
+    hideLibrary();
     const max = chapters().length - 1;
     const idx = Math.min(Math.max(0, i), max);
     state.page = chapters()[idx].page;
@@ -783,46 +1019,48 @@
       if (el) el.scrollIntoView({ block: 'start' });
     }
   }
-  const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
-  const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
+  const next = () => {
+    hideLibrary();
+    return state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1);
+  };
+  const prev = () => {
+    hideLibrary();
+    return state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1);
+  };
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);
   $('nextBtn').addEventListener('click', next);
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
   $('modeBtn').addEventListener('click', () => {
+    hideLibrary();
     state.mode = state.mode === 'text' ? 'page' : 'text';
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
   });
-  $('modeText').addEventListener('click', () => {
-    state.mode = 'text';
-    render();
-  });
-  $('modePage').addEventListener('click', () => {
-    state.mode = 'page';
-    render();
-  });
-
-  function toggleToc(open) {
-    const panel = $('tocPanel');
-    const nextOpen = open === undefined ? panel.hidden : open;
-    panel.hidden = !nextOpen;
-    $('tocBtn').setAttribute('aria-expanded', String(nextOpen));
-    syncBackdrop();
+  function syncModeButtons() {
+    $('modeText').classList.toggle('is-on', state.mode === 'text');
+    $('modePage').classList.toggle('is-on', state.mode === 'page');
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
-  $('tocBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleToc();
-  });
-  document.addEventListener('click', (e) => {
-    if (!$('tocPanel').hidden && !$('tocPanel').contains(e.target)) toggleToc(false);
-  });
+  function switchMode(mode) {
+    hideLibrary();
+    if (state.mode === mode) return;
+    state.mode = mode;
+    syncModeButtons();
+    render();
+    const rEl = $('reader');
+    rEl.classList.remove('is-switching');
+    void rEl.offsetWidth;
+    rEl.classList.add('is-switching');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+  $('modeText').addEventListener('click', () => switchMode('text'));
+  $('modePage').addEventListener('click', () => switchMode('page'));
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    measureChrome();
-  applyTheme();
+    applyTheme();
     LS.set('theme', state.theme);
   });
   $('fontUp').addEventListener('click', () => {
@@ -846,8 +1084,11 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
-      toggleSettings(false);
-      return toggleToc(false);
+      if (libOpen) {
+        if (libKind === 'ch') showLibrary('vol');
+        else hideLibrary();
+      }
+      return;
     }
     if (e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();

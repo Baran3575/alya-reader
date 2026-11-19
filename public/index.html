@@ -8,91 +8,84 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="offline-badge" id="offline" hidden>çevrimdışı · tarayıcı belleğinden</div>
   <div class="progress"><span id="progressBar"></span></div>
 
   <header class="bar">
-    <div class="bar-row bar-top">
-      <a class="brand" href="#" id="homeBtn">
-        <span class="brand-title">Alya Bazen Duygularını Rusça Saklar</span>
-        <span class="brand-sub" id="brandSub">Cilt 4 · Türkçe</span>
-      </a>
-      <span class="pct" id="chPct" title="Bölüm içi ilerleme">%0</span>
-      <button class="icon" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settingsPanel" title="Görünüm ayarları">Aa</button>
+    <select id="volSelect" class="select vol-select" aria-label="Cilt seçimi">
+      <option value="4">Cilt 4</option>
+      <option value="4.5">Cilt 4.5</option>
+      <option value="5">Cilt 5</option>
+      <option value="6">Cilt 6</option>
+      <option value="7">Cilt 7</option>
+      <option value="8">Cilt 8</option>
+      <option value="9">Cilt 9</option>
+      <option value="9.5">Cilt 9.5</option>
+      <option value="10">Cilt 10</option>
+      <option value="11">Cilt 11</option>
+      <option value="12">Cilt 12</option>
+    </select>
+
+    <button class="pick pick-ch" id="chBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
+      <span id="chLabel">Bölüm 1</span><i class="chev" aria-hidden="true"></i>
+    </button>
+
+    <div class="seg seg-mode" role="group" aria-label="Görünüm">
+      <button id="modeText" class="seg-btn is-on" type="button">Çeviri</button>
+      <button id="modePage" class="seg-btn" type="button">Orijinal</button>
     </div>
 
-    <nav class="bar-row bar-tools tools">
-      <select id="volSelect" class="select vol-select" aria-label="Cilt seçimi">
-        <option value="4">Cilt 4</option>
-        <option value="4.5">Cilt 4.5</option>
-        <option value="5">Cilt 5</option>
-        <option value="6">Cilt 6</option>
-        <option value="7">Cilt 7</option>
-        <option value="8">Cilt 8</option>
-        <option value="9">Cilt 9</option>
-        <option value="9.5">Cilt 9.5</option>
-        <option value="10">Cilt 10</option>
-        <option value="11">Cilt 11</option>
-        <option value="12">Cilt 12</option>
-      </select>
-
-      <button class="pill toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
-        <span id="tocLabel">Bölüm</span>
-        <span class="caret">▾</span>
-      </button>
-
-      <div class="seg seg-mode" role="group" aria-label="Görünüm">
-        <button id="modeText" class="seg-btn is-on" type="button">Çeviri</button>
-        <button id="modePage" class="seg-btn" type="button">Orijinal</button>
-      </div>
-      <button class="icon mode-compact" id="modeBtn" type="button">Çeviri</button>
-    </nav>
+    <button class="icon" id="themeBtn" type="button" title="Tema (t)" aria-label="Tema değiştir">☾</button>
   </header>
 
-  <div class="settings-panel" id="settingsPanel" hidden>
-    <div class="set-row">
-      <span class="set-label">Yazı boyutu</span>
-      <div class="set-actions">
-        <button class="icon" id="fontDown" type="button" title="Yazıyı küçült">A−</button>
-        <button class="icon" id="fontUp" type="button" title="Yazıyı büyüt">A+</button>
-      </div>
-    </div>
-    <div class="set-row">
-      <span class="set-label">Tema</span>
-      <div class="set-actions">
-        <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
-
-  <div class="toc-panel" id="tocPanel" hidden>
-    <span class="sheet-grip" aria-hidden="true"></span>
-    <p class="toc-head">İçindekiler</p>
-    <ul class="toc-list" id="tocList"></ul>
-  </div>
-
   <main id="main">
+    <section class="lib" id="libView" hidden aria-label="Cilt ve bölüm listesi">
+      <div class="lib-head">
+        <button class="lib-back" id="libBack" type="button">‹ Ciltler</button>
+        <h2 class="lib-title" id="libTitle">Ciltler</h2>
+      </div>
+      <div class="lib-actions" id="libActions" hidden>
+        <button class="mini" id="markAllBtn" type="button">Hepsini okundu say</button>
+        <button class="mini" id="clearAllBtn" type="button">İşaretleri temizle</button>
+      </div>
+      <div class="lib-list" id="libList"></div>
+    </section>
+
     <article id="reader" class="reader" aria-live="polite"></article>
   </main>
 
   <footer class="nav">
-    <button class="nav-btn" id="prevBtn" type="button" title="Önceki bölüm (←)">←</button>
+    <button class="nav-btn" id="prevBtn" type="button" title="Önceki (←)">‹</button>
     <div class="nav-mid">
       <div class="nav-ch">
         <span class="nav-ch-name" id="navChapter">Bölüm 1</span>
         <span class="nav-ch-pages" id="navPages">s. 1–8</span>
-        <span class="nav-count" id="navCount"></span>
       </div>
       <input id="pageRange" type="range" min="1" max="13" value="1" aria-label="Bölüm" />
     </div>
-    <button class="nav-btn" id="nextBtn" type="button" title="Sonraki bölüm (→)">→</button>
+    <button class="nav-btn" id="nextBtn" type="button" title="Sonraki (→)">›</button>
   </footer>
 
   <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Sayfa görseli">
     <button class="lb-close" type="button" aria-label="Kapat">✕</button>
     <img alt="" />
+  </div>
+
+  <!-- eski arayüz uyumluluğu (gizli) -->
+  <div class="legacy" hidden>
+    <button id="volBtn" type="button" aria-haspopup="dialog" aria-expanded="false">
+      <span id="volLabel">Cilt 4</span>
+    </button>
+    <ul id="tocList"></ul>
+    <span id="tocLabel"></span>
+    <span id="navCount"></span>
+    <span id="chPct"></span>
+    <a id="homeBtn" href="#"></a>
+    <span id="brandSub"></span>
+    <button id="modeBtn" type="button"></button>
+    <button id="fontUp" type="button"></button>
+    <button id="fontDown" type="button"></button>
+    <div id="volMenu"></div>
+    <div id="tocPanel"></div>
   </div>
 
   <script src="app.js" defer></script>
