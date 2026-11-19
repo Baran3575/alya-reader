@@ -259,6 +259,11 @@ function testQc1PunctuationQuoteSuffixesAndSpacing() {
     fixPunctuation('“Merhaba.”Masachika el salladı.'),
     '“Merhaba.” Masachika el salladı.'
   );
+  // Bare domains and URLs must not get stray spaces after dots
+  assert.strictEqual(
+    fixPunctuation('Lütfen lightnovelreader.me veya discord.gg/roshidere adresine bakın.'),
+    'Lütfen lightnovelreader.me veya discord.gg/roshidere adresine bakın.'
+  );
 
   const glossary = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'glossary.json'), 'utf8'));
   assert(!JSON.stringify(glossary).includes("'"), 'data/glossary.json must use curly apostrophes');

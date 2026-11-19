@@ -135,7 +135,8 @@ function notes(t) {
     .replace(/(?:^|\s+)(?<!\p{L})(?:TN|ÇN|TL\s*note|Translator['’]?s?\s*note)\s*:[^\n]*/giu, '');
 }
 
-const URL_MASK_RE = /(?:https?:\/\/|(?:www|discord)\.)\S+/gi;
+const URL_MASK_RE =
+  /(?:https?:\/\/|(?:www|discord)\.)\S+|(?<![\p{L}\p{N}])[a-z0-9-]+\.(?:com|org|net|me|gg|io|jp)(?:\/\S*)?(?![\p{L}\p{N}])/gu;
 
 // 3) dizgi
 function typography(t) {

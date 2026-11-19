@@ -49,7 +49,8 @@ function loadGlossary(glossaryPath = GLOSSARY_FILE) {
   return DEFAULT_GLOSSARY;
 }
 
-const URL_MASK_RE = /(?:https?:\/\/|(?:www|discord)\.)\S+/gi;
+const URL_MASK_RE =
+  /(?:https?:\/\/|(?:www|discord)\.)\S+|(?<![\p{L}\p{N}])[a-z0-9-]+\.(?:com|org|net|me|gg|io|jp)(?:\/\S*)?(?![\p{L}\p{N}])/gu;
 
 function polish(text, glossary) {
   let t = String(text || '');
