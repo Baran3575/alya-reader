@@ -2,9 +2,7 @@ name: Deploy Reader to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -13,12 +11,11 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
-    name: Build & Verify Static Reader (Vols 4–12)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -40,11 +37,13 @@ jobs:
           test -f dist/index.html
           test -f dist/.nojekyll
           test -f dist/books/index.json
-          test -f dist/books/4.json
-          test -f dist/books/4.5.json
-          test -f dist/books/5.json
-          test -f dist/books/6.json
-          test -f dist/books/12.json
+          test -f dist/books/v4.json
+          test -f dist/books/art-4.json
+          test -f dist/books/v4.5.json
+          test -f dist/books/art-4.5.json
+          test -f dist/books/v5.json
+          test -f dist/books/v6.json
+          test -f dist/books/v12.json
           test -f dist/pages/004.webp
           test -f dist/pages45/004.webp
           test -f dist/pages5/001.webp
@@ -56,15 +55,14 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: ./dist
 
   deploy:
-    name: Publish to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

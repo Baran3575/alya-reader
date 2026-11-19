@@ -12,51 +12,96 @@
   <div class="progress"><span id="progressBar"></span></div>
 
   <header class="bar">
-    <a class="brand" href="#" id="homeBtn">
-      <span class="brand-title">Alya Bazen Duygularını Rusça Saklar</span>
-      <span class="brand-sub" id="brandSub">Cilt 4 · Türkçe</span>
-    </a>
+    <div class="bar-row bar-top">
+      <a class="brand" href="#" id="homeBtn">
+        <span class="brand-title">Alya Bazen Duygularını Rusça Saklar</span>
+        <span class="brand-sub" id="brandSub">Cilt 4 · Türkçe</span>
+      </a>
+      <span class="pct" id="chPct" title="Bölüm içi ilerleme">%0</span>
+      <button class="icon" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="settingsPanel" title="Görünüm ayarları">Aa</button>
+    </div>
 
-    <nav class="tools">
-      <div class="seg seg-vol" id="volSelector" role="group" aria-label="Cilt seçimi">
-        <button id="vol4" data-vol="4" class="seg-btn is-on" type="button" title="Cilt 4">4</button>
-        <button id="vol45" data-vol="4.5" class="seg-btn" type="button" title="Cilt 4.5">4.5</button>
-        <button id="vol5" data-vol="5" class="seg-btn" type="button" title="Cilt 5">5</button>
-        <button id="vol6" data-vol="6" class="seg-btn" type="button" title="Cilt 6">6</button>
-        <button id="vol7" data-vol="7" class="seg-btn" type="button" title="Cilt 7">7</button>
-        <button id="vol8" data-vol="8" class="seg-btn" type="button" title="Cilt 8">8</button>
-        <button id="vol9" data-vol="9" class="seg-btn" type="button" title="Cilt 9">9</button>
-        <button id="vol95" data-vol="9.5" class="seg-btn" type="button" title="Cilt 9.5">9.5</button>
-        <button id="vol10" data-vol="10" class="seg-btn" type="button" title="Cilt 10">10</button>
-        <button id="vol11" data-vol="11" class="seg-btn" type="button" title="Cilt 11">11</button>
-        <button id="vol12" data-vol="12" class="seg-btn" type="button" title="Cilt 12">12</button>
+    <div class="bar-row bar-tools">
+      <div class="volpick" id="volSelector">
+        <button class="pill" id="volBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="volMenu">
+          <span id="volLabel">Cilt 4</span>
+          <span class="caret">▾</span>
+        </button>
       </div>
-      <button class="toc-btn vol-btn" id="volBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Cilt seçimi">
-        <span id="volBtnLabel">Cilt 4</span>
-        <span class="caret">▾</span>
-      </button>
-      <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
+
+      <button class="pill" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
         <span id="tocLabel">Bölüm</span>
         <span class="caret">▾</span>
       </button>
-      <div class="seg" role="group" aria-label="Görünüm">
+
+      <div class="seg seg-mode" role="group" aria-label="Görünüm">
         <button id="modeText" class="seg-btn is-on" type="button">Çeviri</button>
         <button id="modePage" class="seg-btn" type="button">Orijinal</button>
       </div>
-      <button class="icon" id="fontDown" type="button" title="Yazıyı küçült">A−</button>
-      <button class="icon" id="fontUp" type="button" title="Yazıyı büyüt">A+</button>
-      <span class="pct" id="chPct" title="Bölüm içi ilerleme">%0</span>
       <button class="icon mode-compact" id="modeBtn" type="button">Çeviri</button>
-      <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
-    </nav>
+    </div>
   </header>
 
-  <div class="toc-panel vol-panel" id="volPanel" hidden>
-    <p class="toc-head">Cilt Seçimi</p>
-    <ul class="toc-list vol-list" id="volList" role="listbox" aria-label="Ciltler"></ul>
+  <div class="volsheet" id="volMenu" hidden role="menu" aria-label="Cilt seçimi">
+    <span class="sheet-grip" aria-hidden="true"></span>
+    <p class="sheet-head">Cilt seç</p>
+    <div class="volgrid">
+      <button role="menuitem" data-vol="4" class="vol-item is-on" type="button">
+        <b>4</b><small>282 s. · Prolog</small>
+      </button>
+      <button role="menuitem" data-vol="4.5" class="vol-item" type="button">
+        <b>4.5</b><small>347 s. · Kısa hikâyeler</small>
+      </button>
+      <button role="menuitem" data-vol="5" class="vol-item" type="button">
+        <b>5</b><small>257 s.</small>
+      </button>
+      <button role="menuitem" data-vol="6" class="vol-item" type="button">
+        <b>6</b><small>262 s.</small>
+      </button>
+      <button role="menuitem" data-vol="7" class="vol-item" type="button">
+        <b>7</b><small>278 s.</small>
+      </button>
+      <button role="menuitem" data-vol="8" class="vol-item" type="button">
+        <b>8</b><small>269 s.</small>
+      </button>
+      <button role="menuitem" data-vol="9" class="vol-item" type="button">
+        <b>9</b><small>256 s.</small>
+      </button>
+      <button role="menuitem" data-vol="9.5" class="vol-item" type="button">
+        <b>9.5</b><small>180 s. · Perde arkası</small>
+      </button>
+      <button role="menuitem" data-vol="10" class="vol-item" type="button">
+        <b>10</b><small>249 s.</small>
+      </button>
+      <button role="menuitem" data-vol="11" class="vol-item" type="button">
+        <b>11</b><small>312 s.</small>
+      </button>
+      <button role="menuitem" data-vol="12" class="vol-item" type="button">
+        <b>12</b><small>74 s. · kısmi</small>
+      </button>
+    </div>
   </div>
 
+  <div class="settings-panel" id="settingsPanel" hidden>
+    <div class="set-row">
+      <span class="set-label">Yazı boyutu</span>
+      <div class="set-actions">
+        <button class="icon" id="fontDown" type="button" title="Yazıyı küçült">A−</button>
+        <button class="icon" id="fontUp" type="button" title="Yazıyı büyüt">A+</button>
+      </div>
+    </div>
+    <div class="set-row">
+      <span class="set-label">Tema</span>
+      <div class="set-actions">
+        <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+
   <div class="toc-panel" id="tocPanel" hidden>
+    <span class="sheet-grip" aria-hidden="true"></span>
     <p class="toc-head">İçindekiler</p>
     <ul class="toc-list" id="tocList"></ul>
   </div>
@@ -71,6 +116,7 @@
       <div class="nav-ch">
         <span class="nav-ch-name" id="navChapter">Bölüm 1</span>
         <span class="nav-ch-pages" id="navPages">s. 1–8</span>
+        <span class="nav-count" id="navCount"></span>
       </div>
       <input id="pageRange" type="range" min="1" max="13" value="1" aria-label="Bölüm" />
     </div>
@@ -82,7 +128,7 @@
     <img alt="" />
   </div>
 
-  <script src="bundle-art.js" defer></script>
-  <script src="app.js" defer></script>
+  <script src="bundle.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>

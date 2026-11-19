@@ -1,7 +1,7 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + cilt bazlı kitap verisi.
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + cilt bazlı kitap/sanat verisi.
 // Hem kök dizinde (/) hem de GitHub Pages alt-dizininde (/alya-reader/) çalışır.
-const VERSION = 'alya-v5';
-const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle-art.js', 'books/index.json'];
+const VERSION = 'alya-v6';
+const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle.js', 'books/index.json'];
 
 function scopeUrl(rel) {
   return new URL(rel, self.registration.scope).href;
@@ -40,29 +40,27 @@ self.addEventListener('fetch', (e) => {
   const rel = relativeToScope(url);
   if (rel === null) return;
 
-  // görseller (Cilt 4–12 pages*/) ve cilt paketleri (books/index.json hariç): önce önbellek, sonra ağ
+  // görseller (Cilt 4–12 pages*/) ve cilt/sanat paketleri (books/index.json hariç): önce önbellek, sonra ağ
   const cacheFirst =
     /^pages\d*\//.test(rel) ||
-    (/^books\/[0-9.]+\.json$/.test(rel) && rel !== 'books/index.json') ||
+    (/^books\/(?:v?[0-9.]+|art-[0-9.]+)\.json$/.test(rel) && rel !== 'books/index.json') ||
     rel === 'api/book' ||
     rel === 'bundle.js' ||
     rel === 'bundle-art.js';
 
   if (cacheFirst) {
     e.respondWith(
-      caches.match(req).then(
-        (hit) =>
-          hit ||
-          fetch(req)
-            .then((res) => {
-              if (res && res.ok) {
-                const copy = res.clone();
-                caches.open(VERSION).then((c) => c.put(req, copy));
-              }
-              return res;
-            })
-            .catch(() => hit),
-      ),
+      caches.open(VERSION).then(async (cache) => {
+        const hit = await cache.match(req);
+        if (hit) return hit;
+        try {
+          const res = await fetch(req);
+          if (res.ok) cache.put(req, res.clone());
+          return res;
+        } catch (err) {
+          return new Response('', { status: 504 });
+        }
+      }),
     );
     return;
   }
@@ -71,7 +69,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     fetch(req)
       .then((res) => {
-        if (res && res.ok) {
+        if (res.ok) {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(req, copy));
         }

@@ -291,13 +291,29 @@ const server = http.createServer((req, res) => {
     return send(req, res, 200, MIME['.json'], body);
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktası (/books/v<v>.json veya /books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);
       return send(req, res, 200, MIME['.json'], loaded.json);
     } catch {}
+  }
+
+  // Gömülü illüstrasyon parçası (/books/art-<v>.json) disk üzerinde yoksa bundle-art.js içinden sun
+  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
+  if (artJsonMatch) {
+    const diskArt = path.join(PUB, 'books', `art-${artJsonMatch[1]}.json`);
+    if (!fs.existsSync(diskArt)) {
+      try {
+        const vm = require('vm');
+        const artCode = fs.readFileSync(path.join(PUB, 'bundle-art.js'), 'utf8');
+        const sb = { window: {} };
+        vm.runInNewContext(artCode, sb, { timeout: 2000 });
+        const pack = sb.window.ALYA_ART && sb.window.ALYA_ART[artJsonMatch[1]];
+        if (pack) return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(pack)));
+      } catch {}
+    }
   }
 
   if (pathname === '/') pathname = '/index.html';

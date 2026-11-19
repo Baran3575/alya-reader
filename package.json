@@ -11,7 +11,6 @@
     "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
     "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node scripts/qc/cli.js --strict --check-regression",
-    "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",
     "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",
@@ -19,7 +18,13 @@
     "qc:v5": "node scripts/qc/cli.js --volume 5 --strict --check-regression",
     "qc:v6": "node scripts/qc/cli.js --volume 6 --strict --check-regression",
     "patch:dry": "node scripts/patch.js --dry-run",
-    "patch:apply": "node scripts/patch.js"
+    "patch:apply": "node scripts/patch.js",
+    "fix:delim": "node scripts/fix_delim_junk.js",
+    "fix:delim:dry": "node scripts/fix_delim_junk.js --dry",
+    "en:qc": "node scripts/qc/en_quality.js",
+    "en:fix": "node scripts/fix_en_ocr.js",
+    "en:ads": "node scripts/qc/en_ads.js",
+    "pretest": "node scripts/build_bundle.js"
   },
   "keywords": [
     "alya",
