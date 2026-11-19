@@ -268,7 +268,7 @@ function isSafeCandidate(orig, cand) {
   if (((cand.match(/[“”]/g) || []).length % 2) !== ((orig.match(/[“”]/g) || []).length % 2)) return false;
   if (/\s+[,.;:!?]/.test(cand) || /\.{2,}/.test(cand) || /[!?]\./.test(cand)) return false;
   if (/(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/iu.test(cand.replace(/https?:\s*\/\/[^\n]+/gi, ''))) return false;
-  if (/(?<!\p{L})(?:ÇN|TN)\s*:/u.test(cand)) return false;
+  if (/(?<!\p{L})TN\s*:/u.test(cand)) return false;
   return true;
 }
 

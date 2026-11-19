@@ -45,7 +45,7 @@ node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 
 ## Sürekli Doğrulama ve Kalite Kapısı (QC)
 
-Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, çevirmen notu `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, dengesiz `{…}`/`[…]` ayracı `0`, köşe tırnağı/Kiril `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` doğrulama testlerini çalıştırıp statik okuyucuyu GitHub Pages’e yayınlar.
+Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, İngilizce çevirmen notu `TN:` `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, dengesiz `{…}`/`[…]` ayracı `0`, köşe tırnağı/Kiril `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` doğrulama testlerini çalıştırıp statik okuyucuyu GitHub Pages’e yayınlar.
 
 ```bash
 npm test                                               # tüm birim/entegrasyon testleri + 11 cilt sıkı QC kapısı

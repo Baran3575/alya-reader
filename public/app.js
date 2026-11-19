@@ -1036,7 +1036,7 @@
   $('modeText').addEventListener('click', () => switchMode('text'));
   $('modePage').addEventListener('click', () => switchMode('page'));
 
-  function toggleToc() {} // sade arayüzde ayrı panel yok (alt sayfa #sheet kullanılır)
+  function toggleToc() {} // sade arayüzde ayrı panel yok (sayfa içi #libView kullanılır)
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
@@ -1064,9 +1064,9 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
-      if (sheet && !sheet.hidden) return closeSheet();
       return toggleToc(false);
     }
+    if (libOpen) return;
     if (e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
