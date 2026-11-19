@@ -347,6 +347,7 @@
   /* illüstrasyonlar cilt başına parça hâlinde; ilk kullanımda yüklenir */
   const artLoading = new Map();
   function ensureArt(v) {
+    if (v !== '4' && v !== '4.5') return Promise.resolve();
     window.ALYA_ART = window.ALYA_ART || {};
     if (window.ALYA_ART[v] && Object.keys(window.ALYA_ART[v]).length) return Promise.resolve();
     if (artLoading.has(v)) return artLoading.get(v);
