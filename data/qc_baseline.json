@@ -6,13 +6,13 @@
  },
  "5": {
   "avg": 0.06,
-  "flagged": 2,
-  "paragraphs": 2806
+  "flagged": 0,
+  "paragraphs": 2810
  },
  "6": {
-  "avg": 0.04,
-  "flagged": 3,
-  "paragraphs": 2963
+  "avg": 0.03,
+  "flagged": 0,
+  "paragraphs": 2964
  },
  "7": {
   "avg": 0.06,
