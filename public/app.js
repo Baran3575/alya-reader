@@ -69,14 +69,14 @@
     { id: '6', label: 'Cilt 6', subtitle: 'Seirei Akademisi Festivali', embedArt: false, status: 'complete', statusNote: '' },
     { id: '7', label: 'Cilt 7', subtitle: 'Sonbahar ve Spor Şenliği', embedArt: false, status: 'complete', statusNote: '' },
     { id: '8', label: 'Cilt 8', subtitle: 'Kışa Girerken ve Doğum Günü', embedArt: false, status: 'complete', statusNote: '' },
-    { id: '9', label: 'Cilt 9', subtitle: 'Kış Günleri ve Geçmişin Sesi', embedArt: false, status: 'complete', statusNote: '' },
+    { id: '9', label: 'Cilt 9', subtitle: 'Suou Ailesi ve Geçmişin Sesi', embedArt: false, status: 'complete', statusNote: '' },
     { id: '9.5', label: 'Cilt 9.5', subtitle: 'Sahne Arkası Kısa Öyküleri', embedArt: false, status: 'complete', statusNote: '' },
-    { id: '10', label: 'Cilt 10', subtitle: 'Yeni Yıl ve Öğrenci Konseyi', embedArt: false, status: 'complete', statusNote: '' },
-    { id: '11', label: 'Cilt 11', subtitle: 'Üçüncü Dönem ve Seçim Yarışı', embedArt: false, status: 'complete', statusNote: '' },
+    { id: '10', label: 'Cilt 10', subtitle: 'Piyano Tınısı ve Öğrenci Konseyi', embedArt: false, status: 'complete', statusNote: '' },
+    { id: '11', label: 'Cilt 11', subtitle: 'Birleşik Cephe ve Kış Hazırlığı', embedArt: false, status: 'complete', statusNote: '' },
     {
       id: '12',
       label: 'Cilt 12',
-      subtitle: 'Yeni Dönem Başlangıcı',
+      subtitle: 'İlk Dans ve Noel Arifesi',
       embedArt: false,
       status: 'partial',
       statusNote: 'Bu cildin çevirisi devam ediyor; yeni bölümler yayınlandıkça eklenecek.',
@@ -484,6 +484,7 @@
       const check = document.createElement('button');
       check.type = 'button';
       check.className = 'lib-check' + (read ? ' is-on' : '');
+      check.disabled = Boolean(c.pending);
       check.setAttribute('aria-pressed', String(read));
       check.setAttribute('aria-label', label + ' okundu');
       check.textContent = '✓';

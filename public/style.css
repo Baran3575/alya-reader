@@ -693,6 +693,9 @@ input[type='range']::-moz-range-thumb {
 .lib-row.is-read:not(.is-current) .lib-name {
   color: var(--muted);
 }
+.lib-row.is-pending:not(.is-current) .lib-name {
+  color: var(--fg-soft);
+}
 .lib-main {
   flex: 1;
   min-width: 0;
@@ -715,6 +718,10 @@ input[type='range']::-moz-range-thumb {
   color: var(--line);
   font-size: 0.95rem;
   cursor: pointer;
+}
+.lib-check:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 .lib-check.is-on {
   color: var(--accent);
