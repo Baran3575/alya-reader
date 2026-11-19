@@ -1,8 +1,9 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --phase <1..5>          # Belirli faz ve önkoşul kontrolü
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (Faz 1: <0.12 ve <%0.5; Faz 2-5: <=0.20)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -11,23 +12,22 @@
 const fs = require('fs');
 const path = require('path');
 const { runVerify } = require('./verify');
-const { evaluateData, score } = require('./quality');
+const { evaluateData } = require('./quality');
 const { validatePatches } = require('../patch');
-const { VOLUME_SPECS, PHASES, getActiveVolumes } = require('../volumes');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY, PHASES, getActiveVolumes } = require('../lib/volumes');
 
-const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
-const MAX_FLAGGED_SHARE_STRICT = 0.005; // < 0.5% 3+ puanlı paragraf sınırı
+const MAX_FLAGGED_SHARE_STRICT = 0.005; // < 0.5% 3+ puanlı paragraf sınırı (Faz 1)
 
 const VOLUMES = Object.fromEntries(
-  Object.entries(VOLUME_SPECS).map(([key, spec]) => [
-    key,
+  VOLUME_KEYS.map((k) => [
+    k,
     {
-      tr: path.posix.join(spec.dataDir, 'paragraphs_final.json'),
-      label: spec.label,
-      phase: spec.phase,
-      maxAvgStrict: 0.12,
-      maxFlaggedShareStrict: MAX_FLAGGED_SHARE_STRICT,
+      tr: REGISTRY[k].finalRel,
+      label: REGISTRY[k].label,
+      phase: REGISTRY[k].phase,
+      maxAvgStrict: REGISTRY[k].maxAvgStrict,
+      maxFlaggedShareStrict: REGISTRY[k].maxFlaggedShareStrict,
     },
   ])
 );
@@ -57,7 +57,7 @@ function parseArgs(argv = process.argv.slice(2)) {
   const checkRegression = args.includes('--check-regression');
 
   let selected = getActiveVolumes(ROOT).map((v) => v.key);
-  if (selected.length === 0) selected = ['4', '4.5'];
+  if (selected.length === 0) selected = [...VOLUME_KEYS];
 
   let phase = null;
   const phaseIdx = args.indexOf('--phase');
@@ -70,10 +70,20 @@ function parseArgs(argv = process.argv.slice(2)) {
     }
   }
 
-  const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  if (volIdx > -1 && args[volIdx + 1]) {
-    const val = String(args[volIdx + 1]);
-    selected = [val];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if ((a === '--volume' || a === '--vol' || a === '-v') && args[i + 1]) {
+      selected = [String(args[i + 1]).trim()];
+      break;
+    }
+    if (a.startsWith('--volume=')) {
+      selected = [a.slice('--volume='.length).trim()];
+      break;
+    }
+    if (a.startsWith('--vol=')) {
+      selected = [a.slice('--vol='.length).trim()];
+      break;
+    }
   }
 
   return { args, json, update, strict, checkRegression, selected, phase };
@@ -219,9 +229,9 @@ function checkPhasePrerequisites(targetPhase, rootDir = ROOT) {
     }
     const q = evaluateData(schema.data);
     const share = q.total > 0 ? q.flagged / q.total : 0;
-    if (q.avg >= cfg.maxAvgStrict || share >= cfg.maxFlaggedShareStrict) {
+    if (q.avg >= 0.12 || share >= MAX_FLAGGED_SHARE_STRICT) {
       errors.push(
-        `Faz 1 (${cfg.label}) eşiği sağlanmadı: avg=${q.avg} (<${cfg.maxAvgStrict}), 3+ oran=${(share * 100).toFixed(2)}% (<0.5%)`
+        `Faz 1 (${cfg.label}) eşiği sağlanmadı: avg=${q.avg} (<0.12), 3+ oran=${(share * 100).toFixed(2)}% (<0.5%)`
       );
     }
   }
@@ -304,7 +314,7 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
+    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için)
     if (vol === '4') {
       const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
       if (fs.existsSync(patchesFile)) {
@@ -326,12 +336,14 @@ function main() {
 
     // 5. Kalite Puanı Eşik ve Regresyon Kapısı
     if (strict) {
-      // Strict Mod Gating: tüm aktif ciltler için ortalama ceza < 0.12 ve 3+ puanlı oran < %0.5
-      if (cfg.maxAvgStrict !== undefined && q.avg >= cfg.maxAvgStrict) {
+      const avgExceeded =
+        cfg.maxAvgStrict !== undefined &&
+        (cfg.phase === 1 ? q.avg >= cfg.maxAvgStrict : q.avg > cfg.maxAvgStrict);
+      if (avgExceeded) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
           value: q.avg,
-          baseline: `< ${cfg.maxAvgStrict}`,
+          baseline: cfg.phase === 1 ? `< ${cfg.maxAvgStrict}` : `<= ${cfg.maxAvgStrict}`,
         });
       }
       const flaggedShare = q.total > 0 ? q.flagged / q.total : 0;
@@ -405,7 +417,6 @@ function main() {
 
   const markdownSummary = generateMarkdownSummary(result, violations, { strict, checkRegression });
 
-  // GitHub Actions Step Summary desteği
   if (process.env.GITHUB_STEP_SUMMARY) {
     try {
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary + '\n\n');

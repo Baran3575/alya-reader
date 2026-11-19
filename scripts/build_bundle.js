@@ -1,38 +1,63 @@
-// Tarayıcıya gömülecek veri paketi: Türkçe + İngilizce + bölümler (iki cilt).
-// Sunucuya ihtiyaç duymadan okuma için public/bundle.js üretir.
+// Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const vm = require('vm');
 const { buildBook } = require('../server.js');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'public', 'bundle.js');
+const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 
-const vols = {
-  4: buildBook({ dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') }),
-  '4.5': buildBook({ dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') }),
-};
-
-// sayfa görsellerini de paketle: data URI olarak gömülür (küçük olanlar)
-const IMG_BUDGET = 0; // 0 = görselleri gömme, göreli yoldan yükle
-for (const [k, book] of Object.entries(vols)) {
-  for (const p of book.pages) {
-    const prefix = /^4\.5$/.test(k) ? 'pages45/' : 'pages/';
-    p.img = prefix + String(p.n).padStart(3, '0') + '.webp';
+function loadExistingArtBundle() {
+  if (!fs.existsSync(ART_OUT)) return {};
+  try {
+    const code = fs.readFileSync(ART_OUT, 'utf8');
+    const sandbox = { window: {} };
+    vm.runInNewContext(code, sandbox, { timeout: 2000 });
+    return sandbox.window.ALYA_ART || {};
+  } catch {
+    return {};
   }
 }
 
-// illüstrasyon sayfalarının görselleri de gömülür (data URI) — sunucusuz inline okuma için
-const IMG_DIRS = { '4': 'public/pages/', '4.5': 'public/pages45/' };
-const art = { '4': {}, '4.5': {} };
-for (const [k, book] of Object.entries(vols)) {
+const existingArt = loadExistingArtBundle();
+const vols = {};
+const art = {};
+
+for (const k of VOLUME_KEYS) {
+  const cfg = VOLUMES[k];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
+
+  const book = buildBook({
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+  });
+
+  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
   for (const p of book.pages) {
-    if (!p.art) continue;
-    const f = path.join(ROOT, IMG_DIRS[k], String(p.n).padStart(3, '0') + '.webp');
-    if (!fs.existsSync(f)) continue;
-    const b64 = fs.readFileSync(f).toString('base64');
-    art[k][String(p.n).padStart(3, '0')] = 'data:image/webp;base64,' + b64;
+    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+  }
+  vols[k] = book;
+
+  // Cilt 4 ve 4.5 için ham görsel klasörü gitignore'da olduğundan mevcut gömülü data URI'leri koru
+  if (k === '4' || k === '4.5') {
+    art[k] = { ...(existingArt[k] || {}) };
+    const diskDir = path.join(ROOT, cfg.imgDir);
+    if (fs.existsSync(diskDir)) {
+      for (const p of book.pages) {
+        if (!p.art) continue;
+        const pad = String(p.n).padStart(3, '0');
+        const f = path.join(diskDir, `${pad}.webp`);
+        if (fs.existsSync(f)) {
+          art[k][pad] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64');
+        }
+      }
+    }
   }
 }
 
@@ -49,9 +74,15 @@ fs.writeFileSync(OUT, body);
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
   'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
-fs.writeFileSync(path.join(ROOT, 'public', 'bundle-art.js'), artBody);
-console.log('illüstrasyon:', Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0), 'görsel |',
-  (artBody.length / 1048576).toFixed(2), 'MB');
+fs.writeFileSync(ART_OUT, artBody);
+
+console.log(
+  'illüstrasyon (gömülü Cilt 4/4.5):',
+  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  'görsel |',
+  (artBody.length / 1048576).toFixed(2),
+  'MB'
+);
 const kb = (body.length / 1024).toFixed(0);
 console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
 for (const [k, b] of Object.entries(vols)) {

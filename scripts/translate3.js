@@ -1,12 +1,10 @@
-// Bölüm bazlı sayfa dikişli (chapter-stitched) çift motor çeviri boru hattı -> bilingual.json
+// Bölüm bazlı sayfa dikişli (chapter-stitched) çift motor çeviri boru hattı -> data<vol>/bilingual.json
 // Kullanım:
 //   node scripts/translate3.js                    # Cilt 4 (varsayılan)
 //   node scripts/translate3.js --volume 4.5       # Cilt 4.5 (veya Faz 2..5 ciltleri: 5..12)
 const fs = require('fs');
 const path = require('path');
-const { getVolumeConfig } = require('./volumes');
-
-const ROOT = path.join(__dirname, '..');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
 const DEFAULT_DEEPL_KEY =
   process.env.DEEPL_KEY ||
@@ -17,7 +15,7 @@ const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36';
 
 const NOISE = /(Goldenagato|mp4directs|jnovels|zerobooks|Download all your Favorite|Stay up to date On Light Novels)/i;
-const CHAPTER_HEADING_RE = /^(Prologue|Epilogue|Chapter\s+(\d+))\s*[:–—-]/i;
+const CHAPTER_HEADING_RE = /^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+(\d+))\s*[:–—-]/i;
 
 function isUsablePage(text) {
   const words = String(text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
@@ -26,10 +24,11 @@ function isUsablePage(text) {
 }
 
 function detectChapterHeading(rawTextOrFirstPara) {
-  const firstLine = String(rawTextOrFirstPara || '')
-    .split('\n')
-    .map((s) => s.trim())
-    .filter((s) => s && !NOISE.test(s))[0] || '';
+  const firstLine =
+    String(rawTextOrFirstPara || '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter((s) => s && !NOISE.test(s))[0] || '';
   return CHAPTER_HEADING_RE.test(firstLine.replace(/\s+/g, ' '));
 }
 
@@ -148,7 +147,7 @@ function joinCrossPageParagraphs(last, first) {
   return (a + ' ' + b).replace(/\s+/g, ' ').trim();
 }
 
-// Bölüm sınırlarını (server.js:L70-L81) gözeterek sayfa geçişlerindeki yarım cümle ve tırnakları
+// Bölüm sınırlarını gözeterek sayfa geçişlerindeki yarım cümle ve tırnakları
 // çeviri öncesinde birleştirir; tüm sayısal sayfa anahtarlarını korur.
 function stitchChapterPages(pages) {
   const entries = pages.map((p) => {
@@ -251,9 +250,12 @@ async function deepl(texts, deeplKey = DEFAULT_DEEPL_KEY, fetchImpl = fetch, sle
 
 async function runTranslate(options = {}) {
   const volKey = options.volume || '4';
-  const volCfg = getVolumeConfig(volKey, ROOT);
-  const srcFile = options.srcFile || (volCfg ? volCfg.sourceFile : path.join(ROOT, 'data/source.json'));
-  const outFile = options.outFile || (volCfg ? volCfg.bilingualFile : path.join(ROOT, 'data/bilingual.json'));
+  const volCfg = resolveVolume(volKey);
+  if (!volCfg && !options.srcFile) {
+    throw new Error(`Bilinmeyen cilt: ${volKey}`);
+  }
+  const srcFile = options.srcFile || volCfg.sourceFile;
+  const outFile = options.outFile || volCfg.bilingualFile;
   const deeplKey = options.deeplKey !== undefined ? options.deeplKey : DEFAULT_DEEPL_KEY;
   const fetchImpl = options.fetchImpl || fetch;
   const batchDelayMs = options.batchDelayMs !== undefined ? options.batchDelayMs : 200;
@@ -347,9 +349,11 @@ async function runTranslate(options = {}) {
 }
 
 if (require.main === module) {
-  const args = process.argv.slice(2);
-  const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const volume = vIdx > -1 && args[vIdx + 1] ? String(args[vIdx + 1]) : '4';
+  const volume = parseVolumeArg(process.argv.slice(2), '4');
+  if (!resolveVolume(volume)) {
+    console.error(`Bilinmeyen cilt: ${volume}`);
+    process.exit(1);
+  }
   runTranslate({ volume }).catch((err) => {
     console.error('Çeviri durduruldu:', err.message || err);
     process.exit(1);

@@ -240,6 +240,12 @@ function testQc1PunctuationQuoteSuffixesAndSpacing() {
   console.log('Testing qc1_punctuation.js and norm_typo.js quote suffixes and curly typography...');
   const { fixPunctuation } = require('../scripts/qc/qc1_punctuation');
   const { normalizeText } = require('../scripts/norm_typo');
+  const { polish } = require('../scripts/merge');
+
+  assert.strictEqual(
+    polish(`Masachika 'otaku' dedi ve ”ters“ tırnağı düzeltti.`),
+    'Masachika ‘otaku’ dedi ve “ters” tırnağı düzeltti.'
+  );
 
   assert.strictEqual(
     fixPunctuation('Gizli otakular “otaku hobileri” nin önemli olduğunu düşünür.'),
@@ -293,8 +299,9 @@ async function testChapterStitchingAndDeepL456FatalStop() {
   console.log('Testing translate3.js chapter cross-page stitching and DeepL HTTP 456 fatal stop...');
   const os = require('os');
   const { stitchChapterPages, runTranslate } = require('../scripts/translate3');
-  const translate45 = require('../scripts45/translate');
-  assert.strictEqual(translate45.stitchChapterPages, stitchChapterPages, 'scripts45/translate.js must share unified pipeline');
+  const { resolveVolume } = require('../scripts/lib/volumes');
+  assert.ok(!fs.existsSync(path.join(ROOT, 'scripts45')), 'scripts45/ directory must remain retired');
+  assert.strictEqual(resolveVolume('4.5').dataDir, 'data45', 'Unified pipeline must resolve Volume 4.5');
 
   const samplePages = [
     {

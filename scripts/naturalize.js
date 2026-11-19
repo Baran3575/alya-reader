@@ -1,10 +1,9 @@
 // Edebî/doğal Türkçe geçişi: makine çevirisinin "resmî" kalıplarını light novel
-// anlatımına çevirir, dizgiyi tek tipleştirir. Kural listesi bilinçli olarak tutucu:
-// anlamı değiştirebilecek dönüşümler yalnızca net kalıplarda uygulanır.
+// anlatımına çevirir, çevirmen notlarını temizler ve dizgiyi tek tipleştirir.
+// Kullanım: node scripts/naturalize.js [--volume <v>] [dosya] [--dry] [--context-only]
 const fs = require('fs');
 const path = require('path');
-
-const ROOT = path.join(__dirname, '..');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
 // Türkçe harfler ("ş, ğ, ı, İ, ö, ü, ç") ASCII \b ile eşleşmediğinden Unicode harf sınırları kullanılır
 function W(pattern, extraLookahead = '') {
@@ -22,12 +21,12 @@ function preserveCase(match, replacement) {
 function applyRules(text, rules) {
   let out = text;
   for (const [re, to] of rules) {
-    out = out.replace(re, (m) => preserveCase(m, to));
+    out = out.replace(re, (m) => (typeof to === 'function' ? to(m) : preserveCase(m, to)));
   }
   return out;
 }
 
-// 1) sözcük/ifade düzeyi: resmî -> günlük/edebî
+// 1) sözcük/ifade düzeyi: resmî -> günlük/edebî + Türkçe imla düzeltmeleri
 const LEX = [
   [W('söz konusu', '(?!\\s+(?:değil|olmadığı|olduğu))'), 'o'],
   [W('adı geçen'), 'o'],
@@ -57,15 +56,21 @@ const LEX = [
   [W('beyan etti'), 'söyledi'],
   [W('muvaffak oldu'), 'başardı'],
   [W('muvaffak olmak'), 'başarmak'],
+  [W('bir nevi'), 'bir bakıma'],
+  [W('olmasına rağmen'), 'olsa da'],
+  [W('herşey'), 'her şey'],
+  [W('birşey'), 'bir şey'],
+  [W('herkez'), 'herkes'],
+  [W('yanlız'), 'yalnız'],
+  [W('bir çok'), 'birçok'],
 ];
 
-// 2) makine çevirisine özgü kalıplar (anlamı bozmayacak kadar dar)
+// 2) makine çevirisine özgü kalıplar
 const MECH = [
   [W('oldukça fazla'), 'epey'],
 ];
 
-// 2b) bağlamsal zarf kuralları: "X bir şekilde" -> Türkçe zarf;
-// algı kalıplarının sadeleştirilmesi. Yalnızca tek anlamlı kalıplar.
+// 2b) bağlamsal zarf kuralları: "X bir şekilde" -> Türkçe zarf
 const CONTEXT = [
   [W('çok hızlı bir şekilde'), 'hızla'],
   [W('hızlı bir şekilde'), 'hızlıca'],
@@ -79,10 +84,13 @@ const CONTEXT = [
   [W('net bir şekilde'), 'açıkça'],
   [W('dikkatli bir şekilde'), 'dikkatle'],
   [W('ciddi bir şekilde'), 'ciddiyetle'],
+  [W('meraklı bir şekilde'), 'merakla'],
   [W('mutlu bir şekilde'), 'mutlulukla'],
   [W('üzüntülü bir şekilde'), 'üzüntüyle'],
   [W('endişeli bir şekilde'), 'endişeyle'],
   [W('öfkeli bir şekilde'), 'öfkeyle'],
+  [W('heyecanlı bir şekilde'), 'heyecanla'],
+  [W('sinirli bir şekilde'), 'sinirle'],
   [W('isteksiz bir şekilde'), 'isteksizce'],
   [W('umutsuz bir şekilde'), 'umutsuzca'],
   [W('beceriksiz bir şekilde'), 'beceriksizce'],
@@ -127,12 +135,18 @@ const CONTEXT = [
 // zaman bağlaçlarını sırayla çeşitlendir (aşırı "ardından" yığılmasını kırar)
 const CONNECTORS = ['Sonra', 'Derken', 'Peşinden', 'Ardından'];
 
-// çevirmen notları: yasaklı "(ÇN: ...)" üretmek yerine tamamen temizle
+// çevirmen notlarını tamamen temizle: (TN: ...), (ÇN: ...), [TN: ...], vb.
 function notes(t) {
-  return t
-    .replace(/\s*\((?:TN|ÇN|TL\s*note|Translator['’]?s?\s*note)\s*:[^)]*\)/giu, '')
-    .replace(/\s*\[(?:TN|ÇN|TL\s*note|Translator['’]?s?\s*note)\s*:[^\]]*\]/giu, '')
-    .replace(/(?:^|\s+)(?<!\p{L})(?:TN|ÇN|TL\s*note|Translator['’]?s?\s*note)\s*:[^\n]*/giu, '');
+  return String(t || '')
+    .replace(
+      /\(\s*(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note|Çevirmen\s*notu|Ed\.?\s*note)\s*:[^()]*(?:\([^()]*\)[^()]*)*\)/giu,
+      ''
+    )
+    .replace(/\[\s*(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note|Çevirmen\s*notu|Ed\.?\s*note)\s*:[^\]]*\]/giu, '')
+    .replace(/(?:^|\s+)(?:\(\s*)?(?<!\p{L})(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note)\s*:[^\n)]*\)?/giu, '')
+    .replace(/\s+([,.;:!?…])/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .trim();
 }
 
 const URL_MASK_RE =
@@ -141,12 +155,14 @@ const URL_MASK_RE =
 // 3) dizgi
 function typography(t) {
   const urls = [];
-  const masked = t.replace(URL_MASK_RE, (m) => {
+  const masked = String(t || '').replace(URL_MASK_RE, (m) => {
     urls.push(m);
     return `__URL_${urls.length - 1}__`;
   });
   const out = masked
-    .replace(/\.{3,}/g, '…')
+    .replace(/\.{2,}/g, '…')
+    .replace(/…\.+/g, '…')
+    .replace(/([!?])\.+/g, '$1')
     .replace(/\s+([,.;:!?…])/g, '$1')
     .replace(/([!?])\s+([!?])/g, '$1$2')
     .replace(/([,;:!?])(?=[^\s"”'’»)}\])…!?])/g, '$1 ')
@@ -168,38 +184,59 @@ function context(t) {
   return s;
 }
 
-function naturalize(text, opt = {}) {
-  const onlyContext = Boolean(opt.contextOnly);
-  let t = text;
+function naturalize(text, opts = {}) {
+  const onlyContext = Boolean(opts.contextOnly);
+  let t = String(text || '');
+  t = notes(t);
   if (!onlyContext) t = applyRules(t, LEX);
   if (!onlyContext) t = applyRules(t, MECH);
   t = context(t);
-  t = notes(t);
   t = typography(t);
   // paragraf başı küçük harf (makine çevirisi artığı) düzeltilir
   if (/^[a-zçğıöşü]/.test(t)) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   return t;
 }
 
+function resolveTargetFile(args) {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--volume' || a === '--vol' || a === '-v') {
+      i++;
+      continue;
+    }
+    if (a.startsWith('--')) continue;
+    return path.resolve(a);
+  }
+  const volKey = parseVolumeArg(args, '4');
+  const vol = resolveVolume(volKey);
+  if (!vol) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
+  return vol.finalFile;
+}
+
 if (require.main === module) {
-  const FILE = process.argv[2] && !process.argv[2].startsWith('--')
-    ? path.resolve(process.argv[2])
-    : path.join(ROOT, 'data/paragraphs_final.json');
-  const dry = process.argv.includes('--dry');
-  const contextOnly = process.argv.includes('--context-only');
+  const args = process.argv.slice(2);
+  const dry = args.includes('--dry');
+  const contextOnly = args.includes('--context-only');
+  const FILE = resolveTargetFile(args);
 
   const fin = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   let changed = 0;
   const samples = [];
   for (const [pg, arr] of Object.entries(fin)) {
-    arr.forEach((t, i) => {
-      const n = naturalize(t, { contextOnly });
-      if (n !== t) {
-        changed++;
-        if (samples.length < 8 && Math.random() < 0.06) samples.push([pg, i, t, n]);
-        fin[pg][i] = n;
-      }
-    });
+    if (!Array.isArray(arr)) continue;
+    fin[pg] = arr
+      .map((t, i) => {
+        const n = naturalize(t, { contextOnly });
+        if (n !== t) {
+          changed++;
+          if (samples.length < 8 && Math.random() < 0.06) samples.push([pg, i, t, n]);
+        }
+        return n;
+      })
+      .filter((x) => x.trim().length > 0);
   }
 
   if (dry) {
@@ -211,8 +248,17 @@ if (require.main === module) {
     }
   } else {
     fs.writeFileSync(FILE, JSON.stringify(fin));
-    console.log('doğallaştırma uygulandı:', changed, 'paragraf');
+    console.log('doğallaştırma uygulandı:', changed, 'paragraf | dosya:', FILE);
   }
 }
 
-module.exports = { W, LEX, MECH, CONTEXT, notes, typography, context, naturalize };
+module.exports = {
+  W,
+  LEX,
+  MECH,
+  CONTEXT,
+  notes,
+  typography,
+  context,
+  naturalize,
+};
