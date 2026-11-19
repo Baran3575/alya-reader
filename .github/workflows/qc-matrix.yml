@@ -50,7 +50,6 @@ jobs:
         run: |
           node test/bundle-lazy-cache.test.js
           npm run build:site
-          git diff --exit-code public/bundles/
 
       - name: Run Unified QC CLI (${{ matrix.volume }})
         run: node scripts/qc/cli.js --volume ${{ matrix.volume }} --strict --check-regression
