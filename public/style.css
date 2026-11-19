@@ -237,6 +237,12 @@ body {
 .toc-list li.is-read .ch-title {
   color: var(--fg-soft);
 }
+.toc-list li.is-pending .ch-label::after {
+  content: ' · beklemede';
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--muted);
+}
 .vol-badge {
   display: inline-flex;
   align-items: center;
@@ -367,6 +373,55 @@ main {
   /* asılı açılış tırnağı: tırnak sol marja taşar, satır başları hizalı kalır */
   text-indent: -0.42em;
   hanging-punctuation: first allow-end;
+}
+
+.reader p.dialog.dialog-ru {
+  /* açılış tırnağı olmayan Rusça diyalog satırlarında negatif girintiyi sıfırla */
+  text-indent: 0;
+  hanging-punctuation: allow-end;
+}
+
+.reader .ru-dialog {
+  font-style: italic;
+  color: var(--fg-soft);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--muted) 42%, transparent);
+  text-underline-offset: 0.22em;
+}
+
+.reader .ru-dialog[title] {
+  cursor: help;
+}
+
+.pending-card {
+  margin: 1.5rem 0 2.2rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+.pending-card .pending-badge {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.55rem;
+}
+.pending-card .pending-desc {
+  font-size: 0.96rem;
+  color: var(--fg-soft);
+  margin: 0;
+  line-height: 1.65;
+}
+
+.orig-prose {
+  padding: 0.4rem 0;
+}
+.orig-prose p {
+  color: var(--fg-soft);
 }
 
 /* ---------- görsel yakınlaştırma ---------- */
@@ -817,7 +872,7 @@ figure.page-img.zoom img {
   font: inherit;
   font-size: 0.9rem;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.42rem 0.9rem;
@@ -863,8 +918,8 @@ figure.page-img.zoom img {
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--line, #2c2a27);
-  background: var(--panel, #1b1917);
-  color: var(--dim, #9c948a);
+  background: var(--bg-soft, #1b1917);
+  color: var(--muted, #9c948a);
   font-size: 0.72rem;
   letter-spacing: 0.02em;
   pointer-events: none;

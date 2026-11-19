@@ -1,0 +1,118 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "8": "Sihirbazım",
+    "12": "Bu Adamlar Bu İşe Çok Girmiş",
+    "33": "Bir Otaku’nun Romantizmi",
+    "59": "Tartışmadan Daha Ciddiye Aldım",
+    "81": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
+    "101": "Bir biçimde Daha İyi Hissediyorum",
+    "125": "Savaş Gücü Önemlidir, Değil mi?",
+    "155": "Şiddet Herşeyi Çözer",
+    "185": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
+    "200": "Sözümü Tutacağım",
+    "219": "Ona teşekkür etmek ve veda etmek istiyorum",
+    "239": "Şimdi, Sadece Şu Anda",
+    "251": "Slit-Paisen’in Doğduğu Gün",
+    "257": "Sonsöz",
+    "259": "Yuri Dünyayı Kurtarıyor"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Sihirbazım",
+      "enTitle": "My Wizard",
+      "startPage": 8
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Bu Adamlar Bu İşe Çok Girmiş",
+      "enTitle": "These Guys Are Way Too Into This",
+      "startPage": 12
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bir Otaku’nun Romantizmi",
+      "enTitle": "An Otaku&rsquo;s Romance",
+      "startPage": 33
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Tartışmadan Daha Ciddiye Aldım",
+      "enTitle": "I Took It More Seriously Than The Debate",
+      "startPage": 59
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
+      "enTitle": "Honestly, My Heart Wavered Quite A Bit",
+      "startPage": 81
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Bir biçimde Daha İyi Hissediyorum",
+      "enTitle": "I&rsquo;m Feeling Better, In A Way",
+      "startPage": 101
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Savaş Gücü Önemlidir, Değil mi?",
+      "enTitle": "Combat Strength Is Important, Right?",
+      "startPage": 125
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Şiddet Herşeyi Çözer",
+      "enTitle": "Violence Solves Everything",
+      "startPage": 155
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
+      "enTitle": "If It Doesn&rsquo;t Yield, Then There&rsquo;s No Choice But To Break It",
+      "startPage": 185
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Sözümü Tutacağım",
+      "enTitle": "I&rsquo;ll Keep My Word",
+      "startPage": 200
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "Ona teşekkür etmek ve veda etmek istiyorum",
+      "enTitle": "I Want To Thank Her And Say Goodbye",
+      "startPage": 219
+    },
+    {
+      "label": "Epilog",
+      "title": "Şimdi, Sadece Şu Anda",
+      "enTitle": "Now, Only At This Moment",
+      "startPage": 239
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Slit-Paisen’in Doğduğu Gün",
+      "enTitle": "The Day Slit-Paisen Was Born",
+      "startPage": 251
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 257
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Yuri Dünyayı Kurtarıyor",
+      "enTitle": "Yuri Saves The World",
+      "startPage": 259
+    }
+  ]
+}

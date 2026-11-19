@@ -1,0 +1,111 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "7": "Bu",
+    "14": "Yeniden Birleşme",
+    "42": "Bu Tür Öngörülere İhtiyacımız Yoktu",
+    "69": "Bir dakika, Cowlick’im ayağa mı kalktı?",
+    "99": "Yüzyılın En Büyük Karışıklık Duygusu",
+    "128": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
+    "161": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
+    "185": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
+    "210": "Gerçekten Büyüdün, Değil mi?",
+    "226": "Rastlamak",
+    "242": "At Yarışması",
+    "259": "Bu",
+    "268": "Çocukluk Arkadaşı Olduğu Zamanlardan",
+    "273": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Bu",
+      "enTitle": "This Is",
+      "startPage": 7
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Yeniden Birleşme",
+      "enTitle": "Reunion",
+      "startPage": 14
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Bu Tür Öngörülere İhtiyacımız Yoktu",
+      "enTitle": "We Didn’t Need This Kind of Foreshadowing",
+      "startPage": 42
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Bir dakika, Cowlick’im ayağa mı kalktı?",
+      "enTitle": "Wait a Moment, Did My Cowlick Just Stand Up?",
+      "startPage": 69
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Yüzyılın En Büyük Karışıklık Duygusu",
+      "enTitle": "The Century’s Greatest Sense of Confusion",
+      "startPage": 99
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
+      "enTitle": "If You’re Gonna Create a Character, Let’s Cast Aside the Shame",
+      "startPage": 128
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
+      "enTitle": "The Senpai Who’s Bad for the Heart and the Senpai Who’s Kind for the Heart",
+      "startPage": 161
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
+      "enTitle": "A Big Rolling Ball Would Probably Cause an Accident",
+      "startPage": 185
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Gerçekten Büyüdün, Değil mi?",
+      "enTitle": "You’ve Really Grown Up, Haven’t You?",
+      "startPage": 210
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Rastlamak",
+      "enTitle": "Encounter",
+      "startPage": 226
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "At Yarışması",
+      "enTitle": "The Horseback Competition",
+      "startPage": 242
+    },
+    {
+      "label": "Epilog",
+      "title": "Bu",
+      "enTitle": "This Is",
+      "startPage": 259
+    },
+    {
+      "label": "Yan Hikâye",
+      "title": "Çocukluk Arkadaşı Olduğu Zamanlardan",
+      "enTitle": "From When She Was Just a Childhood Friend",
+      "startPage": 268
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 273
+    }
+  ]
+}

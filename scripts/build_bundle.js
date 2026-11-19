@@ -1,77 +1,88 @@
-// Tarayıcıya gömülecek veri paketi: Türkçe + İngilizce + bölümler (iki cilt).
-// Sunucuya ihtiyaç duymadan okuma için public/bundle.js üretir.
+// Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler + üstveri.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const vm = require('vm');
 const { buildBook } = require('../server.js');
+const { ROOT, ENABLED_VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
-const MANIFEST = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'volumes.json'), 'utf8'));
-const ENABLED = MANIFEST.filter((entry) => entry.enabled);
 
-let existingArt = {};
-if (fs.existsSync(ART_OUT)) {
+function loadExistingArtBundle() {
+  if (!fs.existsSync(ART_OUT)) return {};
   try {
-    const prev = fs.readFileSync(ART_OUT, 'utf8');
-    const m = prev.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\});/);
-    if (m) existingArt = JSON.parse(m[1]);
-  } catch {}
+    const code = fs.readFileSync(ART_OUT, 'utf8');
+    const sandbox = { window: {} };
+    vm.runInNewContext(code, sandbox, { timeout: 2000 });
+    return sandbox.window.ALYA_ART || {};
+  } catch {
+    return {};
+  }
 }
 
+const existingArt = loadExistingArtBundle();
 const vols = {};
 const art = {};
 const volumeMeta = [];
 
-for (const entry of ENABLED) {
-  const id = String(entry.id);
-  const srcPath = path.join(ROOT, entry.dataDir, 'source.json');
-  if (!fs.existsSync(srcPath)) {
-    console.warn('uyarı: ' + entry.label + ' kaynak dosyası yok (' + entry.dataDir + '/source.json), yalnız üstveri eklendi.');
+for (const id of ENABLED_VOLUME_KEYS) {
+  const cfg = VOLUMES[id];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) {
+    console.warn('uyarı: ' + cfg.label + ' kaynak dosyası yok (' + cfg.dataDir + '), yalnız üstveri eklendi.');
     volumeMeta.push({
       id,
-      label: entry.label,
-      subtitle: entry.subtitle || '',
-      imgPrefix: entry.imgPrefix,
-      status: entry.status || 'complete',
-      statusNote: entry.statusNote || '',
+      label: cfg.label,
+      subtitle: cfg.subtitle || '',
+      imgPrefix: cfg.imgPrefix,
+      embedArt: Boolean(cfg.embedArt),
+      status: cfg.status || 'complete',
+      statusNote: cfg.statusNote || '',
       total: 0,
       chapterCount: 0,
     });
     continue;
   }
-  const book = buildBook({
-    ...entry,
-    id,
-    volume: entry.label,
-    titlesFile: path.join(ROOT, entry.chaptersFile),
-  });
-  const relPrefix = String(entry.imgPrefix || '/pages/').replace(/^\/+/, '');
-  art[id] = {};
 
+  const book = buildBook({
+    ...cfg,
+    id,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+  });
+
+  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
   for (const p of book.pages) {
-    const pageKey = String(p.n).padStart(3, '0');
-    p.img = relPrefix + pageKey + '.webp';
-    if (!p.art) continue;
-    const f = path.join(ROOT, 'public', relPrefix, pageKey + '.webp');
-    if (fs.existsSync(f)) {
-      const b64 = fs.readFileSync(f).toString('base64');
-      art[id][pageKey] = 'data:image/webp;base64,' + b64;
-    } else if (existingArt[id] && existingArt[id][pageKey]) {
-      art[id][pageKey] = existingArt[id][pageKey];
+    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+  }
+  vols[id] = book;
+
+  // Ham görsel dizini gitignore'da olan ciltler (embedArt: true) için gömülü data URI'leri koru
+  if (cfg.embedArt) {
+    art[id] = { ...(existingArt[id] || {}) };
+    const diskDir = path.join(ROOT, cfg.imgDir);
+    if (fs.existsSync(diskDir)) {
+      for (const p of book.pages) {
+        if (!p.art) continue;
+        const pad = String(p.n).padStart(3, '0');
+        const f = path.join(diskDir, `${pad}.webp`);
+        if (fs.existsSync(f)) {
+          art[id][pad] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64');
+        }
+      }
     }
   }
 
-  vols[id] = book;
   volumeMeta.push({
     id,
-    label: entry.label,
-    subtitle: entry.subtitle || '',
-    imgPrefix: entry.imgPrefix,
-    status: entry.status || 'complete',
-    statusNote: entry.statusNote || '',
+    label: cfg.label,
+    subtitle: cfg.subtitle || '',
+    imgPrefix: cfg.imgPrefix,
+    embedArt: Boolean(cfg.embedArt),
+    status: cfg.status || 'complete',
+    statusNote: cfg.statusNote || '',
     total: book.total,
     chapterCount: book.chapters.length,
   });
@@ -97,8 +108,9 @@ const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
   'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
+
 console.log(
-  'illüstrasyon:',
+  'illüstrasyon (gömülü):',
   Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
   'görsel |',
   (artBody.length / 1048576).toFixed(2),
@@ -106,7 +118,9 @@ console.log(
 );
 const kb = (body.length / 1024).toFixed(0);
 console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
-for (const [k, b] of Object.entries(vols)) {
+for (const k of ENABLED_VOLUME_KEYS) {
+  const b = vols[k];
+  if (!b) continue;
   const paras = b.pages.reduce((a, p) => a + p.tr.length, 0);
   console.log('  ' + b.volume + ' (#' + k + '):', b.total, 'sayfa |', paras, 'paragraf |', b.chapters.length, 'bölüm');
 }

@@ -1,4 +1,63 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const inner = t.slice(open + 1, close);
+      if (!inner) {
+        el.appendChild(d.createTextNode('{}'));
+        pos = close + 1;
+        continue;
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
 
@@ -22,29 +81,51 @@
     const searchParams = new URLSearchParams(window.location.search);
     const hashRaw = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
     const hashParams = new URLSearchParams(hashRaw);
-    const v = searchParams.get('v') || hashParams.get('v');
+    const v =
+      searchParams.get('v') ||
+      searchParams.get('vol') ||
+      hashParams.get('v') ||
+      hashParams.get('vol');
     const chRaw = searchParams.has('ch') ? searchParams.get('ch') : hashParams.get('ch');
     const ch = chRaw !== null && chRaw !== '' && /^\d+$/.test(chRaw) ? Number(chRaw) : null;
-    return { v: v ? String(v) : null, ch };
+    const pageRaw =
+      searchParams.get('page') ||
+      searchParams.get('p') ||
+      hashParams.get('page') ||
+      hashParams.get('p');
+    const page = pageRaw !== null && pageRaw !== '' && /^\d+$/.test(pageRaw) && Number(pageRaw) > 0 ? Number(pageRaw) : null;
+    return { v: v ? String(v) : null, ch, page };
   }
 
   const initialRoute = readUrlRoute();
-  const savedVol = LS.get('vol', Array.isArray(window.ALYA_VOLUMES) && window.ALYA_VOLUMES[0] ? String(window.ALYA_VOLUMES[0].id) : '');
+  const savedVol = LS.get(
+    'vol',
+    Array.isArray(window.ALYA_VOLUMES) && window.ALYA_VOLUMES[0] ? String(window.ALYA_VOLUMES[0].id) : ''
+  );
   const initialVol = initialRoute.v || savedVol;
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
-    page: initialRoute.v && initialRoute.v !== savedVol ? LS.get('page:' + initialVol, 1) : LS.get('page:' + initialVol, LS.get('page', 1)),
+    page:
+      initialRoute.page !== null
+        ? initialRoute.page
+        : initialRoute.v && initialRoute.v !== savedVol
+          ? LS.get('page:' + initialVol, 1)
+          : LS.get('page:' + initialVol, LS.get('page', 1)),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
     vol: initialVol,
     volumes: Array.isArray(window.ALYA_VOLUMES) ? window.ALYA_VOLUMES : [],
     pendingChapter: initialRoute.ch,
-    fromDeepLink: Boolean(initialRoute.v || initialRoute.ch !== null),
+    fromDeepLink: Boolean(initialRoute.v || initialRoute.ch !== null || initialRoute.page !== null),
     book: null,
     chapter: 0,
   };
+
+  function currentVolumeMeta(volId = state.vol) {
+    return state.volumes.find((x) => String(x.id) === String(volId)) || null;
+  }
 
   function syncUrl() {
     if (!state.book) return;
@@ -72,20 +153,25 @@
 
   /* ---------------- cilt ---------------- */
   async function loadVolumesCatalog() {
-    if (window.location.protocol.startsWith('http')) {
-      try {
-        const res = await fetch('api/volumes');
-        if (res.ok) {
-          const list = await res.json();
-          if (Array.isArray(list) && list.length) {
-            state.volumes = list;
-            LS.set('volumes', list);
-            return list;
+    const hasEmbeddedCatalog = Array.isArray(window.ALYA_VOLUMES) && window.ALYA_VOLUMES.length > 0;
+    const isLocalServer =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (window.location.protocol.startsWith('http') && (isLocalServer || !hasEmbeddedCatalog)) {
+      for (const endpoint of ['api/volumes', 'books/volumes.json']) {
+        try {
+          const res = await fetch(endpoint);
+          if (res.ok) {
+            const list = await res.json();
+            if (Array.isArray(list) && list.length) {
+              state.volumes = list;
+              LS.set('volumes', list);
+              return list;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     }
-    if (Array.isArray(window.ALYA_VOLUMES) && window.ALYA_VOLUMES.length) {
+    if (hasEmbeddedCatalog) {
       state.volumes = window.ALYA_VOLUMES;
       return state.volumes;
     }
@@ -95,15 +181,18 @@
       return state.volumes;
     }
     if (window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols) {
-      state.volumes = Object.entries(window.ALYA_BUNDLE.vols).map(([id, b]) => ({
-        id: String(id),
-        label: b.volume || 'Cilt ' + id,
-        subtitle: b.subtitle || '',
-        status: b.status || 'complete',
-        statusNote: b.statusNote || '',
-        total: b.total || 0,
-        chapterCount: Array.isArray(b.chapters) ? b.chapters.length : 0,
-      }));
+      state.volumes = Object.entries(window.ALYA_BUNDLE.vols)
+        .sort(([a], [b]) => parseFloat(a) - parseFloat(b))
+        .map(([id, b]) => ({
+          id: String(id),
+          label: b.volume || 'Cilt ' + id,
+          subtitle: b.subtitle || '',
+          embedArt: Boolean(b.embedArt || (window.ALYA_ART && window.ALYA_ART[id])),
+          status: b.status || 'complete',
+          statusNote: b.statusNote || '',
+          total: b.total || 0,
+          chapterCount: Array.isArray(b.chapters) ? b.chapters.length : 0,
+        }));
     }
     return state.volumes;
   }
@@ -171,14 +260,14 @@
   function switchVolume(v) {
     const nextVol = String(v);
     if (nextVol === state.vol && state.book) return;
-    if (state.book) LS.set('page:' + state.vol, state.page);
+    if (state.book && !state.fromDeepLink) LS.set('page:' + state.vol, state.page);
     state.vol = nextVol;
     state.pendingChapter = null;
     state.fromDeepLink = false;
     LS.set('vol', nextVol);
     state.page = LS.get('page:' + nextVol, 1);
     load().catch((err) => {
-      const meta = state.volumes.find((x) => String(x.id) === nextVol);
+      const meta = currentVolumeMeta(nextVol);
       const label = meta ? meta.label : 'Cilt ' + nextVol;
       state.book = null;
       $('volLabel').textContent = label;
@@ -217,15 +306,21 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
   function imgSrc(p, vol) {
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
     if (pack && pack[key]) return pack[key];
-    return p.img;
+    return String(p.img || '').replace(/^\/+/, '');
   }
 
-  /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
+  function hasEmbeddedArt(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    return Boolean(pack && pack[key]);
+  }
+
+  /* veri kaynakları: bellek -> gömülü paket -> önbellek -> statik JSON -> sunucu API */
   function bundleBook(v) {
     const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
     return b || null;
@@ -240,37 +335,58 @@
 
   function enrichBookMeta(book, v) {
     if (!book) return book;
-    const meta = state.volumes.find((x) => String(x.id) === String(v));
+    const meta = currentVolumeMeta(v);
     if (meta) {
       if (!book.id) book.id = String(meta.id);
       if (!book.status) book.status = meta.status || 'complete';
       if (book.statusNote === undefined) book.statusNote = meta.statusNote || '';
       if (!book.subtitle) book.subtitle = meta.subtitle || '';
+      if (book.embedArt === undefined) book.embedArt = Boolean(meta.embedArt);
     }
     return book;
   }
 
+  const memBooks = new Map();
+
   async function readBook(v) {
-    const cached = cachedBook(v);
-    if (cached) return enrichBookMeta(cached, v);
-    const embedded = bundleBook(v);
+    const key = String(v);
+    if (memBooks.has(key)) return memBooks.get(key);
+
+    const embedded = bundleBook(key);
     if (embedded) {
-      enrichBookMeta(embedded, v);
-      LS.set('book:' + v, embedded);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-      return embedded;
+      const enriched = enrichBookMeta(embedded, key);
+      memBooks.set(key, enriched);
+      return enriched;
     }
-    const res = await fetch('api/book?v=' + encodeURIComponent(v));
-    const payload = await res.json();
-    if (!res.ok) {
-      throw new Error(payload && payload.error ? payload.error : 'HTTP ' + res.status);
+
+    const cached = cachedBook(key);
+    if (cached) {
+      const enriched = enrichBookMeta(cached, key);
+      memBooks.set(key, enriched);
+      return enriched;
     }
-    const book = enrichBookMeta(payload, v);
+
+    let book = null;
     try {
-      LS.set('book:' + v, book);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-    } catch (e) {}
-    return book;
+      const staticRes = await fetch('books/' + encodeURIComponent(key) + '.json');
+      if (staticRes.ok) book = await staticRes.json();
+    } catch {}
+
+    if (!book) {
+      const res = await fetch('api/book?v=' + encodeURIComponent(key));
+      let payload = null;
+      try {
+        payload = await res.json();
+      } catch {}
+      if (!res.ok) {
+        throw new Error(payload && payload.error ? payload.error : 'HTTP ' + res.status);
+      }
+      book = payload;
+    }
+
+    const enriched = enrichBookMeta(book, key);
+    memBooks.set(key, enriched);
+    return enriched;
   }
 
   async function load() {
@@ -304,6 +420,7 @@
       const li = document.createElement('li');
       li.dataset.page = ch.page;
       li.dataset.idx = i;
+      if (ch.pending) li.classList.add('is-pending');
       const btn = document.createElement('button');
       btn.type = 'button';
       const lab = document.createElement('span');
@@ -315,7 +432,7 @@
       const pg = document.createElement('span');
       pg.className = 'ch-page';
       const [s, e] = chapterRange(i);
-      pg.textContent = s === e ? s : s + '–' + e;
+      pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
         toggleToc(false);
@@ -336,21 +453,27 @@
     const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
+      const ch = chapters()[i];
+      if (ch && ch.pending) {
+        li.classList.remove('is-read');
+        continue;
+      }
       const end = chapterRange(i)[1];
       li.classList.toggle('is-read', max >= end);
     }
   }
+
   /* ---------------- metin temizliği ---------------- */
   function cleanHeading(paras, ch) {
     const out = paras.slice();
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Başlangıç)\b/.test(t);
+    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Ara Bölüm|Kısa Hikâye|Başlangıç)\b/.test(t);
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
-    } else {
+    } else if (ch.title) {
       const i = t.indexOf(ch.title);
       if (i >= 0) {
         const rest = t.slice(i + ch.title.length).replace(/^[:\s"”]+/, '');
@@ -359,6 +482,33 @@
       }
     }
     return out;
+  }
+
+  function createPendingNotice(ch) {
+    const box = document.createElement('div');
+    box.className = 'pending-card';
+    const badge = document.createElement('p');
+    badge.className = 'pending-badge';
+    badge.textContent = 'Çeviri Beklemede · [Translation In Progress]';
+    const desc = document.createElement('p');
+    desc.className = 'pending-desc';
+    desc.textContent =
+      ch.statusNote ||
+      'Bu bölümün İngilizce kaynak çevirisi henüz yayınlanmadı ([Translation In Progress]). Kaynak metin tamamlandığında Türkçe çevirisi eklenecektir.';
+    box.append(badge, desc);
+    return box;
+  }
+
+  function buildOrigProse(p) {
+    const lines = p.en && p.en.length ? p.en : p.tr || [];
+    const proseWrap = document.createElement('div');
+    proseWrap.className = 'orig-prose';
+    for (const line of lines) {
+      const el = document.createElement('p');
+      el.textContent = line;
+      proseWrap.appendChild(el);
+    }
+    return proseWrap;
   }
 
   function figureFor(p, caption) {
@@ -407,6 +557,7 @@
     const idx = chapterIndex(n);
     state.chapter = idx;
     const ch = chapters()[idx];
+    const volMeta = currentVolumeMeta();
 
     reader.innerHTML = '';
 
@@ -427,7 +578,28 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false));
+
+    if (ch.pending || (p && p.pending)) {
+      sec.appendChild(createPendingNotice(ch));
+    } else if (p) {
+      const hasFullScan = Boolean(p.art || hasEmbeddedArt(p) || (volMeta && volMeta.embedArt) || state.book.embedArt);
+      if (hasFullScan) {
+        const fig = figureFor(p, false);
+        const im = fig.querySelector('img');
+        if (im && ((p.en && p.en.length) || (p.tr && p.tr.length))) {
+          im.addEventListener(
+            'error',
+            () => {
+              if (fig.parentNode === sec) sec.replaceChild(buildOrigProse(p), fig);
+            },
+            { once: true }
+          );
+        }
+        sec.appendChild(fig);
+      } else if ((p.en && p.en.length) || (p.tr && p.tr.length)) {
+        sec.appendChild(buildOrigProse(p));
+      }
+    }
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -478,6 +650,8 @@
     state.chapter = idx;
     const ch = chapters()[idx];
     const [startPage, endPage] = chapterRange(idx);
+    const volMeta = currentVolumeMeta();
+    const usesEmbeddedArt = Boolean((volMeta && volMeta.embedArt) || state.book.embedArt);
 
     reader.innerHTML = '';
 
@@ -498,48 +672,55 @@
       if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
     const mins = Math.max(1, Math.round(words / 240));
-    meta.textContent =
-      'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
-      ' · ' + pages + ' sayfa · ~' + mins + ' dk';
+    meta.textContent = ch.pending
+      ? 'Durum: Kaynak çeviri devam ediyor'
+      : 'Sayfa ' +
+        startPage +
+        (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' +
+        pages +
+        ' sayfa · ~' +
+        mins +
+        ' dk';
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
-    const frag = document.createDocumentFragment();
-    for (let n = startPage; n <= endPage; n++) {
-      const p = state.book.pages[n - 1];
-      if (!p) continue;
-      const sec = document.createElement('section');
-      sec.className = 'pg';
-      sec.dataset.page = p.n;
-
-      if (state.mode === 'page') {
-        sec.appendChild(figureFor(p, true));
-        frag.appendChild(sec);
-        continue;
-      }
-
-      const isIllustration = p.tr.length === 0 || p.art === true;
-      if (isIllustration) {
-        sec.classList.add('pg-art');
-        if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true));
-        if (p.tr.length === 0) {
-          frag.appendChild(sec);
+    if (ch.pending) {
+      reader.appendChild(createPendingNotice(ch));
+    } else {
+      const frag = document.createDocumentFragment();
+      for (let n = startPage; n <= endPage; n++) {
+        const p = state.book.pages[n - 1];
+        if (!p) continue;
+        if (p.pending) {
+          frag.appendChild(createPendingNotice(ch));
           continue;
         }
-      }
+        const sec = document.createElement('section');
+        sec.className = 'pg';
+        sec.dataset.page = p.n;
 
-      let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
-      for (const t of paras) {
-        if (!t) continue;
-        const el = document.createElement('p');
-        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-        el.textContent = t;
-        sec.appendChild(el);
+        const isIllustration =
+          p.art === true || (p.tr.length === 0 && (usesEmbeddedArt || hasEmbeddedArt(p)));
+        if (isIllustration) {
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(figureFor(p, true));
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
+          }
+        }
+
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        for (const t of paras) {
+          if (!t) continue;
+          sec.appendChild(renderParagraph(t));
+        }
+        frag.appendChild(sec);
       }
-      frag.appendChild(sec);
+      reader.appendChild(frag);
     }
-    reader.appendChild(frag);
 
     // bölüm sonu
     const last = idx === chapters().length - 1;
@@ -574,7 +755,11 @@
     // durum satırı
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('navPages').textContent = ch.pending
+      ? 'beklemede'
+      : startPage === endPage
+        ? 's. ' + startPage
+        : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = idx <= 0;
     $('nextBtn').disabled = last;
     $('tocLabel').textContent = ch.label;
@@ -589,8 +774,10 @@
     if (!state.fromDeepLink) {
       LS.set('page', targetPage);
       LS.set('page:' + state.vol, targetPage);
-      const prevMax2 = LS.get('max:' + state.vol, 0);
-      if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+      if (!ch.pending) {
+        const prevMax2 = LS.get('max:' + state.vol, 0);
+        if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+      }
     }
     markTocRead();
     renderVolList();
@@ -673,13 +860,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && p.art && !p.pending) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
-    if (nxt) {
+    if (nxt && !nxt.pending) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && p.art && !p.pending) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
@@ -703,9 +890,6 @@
   }
   const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
   const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
-  function goto(n) {
-    goChapter(chapterIndex(n), n);
-  }
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);
@@ -819,19 +1003,23 @@
 
   function handleUrlRouteChange() {
     const r = readUrlRoute();
-    if (!r.v && r.ch === null) return;
+    if (!r.v && r.ch === null && r.page === null) return;
     const targetVol = r.v && (!state.volumes.length || state.volumes.some((x) => String(x.id) === r.v)) ? r.v : state.vol;
     if (targetVol !== state.vol) {
       state.vol = targetVol;
       state.pendingChapter = r.ch;
       state.fromDeepLink = true;
-      state.page = LS.get('page:' + targetVol, 1);
+      state.page = r.page !== null ? r.page : LS.get('page:' + targetVol, 1);
       load().catch(() => {});
     } else if (r.ch !== null && state.book && r.ch !== state.chapter) {
       const max = chapters().length - 1;
       const idx = Math.min(Math.max(0, r.ch), max);
       state.fromDeepLink = true;
       state.page = chapters()[idx].page;
+      render();
+    } else if (r.page !== null && state.book && r.page !== state.page) {
+      state.fromDeepLink = true;
+      state.page = Math.min(Math.max(1, r.page), state.book.total);
       render();
     }
   }

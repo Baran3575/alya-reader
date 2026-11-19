@@ -1,17 +1,18 @@
 // Elle düzeltmeler: patches.json { "sayfa.index": "yeni metin" }
 // Kullanım:
-//   node scripts/patch.js             # yamaları doğrula ve uygula
-//   node scripts/patch.js --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
+//   node scripts/patch.js [--volume <v>]             # yamaları doğrula ve uygula
+//   node scripts/patch.js [--volume <v>] --dry-run   # yalnızca regresyon ve şema kontrolü yap (yazma)
 const fs = require('fs');
-const path = require('path');
 const { score } = require('./qc/quality');
-
-const ROOT = path.join(__dirname, '..');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
+const { hasUnbalancedDelim } = require('./qc/verify');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const CORNER_QUOTE_RE = /[『』「」]/;
+const CYRILLIC_RE = /\p{Script=Cyrillic}/u;
 
-function validatePatches(patches, data, options = {}) {
+function validatePatches(patches, data) {
   const errors = [];
   const warnings = [];
   const applied = [];
@@ -50,6 +51,22 @@ function validatePatches(patches, data, options = {}) {
     // 3. Sıfır tolerans format kontrolleri
     if (/["']/.test(text)) {
       errors.push(`Yama metninde düz tırnak/kesme bulundu: "${key}" -> lütfen kıvrık tırnak (“ ” ’) kullanın.`);
+    }
+
+    if (hasUnbalancedDelim(text, '{', '}')) {
+      errors.push(`Yama metninde dengesiz süslü parantez ({…}) bulundu: "${key}"`);
+    }
+
+    if (hasUnbalancedDelim(text, '[', ']')) {
+      errors.push(`Yama metninde dengesiz köşeli parantez ([…]) bulundu: "${key}"`);
+    }
+
+    if (CORNER_QUOTE_RE.test(text)) {
+      errors.push(`Yama metninde Japonca köşe tırnağı (『』「」) bulundu: "${key}"`);
+    }
+
+    if (CYRILLIC_RE.test(text)) {
+      errors.push(`Yama metninde Kiril karakteri bulundu: "${key}"`);
     }
 
     if (TN_RE.test(text)) {
@@ -91,34 +108,25 @@ function validatePatches(patches, data, options = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run') || args.includes('--dry');
-  const vArg = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'volumes.json'), 'utf8'));
-  const defaultEntry = manifest.find((v) => v.enabled) || manifest[0];
-  const vol = vArg > -1 && args[vArg + 1] ? String(args[vArg + 1]) : String(defaultEntry.id);
-  const cfg = manifest.find((v) => String(v.id) === vol);
+  const volKey = parseVolumeArg(args);
+  const volCfg = resolveVolume(volKey);
 
-  if (!cfg) {
-    console.error(`Hata: Bilinmeyen cilt: ${vol}`);
+  if (!volCfg) {
+    console.error(`Hata: Bilinmeyen cilt "${volKey}"`);
     process.exit(1);
   }
 
-  const targetRel = `${cfg.dataDir}/paragraphs_final.json`;
-  const targetFile = path.resolve(ROOT, targetRel);
-  const patchRel = cfg.patchesFile || 'scripts/patches.json';
-  const patchFile = path.resolve(ROOT, patchRel);
+  const targetFile = volCfg.finalFile;
+  const patchFile = volCfg.patchesAbsFile;
 
   if (!fs.existsSync(targetFile)) {
-    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${targetRel}`);
+    console.error(`Hata: Hedef çeviri dosyası bulunamadı: ${volCfg.finalRel}`);
     process.exit(1);
   }
 
-  if (!fs.existsSync(patchFile)) {
-    if (dryRun) {
-      console.log(`✓ Önizleme başarılı (${cfg.label}): yama dosyası henüz yok (${patchRel}), 0 yama.`);
-      process.exit(0);
-    }
-    console.error(`Hata: Yama dosyası bulunamadı: ${patchRel}`);
-    process.exit(1);
+  if (!patchFile || !fs.existsSync(patchFile)) {
+    console.log(`✓ ${volCfg.label}: ${volCfg.patchesFile || 'yama dosyası'} bulunmuyor (uygulanacak el yaması yok).`);
+    process.exit(0);
   }
 
   const fin = JSON.parse(fs.readFileSync(targetFile, 'utf8'));
@@ -133,14 +141,14 @@ if (require.main === module) {
   }
 
   if (dryRun) {
-    console.log(`✓ Önizleme başarılı: ${result.count} yama doğrulandı.`);
+    console.log(`✓ Önizleme başarılı (${volCfg.label}): ${result.count} yama doğrulandı.`);
     console.log(`  Sıfır regresyon, tüm yama anahtarları geçerli. Toplam puan değişimi: ${result.scoreDiffSum}`);
   } else {
     for (const item of result.applied) {
       fin[item.pg][item.idx] = item.text;
     }
     fs.writeFileSync(targetFile, JSON.stringify(fin) + '\n');
-    console.log(`✓ ${result.applied.length} yama başarıyla uygulandı.`);
+    console.log(`✓ ${volCfg.label}: ${result.applied.length} yama başarıyla uygulandı.`);
   }
 }
 

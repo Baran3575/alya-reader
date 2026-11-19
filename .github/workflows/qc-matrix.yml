@@ -7,6 +7,7 @@ on:
       - master
     paths:
       - 'data*/**'
+      - 'public/**'
       - 'scripts/**'
       - 'test/**'
       - 'server.js'
@@ -28,6 +29,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run unit, manifest, and pipeline test suite
+        run: npm run test:suite
+
       - name: Read enabled volume IDs from data/volumes.json
         id: manifest
         run: |
@@ -38,7 +47,7 @@ jobs:
     name: QC Matrix (Cilt ${{ matrix.volume }})
     needs: discover-volumes
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
@@ -65,10 +74,14 @@ jobs:
           chmod 444 "${{ steps.vol.outputs.source_file }}"
 
       - name: Dry-run patch regression test (Cilt ${{ matrix.volume }})
-        run: node scripts/patch.js --volume "${{ matrix.volume }}" --dry-run
+        env:
+          MATRIX_VOL: ${{ matrix.volume }}
+        run: node scripts/patch.js --volume "$MATRIX_VOL" --dry-run
 
       - name: Run Unified QC CLI (${{ matrix.volume }})
-        run: node scripts/qc/cli.js --volume "${{ matrix.volume }}" --strict --check-regression
+        env:
+          MATRIX_VOL: ${{ matrix.volume }}
+        run: node scripts/qc/cli.js --volume "$MATRIX_VOL" --strict --check-regression
 
       - name: Verify source file was untouched
         run: |

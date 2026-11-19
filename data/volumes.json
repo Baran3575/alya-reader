@@ -8,6 +8,7 @@
     "chaptersFile": "data/chapters.json",
     "patchesFile": "scripts/patches.json",
     "maxAvgStrict": 0.20,
+    "embedArt": true,
     "status": "complete",
     "statusNote": "",
     "enabled": true
@@ -20,7 +21,8 @@
     "imgPrefix": "/pages45/",
     "chaptersFile": "data45/chapters.json",
     "patchesFile": "scripts/patches45.json",
-    "maxAvgStrict": 0.28,
+    "maxAvgStrict": 0.20,
+    "embedArt": true,
     "status": "complete",
     "statusNote": "",
     "enabled": true
@@ -33,10 +35,11 @@
     "imgPrefix": "/pages5/",
     "chaptersFile": "data5/chapters.json",
     "patchesFile": "scripts/patches5.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "6",
@@ -46,10 +49,11 @@
     "imgPrefix": "/pages6/",
     "chaptersFile": "data6/chapters.json",
     "patchesFile": "scripts/patches6.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "7",
@@ -59,10 +63,11 @@
     "imgPrefix": "/pages7/",
     "chaptersFile": "data7/chapters.json",
     "patchesFile": "scripts/patches7.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "8",
@@ -72,10 +77,11 @@
     "imgPrefix": "/pages8/",
     "chaptersFile": "data8/chapters.json",
     "patchesFile": "scripts/patches8.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "9",
@@ -85,10 +91,11 @@
     "imgPrefix": "/pages9/",
     "chaptersFile": "data9/chapters.json",
     "patchesFile": "scripts/patches9.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "9.5",
@@ -98,10 +105,11 @@
     "imgPrefix": "/pages95/",
     "chaptersFile": "data95/chapters.json",
     "patchesFile": "scripts/patches95.json",
-    "maxAvgStrict": 0.28,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "10",
@@ -111,10 +119,11 @@
     "imgPrefix": "/pages10/",
     "chaptersFile": "data10/chapters.json",
     "patchesFile": "scripts/patches10.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "11",
@@ -124,10 +133,11 @@
     "imgPrefix": "/pages11/",
     "chaptersFile": "data11/chapters.json",
     "patchesFile": "scripts/patches11.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "complete",
     "statusNote": "",
-    "enabled": false
+    "enabled": true
   },
   {
     "id": "12",
@@ -137,9 +147,10 @@
     "imgPrefix": "/pages12/",
     "chaptersFile": "data12/chapters.json",
     "patchesFile": "scripts/patches12.json",
-    "maxAvgStrict": 0.25,
+    "maxAvgStrict": 0.20,
+    "embedArt": false,
     "status": "partial",
     "statusNote": "Bu cildin çevirisi devam ediyor; yeni bölümler yayınlandıkça eklenecek.",
-    "enabled": false
+    "enabled": true
   }
 ]

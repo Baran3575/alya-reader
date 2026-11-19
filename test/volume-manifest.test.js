@@ -72,60 +72,60 @@ function testManifestSchema() {
 
 function testBuildBookAndSummary() {
   console.log('Testing buildBook metadata and buildVolumesSummary...');
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
+  const enabledEntries = manifest.filter((v) => v.enabled);
   const active = loadVolumes();
-  assert(active['4'] && active['4.5'], 'Volumes 4 and 4.5 should be enabled');
+  assert(active['4'] && active['4.5'] && active['12'], 'Volumes 4, 4.5, and 12 should be enabled');
 
   const b4 = buildBook(active['4']);
   assert.strictEqual(b4.id, '4');
   assert.strictEqual(b4.status, 'complete');
   assert.strictEqual(typeof b4.statusNote, 'string');
 
-  // Verify partial volume metadata propagation
-  const bPartial = buildBook({
-    ...active['4'],
-    id: '12',
-    label: 'Cilt 12',
-    status: 'partial',
-    statusNote: 'Devam ediyor',
-  });
-  assert.strictEqual(bPartial.id, '12');
-  assert.strictEqual(bPartial.status, 'partial');
-  assert.strictEqual(bPartial.statusNote, 'Devam ediyor');
+  const b12 = buildBook(active['12']);
+  assert.strictEqual(b12.id, '12');
+  assert.strictEqual(b12.status, 'partial');
+  assert(b12.statusNote.length > 0);
 
   const summary = buildVolumesSummary();
-  assert.strictEqual(summary.length, 2);
-  assert.strictEqual(summary[0].id, '4');
-  assert(summary[0].chapterCount > 0 && summary[0].total > 0);
-  assert.strictEqual(summary[1].id, '4.5');
-  assert(summary[1].chapterCount > 0 && summary[1].total > 0);
-  console.log('  ✓ buildBook and buildVolumesSummary verified');
+  assert.strictEqual(summary.length, enabledEntries.length);
+  for (const item of summary) {
+    assert(item.chapterCount > 0 && item.total > 0, `Volume ${item.id} summary must have chapters and pages`);
+  }
+  console.log('  ✓ buildBook and buildVolumesSummary verified across all 11 enabled volumes');
 }
 
 async function testServerApiEndpoints() {
-  console.log('Testing /api/volumes and /api/book HTTP endpoints...');
+  console.log('Testing /api/volumes, /api/book, and /books/<v>.json HTTP endpoints...');
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const { port } = server.address();
   try {
     const volsRes = await fetchJson(port, '/api/volumes');
     assert.strictEqual(volsRes.status, 200);
-    assert(Array.isArray(volsRes.body) && volsRes.body.length >= 2);
+    assert(Array.isArray(volsRes.body) && volsRes.body.length === 11);
     assert.strictEqual(volsRes.body[0].id, '4');
-    assert.strictEqual(volsRes.body[1].id, '4.5');
+    assert.strictEqual(volsRes.body[10].id, '12');
+    assert.strictEqual(volsRes.body[10].status, 'partial');
 
     const bookRes = await fetchJson(port, '/api/book?v=4.5');
     assert.strictEqual(bookRes.status, 200);
     assert.strictEqual(bookRes.body.id, '4.5');
     assert.strictEqual(bookRes.body.volume, 'Cilt 4.5');
     assert.strictEqual(bookRes.body.status, 'complete');
+
+    const staticBookRes = await fetchJson(port, '/books/9.5.json');
+    assert.strictEqual(staticBookRes.status, 200);
+    assert.strictEqual(staticBookRes.body.id, '9.5');
+    assert.strictEqual(staticBookRes.body.volume, 'Cilt 9.5');
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
-  console.log('  ✓ /api/volumes and /api/book endpoints verified');
+  console.log('  ✓ /api/volumes, /api/book, and /books/<v>.json endpoints verified');
 }
 
 function testBundleAndWorkflows() {
   console.log('Testing bundle output, retired qc.yml, and dynamic qc-matrix.yml...');
-  const bundleHead = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8').slice(0, 2000);
+  const bundleHead = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8').slice(0, 4000);
   assert(bundleHead.includes('window.ALYA_VOLUMES='), 'public/bundle.js must define window.ALYA_VOLUMES');
 
   assert(!fs.existsSync(path.join(ROOT, '.github', 'workflows', 'qc.yml')), 'Duplicate qc.yml must be deleted');
@@ -146,13 +146,21 @@ function testBundleAndWorkflows() {
   });
   assert(patchV45.includes('✓'), 'patch.js --volume 4.5 --dry-run must succeed');
 
+  const patchV12 = execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'patch.js'), '--volume', '12', '--dry-run'], {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  assert(patchV12.includes('✓'), 'patch.js --volume 12 --dry-run must succeed');
+
   const filesToCheck = [
     'server.js',
     'public/index.html',
     'public/style.css',
     'public/app.js',
     'public/sw.js',
+    'scripts/lib/volumes.js',
     'scripts/build_bundle.js',
+    'scripts/build_site.js',
     'scripts/patch.js',
     'scripts/qc/cli.js',
     'scripts/qc/sent_align.js',
