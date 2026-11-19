@@ -1,32 +1,14 @@
-// Cilt bazlı edebî Türkçe iyileştirme, makine çevirisi kalıbı temizliği ve QC sıfır-tolerans onarımı.
+// Cilt bazlı edebî Türkçe iyileştirme, makine çevirisi kalıbı temizliği ve QC sıfır-tolerans koruyucusu.
 // Kullanım:
 //   node scripts/polish_volume.js --volume <4|4.5|5|...|12> [--dry]
+//   node scripts/polish_volume.js --all [--dry]
 const fs = require('fs');
 const path = require('path');
-const { resolveVolumeDir } = require('./volumes');
-const { loadGlossary, toCurlyQuotesAndBalanced, balanceParentheses } = require('./merge');
+const { ROOT, VOLUME_KEYS, resolveVolume } = require('./lib/volumes');
+const { loadGlossary } = require('./merge');
+const { hasUnbalancedDelim } = require('./qc/verify');
 const { score, evaluateData } = require('./qc/quality');
 
-const ROOT = path.join(__dirname, '..');
-
-const EN_RESIDUE_MAP = [
-  [/(?<!\p{L})the(?!\p{L})/giu, ''],
-  [/(?<!\p{L})and(?!\p{L})/giu, 've'],
-  [/(?<!\p{L})with(?!\p{L})/giu, 'ile'],
-  [/(?<!\p{L})that(?!\p{L})/giu, 'bu'],
-  [/(?<!\p{L})this(?!\p{L})/giu, 'bu'],
-  [/(?<!\p{L})from(?!\p{L})/giu, 'kaynaklı'],
-  [/(?<!\p{L})have(?!\p{L})/giu, 'sahip'],
-  [/(?<!\p{L})would(?!\p{L})/giu, 'olurdu'],
-  [/(?<!\p{L})could(?!\p{L})/giu, 'olabilirdi'],
-  [/(?<!\p{L})should(?!\p{L})/giu, 'gerekirdi'],
-  [/(?<!\p{L})about(?!\p{L})/giu, 'hakkında'],
-  [/(?<!\p{L})there(?!\p{L})/giu, 'orada'],
-  [/(?<!\p{L})their(?!\p{L})/giu, 'onların'],
-  [/(?<!\p{L})which(?!\p{L})/giu, 'ki'],
-];
-
-// Türkçe dilbilgisi ve imla sıfır tolerans düzeltmeleri
 const SPELLING_FIXES = [
   [/(?<!\p{L})herşey/giu, (m) => (m[0] === 'H' ? 'Her şey' : 'her şey')],
   [/(?<!\p{L})birşey/giu, (m) => (m[0] === 'B' ? 'Bir şey' : 'bir şey')],
@@ -37,9 +19,7 @@ const SPELLING_FIXES = [
   [/(?<!\p{L})her hangi(?!\p{L})/giu, (m) => (m[0] === 'H' ? 'Herhangi' : 'herhangi')],
 ];
 
-// Edebî Türkçe doğallaştırma (quality.js SIGNS kalıplarını hedefler)
 const LITERARY_RULES = [
-  // -lı/-li bir şekilde -> doğal zarf
   [/(?<!\p{L})çok hızlı bir şekilde(?!\p{L})/giu, 'hızla'],
   [/(?<!\p{L})hızlı bir şekilde(?!\p{L})/giu, 'hızlıca'],
   [/(?<!\p{L})yavaş bir şekilde(?!\p{L})/giu, 'yavaşça'],
@@ -69,15 +49,11 @@ const LITERARY_RULES = [
   [/(?<!\p{L})garip bir şekilde(?!\p{L})/giu, 'tuhaf biçimde'],
   [/(?<!\p{L})normal bir şekilde(?!\p{L})/giu, 'normalce'],
   [/(?<!\p{L})sert bir şekilde(?!\p{L})/giu, 'sertçe'],
-  [/(?<!\p{L})sert nasılsa(?!\p{L})/giu, 'sertçe'],
   [/(?<!\p{L})kısa bir şekilde(?!\p{L})/giu, 'kısaca'],
-  [/(?<!\p{L})kısa nasılsa(?!\p{L})/giu, 'kısaca'],
   [/(?<!\p{L})yumuşak bir şekilde(?!\p{L})/giu, 'yumuşakça'],
-  [/(?<!\p{L})yumuşak nasılsa(?!\p{L})/giu, 'yumuşakça'],
   [/(?<!\p{L})kaba bir şekilde(?!\p{L})/giu, 'kabaca'],
   [/(?<!\p{L})zarif bir şekilde(?!\p{L})/giu, 'zarifçe'],
-  [/(?<!\p{L})iyi bir şekilde(?!\p{L})/giu, 'iyice'],
-  [/(?<!\p{L})iyi bir yolunu bulup(?!\p{L})/giu, 'iyice'],
+  [/(?<!\p{L})iyi bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'iyice'],
   [/(?<!\p{L})kötü bir şekilde(?!\p{L})/giu, 'kötü biçimde'],
   [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, 'uygun biçimde'],
   [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, 'hiçbir biçimde'],
@@ -122,11 +98,10 @@ const LITERARY_RULES = [
   [/(?<!\p{L})(?:adeta|âdeta)(?!\p{L})/giu, (m) => (m[0] === 'A' || m[0] === 'Â' ? 'Resmen' : 'resmen')],
   [/(?<!\p{L})farkında olmadan(?!\p{L})/giu, (m) => (m[0] === 'F' ? 'Elinde olmadan' : 'elinde olmadan')],
   [/(?<!\p{L})fark etmeden(?!\p{L})/giu, (m) => (m[0] === 'F' ? 'İstemeden' : 'istemeden')],
-  // "sanki ... gibi" ikilemesini sadeleştir
-  [/(?<!\p{L})sanki ([^.!?“”]{3,80}?\bgibi\b)/giu, (m, rest) =>
+  [/(?<!\p{L})sanki ([^.!?“”{}]{3,80}?\bgibi\b)/giu, (m, rest) =>
     m[0] === 'S' ? rest.charAt(0).toLocaleUpperCase('tr') + rest.slice(1) : rest
   ],
-  [/(?<!\p{L})Sanki ([^.!?“”]{3,60})\./gu, 'Görünüşe bakılırsa $1.'],
+  [/(?<!\p{L})Sanki ([^.!?“”{}]{3,60})\./gu, 'Görünüşe bakılırsa $1.'],
   [/(?<!\p{L})sanki(?!\p{L})/gu, 'galiba'],
   [/(?<!\p{L})gibi görünüyordu(?!\p{L})/giu, 'gibi duruyordu'],
   [/(?<!\p{L})görünüyordu(?!\p{L})/gu, 'duruyordu'],
@@ -134,7 +109,6 @@ const LITERARY_RULES = [
   [/(?<!\p{L})gibiydin(?!\p{L})/gu, 'haldeydin'],
   [/(?<!\p{L})gibiydiler(?!\p{L})/gu, 'haldeydiler'],
   [/(?<!\p{L})gibiydi(?!\p{L})/gu, 'haldeydi'],
-  // Resmî edilgen çekimler (-ilmektedir / -ılmıştır)
   [/([a-zçğıöşü])ılmaktadır(?!\p{L})/gu, '$1ılıyor'],
   [/([a-zçğıöşü])ilmektedir(?!\p{L})/gu, '$1iliyor'],
   [/([a-zçğıöşü])ulmaktadır(?!\p{L})/gu, '$1uluyor'],
@@ -147,7 +121,6 @@ const LITERARY_RULES = [
   [/(?<!\p{L})gerçekleşti(?!\p{L})/giu, 'oldu'],
   [/(?<!\p{L})ifade etti(?!\p{L})/giu, 'söyledi'],
   [/(?<!\p{L})diye söyledi(?!\p{L})/giu, 'dedi'],
-  // Öğrenci konseyi hitapları ve Japonca eklerde ünlü uyumu / kaynaştırma ünsüzü
   [/(?<!\p{L})Prez[’']in(?!\p{L})/gu, 'Başkan’ın'],
   [/(?<!\p{L})Prez[’']i(?!\p{L})/gu, 'Başkan’ı'],
   [/(?<!\p{L})Prez[’']e(?!\p{L})/gu, 'Başkan’a'],
@@ -173,12 +146,6 @@ const LITERARY_RULES = [
   [/sama’in(?!\p{L})/giu, 'sama’nın'],
   [/sama’i(?!\p{L})/giu, 'sama’yı'],
   [/sama’e(?!\p{L})/giu, 'sama’ya'],
-  // Birebir çeviri pürüzleri
-  [/(?<!\p{L})mutlak ve mutlak(?!\p{L})/giu, 'tam ve sarsılmaz'],
-  [/(?<!\p{L})kendisi(?:yle|\s+ile) dolu değildi(?!\p{L})/giu, 'kendini beğenmişlik etmiyordu'],
-  [/(?<!\p{L})öğrenci konseyi memuru(?!\p{L})/giu, 'öğrenci konseyi yöneticisi'],
-  [/düzenlenen ilk Noel partisini düzenliyordu/gu, 'düzenlenen ilk Noel partisine ev sahipliği yapıyordu'],
-  [/Spor salonunun salonunda/gu, 'Spor salonunun pistinde'],
 ];
 
 function splitOverlongSentences(text) {
@@ -192,7 +159,6 @@ function splitOverlongSentences(text) {
       outSents.push(s);
       continue;
     }
-    // Tırnak içinde konuşma bölünmesin diye yalnızca dengeli tırnaklı yan cümle bağlaçlarında böl
     const splitRe =
       /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|bu arada|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra|hem de|yine de|dolayısıyla|nitekim|neyse ki|ve)\s+/iu;
     const m = splitRe.exec(s);
@@ -204,32 +170,18 @@ function splitOverlongSentences(text) {
         rawConj === 've'
           ? restSlice.charAt(0).toLocaleUpperCase('tr') + restSlice.slice(1)
           : m[1].charAt(0).toLocaleUpperCase('tr') + m[1].slice(1) + ' ' + restSlice;
-      const lQuotes = (left.match(/[“”]/g) || []).length;
-      const rQuotes = (right.match(/[“”]/g) || []).length;
-      const lWords = left.split(/\s+/).length;
-      const rWords = right.split(/\s+/).length;
-      if (lQuotes % 2 === 0 && rQuotes % 2 === 0 && lWords >= 8 && rWords >= 8) {
+      const balanced =
+        (left.match(/[“”]/g) || []).length % 2 === 0 &&
+        (right.match(/[“”]/g) || []).length % 2 === 0 &&
+        (left.match(/\(/g) || []).length === (left.match(/\)/g) || []).length &&
+        (right.match(/\(/g) || []).length === (right.match(/\)/g) || []).length &&
+        !hasUnbalancedDelim(left, '{', '}') &&
+        !hasUnbalancedDelim(right, '{', '}') &&
+        !hasUnbalancedDelim(left, '[', ']') &&
+        !hasUnbalancedDelim(right, '[', ']');
+      if (balanced && left.split(/\s+/).length >= 8 && right.split(/\s+/).length >= 8) {
         outSents.push(left + '.');
         outSents.push(right);
-        modified = true;
-        continue;
-      }
-    }
-    // Noktalı virgül varsa ve tırnak dengeliyse böl
-    const semiIdx = s.indexOf('; ');
-    if (semiIdx > 35) {
-      const left = s.slice(0, semiIdx).trim();
-      const rest = s.slice(semiIdx + 2).trim();
-      const lQuotes = (left.match(/[“”]/g) || []).length;
-      const rQuotes = (rest.match(/[“”]/g) || []).length;
-      if (
-        lQuotes % 2 === 0 &&
-        rQuotes % 2 === 0 &&
-        left.split(/\s+/).length >= 8 &&
-        rest.split(/\s+/).length >= 8
-      ) {
-        outSents.push(left + '.');
-        outSents.push(rest.charAt(0).toLocaleUpperCase('tr') + rest.slice(1));
         modified = true;
         continue;
       }
@@ -250,90 +202,70 @@ function reduceExcessiveVe(text) {
   });
 }
 
-function cleanZeroTolerance(text, glossary, preserveQuotes = false) {
-  let t = String(text || '');
+// Rusça fısıltı bloklarını ({...}) ve köşeli parantez bloklarını ([...]) koruyarak yalnızca dış/uygun metni işle
+function polishPreservingDelims(text, glossary) {
+  const protectedSpans = [];
+  let masked = String(text || '').replace(/\{[^{}]+\}/g, (m) => {
+    const idx = protectedSpans.length;
+    protectedSpans.push(m);
+    return `\uE000${idx}\uE001`;
+  });
 
-  // Çevirmen notları
-  t = t
-    .replace(/\((?:ÇN|TN|TL\s*note|Çevirmen\s*Notu)\s*:[^)]*\)/gi, '')
-    .replace(/(?<!\p{L})(?:ÇN|TN)\s*:\s*/gu, '');
-
-  // Sözlük
   for (const [from, to] of Object.entries(glossary)) {
     if (from === to) continue;
     const re = new RegExp(
       '(?<![\\p{L}\\p{N}])' + from.replace(/[\\^$*+?.()|[\]{}]/g, '\\$&') + '(?![\\p{L}\\p{N}])',
       'gu'
     );
-    t = t.replace(re, to);
+    masked = masked.replace(re, to);
   }
+  for (const [re, rep] of SPELLING_FIXES) masked = masked.replace(re, rep);
+  for (const [re, rep] of LITERARY_RULES) masked = masked.replace(re, rep);
 
-  for (const [re, rep] of SPELLING_FIXES) t = t.replace(re, rep);
-  for (const [re, rep] of EN_RESIDUE_MAP) t = t.replace(re, rep);
+  masked = splitOverlongSentences(masked);
+  masked = reduceExcessiveVe(masked);
 
-  // Noktalama sıfır tolerans
-  t = t
+  masked = masked
     .replace(/\.{2,}/g, '…')
     .replace(/…+\.+/g, '…')
     .replace(/\.+…+/g, '…')
     .replace(/[!?]\.+/g, (m) => m[0])
-    .replace(/([!?])\1+/g, '$1')
-    .replace(/[─━―]{2,}/g, '—')
-    .replace(/[〜~]{2,}/g, '~')
-    .replace(/—{3,}/g, '——')
-    .replace(/…{4,}/g, '……')
-    .replace(/(?:^|(?<=[.!?]\s))—\s+/g, '—')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\s+([,.;:!?…])/g, '$1')
-    .replace(/(?<!\d)([,;:])(?=[^\s"”’)\]])/g, '$1 ')
-    .trim();
-
-  if (!preserveQuotes) {
-    t = toCurlyQuotesAndBalanced(t);
-  } else {
-    // Yalnızca düz tırnak varsa dönüştür, mevcut bilinen sayfa-bölünmesi tırnak sayısını bozma
-    if (/["']/.test(t)) {
-      t = t.replace(/([\p{L}\p{N}])'([\p{L}\p{N}])/gu, '$1’$2').replace(/'/g, '’');
-      let open = true;
-      t = t.replace(/"/g, () => {
-        const q = open ? '“' : '”';
-        open = !open;
-        return q;
-      });
-    }
-  }
-  t = balanceParentheses(t);
-  t = t
     .replace(/([,.;:!?…~])\s+([”])/g, '$1$2')
     .replace(/([“])\s+/g, '$1')
     .replace(/[ \t]{2,}/g, ' ')
-    .replace(/\s+([,.;:!?…])/g, '$1')
+    .replace(/\s+([,.;:!?])/g, '$1')
     .trim();
-  return t;
+
+  let restored = masked.replace(/\uE000(\d+)\uE001/g, (_, idx) => protectedSpans[Number(idx)]);
+  if (/^[a-zçğıöşü]/.test(restored)) {
+    restored = restored.charAt(0).toLocaleUpperCase('tr') + restored.slice(1);
+  }
+  return restored;
 }
 
-function polishParagraph(text, glossary, options = {}) {
-  let t = cleanZeroTolerance(text, glossary, options.preservePageSplitQuotes);
-  for (const [re, rep] of LITERARY_RULES) {
-    t = t.replace(re, rep);
-  }
-  t = splitOverlongSentences(t);
-  t = reduceExcessiveVe(t);
-  t = cleanZeroTolerance(t, glossary, options.preservePageSplitQuotes);
-  if (/^[a-zçğıöşü]/.test(t)) {
-    t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
-  }
-  return t;
+function isSafeCandidate(orig, cand) {
+  if (!cand || !cand.trim()) return false;
+  if (/["']/.test(cand)) return false;
+  if (/[『』「」]/.test(cand)) return false;
+  if (/\p{Script=Cyrillic}/u.test(cand)) return false;
+  if (hasUnbalancedDelim(cand, '{', '}')) return false;
+  if (hasUnbalancedDelim(cand, '[', ']')) return false;
+  if ((cand.match(/\(/g) || []).length !== (cand.match(/\)/g) || []).length) return false;
+  if (((cand.match(/[“”]/g) || []).length % 2) !== ((orig.match(/[“”]/g) || []).length % 2)) return false;
+  if (/\s+[,.;:!?]/.test(cand) || /\.{2,}/.test(cand) || /[!?]\./.test(cand)) return false;
+  if (/(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/iu.test(cand.replace(/https?:\s*\/\/[^\n]+/gi, ''))) return false;
+  if (/(?<!\p{L})(?:ÇN|TN)\s*:/u.test(cand)) return false;
+  return true;
 }
 
 function polishVolume(volKey, { dry = false } = {}) {
-  const dataDir = resolveVolumeDir(volKey);
-  const filePath = path.join(ROOT, dataDir, 'paragraphs_final.json');
-  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  const cfg = resolveVolume(volKey);
+  if (!cfg) throw new Error(`Bilinmeyen cilt: ${volKey}`);
+  const filePath = cfg.finalFile;
+  const rawOrigFile = fs.readFileSync(filePath, 'utf8');
+  const data = JSON.parse(rawOrigFile);
   const glossary = loadGlossary();
-  const isLegacyVol = volKey === '4' || volKey === '4.5';
 
-  // Cilt 4'te patches.json varsa regresyon olmaması için yama dosyasını da senkron tut
   const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
   const patches = volKey === '4' && fs.existsSync(patchesFile)
     ? JSON.parse(fs.readFileSync(patchesFile, 'utf8'))
@@ -348,43 +280,39 @@ function polishVolume(volKey, { dry = false } = {}) {
       const orig = arr[i];
       if (!orig || !orig.trim()) continue;
       const key = `${pg}.${i}`;
-      const candidate = polishParagraph(orig, glossary, {
-        preservePageSplitQuotes: isLegacyVol,
-      });
-      if (!candidate) continue;
-
-      if (isLegacyVol) {
-        // Mevcut ciltlerde yalnızca puan düşüren veya sıfır tolerans hatasını gideren değişiklikleri kabul et
+      const candidate = polishPreservingDelims(orig, glossary);
+      if (candidate !== orig && isSafeCandidate(orig, candidate)) {
         const sBefore = score(pg, i, orig).score;
         const sAfter = score(pg, i, candidate).score;
-        const origCurly = (orig.match(/[“”]/g) || []).length % 2;
-        const candCurly = (candidate.match(/[“”]/g) || []).length % 2;
-        if (candCurly === origCurly && sAfter < sBefore) {
+        // Yalnızca kusur puanını düşüren veya açık ek/tırnak pürüzünü puan artırmadan düzelten adayları kabul et
+        const fixedHarmonyOrSpace =
+          /(?:senpai|chan|kun|sama)’(?:in|i|e|den|de|le)|Prez|(?:[“]\s+|\s+[”])/.test(orig) &&
+          sAfter <= sBefore;
+        if (sAfter < sBefore || fixedHarmonyOrSpace) {
           nextArr.push(candidate);
           if (patches && patches[key] !== undefined) {
             patches[key] = candidate;
           }
           changed++;
-        } else {
-          nextArr.push(orig);
+          continue;
         }
-      } else {
-        if (candidate !== orig) changed++;
-        nextArr.push(candidate);
       }
+      nextArr.push(orig);
     }
     data[pg] = nextArr;
   }
 
   const afterEval = evaluateData(data);
   console.log(
-    `[${dataDir}] Edebî iyileştirme (${dry ? 'dry-run' : 'yazıldı'}): değişen=${changed} | ort: ${beforeEval.avg.toFixed(2)} -> ${afterEval.avg.toFixed(2)} | 3+ puanlı: ${beforeEval.flagged} -> ${afterEval.flagged}`
+    `[${cfg.dataDir}] Edebî iyileştirme (${dry ? 'dry-run' : 'yazıldı'}): değişen=${changed} | ort: ${beforeEval.avg.toFixed(2)} -> ${afterEval.avg.toFixed(2)} | 3+ puanlı: ${beforeEval.flagged} -> ${afterEval.flagged}`
   );
 
   if (!dry) {
-    fs.writeFileSync(filePath, JSON.stringify(data) + '\n');
+    const isMultiline = rawOrigFile.includes('\n ');
+    const serialized = isMultiline ? JSON.stringify(data, null, 1) : JSON.stringify(data);
+    fs.writeFileSync(filePath, rawOrigFile.endsWith('\n') ? serialized + '\n' : serialized);
     if (patches) {
-      fs.writeFileSync(patchesFile, JSON.stringify(patches, null, 2) + '\n');
+      fs.writeFileSync(patchesFile, JSON.stringify(patches, null, 1) + '\n');
     }
   }
   return { before: beforeEval, after: afterEval, changed };
@@ -393,11 +321,13 @@ function polishVolume(volKey, { dry = false } = {}) {
 if (require.main === module) {
   const args = process.argv.slice(2);
   const dry = args.includes('--dry');
-  const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  const vols = vIdx > -1 && args[vIdx + 1] ? args[vIdx + 1].split(',') : ['4'];
-  for (const v of vols) {
-    polishVolume(v.trim(), { dry });
+  if (args.includes('--all')) {
+    for (const v of VOLUME_KEYS) polishVolume(v, { dry });
+  } else {
+    const vIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
+    const vols = vIdx > -1 && args[vIdx + 1] ? args[vIdx + 1].split(',') : ['4'];
+    for (const v of vols) polishVolume(v.trim(), { dry });
   }
 }
 
-module.exports = { polishParagraph, polishVolume };
+module.exports = { polishParagraph: polishPreservingDelims, polishVolume };

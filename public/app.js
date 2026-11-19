@@ -1,6 +1,67 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const inner = t.slice(open + 1, close);
+      if (!inner) {
+        el.appendChild(d.createTextNode('{}'));
+        pos = close + 1;
+        continue;
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
+  const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
+  const VOLUME_ORDER = volButtons.map((b) => b.dataset.vol);
 
   const LS = {
     get(k, d) {
@@ -16,7 +77,6 @@
         localStorage.setItem('alya4:' + k, JSON.stringify(v));
         return true;
       } catch {
-        // 11 ciltlik önbellek tarayıcı kotasını doldurursa eski cilt önbelleklerini temizle
         try {
           for (const key of Object.keys(localStorage)) {
             if (key.startsWith('alya4:book:') || key.startsWith('alya4:bookver:')) {
@@ -32,85 +92,37 @@
     },
   };
 
+  // URL sorgusu (?vol=9.5 veya ?v=12&p=1) ile doğrudan cilt/sayfa açma desteği
   const urlParams = new URLSearchParams(window.location.search);
-  const urlVol = urlParams.get('v');
-  const urlPage = Number(urlParams.get('p'));
+  const initialUrlVol = urlParams.get('vol') || urlParams.get('v');
+  const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
+
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
-    page: Number.isFinite(urlPage) && urlPage >= 1 ? urlPage : LS.get('page', 1),
+    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: urlVol ? String(urlVol) : String(LS.get('vol', '4')),
-    catalog: Array.isArray(window.ALYA_CATALOG) ? window.ALYA_CATALOG : [],
+    vol: initialUrlVol || LS.get('vol', '4'),
     book: null,
     chapter: 0,
   };
 
-  const memBooks = new Map();
-
-  /* ---------------- dinamik cilt seçici ---------------- */
-  async function ensureCatalog() {
-    if (state.catalog.length > 0) return state.catalog;
-    try {
-      const res = await fetch('api/catalog');
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.volumes) && data.volumes.length) {
-          state.catalog = data.volumes;
-          return state.catalog;
-        }
-      }
-    } catch {}
-    state.catalog = [
-      { key: '4', label: '4', volume: 'Cilt 4', file: 'volumes/4.json' },
-      { key: '4.5', label: '4.5', volume: 'Cilt 4.5', file: 'volumes/4.5.json' },
-    ];
-    return state.catalog;
-  }
-
-  function renderVolumeNav() {
-    const nav = $('volNav');
-    if (!nav) return;
-    nav.innerHTML = '';
-    for (const item of state.catalog) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'seg-btn' + (item.key === state.vol ? ' is-on' : '') + (item.ongoing ? ' is-ongoing' : '');
-      btn.dataset.vol = item.key;
-      btn.title = item.ongoing ? item.volume + ' (Devam Ediyor)' : item.volume;
-      btn.textContent = item.label || item.key;
-      btn.addEventListener('click', () => switchVolume(item.key));
-      nav.appendChild(btn);
-    }
-    syncActiveVolumeButton();
-  }
-
-  function syncActiveVolumeButton() {
-    const nav = $('volNav');
-    if (!nav) return;
-    let activeBtn = null;
-    for (const btn of nav.querySelectorAll('button[data-vol]')) {
-      const on = btn.dataset.vol === state.vol;
-      btn.classList.toggle('is-on', on);
-      if (on) activeBtn = btn;
-    }
-    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
-      activeBtn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' });
-    }
-  }
-
+  /* ---------------- cilt ---------------- */
   function switchVolume(v) {
     if (v === state.vol) return;
     LS.set('page:' + state.vol, state.page);
     state.vol = v;
     LS.set('vol', v);
     state.page = LS.get('page:' + v, 1);
-    syncActiveVolumeButton();
     load().catch((err) => {
-      reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
+      reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
+
+  volButtons.forEach((btn) => {
+    btn.addEventListener('click', () => switchVolume(btn.dataset.vol));
+  });
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -127,7 +139,10 @@
 
   /* ---------------- bölüm yardımcıları ---------------- */
   const chapters = () => state.book.chapters;
-  const isChapterNative = () => Boolean(state.book && state.book.chapterNative);
+  const isChapterNative = () =>
+    Boolean((state.book && state.book.chapterNative) || ['9.5', '11', '12'].includes(state.vol));
+  const isOngoing = () => Boolean((state.book && state.book.ongoing) || state.vol === '12');
+
   const chapterIndex = (n) => {
     let idx = 0;
     chapters().forEach((c, k) => {
@@ -140,74 +155,6 @@
     const next = chapters()[i + 1];
     return [start, next ? next.page - 1 : state.book.total];
   };
-
-  /* ---------------- veri ---------------- */
-  function imgSrc(p, forScanMode = false) {
-    const key = String(p.n).padStart(3, '0');
-    const pack = window.ALYA_ART && window.ALYA_ART[state.vol];
-    if (!forScanMode && pack && pack[key]) return pack[key];
-    if (forScanMode && p.scanImg) return p.scanImg;
-    return p.img;
-  }
-
-  function catalogEntry(v) {
-    return state.catalog.find((c) => c.key === v) || null;
-  }
-
-  function volumeVersion(v) {
-    const entry = catalogEntry(v);
-    if (entry && entry.hash) return entry.hash;
-    return window.ALYA_BUNDLE_VERSION || 'dev';
-  }
-
-  function bundleBook(v) {
-    const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
-    return b || null;
-  }
-
-  function cachedBook(v) {
-    if (memBooks.has(v)) return memBooks.get(v);
-    const ver = volumeVersion(v);
-    if (ver === 'dev') return null;
-    const hit = LS.get('bookver:' + v, null);
-    if (!hit || hit !== ver) return null;
-    return LS.get('book:' + v, null);
-  }
-
-  async function readBook(v) {
-    const cached = cachedBook(v);
-    if (cached) {
-      memBooks.set(v, cached);
-      return cached;
-    }
-    const embedded = bundleBook(v);
-    if (embedded) {
-      memBooks.set(v, embedded);
-      LS.set('book:' + v, embedded);
-      LS.set('bookver:' + v, volumeVersion(v));
-      return embedded;
-    }
-
-    const entry = catalogEntry(v);
-    const volFile = (entry && entry.file) || 'volumes/' + encodeURIComponent(v) + '.json';
-    let book = null;
-
-    try {
-      const res = await fetch(volFile);
-      if (res.ok) book = await res.json();
-    } catch {}
-
-    if (!book) {
-      const res = await fetch('api/book?v=' + encodeURIComponent(v));
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      book = await res.json();
-    }
-
-    memBooks.set(v, book);
-    LS.set('book:' + v, book);
-    LS.set('bookver:' + v, volumeVersion(v));
-    return book;
-  }
 
   function syncModeControls() {
     const native = isChapterNative();
@@ -227,26 +174,89 @@
     }
   }
 
-  async function load() {
-    await ensureCatalog();
-    if (!catalogEntry(state.vol) && state.catalog.length > 0) {
-      state.vol = state.catalog[0].key;
-      LS.set('vol', state.vol);
-    }
-    renderVolumeNav();
+  /* ---------------- veri ---------------- */
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
+  function imgSrc(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    if (pack && pack[key]) return pack[key];
+    return String(p.img || '').replace(/^\/+/, '');
+  }
 
+  function hasEmbeddedArt(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    return Boolean(pack && pack[key]);
+  }
+
+  /* veri kaynakları: gömülü paket -> önbellek -> statik JSON -> sunucu API */
+  function bundleBook(v) {
+    const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
+    return b || null;
+  }
+
+  function cachedBook(v) {
+    const ver = window.ALYA_BUNDLE_VERSION || 'dev';
+    const hit = LS.get('bookver:' + v, null);
+    if (!hit || hit !== ver) return null;
+    return LS.get('book:' + v, null);
+  }
+
+  const memBooks = new Map();
+
+  async function readBook(v) {
+    if (memBooks.has(v)) return memBooks.get(v);
+    const embedded = bundleBook(v);
+    if (embedded) {
+      memBooks.set(v, embedded);
+      return embedded;
+    }
+    const cached = cachedBook(v);
+    if (cached) {
+      memBooks.set(v, cached);
+      return cached;
+    }
+
+    let book = null;
+    try {
+      const staticRes = await fetch('books/' + encodeURIComponent(v) + '.json');
+      if (staticRes.ok) book = await staticRes.json();
+    } catch {}
+
+    if (!book) {
+      const res = await fetch('api/book?v=' + encodeURIComponent(v));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      book = await res.json();
+    }
+
+    memBooks.set(v, book);
+    return book;
+  }
+
+  async function load() {
     state.book = await readBook(state.vol);
     syncModeControls();
 
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
-    const statusSuffix = state.book.ongoing ? ' · Türkçe · Devam Ediyor' : ' · Türkçe';
-    $('brandSub').textContent = state.book.volume + statusSuffix;
+    const ongoing = isOngoing();
+    $('brandSub').textContent = state.book.volume + (ongoing ? ' · Türkçe · Devam Ediyor' : ' · Türkçe');
+    const tocHead = $('tocHead');
+    if (tocHead) {
+      tocHead.textContent = ongoing
+        ? 'İçindekiler · ' + state.book.volume + ' (Devam Ediyor)'
+        : 'İçindekiler · ' + state.book.volume;
+    }
+
+    volButtons.forEach((btn) => {
+      const active = btn.dataset.vol === state.vol;
+      btn.classList.toggle('is-on', active);
+      if (active && typeof btn.scrollIntoView === 'function') {
+        btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
-    $('tocHead').textContent = state.book.ongoing
-      ? 'İçindekiler · ' + state.book.volume + ' (Devam Ediyor)'
-      : 'İçindekiler · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
 
@@ -257,6 +267,7 @@
       const li = document.createElement('li');
       li.dataset.page = ch.page;
       li.dataset.idx = i;
+      if (ch.pending) li.classList.add('is-pending');
       const btn = document.createElement('button');
       btn.type = 'button';
       const lab = document.createElement('span');
@@ -267,12 +278,8 @@
       ttl.textContent = ch.title;
       const pg = document.createElement('span');
       pg.className = 'ch-page';
-      if (native) {
-        pg.textContent = '#' + (i + 1);
-      } else {
-        const [s, e] = chapterRange(i);
-        pg.textContent = s === e ? s : s + '–' + e;
-      }
+      const [s, e] = chapterRange(i);
+      pg.textContent = ch.pending ? 'yakında' : native ? '#' + (i + 1) : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
         toggleToc(false);
@@ -292,6 +299,11 @@
     const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
+      const ch = chapters()[i];
+      if (ch && ch.pending) {
+        li.classList.remove('is-read');
+        continue;
+      }
       const end = chapterRange(i)[1];
       li.classList.toggle('is-read', max >= end);
     }
@@ -310,9 +322,9 @@
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
-    } else if (t.length < 110 && !t.includes('“') && !/\.$/.test(t)) {
+    } else if (t.length < 110 && !t.includes('“') && !t.includes('{') && !/\.$/.test(t)) {
       out.shift();
-    } else {
+    } else if (ch.title) {
       const i = t.indexOf(ch.title);
       if (i >= 0) {
         const rest = t.slice(i + ch.title.length).replace(/^[:\s"”—–-]+/, '');
@@ -323,25 +335,40 @@
     return out;
   }
 
-  function figureFor(p, caption, forScanMode = false) {
-    const src = imgSrc(p, forScanMode);
-    const labelText = isChapterNative() ? 'İllüstrasyon' : 'Sayfa ' + p.n;
+  function createPendingNotice(ch) {
+    const box = document.createElement('div');
+    box.className = 'pending-card';
+    const badge = document.createElement('p');
+    badge.className = 'pending-badge';
+    badge.textContent = 'Çeviri Beklemede · Devam Eden Cilt';
+    const desc = document.createElement('p');
+    desc.className = 'pending-desc';
+    desc.textContent =
+      ch.statusNote ||
+      'Bu bölümün kaynak çevirisi henüz tamamlanmadı. Yeni bölümler yayınlandıkça Türkçe çevirisi eklenecektir.';
+    box.append(badge, desc);
+    return box;
+  }
+
+  function figureFor(p, caption) {
+    const native = isChapterNative();
+    const labelText = native ? 'İllüstrasyon' : 'Sayfa ' + p.n;
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = src;
+    img.src = imgSrc(p);
     img.alt = labelText;
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => scheduleProgress(), { once: true });
     fig.appendChild(img);
-    if (caption && !isChapterNative()) {
+    if (caption && !native) {
       const cap = document.createElement('figcaption');
       cap.className = 'img-cap';
       cap.textContent = labelText;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(src, labelText));
+    fig.addEventListener('click', () => openLightbox(imgSrc(p), labelText));
     return fig;
   }
 
@@ -391,7 +418,28 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false, true));
+
+    if (ch.pending || (p && p.pending)) {
+      sec.appendChild(createPendingNotice(ch));
+    } else if (p) {
+      const hasFullScan = p.art || hasEmbeddedArt(p) || state.vol === '4' || state.vol === '4.5';
+      if (hasFullScan) {
+        sec.appendChild(figureFor(p, false));
+      } else if (p.en && p.en.length) {
+        const proseWrap = document.createElement('div');
+        proseWrap.className = 'orig-prose';
+        for (const line of p.en) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          proseWrap.appendChild(el);
+        }
+        sec.appendChild(proseWrap);
+      } else if (p.tr && p.tr.length) {
+        for (const line of p.tr) {
+          sec.appendChild(renderParagraph(line));
+        }
+      }
+    }
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -445,6 +493,7 @@
     const ch = chapters()[idx];
     const [startPage, endPage] = chapterRange(idx);
     const native = isChapterNative();
+    const ongoing = isOngoing();
 
     reader.innerHTML = '';
 
@@ -452,13 +501,12 @@
     head.className = 'ch-head';
     const kicker = document.createElement('p');
     kicker.className = 'kicker';
-    kicker.textContent = state.book.ongoing ? ch.label + ' · Devam Eden Cilt' : ch.label;
+    kicker.textContent = ongoing ? ch.label + ' · Devam Eden Cilt' : ch.label;
     const h1 = document.createElement('h1');
     h1.className = 'chapter-title';
     h1.textContent = ch.title;
     const meta = document.createElement('p');
     meta.className = 'ch-meta';
-
     const pages = endPage - startPage + 1;
     let words = 0;
     let artCount = 0;
@@ -469,58 +517,56 @@
       if (pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
     const mins = Math.max(1, Math.round(words / 240));
-    if (native) {
+    if (ch.pending) {
+      meta.textContent = 'Durum: Kaynak çeviri devam ediyor';
+    } else if (native) {
       meta.textContent =
         words > 0
           ? 'Bölüm ' + (idx + 1) + ' / ' + chapters().length + ' · ~' + mins + ' dk okuma'
           : artCount + ' görsel · İllüstrasyon galerisi';
     } else {
       meta.textContent =
-        'Sayfa ' +
-        startPage +
-        (startPage === endPage ? '' : '–' + endPage) +
-        ' · ' +
-        pages +
-        ' sayfa · ~' +
-        mins +
-        ' dk';
+        'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' + pages + ' sayfa · ~' + mins + ' dk';
     }
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
-    const frag = document.createDocumentFragment();
-    for (let n = startPage; n <= endPage; n++) {
-      const p = state.book.pages[n - 1];
-      if (!p) continue;
-
-      const isIllustration = p.art === true && Boolean(imgSrc(p, false));
-      if (!isIllustration && (!p.tr || p.tr.length === 0)) continue;
-
-      const sec = document.createElement('section');
-      sec.className = 'pg';
-      sec.dataset.page = p.n;
-
-      if (isIllustration) {
-        sec.classList.add('pg-art');
-        if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true, false));
-        if (p.tr.length === 0) {
-          frag.appendChild(sec);
+    if (ch.pending) {
+      reader.appendChild(createPendingNotice(ch));
+    } else {
+      const frag = document.createDocumentFragment();
+      for (let n = startPage; n <= endPage; n++) {
+        const p = state.book.pages[n - 1];
+        if (!p) continue;
+        if (p.pending) {
+          frag.appendChild(createPendingNotice(ch));
           continue;
         }
-      }
+        const sec = document.createElement('section');
+        sec.className = 'pg';
+        sec.dataset.page = p.n;
 
-      const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
-      for (const t of paras) {
-        if (!t) continue;
-        const el = document.createElement('p');
-        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-        el.textContent = t;
-        sec.appendChild(el);
+        const isIllustration = p.art === true || (p.tr.length === 0 && (state.vol === '4' || state.vol === '4.5' || hasEmbeddedArt(p)));
+        if (isIllustration) {
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(figureFor(p, true));
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
+          }
+        }
+
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        for (const t of paras) {
+          if (!t) continue;
+          sec.appendChild(renderParagraph(t));
+        }
+        frag.appendChild(sec);
       }
-      frag.appendChild(sec);
+      reader.appendChild(frag);
     }
-    reader.appendChild(frag);
 
     // bölüm sonu
     const last = idx === chapters().length - 1;
@@ -529,7 +575,7 @@
     const note = document.createElement('p');
     note.className = 'ch-end-note';
     note.textContent = last
-      ? state.book.ongoing
+      ? ongoing
         ? '— Güncel çeviri sonu · Yeni bölümler yayınlandıkça eklenecektir —'
         : '— Cilt sonu —'
       : '— Bölüm sonu —';
@@ -542,14 +588,14 @@
       b.addEventListener('click', () => goChapter(idx + 1));
       foot.appendChild(b);
     } else {
-      const curCatIdx = state.catalog.findIndex((c) => c.key === state.vol);
-      const nextVol = curCatIdx >= 0 ? state.catalog[curCatIdx + 1] : null;
-      if (nextVol) {
+      const curVolIdx = VOLUME_ORDER.indexOf(state.vol);
+      const nextVolKey = curVolIdx >= 0 ? VOLUME_ORDER[curVolIdx + 1] : null;
+      if (nextVolKey) {
         const b = document.createElement('button');
         b.type = 'button';
         b.className = 'ch-end-btn';
-        b.textContent = 'Sonraki cilt: ' + nextVol.volume + ' →';
-        b.addEventListener('click', () => switchVolume(nextVol.key));
+        b.textContent = 'Sonraki cilt: Cilt ' + nextVolKey + ' →';
+        b.addEventListener('click', () => switchVolume(nextVolKey));
         foot.appendChild(b);
       }
     }
@@ -558,7 +604,9 @@
     // durum satırı
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = native
+    $('navPages').textContent = ch.pending
+      ? 'beklemede'
+      : native
       ? (idx + 1) + ' / ' + chapters().length
       : startPage === endPage
       ? 's. ' + startPage
@@ -576,11 +624,14 @@
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
-    const prevMax2 = LS.get('max:' + state.vol, 0);
-    if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    if (!ch.pending) {
+      const prevMax2 = LS.get('max:' + state.vol, 0);
+      if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    }
     markTocRead();
     if (!native) LS.set('mode', state.mode);
 
+    // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
     const anchorPt = targetPage > startPage ? reader.querySelector('.pg[data-page="' + targetPage + '"]') : null;
     if (anchorPt) requestAnimationFrame(() => anchorPt.scrollIntoView({ block: 'start' }));
     else window.scrollTo({ top: 0, behavior: 'auto' });
@@ -615,7 +666,7 @@
     pct = Math.min(1, Math.max(0, pct));
     $('progressBar').style.width = (pct * 100).toFixed(2) + '%';
     $('chPct').textContent = '%' + Math.round(pct * 100);
-
+    // ekranda görünen sayfayı hatırla (çeviri ↔ orijinal geçişi için)
     const mid = window.scrollY + window.innerHeight * 0.35;
     let seen = state.page;
     for (const el of reader.querySelectorAll('.pg[data-page]')) {
@@ -655,13 +706,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && p.art && imgSrc(p)) imgs.push(imgSrc(p));
+      if (p && p.art && !p.pending) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
-    if (nxt) {
+    if (nxt && !nxt.pending) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && p.art && imgSrc(p)) imgs.push(imgSrc(p));
+        if (p && p.art && !p.pending) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {

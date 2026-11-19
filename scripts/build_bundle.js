@@ -1,84 +1,91 @@
-// Sunucusuz (GitHub Pages / çevrimdışı) okuma için cilt bazlı tembel yüklenen (lazy-loaded) JSON paketleri üretir.
-// Tekil devasa bundle yerine:
-//   - public/volumes/<cilt>.json  (her cilt yalnızca açıldığında indirilir)
-//   - public/bundle.js            (~2 KB katalog manifestosu ve sürüm özeti)
-//   - public/bundle-art.js        (geriye dönük uyumluluk için hafif sarmalayıcı; görseller public/art/ altından tembel yüklenir)
+// Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { VOLUME_ORDER, VOLUMES, buildBook } = require('../server.js');
+const vm = require('vm');
+const { buildBook } = require('../server.js');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
-const VOL_DIR = path.join(ROOT, 'public', 'volumes');
-const OUT_MANIFEST = path.join(ROOT, 'public', 'bundle.js');
-const OUT_ART_STUB = path.join(ROOT, 'public', 'bundle-art.js');
+const OUT = path.join(ROOT, 'public', 'bundle.js');
+const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 
-fs.mkdirSync(VOL_DIR, { recursive: true });
-
-const catalog = [];
-const hashes = [];
-
-for (const key of VOLUME_ORDER) {
-  const cfg = VOLUMES[key];
-  const book = buildBook(cfg);
-  // Statik ortamda tüm görsel yollarının göreli (başında / olmadan) olduğundan emin ol
-  for (const p of book.pages) {
-    if (p.img && p.img.startsWith('/')) p.img = p.img.slice(1);
-    if (p.scanImg && p.scanImg.startsWith('/')) p.scanImg = p.scanImg.slice(1);
+function loadExistingArtBundle() {
+  if (!fs.existsSync(ART_OUT)) return {};
+  try {
+    const code = fs.readFileSync(ART_OUT, 'utf8');
+    const sandbox = { window: {} };
+    vm.runInNewContext(code, sandbox, { timeout: 2000 });
+    return sandbox.window.ALYA_ART || {};
+  } catch {
+    return {};
   }
-
-  const rawBook = JSON.stringify(book);
-  const volHash = crypto.createHash('sha1').update(rawBook).digest('hex').slice(0, 12);
-  hashes.push(`${key}:${volHash}`);
-
-  const relFile = `volumes/${key}.json`;
-  fs.writeFileSync(path.join(ROOT, 'public', relFile), rawBook);
-
-  const paras = book.pages.reduce((a, p) => a + p.tr.length, 0);
-  const arts = book.pages.filter((p) => p.art).length;
-  catalog.push({
-    key,
-    label: cfg.label || key,
-    volume: book.volume,
-    file: relFile,
-    hash: volHash,
-    total: book.total,
-    chapters: book.chapters.length,
-    paragraphs: paras,
-    illustrations: arts,
-    chapterNative: Boolean(book.chapterNative),
-    ongoing: Boolean(book.ongoing),
-  });
 }
 
-const globalHash = crypto.createHash('sha1').update(hashes.join('|')).digest('hex').slice(0, 12);
+const existingArt = loadExistingArtBundle();
+const vols = {};
+const art = {};
 
-const manifestBody =
+for (const k of VOLUME_KEYS) {
+  const cfg = VOLUMES[k];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
+
+  const book = buildBook({
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+  });
+
+  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
+  for (const p of book.pages) {
+    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+  }
+  vols[k] = book;
+
+  // Cilt 4 ve 4.5 için ham görsel klasörü gitignore'da olduğundan mevcut gömülü data URI'leri koru
+  if (k === '4' || k === '4.5') {
+    art[k] = { ...(existingArt[k] || {}) };
+    const diskDir = path.join(ROOT, cfg.imgDir);
+    if (fs.existsSync(diskDir)) {
+      for (const p of book.pages) {
+        if (!p.art) continue;
+        const pad = String(p.n).padStart(3, '0');
+        const f = path.join(diskDir, `${pad}.webp`);
+        if (fs.existsSync(f)) {
+          art[k][pad] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64');
+        }
+      }
+    }
+  }
+}
+
+const raw = JSON.stringify({ vols });
+const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+
+const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-  'window.ALYA_CATALOG=' +
-  JSON.stringify(catalog) +
-  ';\n' +
-  'window.ALYA_BUNDLE_VERSION=' +
-  JSON.stringify(globalHash) +
-  ';\n' +
-  'window.ALYA_BUNDLE={lazy:true,version:' +
-  JSON.stringify(globalHash) +
-  ',catalog:window.ALYA_CATALOG,vols:{}};\n';
+  'window.ALYA_BUNDLE=' + raw + ';\n' +
+  'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
 
-fs.writeFileSync(OUT_MANIFEST, manifestBody);
+fs.writeFileSync(OUT, body);
 
-const artStubBody =
-  '/* otomatik üretildi: scripts/build_bundle.js — görseller public/art/ altından tembel yüklenir */\n' +
-  'window.ALYA_ART=window.ALYA_ART||{};\n';
-fs.writeFileSync(OUT_ART_STUB, artStubBody);
+const artBody =
+  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
+  'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
+fs.writeFileSync(ART_OUT, artBody);
 
 console.log(
-  `yazıldı: ${path.relative(ROOT, OUT_MANIFEST)} (${(manifestBody.length / 1024).toFixed(1)} KB) | sürüm: ${globalHash}`
+  'illüstrasyon (gömülü Cilt 4/4.5):',
+  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  'görsel |',
+  (artBody.length / 1048576).toFixed(2),
+  'MB'
 );
-for (const c of catalog) {
-  const sizeKb = (fs.statSync(path.join(ROOT, 'public', c.file)).size / 1024).toFixed(0);
-  console.log(
-    `  ${c.volume.padEnd(10)} -> public/${c.file.padEnd(16)} (${sizeKb.padStart(4)} KB) | ${c.total} birim | ${c.paragraphs} paragraf | ${c.chapters} bölüm | ${c.illustrations} görsel`
-  );
+const kb = (body.length / 1024).toFixed(0);
+console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
+for (const [k, b] of Object.entries(vols)) {
+  const paras = b.pages.reduce((a, p) => a + p.tr.length, 0);
+  console.log('  Cilt ' + k + ':', b.total, 'sayfa |', paras, 'paragraf |', b.chapters.length, 'bölüm');
 }

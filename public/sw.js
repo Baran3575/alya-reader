@@ -1,14 +1,11 @@
-// Çevrimdışı önbellek: kabuk dosyaları + cilt JSON paketleri + illüstrasyonlar + sayfa görselleri.
-// Hem kök dizinde (localhost) hem de GitHub Pages alt yolunda (/alya-reader/) çalışır.
-const VERSION = 'alya-v4';
-const SHELL_REL = ['./', './index.html', './style.css', './app.js', './bundle.js'];
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
+// Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
+const VERSION = 'alya-v5';
+const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches
-      .open(VERSION)
-      .then((c) => c.addAll(SHELL_REL).catch(() => {}))
-      .then(() => self.skipWaiting())
+    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
   );
 });
 
@@ -17,7 +14,7 @@ self.addEventListener('activate', (e) => {
     caches
       .keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -27,19 +24,13 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  const scopePath = new URL(self.registration.scope).pathname;
-  const relPath = url.pathname.startsWith(scopePath)
-    ? url.pathname.slice(scopePath.length)
-    : url.pathname.replace(/^\/+/, '');
-
-  // Cilt paketleri, illüstrasyonlar ve sayfa görselleri: önce önbellek, yoksa ağ (ve önbelleğe yaz)
+  // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
-    relPath.startsWith('art/') ||
-    /^pages[^/]*\//.test(relPath) ||
-    /^volumes\/[^/]+\.json$/.test(relPath) ||
-    relPath === 'api/book' ||
-    relPath === 'api/catalog' ||
-    relPath === 'bundle.js';
+    /\/pages\d*\//.test(url.pathname) ||
+    /\/(?:books|volumes)\/[0-9.]+\.json$/.test(url.pathname) ||
+    url.pathname.endsWith('/api/book') ||
+    url.pathname.endsWith('/bundle.js') ||
+    url.pathname.endsWith('/bundle-art.js');
 
   if (cacheFirst) {
     e.respondWith(
@@ -54,13 +45,13 @@ self.addEventListener('fetch', (e) => {
               }
               return res;
             })
-            .catch(() => hit)
-      )
+            .catch(() => hit),
+      ),
     );
     return;
   }
 
-  // Kabuk dosyaları: önce ağ, düşerse çevrimdışı önbellek
+  // kabuk: önce ağ, düşerse önbellek
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -70,6 +61,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
+      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html'))),
   );
 });

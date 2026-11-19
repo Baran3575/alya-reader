@@ -1,15 +1,104 @@
 {
-  "Prologue": "Sır",
-  "Chapter 1": "İlk Aşk",
-  "Chapter 2": "Yalan",
-  "Chapter 3": "Saflık",
-  "Chapter 4": "İfşa",
-  "Chapter 5": "Kaos",
-  "Chapter 6": "Oyun",
-  "Chapter 7": "Müzik",
-  "Chapter 8": "Dostluk",
-  "Chapter 9": "Kutsama",
-  "Chapter 10": "İtiraf",
-  "Epilogue": "Pişmanlık",
-  "Afterword": "Yazarın Sonsözü"
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "8": "Gizli",
+    "12": "İlk Aşk",
+    "32": "Yalan",
+    "60": "Saflık",
+    "86": "Maruz",
+    "106": "Kaos",
+    "139": "Oyun",
+    "180": "Müzik",
+    "212": "Dostluk",
+    "230": "Nimet",
+    "249": "İtiraf",
+    "262": "Tövbe",
+    "265": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Gizli",
+      "enTitle": "Secret",
+      "startPage": 8
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "İlk Aşk",
+      "enTitle": "First Love",
+      "startPage": 12
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Yalan",
+      "enTitle": "Lie",
+      "startPage": 32
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Saflık",
+      "enTitle": "Purity",
+      "startPage": 60
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Maruz",
+      "enTitle": "Exposed",
+      "startPage": 86
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Kaos",
+      "enTitle": "Chaos",
+      "startPage": 106
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Oyun",
+      "enTitle": "Game",
+      "startPage": 139
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Müzik",
+      "enTitle": "Music",
+      "startPage": 180
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Dostluk",
+      "enTitle": "Friendship",
+      "startPage": 212
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Nimet",
+      "enTitle": "Blessing",
+      "startPage": 230
+    },
+    {
+      "label": "Bölüm 10",
+      "title": "İtiraf",
+      "enTitle": "Confession",
+      "startPage": 249
+    },
+    {
+      "label": "Epilog",
+      "title": "Tövbe",
+      "enTitle": "Repentance",
+      "startPage": 262
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 265
+    }
+  ]
 }

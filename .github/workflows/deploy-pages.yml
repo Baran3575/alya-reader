@@ -1,8 +1,10 @@
-name: Deploy Static Reader to GitHub Pages
+name: Deploy Reader to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
+    branches:
+      - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -11,12 +13,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
   build:
-    name: Build Lazy Bundles & Verify QC
+    name: Build & Verify Static Reader (Vols 4–12)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -27,22 +29,22 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Run Verification & Strict QC Gate
+      - name: Run Verification Suite & Strict QC Gate Across All Volumes
         run: npm test
 
-      - name: Build Per-Volume Static Bundles
-        run: node scripts/build_bundle.js
+      - name: Build Static GitHub Pages Bundle
+        run: npm run build:site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: './dist'
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: Publish to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     environment:

@@ -1,15 +1,104 @@
 {
-  "Prologue": "Yine de Yuki Hâlâ Bir Çocuktu",
-  "Chapter 1": "Ve Her Şey Uyluklardan İbaret Oldu",
-  "Chapter 2": "Ve Çocukla Annesi Göz Göze Geldi",
-  "Chapter 3": "Ve Her Şey Hiçliğe Dönüştü",
-  "Chapter 4": "Ve Masachika Kararını Verdi",
-  "Chapter 5": "Ve Ardından Rol Gerçeğe Dönüştü",
-  "Chapter 6": "Ve Alisa Sağ Salim İlerledi",
-  "Chapter 7": "Ve Suçlu Ortaya Çıkarıldı",
-  "Chapter 8": "Ve Böylece Tohumlar Ekildi",
-  "Chapter 9": "Ve Böylece İkisi Yüzleşti",
-  "Epilogue": "Böylece Kendim Oldum",
-  "Anecdote": "Soğuk Bir Adamın Kalbi",
-  "Afterword": "Yazarın Sonsözü"
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "9": "Buna rağmen Yuki hâlâ bir çocuktu",
+    "13": "Ve Her Şey Uyluk Oldu",
+    "33": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
+    "53": "Ve Hepsi Hiçbir Şeye Dönüştü",
+    "71": "Ve Masachika Bir Karar Verdi",
+    "89": "Ve Sonra Kanun Gerçek Oldu",
+    "118": "Ve Alisa Güvenle Taşındı",
+    "149": "Ve suçlu ortaya çıktı",
+    "177": "Ve Böylece Tohumlar Ekildi",
+    "196": "Ve böylece ikisi karşı karşıya geldi",
+    "221": "Böylece Kendim Oldum",
+    "228": "Soğuk Bir Adamın Kalbi",
+    "246": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Buna rağmen Yuki hâlâ bir çocuktu",
+      "enTitle": "Even So, Yuki Was Still A Child",
+      "startPage": 9
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Ve Her Şey Uyluk Oldu",
+      "enTitle": "And Everything Became Thighs",
+      "startPage": 13
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
+      "enTitle": "And So The Child And His Mother’s Eyes Met",
+      "startPage": 33
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Ve Hepsi Hiçbir Şeye Dönüştü",
+      "enTitle": "And It All Became Nothing",
+      "startPage": 53
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Ve Masachika Bir Karar Verdi",
+      "enTitle": "And Masachika Made A Decision",
+      "startPage": 71
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Ve Sonra Kanun Gerçek Oldu",
+      "enTitle": "And Then The Act Became Reality",
+      "startPage": 89
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Ve Alisa Güvenle Taşındı",
+      "enTitle": "And Alisa Moved Along Safely",
+      "startPage": 118
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Ve suçlu ortaya çıktı",
+      "enTitle": "And The Culprit Was Exposed",
+      "startPage": 149
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "Ve Böylece Tohumlar Ekildi",
+      "enTitle": "And So The Seeds Were Sown",
+      "startPage": 177
+    },
+    {
+      "label": "Bölüm 9",
+      "title": "Ve böylece ikisi karşı karşıya geldi",
+      "enTitle": "And So The Two Faced Each Other",
+      "startPage": 196
+    },
+    {
+      "label": "Epilog",
+      "title": "Böylece Kendim Oldum",
+      "enTitle": "So I Became Myself",
+      "startPage": 221
+    },
+    {
+      "label": "Yan Hikâye",
+      "title": "Soğuk Bir Adamın Kalbi",
+      "enTitle": "The Heart Of A Cold Man",
+      "startPage": 228
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 246
+    }
+  ]
 }

@@ -1,14 +1,90 @@
 {
-  "Illustrations": "Kapak ve İllüstrasyonlar",
-  "Prologue": "Birleşik Cephe",
-  "Chapter 1": "Tüm Entrikacılar Toplanıyor",
-  "Chapter 2": "Perde Arkasındaki Beyni Bulmak",
-  "Chapter 3": "Ondan da Öte, Bu Karşı Cins Kılığı!",
-  "Chapter 4": "Görünüşe Göre Efendi-Hizmetkâr Tersine Dönüşü Bir Yanlış Anlaşılmaymış",
-  "Chapter 5": "Görünüşe Göre Abla-Kardeş Tersine Dönüşü Bir Yanlış Anlaşılmaymış",
-  "Chapter 6": "Ondan da Öte, Bu Onii-chan!",
-  "Chapter 7": "Seçim Vaadini Bulmak",
-  "Chapter 8": "İki Prenses Karşı Karşıya",
-  "Epilogue": "Ortak Mücadele",
-  "Afterword": "Yazarın Sonsözü"
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "7": "Birleşik Cephe",
+    "27": "Bütün plancılar toplanıyor",
+    "61": "Beyni Bulmak",
+    "96": "Bundan Daha Fazlası, Karşılıklı Giyinmedir!",
+    "124": "Görünüşe göre Usta-Hizmetçi Tersine Dönüşü Bir Yanlış Anlamaydı",
+    "150": "Büyük-Küçük Kardeş Değişiminin Yanlış Anlaşılması Gibi Görünüyor",
+    "189": "Bundan da fazlası, Bu Onii-chan!",
+    "218": "Kampanya Vaadini Bulmak",
+    "247": "İki Prenses Karşı Karşıya",
+    "281": "Ortak Bir Savaş",
+    "303": "Sonsöz"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Birleşik Cephe",
+      "enTitle": "A United Front",
+      "startPage": 7
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Bütün plancılar toplanıyor",
+      "enTitle": "All the Schemers Gather",
+      "startPage": 27
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Beyni Bulmak",
+      "enTitle": "Finding the Mastermind",
+      "startPage": 61
+    },
+    {
+      "label": "Bölüm 3",
+      "title": "Bundan Daha Fazlası, Karşılıklı Giyinmedir!",
+      "enTitle": "More Than That, It’s Crossdressing!!!",
+      "startPage": 96
+    },
+    {
+      "label": "Bölüm 4",
+      "title": "Görünüşe göre Usta-Hizmetçi Tersine Dönüşü Bir Yanlış Anlamaydı",
+      "enTitle": "Looks Like the Master-Servant Reversal Was a Misunderstanding",
+      "startPage": 124
+    },
+    {
+      "label": "Bölüm 5",
+      "title": "Büyük-Küçük Kardeş Değişiminin Yanlış Anlaşılması Gibi Görünüyor",
+      "enTitle": "Looks Like the Older-Younger Sibling Reversal Was a Misunderstanding",
+      "startPage": 150
+    },
+    {
+      "label": "Bölüm 6",
+      "title": "Bundan da fazlası, Bu Onii-chan!",
+      "enTitle": "More Than That, It’s Onii-chan!!!",
+      "startPage": 189
+    },
+    {
+      "label": "Bölüm 7",
+      "title": "Kampanya Vaadini Bulmak",
+      "enTitle": "Finding the Campaign Promise",
+      "startPage": 218
+    },
+    {
+      "label": "Bölüm 8",
+      "title": "İki Prenses Karşı Karşıya",
+      "enTitle": "The Two Princesses Face Off",
+      "startPage": 247
+    },
+    {
+      "label": "Epilog",
+      "title": "Ortak Bir Savaş",
+      "enTitle": "A Joint Battle",
+      "startPage": 281
+    },
+    {
+      "label": "Sonsöz",
+      "title": "Sonsöz",
+      "enTitle": "Afterword",
+      "startPage": 303
+    }
+  ]
 }

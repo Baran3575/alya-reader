@@ -243,6 +243,11 @@ body {
   overflow: hidden;
   background: var(--bg-soft);
 }
+.seg[hidden],
+.seg-btn[hidden],
+.mode-compact[hidden] {
+  display: none !important;
+}
 .seg-btn {
   border: 0;
   background: transparent;
@@ -256,6 +261,15 @@ body {
 .seg-btn.is-on {
   background: var(--fg);
   color: var(--bg);
+}
+.seg-btn.is-ongoing::after {
+  content: '•';
+  margin-left: 0.16rem;
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+.seg-btn.is-on.is-ongoing::after {
+  color: currentColor;
 }
 
 .icon {
@@ -324,6 +338,25 @@ main {
   /* asılı açılış tırnağı: tırnak sol marja taşar, satır başları hizalı kalır */
   text-indent: -0.42em;
   hanging-punctuation: first allow-end;
+}
+
+.reader p.dialog.dialog-ru {
+  /* açılış tırnağı olmayan Rusça diyalog satırlarında negatif girintiyi sıfırla */
+  text-indent: 0;
+  hanging-punctuation: allow-end;
+}
+
+.reader .ru-dialog {
+  font-style: italic;
+  color: var(--fg-soft);
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, var(--muted) 42%, transparent);
+  text-underline-offset: 0.22em;
+}
+
+.reader .ru-dialog[title] {
+  cursor: help;
 }
 
 /* ---------- görsel yakınlaştırma ---------- */
@@ -564,20 +597,15 @@ input[type='range']::-moz-range-thumb {
     line-height: 1.72;
   }
 }
-/* cilt seçici (11 cilt, masaüstü + mobil yatay kaydırmalı) */
-.seg[hidden],
-.mode-compact[hidden],
-.seg-btn[hidden] {
-  display: none !important;
-}
-.seg-vol {
-  max-width: min(48vw, 31rem);
+
+/* cilt seçici */
+.seg.seg-vol {
+  max-width: min(46vw, 29rem);
   overflow-x: auto;
   scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
   flex-shrink: 1;
 }
-.seg-vol::-webkit-scrollbar {
+.seg.seg-vol::-webkit-scrollbar {
   display: none;
 }
 .seg-vol .seg-btn {
@@ -586,17 +614,6 @@ input[type='range']::-moz-range-thumb {
   min-width: 1.95rem;
   text-align: center;
   flex-shrink: 0;
-  position: relative;
-}
-.seg-vol .seg-btn.is-ongoing::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  right: 3px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
 }
 @media (max-width: 640px) {
   .seg.seg-vol {
@@ -608,6 +625,43 @@ input[type='range']::-moz-range-thumb {
     font-size: 0.69rem;
     min-width: 1.75rem;
   }
+}
+
+.toc-list li.is-pending .ch-label::after {
+  content: ' · beklemede';
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.pending-card {
+  margin: 1.5rem 0 2.2rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+.pending-card .pending-badge {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.55rem;
+}
+.pending-card .pending-desc {
+  font-size: 0.96rem;
+  color: var(--fg-soft);
+  margin: 0;
+  line-height: 1.65;
+}
+
+.orig-prose {
+  padding: 0.4rem 0;
+}
+.orig-prose p {
+  color: var(--fg-soft);
 }
 
 /* ---------- bölüm akışı ---------- */
@@ -841,8 +895,8 @@ figure.page-img.zoom img {
   padding: 0.28rem 0.7rem;
   border-radius: 999px;
   border: 1px solid var(--line, #2c2a27);
-  background: var(--panel, #1b1917);
-  color: var(--dim, #9c948a);
+  background: var(--bg-soft, #1b1917);
+  color: var(--muted, #9c948a);
   font-size: 0.72rem;
   letter-spacing: 0.02em;
   pointer-events: none;
