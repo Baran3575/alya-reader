@@ -18,10 +18,10 @@
     </a>
 
     <nav class="tools">
-      <div class="seg seg-vol" role="group" aria-label="Cilt seçimi">
-        <button id="vol4" class="seg-btn is-on" type="button" title="Cilt 4">4</button>
-        <button id="vol45" class="seg-btn" type="button" title="Cilt 4.5">4.5</button>
-      </div>
+      <select id="volSelect" class="select vol-select" aria-label="Cilt seçimi">
+        <option value="4">Cilt 4</option>
+        <option value="4.5">Cilt 4.5</option>
+      </select>
       <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
         <span id="tocLabel">Bölüm</span>
         <span class="caret">▾</span>
@@ -64,8 +64,6 @@
     <img alt="" />
   </div>
 
-  <script src="bundle.js"></script>
-  <script src="bundle-art.js"></script>
-  <script src="app.js"></script>
+  <script src="app.js" defer></script>
 </body>
 </html>

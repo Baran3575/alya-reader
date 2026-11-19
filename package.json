@@ -1,10 +1,11 @@
 {
   "name": "alya-reader",
   "version": "1.0.0",
-  "description": "Alya Bazen Duygularını Rusça Saklar — Cilt 4 ve Cilt 4.5 Türkçe okuyucu",
+  "description": "Alya Bazen Duygularını Rusça Saklar — Türkçe hafif roman okuyucu (Cilt 4–12)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "node scripts/build_bundle.js",
     "test": "node test/qc-verification.test.js && node scripts/qc/cli.js --strict --check-regression",
     "test:suite": "node test/qc-verification.test.js",
     "qc": "node scripts/qc/cli.js",

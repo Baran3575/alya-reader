@@ -1,0 +1,27 @@
+{
+  "defaultVolume": "4",
+  "order": [
+    "4",
+    "4.5"
+  ],
+  "volumes": {
+    "4": {
+      "id": "4",
+      "slug": "4",
+      "label": "Cilt 4",
+      "file": "bundles/vol-4.json",
+      "hash": "a32b378291d7",
+      "total": 282,
+      "chapters": 13
+    },
+    "4.5": {
+      "id": "4.5",
+      "slug": "4-5",
+      "label": "Cilt 4.5",
+      "file": "bundles/vol-4-5.json",
+      "hash": "d97e4f6b24dd",
+      "total": 347,
+      "chapters": 14
+    }
+  }
+}

@@ -67,22 +67,22 @@ node scripts/qc/cli.js --volume 4.5 --strict
 node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
 ```
 
-### Sunucusuz (çevrimdışı) okuma
+### Çevrimdışı okuma ve tembel yüklenen paketler
 
-`scripts/build_bundle.js` iki cildin Türkçe + İngilizce metnini ve **illüstrasyon görsellerini**
-tarayıcı paketine gömer:
+`volumes.json` ve `scripts/volumes.js`, Cilt `4` ile `12` arasındaki tüm hedef ciltleri tek merkezden yönetir.
+`scripts/build_bundle.js` aktif her cilt için yalnızca Türkçe metin parçalarını ve ikili `.webp` illüstrasyonları üretir:
 
-| Dosya | İçerik | Boyut |
-|---|---|---|
-| `public/bundle.js` | `window.ALYA_BUNDLE` — iki cildin sayfa/paragraf/EN verisi + bölüm listesi | ~1,5 MB |
-| `public/bundle-art.js` | `window.ALYA_ART` — 31 illüstrasyon, `data:image/webp;base64` olarak gömülü | ~4,0 MB |
+| Dosya | İçerik |
+|---|---|
+| `volumes.json` | Cilt `4`–`12` kayıt defteri, sıkı QC eşikleri ve yama yolları |
+| `public/bundles/manifest.json` | Aktif cilt listesi, sayfa/bölüm sayıları ve içerik özetleri (`?v=<hash>`) |
+| `public/bundles/vol-<slug>.json` | İlgili cildin `p.en` arındırılmış Türkçe sayfa ve bölüm verisi |
+| `public/art/vol-<slug>/NNN.webp` | Bağımsız ikili `.webp` illüstrasyon görselleri |
 
-Okuyucu veriyi şu sırayla bulur: **localStorage** (`alya4:book:<cilt>`) → gömülü paket → `/api/book`.
-Yani ilk açılıştan sonra sunucu kapalı olsa da, hatta `index.html` doğrudan `file://` ile açılsa da okuma sürer.
-`public/sw.js` service worker'ı kabuğu, sayfa görsellerini ve `/api/book` yanıtlarını Cache Storage'a yazar.
+Okuyucu başlangıçta yalnızca `manifest.json` ve seçili cildin `vol-<slug>.json` parçasını indirir; `localStorage` yalnız okuma ilerlemesini ve tercihleri (`< 2 KB`) saklar. `public/sw.js` Service Worker’ı kabuğu, cilt JSON parçalarını ve `.webp` görsellerini Cache Storage’a yazar.
 
 ```bash
-node scripts/build_bundle.js   # metin/EN/görsel değişince yeniden üret
+npm run build   # manifest.json, vol-<slug>.json ve art/ çıktılarını yeniden üret
 ```
 
 ## Özellikler

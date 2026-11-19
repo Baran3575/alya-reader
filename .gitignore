@@ -1,8 +1,6 @@
 node_modules/
-public/pages/
-public/pages45/
-data/back_en.json
-data45/back_en.json
+public/pages*/
+data*/back_en.json
 *.log
 *.pid
 .deepl-key

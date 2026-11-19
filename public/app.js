@@ -18,28 +18,73 @@
     },
   };
 
+  /* Eski büyük kitap önbelleklerini (alya4:book:<v>, alya4:bookver:<v>) temizle */
+  function purgeLegacyBookStorage() {
+    try {
+      const staleKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('alya4:book')) staleKeys.push(key);
+      }
+      for (const key of staleKeys) localStorage.removeItem(key);
+    } catch {}
+  }
+  purgeLegacyBookStorage();
+
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
     page: LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: LS.get('vol', '4'),
+    vol: String(LS.get('vol', '4')),
+    manifest: null,
     book: null,
     chapter: 0,
   };
 
+  const memoryBooks = new Map();
+
   /* ---------------- cilt ---------------- */
-  function switchVolume(v) {
-    if (v === state.vol) return;
-    LS.set('page:' + state.vol, state.page);
-    state.vol = v;
-    LS.set('vol', v);
-    state.page = LS.get('page:' + v, 1);
-    load().catch(() => {});
+  function volSlug(v) {
+    const meta = state.manifest && state.manifest.volumes && state.manifest.volumes[v];
+    if (meta && meta.slug) return meta.slug;
+    return String(v).replace(/\./g, '-');
   }
-  $('vol4').addEventListener('click', () => switchVolume('4'));
-  $('vol45').addEventListener('click', () => switchVolume('4.5'));
+
+  function syncVolSelect() {
+    const sel = $('volSelect');
+    if (!sel) return;
+    if (state.manifest && Array.isArray(state.manifest.order) && state.manifest.order.length > 0) {
+      sel.innerHTML = '';
+      for (const id of state.manifest.order) {
+        const meta = state.manifest.volumes && state.manifest.volumes[id];
+        if (!meta) continue;
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = meta.label || 'Cilt ' + id;
+        sel.appendChild(opt);
+      }
+    }
+    sel.value = state.vol;
+  }
+
+  function switchVolume(v) {
+    const nextVol = String(v);
+    if (nextVol === state.vol) return;
+    LS.set('page:' + state.vol, state.page);
+    state.vol = nextVol;
+    LS.set('vol', nextVol);
+    state.page = LS.get('page:' + nextVol, 1);
+    load().catch((err) => {
+      reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
+    });
+  }
+
+  const volSelectEl = $('volSelect');
+  if (volSelectEl) {
+    volSelectEl.addEventListener('change', (e) => switchVolume(e.target.value));
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -70,53 +115,73 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
   function imgSrc(p, vol) {
+    const v = vol || state.vol;
     const key = String(p.n).padStart(3, '0');
-    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
-    if (pack && pack[key]) return pack[key];
-    return p.img;
+    const rawImg = String(p.img || '').replace(/^\/+/, '');
+    if (rawImg.startsWith('art/')) return rawImg;
+    if (p.art) return 'art/vol-' + volSlug(v) + '/' + key + '.webp';
+    return rawImg;
   }
 
-  /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
-  function bundleBook(v) {
-    const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
-    return b || null;
-  }
-
-  function cachedBook(v) {
-    const ver = window.ALYA_BUNDLE_VERSION || 'dev';
-    const hit = LS.get('bookver:' + v, null);
-    if (!hit || hit !== ver) return null;
-    return LS.get('book:' + v, null);
+  async function readManifest() {
+    if (state.manifest) return state.manifest;
+    try {
+      const res = await fetch('bundles/manifest.json');
+      if (res.ok) {
+        state.manifest = await res.json();
+        return state.manifest;
+      }
+    } catch {}
+    try {
+      const res = await fetch('api/volumes');
+      if (res.ok) {
+        state.manifest = await res.json();
+        return state.manifest;
+      }
+    } catch {}
+    return null;
   }
 
   async function readBook(v) {
-    const cached = cachedBook(v);
-    if (cached) return cached;
-    const embedded = bundleBook(v);
-    if (embedded) {
-      LS.set('book:' + v, embedded);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-      return embedded;
+    if (memoryBooks.has(v)) return memoryBooks.get(v);
+
+    const manifest = await readManifest();
+    const meta = manifest && manifest.volumes && manifest.volumes[v];
+    if (meta) {
+      const slug = meta.slug || volSlug(v);
+      const query = meta.hash ? '?v=' + encodeURIComponent(meta.hash) : '';
+      try {
+        const res = await fetch('bundles/vol-' + slug + '.json' + query);
+        if (res.ok) {
+          const book = await res.json();
+          memoryBooks.set(v, book);
+          return book;
+        }
+      } catch {}
     }
+
     const res = await fetch('api/book?v=' + encodeURIComponent(v));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const book = await res.json();
-    try {
-      LS.set('book:' + v, book);
-      LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
-    } catch (e) {}
+    memoryBooks.set(v, book);
     return book;
   }
 
   async function load() {
+    const manifest = await readManifest();
+    if (manifest && manifest.volumes && !manifest.volumes[state.vol]) {
+      state.vol = manifest.defaultVolume || (manifest.order && manifest.order[0]) || '4';
+      LS.set('vol', state.vol);
+    }
+    syncVolSelect();
+
     state.book = await readBook(state.vol);
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
-    $('vol4').classList.toggle('is-on', state.vol === '4');
-    $('vol45').classList.toggle('is-on', state.vol === '4.5');
+    if ($('volSelect')) $('volSelect').value = state.vol;
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
@@ -162,22 +227,32 @@
       li.classList.toggle('is-read', max >= end);
     }
   }
+
   /* ---------------- metin temizliği ---------------- */
   function cleanHeading(paras, ch) {
     const out = paras.slice();
     if (!out[0]) return out;
     const t = out[0];
     const q = t.indexOf('“');
-    const looksHeading = /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Epilog|Prolog|Başlangıç)\b/.test(t);
+    const looksHeading =
+      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye|Yan\s*Hik[aâ]ye|Bonus\s*(?:SS|Hik[aâ]ye)|Anekdot|Ara\s*Bölüm|Epilog|Prolog|Başlangıç|Prologue|Epilogue|Afterword|Side\s*Story|Anecdote|Interlude|Chapter)\b/i.test(
+        t
+      );
     if (!looksHeading) return out;
     if (q > 0 && q < 140) {
       out[0] = t.slice(q);
     } else {
-      const i = t.indexOf(ch.title);
+      const i = ch.title ? t.indexOf(ch.title) : -1;
       if (i >= 0) {
-        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”]+/, '');
+        const rest = t.slice(i + ch.title.length).replace(/^[:\s"”–—-]+/, '');
         if (rest.length > 40) out[0] = rest;
         else out.shift();
+      } else if (
+        /^(?:\d+\.\s*)?(?:Bölüm(?:\s+\d+)?|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye(?:\s+\d+)?|Yan\s*Hik[aâ]ye(?:\s+\d+)?|Bonus\s*SS(?:\s+\d+)?|Anekdot(?:\s+\d+)?|Ara\s*Bölüm(?:\s+\d+)?|Epilog|Prolog|Prologue|Epilogue|Afterword|Side\s*Story(?:\s+\d+)?|Anecdote(?:\s+\d+)?|Interlude(?:\s+\d+)?)$/i.test(
+          t.trim()
+        )
+      ) {
+        out.shift();
       }
     }
     return out;

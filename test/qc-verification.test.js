@@ -189,6 +189,277 @@ function testSchemaValidation() {
   }
 }
 
+function testMultiVolumeDiscoveryAndPatches() {
+  console.log('Testing shared volumes.json registry, dynamic volume discovery, and per-volume patches...');
+  const os = require('os');
+  const vm = require('vm');
+  const {
+    getVolumeIds,
+    getActiveVolumeIds,
+    getVolume,
+  } = require('../scripts/volumes');
+  const { buildBook } = require('../server');
+  const { buildBundles } = require('../scripts/build_bundle');
+
+  // 1. All 11 volumes registered in volumes.json
+  const allIds = getVolumeIds(ROOT);
+  const expectedIds = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+  assert.deepStrictEqual(allIds, expectedIds, 'volumes.json must register volumes 4 through 12 in order');
+  assert.deepStrictEqual(getActiveVolumeIds(ROOT), ['4', '4.5'], 'Active volumes in repo should be 4 and 4.5');
+
+  // 2. Dynamic discovery in isolated temp root when adding data5/ and data95/
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-vols-'));
+  try {
+    fs.copyFileSync(path.join(ROOT, 'volumes.json'), path.join(tmpRoot, 'volumes.json'));
+    for (const dir of ['data', 'data5', 'data95']) {
+      fs.mkdirSync(path.join(tmpRoot, dir), { recursive: true });
+      fs.writeFileSync(
+        path.join(tmpRoot, dir, 'source.json'),
+        JSON.stringify([
+          { page: 1, text: 'Cover' },
+          { page: 2, text: 'Prologue\nMasachika walked quietly into the council room today.' },
+          { page: 3, text: 'Chapter 1: New Term\nAlisa looked over her notes carefully at her desk.' },
+        ])
+      );
+      fs.writeFileSync(
+        path.join(tmpRoot, dir, 'paragraphs_final.json'),
+        JSON.stringify({
+          '2': ['Önsöz', 'Masachika bugün öğrenci konseyi odasına sessizce girdi.'],
+          '3': ['Alisa masasında notlarını dikkatle inceledi.'],
+        })
+      );
+    }
+
+    assert.deepStrictEqual(
+      getActiveVolumeIds(tmpRoot),
+      ['4', '5', '9.5'],
+      'Adding source.json + paragraphs_final.json must automatically activate volumes'
+    );
+
+    // Build bundles in tmpRoot and verify manifest + chunks + zero p.en
+    const built = buildBundles(tmpRoot);
+    assert.deepStrictEqual(built.manifest.order, ['4', '5', '9.5']);
+    for (const slug of ['4', '5', '9-5']) {
+      const chunkFile = path.join(tmpRoot, 'public', 'bundles', `vol-${slug}.json`);
+      assert(fs.existsSync(chunkFile), `Expected chunk vol-${slug}.json`);
+      const chunk = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
+      assert(chunk.pages.every((p) => !('en' in p)), `Chunk vol-${slug}.json must omit p.en`);
+    }
+
+    // Verify CLI discovers all 3 active volumes automatically
+    const cliRes = runCLI(['--root', tmpRoot, '--strict'], true);
+    assert(cliRes.out.includes('Cilt 4') && cliRes.out.includes('Cilt 5') && cliRes.out.includes('Cilt 9.5'));
+
+    // Verify per-volume patches (valid vs regressing patch in data95/patches.json)
+    const v95Cfg = getVolume('9.5', tmpRoot);
+    fs.writeFileSync(
+      v95Cfg.absPatchesFile,
+      JSON.stringify({ '3.0': 'Alisa masasında ders notlarını dikkatle gözden geçirdi.' })
+    );
+    const patchDryOk = execFileSync(
+      process.execPath,
+      [PATCH_SCRIPT, '--root', tmpRoot, '--volume', '9.5', '--dry-run'],
+      { cwd: ROOT, encoding: 'utf8' }
+    );
+    assert(patchDryOk.includes('Cilt 9.5 önizleme başarılı'), 'Valid per-volume patch should pass dry-run');
+
+    fs.writeFileSync(
+      v95Cfg.absPatchesFile,
+      JSON.stringify({ '3.0': '"Düz tırnak ve that kelimesi" (ÇN: hata)' })
+    );
+    const badPatchCli = runCLI(['--root', tmpRoot, '--volume', '9.5', '--strict'], false);
+    assert.strictEqual(badPatchCli.code, 1, 'Invalid per-volume patch in data95/patches.json must fail QC CLI');
+
+    // Verify patch.js --dry-run succeeds cleanly when a volume has no patches.json
+    const noPatchDry = execFileSync(
+      process.execPath,
+      [PATCH_SCRIPT, '--root', tmpRoot, '--volume', '5', '--dry-run'],
+      { cwd: ROOT, encoding: 'utf8' }
+    );
+    assert(noPatchDry.includes('atlandı'), 'Missing optional per-volume patches.json should skip cleanly in dry-run');
+
+    // 3. Heading detection with and without punctuation separators + p.en stripping
+    const syntheticBook = buildBook({
+      rootDir: tmpRoot,
+      dataDir: 'data95',
+      volume: 'Cilt 9.5',
+      source: [
+        { page: 1, text: '' },
+        { page: 2, text: 'Prologue' },
+        { page: 3, text: 'Chapter 1: Morning Tea\nMasachika sipped his tea quietly at his desk.' },
+        { page: 4, text: 'Interlude: Rainy Window\nRain tapped softly against the classroom windowpane.' },
+        { page: 5, text: 'Interlude Quiet Corridor\nFootsteps echoed down the empty school hallway.' },
+        { page: 6, text: 'Side Story: Library Duty\nYuki smiled mischievously from across the table.' },
+        { page: 7, text: 'Bonus SS Secret Notebook\nAlisa hid her notebook behind her back.' },
+        { page: 8, text: 'Anecdote - Rooftop Breeze\nMaria hummed a gentle melody under the sky.' },
+        { page: 9, text: 'Epilogue\nThe sun dipped below the horizon at last.' },
+        { page: 10, text: 'Afterword\nThank you very much for picking up this volume.' },
+        { page: 11, text: 'Afterword: Author Notes\nSee you again in the next volume soon.' },
+      ],
+      tr: {
+        '2': ['Önsöz', 'Kısa giriş paragrafı.'],
+        '3': ['Masachika masasında çayını sessizce yudumladı.'],
+        '4': ['Yağmur sınıf penceresine usulca vuruyordu.'],
+        '5': ['Boş okul koridorunda ayak sesleri yankılandı.'],
+        '6': ['Yuki masanın karşısından muzipçe gülümsedi.'],
+        '7': ['Alisa defterini arkasında sakladı.'],
+        '8': ['Maria gökyüzünün altında yumuşak bir ezgi mırıldandı.'],
+        '9': ['Güneş nihayet ufkun altına indi.'],
+        '10': ['Bu cildi okuduğunuz için çok teşekkür ederim.'],
+        '11': ['Bir sonraki ciltte görüşmek üzere.'],
+      },
+      titles: {},
+    });
+
+    assert(syntheticBook.pages.every((p) => !('en' in p)), 'buildBook() must strip p.en by default');
+    const byPage = Object.fromEntries(syntheticBook.chapters.map((c) => [c.page, c]));
+    assert.strictEqual(byPage[2].label, 'Önsöz');
+    assert.strictEqual(byPage[3].label, 'Bölüm 1');
+    assert.strictEqual(byPage[4].label, 'Ara Bölüm');
+    assert.strictEqual(byPage[5].label, 'Ara Bölüm');
+    assert.strictEqual(byPage[6].label, 'Ek Hikâye');
+    assert.strictEqual(byPage[7].label, 'Ek Hikâye');
+    assert.strictEqual(byPage[8].label, 'Ek Hikâye');
+    assert.strictEqual(byPage[9].label, 'Sonsöz');
+    assert.strictEqual(byPage[10].label, 'Sonsöz');
+    assert.strictEqual(byPage[11].label, 'Sonsöz');
+
+    // 4. Verify production bundles & standalone WebP art exist and omit p.en
+    buildBundles(ROOT);
+    const prodManifest = JSON.parse(
+      fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'manifest.json'), 'utf8')
+    );
+    assert.deepStrictEqual(prodManifest.order, ['4', '4.5']);
+    for (const id of prodManifest.order) {
+      const m = prodManifest.volumes[id];
+      const chunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.file), 'utf8'));
+      assert(chunk.pages.every((p) => !('en' in p)), `Production ${m.file} must have zero p.en keys`);
+      const artDir = path.join(ROOT, 'public', 'art', `vol-${m.slug}`);
+      const webps = fs.readdirSync(artDir).filter((f) => f.endsWith('.webp'));
+      assert(webps.length > 0, `Expected standalone .webp files in public/art/vol-${m.slug}/`);
+    }
+
+    // 5. Verify app.js purges legacy alya4:book* keys and keeps localStorage < 2048 bytes across 11 volumes
+    const appSource = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
+    assert(!appSource.includes("'book:' +"), 'app.js must not write book:<v> to localStorage');
+    assert(!appSource.includes("'bookver:' +"), 'app.js must not write bookver:<v> to localStorage');
+
+    const store = new Map([
+      ['alya4:book:4', 'x'.repeat(500000)],
+      ['alya4:bookver:4', '"deadbeef"'],
+      ['alya4:book:4.5', 'y'.repeat(500000)],
+      ['alya4:vol', '"4"'],
+      ['alya4:mode', '"text"'],
+      ['alya4:theme', '"dark"'],
+      ['alya4:size', '1.06'],
+      ['alya4:page', '14'],
+    ]);
+    for (const v of expectedIds) {
+      store.set(`alya4:page:${v}`, '42');
+      store.set(`alya4:max:${v}`, '120');
+    }
+    const mockLS = {
+      get length() {
+        return store.size;
+      },
+      key(i) {
+        return Array.from(store.keys())[i] || null;
+      },
+      getItem(k) {
+        return store.has(k) ? store.get(k) : null;
+      },
+      setItem(k, v) {
+        store.set(k, String(v));
+      },
+      removeItem(k) {
+        store.delete(k);
+      },
+    };
+
+    const elStub = () => ({
+      style: {},
+      dataset: {},
+      classList: { add() {}, remove() {}, toggle() {} },
+      children: [],
+      addEventListener() {},
+      setAttribute() {},
+      append() {},
+      appendChild() {},
+      querySelector: () => ({ removeAttribute() {}, setAttribute() {} }),
+      querySelectorAll: () => [],
+      contains: () => false,
+      hidden: true,
+      innerHTML: '',
+      textContent: '',
+      value: '4',
+    });
+
+    const elements = new Map();
+    const getEl = (id) => {
+      if (!elements.has(id)) elements.set(id, elStub());
+      return elements.get(id);
+    };
+
+    const elevenManifest = {
+      defaultVolume: '4',
+      order: expectedIds,
+      volumes: Object.fromEntries(
+        expectedIds.map((id) => [
+          id,
+          { id, slug: id.replace(/\./g, '-'), label: `Cilt ${id}`, hash: 'abc123def456' },
+        ])
+      ),
+    };
+
+    const sandbox = {
+      localStorage: mockLS,
+      navigator: { onLine: true },
+      location: { protocol: 'http:' },
+      requestAnimationFrame: (fn) => fn(),
+      Image: function () {},
+      window: {
+        matchMedia: () => ({ matches: false }),
+        addEventListener() {},
+        scrollTo() {},
+        scrollY: 0,
+        innerHeight: 800,
+      },
+      document: {
+        getElementById: getEl,
+        querySelector: () => ({ setAttribute() {} }),
+        createElement: () => elStub(),
+        createDocumentFragment: () => elStub(),
+        addEventListener() {},
+        documentElement: { dataset: {}, style: { setProperty() {} } },
+        body: { style: {} },
+        title: '',
+      },
+      fetch: async (url) => {
+        if (String(url).includes('manifest.json')) {
+          return { ok: true, status: 200, json: async () => elevenManifest };
+        }
+        return { ok: true, status: 200, json: async () => syntheticBook };
+      },
+    };
+    vm.runInNewContext(appSource, sandbox);
+
+    const remainingKeys = Array.from(store.keys());
+    assert(
+      !remainingKeys.some((k) => k.startsWith('alya4:book')),
+      'Legacy alya4:book* keys must be purged on startup'
+    );
+    assert.strictEqual(store.get('alya4:page:4'), '42', 'Existing reading progress must be preserved');
+    const totalBytes = remainingKeys.reduce(
+      (sum, k) => sum + Buffer.byteLength(k, 'utf8') + Buffer.byteLength(store.get(k), 'utf8'),
+      0
+    );
+    assert(totalBytes < 2048, `Expected localStorage < 2048 bytes across 11 volumes, got ${totalBytes}`);
+    console.log(`  ✓ Multi-volume discovery, headings, p.en stripping, patches & localStorage (${totalBytes} B < 2048 B) verified`);
+  } finally {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -199,6 +470,7 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
+  testMultiVolumeDiscoveryAndPatches();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 

@@ -3,8 +3,9 @@ name: Çeviri kalite kapısı
 on:
   push:
     paths:
-      - 'data/**'
-      - 'data45/**'
+      - 'volumes.json'
+      - 'data*/**'
+      - 'scripts/volumes.js'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'
@@ -14,22 +15,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  qc:
+  discover:
+    name: Aktif ciltleri bul
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        vol: ['4', '4.5']
+    outputs:
+      volumes: ${{ steps.vols.outputs.volumes }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - id: vols
+        run: |
+          echo "volumes=$(node scripts/volumes.js --active-ids)" >> "$GITHUB_OUTPUT"
+
+  qc:
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vol: ${{ fromJSON(needs.discover.outputs.volumes) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Kaynak dosyaları salt okunur yap
+        run: |
+          node scripts/volumes.js --source-files | xargs chmod 444
       - name: Doğrulama (verify.js)
-        env:
-          ALYA_TR_FILE: ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
-        run: node scripts/qc/verify.js
+        run: |
+          ALYA_TR_FILE="$(node scripts/volumes.js --tr-file "${{ matrix.vol }}")" node scripts/qc/verify.js
       - name: Kalite puanı (quality.js)
-        run: node scripts/qc/quality.js ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
+        run: |
+          node scripts/qc/quality.js "$(node scripts/volumes.js --tr-file "${{ matrix.vol }}")"
       - name: Eşik kapısı (cli.js)
-        run: node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict
+        run: node scripts/qc/cli.js --volume "${{ matrix.vol }}" --strict
+      - name: Kaynak dosyaların değişmediğini doğrula
+        run: |
+          node scripts/volumes.js --source-files | xargs git diff --exit-code --

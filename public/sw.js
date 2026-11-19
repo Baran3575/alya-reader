@@ -1,11 +1,14 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
-// Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+// Çevrimdışı önbellek: kabuk dosyaları + tembel yüklenen cilt JSON parçaları + WebP illüstrasyonlar.
+// Sunucu veya ağ kapalıyken daha önce açılmış ciltler Cache Storage üzerinden okunur.
+const VERSION = 'alya-v4';
+const SHELL = ['./', './index.html', './style.css', './app.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(SHELL).catch(() => {}))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -18,18 +21,46 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+function scopeRelativePath(pathname) {
+  try {
+    const scopePath = new URL(self.registration.scope).pathname.replace(/\/$/, '');
+    if (scopePath && pathname.startsWith(scopePath)) {
+      return pathname.slice(scopePath.length) || '/';
+    }
+  } catch {}
+  return pathname;
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  const relPath = scopeRelativePath(url.pathname);
+
+  // manifest.json ve /api/volumes: önce ağ, düşerse önbellek (yeni cilt/hash güncellemeleri için)
+  if (relPath === '/bundles/manifest.json' || relPath === '/api/volumes') {
+    e.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(VERSION).then((c) => c.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req)),
+    );
+    return;
+  }
+
+  // cilt JSON parçaları, bağımsız illüstrasyonlar ve sayfa görselleri: önce önbellek, sonra ağ
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
-    url.pathname === '/api/book' ||
-    url.pathname === '/bundle.js';
+    /^\/bundles\/vol-[^/]+\.json$/.test(relPath) ||
+    relPath.startsWith('/art/') ||
+    /^\/pages[^/]*\//.test(relPath) ||
+    relPath === '/api/book';
 
   if (cacheFirst) {
     e.respondWith(
@@ -60,6 +91,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html'))),
   );
 });

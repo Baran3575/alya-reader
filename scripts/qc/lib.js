@@ -1,8 +1,10 @@
 const fs = require('fs');
 const path = require('path');
+const { getVolume } = require('../volumes');
 const FILE = process.env.ALYA_TR_FILE
   ? path.resolve(process.env.ALYA_TR_FILE)
-  : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json');
+  : (getVolume(process.env.ALYA_VOLUME || '4') || {}).absTrFile ||
+    path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json');
 
 function load() {
   return JSON.parse(fs.readFileSync(FILE, 'utf8'));
