@@ -742,17 +742,9 @@
       : startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = n <= 1;
     $('nextBtn').disabled = n >= state.book.total;
-    $('tocLabel').textContent = ch.label;
-    for (const li of $('tocList').children) {
-      li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
-    }
-    $('modeText').classList.toggle('is-on', false);
-    $('modePage').classList.toggle('is-on', true);
-    $('modeBtn').textContent = 'Orijinal';
 
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
-    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
