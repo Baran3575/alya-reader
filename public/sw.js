@@ -27,7 +27,7 @@ self.addEventListener('fetch', (e) => {
   // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
     /\/pages\d*\//.test(url.pathname) ||
-    /\/books\/[0-9.]+\.json$/.test(url.pathname) ||
+    /\/books\/(?:v|art-)?[0-9.]+\.json$/.test(url.pathname) ||
     url.pathname.endsWith('/api/book') ||
     url.pathname.endsWith('/bundle.js') ||
     url.pathname.endsWith('/bundle-art.js');
