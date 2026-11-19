@@ -1,13 +1,16 @@
 {
   "name": "alya-reader",
-  "version": "1.0.0",
-  "description": "Alya Bazen Duygularını Rusça Saklar — Cilt 4 ve Cilt 4.5 Türkçe okuyucu",
+  "version": "2.0.0",
+  "description": "Alya Bazen Duygularını Rusça Saklar — Cilt 4 – 12 (4.5 ve 9.5 dahil) Türkçe web okuyucu",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "ingest": "node scripts/ingest/cli.js",
+    "translate": "node scripts/translate_llm.js",
+    "build:bundle": "node scripts/build_bundle.js",
     "build:site": "node scripts/build_site.js",
-    "test": "node test/qc-verification.test.js && node test/build-site.test.js && node scripts/qc/cli.js --strict --check-regression",
-    "test:suite": "node test/qc-verification.test.js && node test/build-site.test.js",
+    "test": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/build-site.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "test:suite": "node test/qc-verification.test.js && node test/ingest-and-pipeline.test.js && node test/build-site.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",
     "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",
@@ -17,6 +20,7 @@
   },
   "keywords": [
     "alya",
+    "roshidere",
     "light-novel",
     "reader",
     "turkish-translation",

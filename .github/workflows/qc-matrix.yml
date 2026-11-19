@@ -6,8 +6,7 @@ on:
       - main
       - master
     paths:
-      - 'data/**'
-      - 'data45/**'
+      - 'data*/**'
       - 'public/**'
       - 'server.js'
       - 'scripts/**'
@@ -24,11 +23,11 @@ jobs:
   qc-matrix:
     name: QC Matrix (Cilt ${{ matrix.volume }})
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        volume: ['4', '4.5']
+        volume: ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -38,7 +37,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Ensure source files remain read-only
+      - name: Ensure canonical source files remain read-only
         run: |
           chmod 444 data/source.json data45/source.json
 
@@ -49,6 +48,6 @@ jobs:
       - name: Run Unified QC CLI (${{ matrix.volume }})
         run: node scripts/qc/cli.js --volume ${{ matrix.volume }} --strict --check-regression
 
-      - name: Verify source files were untouched
+      - name: Verify canonical source files were untouched
         run: |
           git diff --exit-code data/source.json data45/source.json

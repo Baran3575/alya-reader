@@ -1,14 +1,22 @@
-// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data/bilingual.json
-// Kullanım: node scripts/translate3.js
+// Google Translate + DeepL ile paragraf paragraf çift çeviri -> data<vol>/bilingual.json
+// Kullanım: node scripts/translate3.js [--volume <v>]
 const fs = require('fs');
 const path = require('path');
+const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
-const SRC = path.join(ROOT, 'data/source.json');
-const OUT = path.join(ROOT, 'data/bilingual.json');
+const volKey = parseVolumeArg(process.argv.slice(2), '4');
+const volCfg = resolveVolume(volKey);
+if (!volCfg) {
+  console.error(`Bilinmeyen cilt: ${volKey}`);
+  process.exit(1);
+}
 
+const SRC = volCfg.sourceFile;
+const OUT = volCfg.bilingualFile;
+
+const DEEPL_KEY_PATH = path.join(ROOT, '.deepl-key');
 const DEEPL_KEY =
-  process.env.DEEPL_KEY || (fs.existsSync(path.join(ROOT, '.deepl-key')) ? fs.readFileSync(path.join(ROOT, '.deepl-key'), 'utf8').trim() : '');
+  process.env.DEEPL_KEY || (fs.existsSync(DEEPL_KEY_PATH) ? fs.readFileSync(DEEPL_KEY_PATH, 'utf8').trim() : '');
 const G_URL = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=tr';
 const D_URL = 'https://api-free.deepl.com/v2/translate';
 const UA =
@@ -28,7 +36,7 @@ function paragraphs(text) {
     if (cur.length) {
       const prev = cur[cur.length - 1];
       const prevEnds = endPunct.test(prev);
-      const newDialogue = ln.startsWith('"');
+      const newDialogue = ln.startsWith('"') || ln.startsWith('“');
       const shortPrev = prev.length < 48 && prevEnds;
       if (prevEnds && (newDialogue || shortPrev)) {
         blocks.push(cur.join(' '));
@@ -124,78 +132,82 @@ async function deepl(texts) {
   }
 }
 
-(async () => {
-  const pages = JSON.parse(fs.readFileSync(SRC, 'utf8'));
-  let done = {};
-  if (fs.existsSync(OUT)) {
-    try {
-      done = JSON.parse(fs.readFileSync(OUT, 'utf8'));
-    } catch {}
-  }
-
-  const items = [];
-  for (const p of pages) {
-    const key = String(p.page);
-    if (done[key]) continue;
-    const paras = paragraphs(p.text || '');
-    if (!paras.length) {
-      done[key] = [];
-      continue;
-    }
-    paras.forEach((t, i) => items.push({ key, i, t, n: paras.length }));
-  }
-  console.log('çevrilecek paragraf:', items.length, '| DeepL anahtarı:', DEEPL_KEY ? 'var' : 'yok');
-
-  const SIZE = 20;
-  const batches = [];
-  for (let i = 0; i < items.length; i += SIZE) batches.push(items.slice(i, i + SIZE));
-
-  let quotaOut = false;
-  let b = 0;
-  for (const batch of batches) {
-    b++;
-    const texts = batch.map((x) => x.t);
-
-    let g = [];
-    try {
-      g = await google(texts);
-    } catch {
-      g = [];
-      for (const t of texts) {
-        try {
-          g.push((await google([t]))[0] || '');
-        } catch {
-          g.push('');
-        }
-      }
-    }
-
-    let d = new Array(texts.length).fill('');
-    if (!quotaOut && DEEPL_KEY) {
+if (require.main === module) {
+  (async () => {
+    const pages = JSON.parse(fs.readFileSync(SRC, 'utf8'));
+    let done = {};
+    if (fs.existsSync(OUT)) {
       try {
-        d = await deepl(texts);
-      } catch (e) {
-        if (e.fatal || /kota/i.test(e.message)) {
-          quotaOut = true;
-          console.log('!! DeepL kotası doldu, kalanlar Google ile:', e.message);
-        } else {
-          d = new Array(texts.length).fill('');
+        done = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+      } catch {}
+    }
+
+    const items = [];
+    for (const p of pages) {
+      const key = String(p.page);
+      if (done[key]) continue;
+      const paras = paragraphs(p.text || '');
+      if (!paras.length) {
+        done[key] = [];
+        continue;
+      }
+      paras.forEach((t, i) => items.push({ key, i, t, n: paras.length }));
+    }
+    console.log(`Cilt ${volCfg.key} | çevrilecek paragraf: ${items.length} | DeepL anahtarı: ${DEEPL_KEY ? 'var' : 'yok'}`);
+
+    const SIZE = 20;
+    const batches = [];
+    for (let i = 0; i < items.length; i += SIZE) batches.push(items.slice(i, i + SIZE));
+
+    let quotaOut = false;
+    let b = 0;
+    for (const batch of batches) {
+      b++;
+      const texts = batch.map((x) => x.t);
+
+      let g = [];
+      try {
+        g = await google(texts);
+      } catch {
+        g = [];
+        for (const t of texts) {
+          try {
+            g.push((await google([t]))[0] || '');
+          } catch {
+            g.push('');
+          }
         }
       }
-    }
 
-    batch.forEach((it, idx) => {
-      const k = it.key;
-      if (!Array.isArray(done[k])) done[k] = new Array(it.n).fill(null).map(() => ({ g: '', d: '' }));
-      done[k][it.i] = { g: (g[idx] || '').trim(), d: (d[idx] || '').trim() };
-    });
+      let d = new Array(texts.length).fill('');
+      if (!quotaOut && DEEPL_KEY) {
+        try {
+          d = await deepl(texts);
+        } catch (e) {
+          if (e.fatal || /kota/i.test(e.message)) {
+            quotaOut = true;
+            console.log('!! DeepL kotası doldu, kalanlar Google ile:', e.message);
+          } else {
+            d = new Array(texts.length).fill('');
+          }
+        }
+      }
 
-    if (b % 4 === 0 || b === batches.length) {
-      fs.writeFileSync(OUT, JSON.stringify(done));
-      console.log(`grup ${b}/${batches.length} — ${Object.keys(done).length}/282 sayfa`);
+      batch.forEach((it, idx) => {
+        const k = it.key;
+        if (!Array.isArray(done[k])) done[k] = new Array(it.n).fill(null).map(() => ({ g: '', d: '' }));
+        done[k][it.i] = { g: (g[idx] || '').trim(), d: (d[idx] || '').trim() };
+      });
+
+      if (b % 4 === 0 || b === batches.length) {
+        fs.writeFileSync(OUT, JSON.stringify(done));
+        console.log(`grup ${b}/${batches.length} — ${Object.keys(done).length}/${pages.length} sayfa`);
+      }
+      await sleep(200);
     }
-    await sleep(200);
-  }
-  fs.writeFileSync(OUT, JSON.stringify(done));
-  console.log('bitti');
-})();
+    fs.writeFileSync(OUT, JSON.stringify(done));
+    console.log('bitti');
+  })();
+}
+
+module.exports = { paragraphs };

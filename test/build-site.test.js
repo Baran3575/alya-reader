@@ -49,6 +49,13 @@ function testCleanCheckoutBuildPreservesArtAndExcludesBackups() {
       const parsed = JSON.parse(fs.readFileSync(path.join(tmpDist, rel), 'utf8'));
       assert(parsed.total > 0 && Array.isArray(parsed.pages), rel + ' must contain valid book payload');
       assert(!parsed.pages[0].img.startsWith('/'), rel + ' page image paths must be relative for subpath hosting');
+      if (volKey !== '4' && volKey !== '4.5') {
+        for (const p of parsed.pages) {
+          if (p.art) {
+            assert(files.includes(p.img), 'dist/' + p.img + ' WebP illustration must be staged for Vol ' + volKey);
+          }
+        }
+      }
     }
 
     // Verify all 31 illustrations (> 4 MB) are preserved
@@ -64,7 +71,7 @@ function testCleanCheckoutBuildPreservesArtAndExcludesBackups() {
     const swText = fs.readFileSync(path.join(tmpDist, 'sw.js'), 'utf8');
     assert(/^alya-[0-9a-f]{12}$/.test(info.swVersion), 'swVersion must be alya-<12 hex chars>');
     assert(swText.includes("const VERSION = '" + info.swVersion + "';"), 'dist/sw.js must contain hashed VERSION');
-    assert(!swText.includes('alya-v3'), 'dist/sw.js must replace static alya-v3');
+    assert(!swText.includes('alya-v3') && !swText.includes('alya-v4'), 'dist/sw.js must replace static VERSION');
     console.log('  ✓ Staged dist/ verified (' + info.artCount + ' illustrations, ' + (artBytes / 1e6).toFixed(2) + ' MB, ' + info.swVersion + ')');
   } finally {
     fs.rmSync(tmpDist, { recursive: true, force: true });
@@ -83,6 +90,12 @@ function testDynamicVolumeScalingAndHashRotation() {
       fs.copyFileSync(path.join(ROOT, 'public', f), path.join(pubDir, f));
     }
     fs.writeFileSync(path.join(pubDir, 'bundle-art.js'), 'window.ALYA_ART={"4":{"004":"data:image/webp;base64,AAAA"}};\n');
+    fs.mkdirSync(path.join(pubDir, 'pages'), { recursive: true });
+    fs.writeFileSync(path.join(pubDir, 'pages', '001.webp'), 'scan');
+    fs.mkdirSync(path.join(pubDir, 'pages45'), { recursive: true });
+    fs.writeFileSync(path.join(pubDir, 'pages45', '001.webp'), 'scan45');
+    fs.mkdirSync(path.join(pubDir, 'pages5'), { recursive: true });
+    fs.writeFileSync(path.join(pubDir, 'pages5', '001.webp'), 'vol5art');
 
     for (const dir of ['data', 'data5']) {
       fs.mkdirSync(path.join(tmpRoot, dir), { recursive: true });
@@ -103,7 +116,9 @@ function testDynamicVolumeScalingAndHashRotation() {
     };
 
     const res1 = buildSite({ rootDir: tmpRoot, publicDir: pubDir, distDir: dist1, volumes: customVolumes, quiet: true });
-    assert(!fs.existsSync(path.join(dist1, 'pages5')), 'Gitignored public/pages* scan directories must not be copied into dist/');
+    assert(!fs.existsSync(path.join(dist1, 'pages')), 'Gitignored public/pages scan directory must not be copied into dist/');
+    assert(!fs.existsSync(path.join(dist1, 'pages45')), 'Gitignored public/pages45 scan directory must not be copied into dist/');
+    assert(fs.existsSync(path.join(dist1, 'pages5', '001.webp')), 'Tracked public/pages5 WebP illustrations must be copied into dist/');
     assert(fs.existsSync(path.join(dist1, 'books', '5.json')), 'Volume 5 static JSON must be emitted automatically');
     const vol5Book = JSON.parse(fs.readFileSync(path.join(dist1, 'books', '5.json'), 'utf8'));
     assert.strictEqual(vol5Book.volume, 'Cilt 5');
@@ -132,6 +147,7 @@ async function testServiceWorkerSubpathResolutionAndCacheCleanup() {
     const listeners = {};
     const store = new Map();
     store.set('alya-v3', new Map([['https://baran3575.github.io/index.html', { ok: true, body: 'stale' }]]));
+    store.set('alya-v4', new Map([['https://baran3575.github.io/alya-reader/index.html', { ok: true, body: 'stale-v4' }]]));
 
     const cachesMock = {
       async open(name) {
@@ -216,7 +232,7 @@ async function testServiceWorkerSubpathResolutionAndCacheCleanup() {
     let activatePromise;
     listeners.activate({ waitUntil: (p) => { activatePromise = p; } });
     await activatePromise;
-    assert(!store.has('alya-v3'), 'Old static alya-v3 cache must be deleted on activate');
+    assert(!store.has('alya-v3') && !store.has('alya-v4'), 'Old static alya-v3/alya-v4 caches must be deleted on activate');
     assert(store.has(info.swVersion), 'Current hashed cache must remain');
 
     // 3. Cache-first for /alya-reader/books/4.json
@@ -318,6 +334,7 @@ async function testReadBookStaticFallbackOn404() {
       documentElement: makeElement(),
       getElementById: getEl,
       querySelector: () => makeElement(),
+      querySelectorAll: () => [],
       createElement: () => makeElement(),
       createDocumentFragment: () => makeElement(),
       addEventListener() {},
@@ -327,7 +344,8 @@ async function testReadBookStaticFallbackOn404() {
       setItem: (k, v) => storage.set(k, String(v)),
     },
     navigator: { onLine: true },
-    location: { protocol: 'https:' },
+    location: { protocol: 'https:', search: '' },
+    URLSearchParams,
     Image: function Image() {},
     encodeURIComponent,
     fetch: async (url) => {

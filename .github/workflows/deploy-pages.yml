@@ -22,9 +22,9 @@ concurrency:
 
 jobs:
   build:
-    name: QC Gates & Stage dist/
+    name: QC Gates & Stage dist/ (Vols 4–12)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +37,7 @@ jobs:
       - name: Run test suite and unified QC regression gates
         run: npm test
 
-      - name: Run strict unified QC CLI gate
+      - name: Run strict unified QC CLI gate across all volumes
         run: node scripts/qc/cli.js --strict --check-regression
 
       - name: Stage clean dist/ directory
@@ -65,12 +65,21 @@ jobs:
             assert(totalArt >= 31, "Expected >= 31 illustrations, got " + totalArt);
 
             for (const vol of Object.keys(VOLUMES)) {
-              assert(fs.existsSync(path.join("dist", "books", vol + ".json")), "Missing dist/books/" + vol + ".json");
+              const bookPath = path.join("dist", "books", vol + ".json");
+              assert(fs.existsSync(bookPath), "Missing " + bookPath);
+              const book = JSON.parse(fs.readFileSync(bookPath, "utf8"));
+              for (const p of book.pages) {
+                if (!p.art) continue;
+                const pad = String(p.n).padStart(3, "0");
+                const hasEmbedded = Boolean(ctx.window.ALYA_ART[vol] && ctx.window.ALYA_ART[vol][pad]);
+                const hasAsset = fs.existsSync(path.join("dist", p.img));
+                assert(hasEmbedded || hasAsset, "Missing illustration for Vol " + vol + ": " + p.img);
+              }
             }
 
             const sw = fs.readFileSync("dist/sw.js", "utf8");
             assert(/const VERSION = '\''alya-[0-9a-f]{12}'\'';/.test(sw), "Expected hashed VERSION in dist/sw.js");
-            assert(!sw.includes("alya-v3"), "dist/sw.js still contains static alya-v3");
+            assert(!sw.includes("alya-v3") && !sw.includes("alya-v4"), "dist/sw.js still contains static VERSION");
           '
           git diff --exit-code
 

@@ -565,20 +565,69 @@ input[type='range']::-moz-range-thumb {
   }
 }
 /* cilt seçici */
+.seg.seg-vol {
+  max-width: min(46vw, 29rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 1;
+}
+.seg.seg-vol::-webkit-scrollbar {
+  display: none;
+}
 .seg-vol .seg-btn {
-  padding: 0.32rem 0.52rem;
-  font-size: 0.74rem;
-  min-width: 2.05rem;
+  padding: 0.32rem 0.48rem;
+  font-size: 0.73rem;
+  min-width: 1.95rem;
   text-align: center;
+  flex-shrink: 0;
 }
 @media (max-width: 640px) {
   .seg.seg-vol {
     display: inline-flex;
+    max-width: 44vw;
   }
   .seg-vol .seg-btn {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.7rem;
+    padding: 0.3rem 0.42rem;
+    font-size: 0.69rem;
+    min-width: 1.75rem;
   }
+}
+
+.toc-list li.is-pending .ch-label::after {
+  content: ' · beklemede';
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--muted);
+}
+
+.pending-card {
+  margin: 1.5rem 0 2.2rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--bg-soft);
+}
+.pending-card .pending-badge {
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.55rem;
+}
+.pending-card .pending-desc {
+  font-size: 0.96rem;
+  color: var(--fg-soft);
+  margin: 0;
+  line-height: 1.65;
+}
+
+.orig-prose {
+  padding: 0.4rem 0;
+}
+.orig-prose p {
+  color: var(--fg-soft);
 }
 
 /* ---------- bölüm akışı ---------- */

@@ -1,19 +1,20 @@
-// GitHub Pages için temiz dist/ dizini hazırlar (.nojekyll, illüstrasyonlar, books/<cilt>.json, hash'li sw.js).
+// GitHub Pages için temiz dist/ dizini hazırlar (.nojekyll, Cilt 4–12 illüstrasyonlar, books/<cilt>.json, hash'li sw.js).
 // Kullanım: node scripts/build_site.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { VOLUMES } = require('../server.js');
+const { VOLUMES } = require('./lib/volumes');
 const { buildBundles } = require('./build_bundle.js');
 
 const ROOT = path.join(__dirname, '..');
 const GENERATED_TOP_FILES = new Set(['bundle.js', 'bundle-art.js', 'sw.js']);
+const GITIGNORED_SCAN_DIRS = new Set(['pages', 'pages45']);
 
 function shouldExclude(relPosix, isTopLevel, isDir) {
   const base = path.posix.basename(relPosix);
   if (/\.bak$/i.test(base)) return true;
   if (isTopLevel && GENERATED_TOP_FILES.has(base)) return true;
-  if (isTopLevel && isDir && /^pages/i.test(base)) return true;
+  if (isTopLevel && isDir && GITIGNORED_SCAN_DIRS.has(base.toLowerCase())) return true;
   return false;
 }
 
@@ -62,17 +63,26 @@ function computeSiteHash(swTemplate, distDir) {
   return hash.digest('hex').slice(0, 12);
 }
 
-function verifyDist(distDir, volumes, swVersion) {
+function verifyDist(distDir, bundleInfo, swVersion) {
   const required = ['.nojekyll', 'index.html', 'style.css', 'app.js', 'bundle.js', 'bundle-art.js', 'sw.js'];
   for (const rel of required) {
     if (!fs.existsSync(path.join(distDir, rel))) {
       throw new Error('Eksik derleme çıktısı: dist/' + rel);
     }
   }
-  for (const volKey of Object.keys(volumes)) {
+  for (const [volKey, book] of Object.entries(bundleInfo.vols)) {
     const bookJson = path.join(distDir, 'books', volKey + '.json');
     if (!fs.existsSync(bookJson)) {
       throw new Error('Eksik statik cilt dosyası: dist/books/' + volKey + '.json');
+    }
+    for (const p of book.pages) {
+      if (!p.art) continue;
+      const pad = String(p.n).padStart(3, '0');
+      const hasEmbedded = Boolean(bundleInfo.art[volKey] && bundleInfo.art[volKey][pad]);
+      const hasDiskAsset = fs.existsSync(path.join(distDir, p.img));
+      if (!hasEmbedded && !hasDiskAsset) {
+        throw new Error('Eksik illüstrasyon dosyası (Cilt ' + volKey + '): ' + p.img);
+      }
     }
   }
   const allFiles = listFilesSorted(distDir);
@@ -119,14 +129,15 @@ function buildSite(opt = {}) {
   const swOut = swTemplate.replace(versionPattern, "const VERSION = '" + swVersion + "';");
   fs.writeFileSync(path.join(distDir, 'sw.js'), swOut);
 
-  verifyDist(distDir, volumes, swVersion);
+  const builtVolumes = Object.keys(bundleInfo.vols);
+  verifyDist(distDir, bundleInfo, swVersion);
 
   if (!quiet) {
     console.log(
       'hazır:',
       path.relative(rootDir, distDir) || 'dist',
       '| ciltler:',
-      Object.keys(volumes).join(', '),
+      builtVolumes.join(', '),
       '| sw:',
       swVersion,
     );
@@ -139,7 +150,7 @@ function buildSite(opt = {}) {
     bundleHash: bundleInfo.hash,
     artCount: bundleInfo.artCount,
     artBytes: bundleInfo.artBytes,
-    volumes: Object.keys(volumes),
+    volumes: builtVolumes,
   };
 }
 
