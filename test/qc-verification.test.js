@@ -375,6 +375,48 @@ function testAuditMeaningZeroSkippedPages() {
   console.log('  ✓ Zero skipped pages and Faz 1–5 volume registry verified');
 }
 
+function testHighWordRatioAndSevereNegationGates() {
+  console.log('Testing high word-ratio bloat and severe negation divergence gates...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    // 1. High word-ratio bloat
+    const bloated = JSON.parse(orig);
+    bloated['103'] = bloated['103'].map((p) => `${p} ${p} ${p}`);
+    fs.writeFileSync(v4Path, JSON.stringify(bloated));
+    const resBloat = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resBloat.code, 1, 'High word-ratio bloat must exit with code 1');
+    assert(resBloat.out.includes('yüksek kelime oranı'), 'Diagnostics must report high word ratio');
+
+    // 2. Severe negation/meaning divergence (strip negations across a page with >=3 negative EN paragraphs)
+    const src = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'source.json'), 'utf8'));
+    const { hasEnNeg } = require('../scripts/qc/audit_meaning');
+    const { paragraphs, stripTranslatorNotes } = require('../mt/paragraphs');
+    const targetPage = src.find((p) => {
+      const ep = paragraphs(p.text || '').map(stripTranslatorNotes).filter((s) => s.length > 40 && hasEnNeg(s));
+      return ep.length >= 3;
+    });
+    assert(targetPage, 'Must find a source page with >=3 negative paragraphs');
+
+    const negFlipped = JSON.parse(orig);
+    const pk = String(targetPage.page);
+    const namesKeep = ['Masachika', 'Alisa', 'Yuki', 'Ayano', 'Maria', 'Chisaki', 'Touya', 'Sayaka', 'Nonoa', 'Sarashina', 'Kuze', 'Kujou', 'Suou', 'Alya', 'Masha']
+      .filter((n) => String(targetPage.text).includes(n))
+      .join(' ');
+    negFlipped[pk] = negFlipped[pk].map(
+      (_, idx) =>
+        `O gün güneşli odada ${namesKeep} birlikte oldukça sakin biçimde sohbet ederek pencereden dışarıdaki bulutları ve ağaçları dikkatle izliyordu ${idx + 1}.`
+    );
+    fs.writeFileSync(v4Path, JSON.stringify(negFlipped));
+    const resNeg = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resNeg.code, 1, 'Severe negation divergence must exit with code 1');
+    assert(resNeg.out.includes('olumsuzluk/anlam sapması'), 'Diagnostics must report severe negation divergence');
+    console.log('  ✓ High word-ratio bloat and severe negation divergence gates verified');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -390,6 +432,7 @@ function runAll() {
   testLowWordRatioTruncatedPageFailsCLI();
   testMissingCharacterNameFailsCLI();
   testFabricatedPage30FailsCLI();
+  testHighWordRatioAndSevereNegationGates();
   testMergeEmptyBilingualGuard();
   testAuditMeaningZeroSkippedPages();
   console.log('\n=== All Verification Tests Passed Successfully! ===');

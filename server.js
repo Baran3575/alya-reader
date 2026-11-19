@@ -24,7 +24,7 @@ const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
-  const imgPrefix = opt.imgPrefix || '/pages/';
+  const imgPrefix = opt.imgPrefix || 'pages/';
   const volume = opt.volume || 'Cilt 4';
   const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
 
@@ -84,8 +84,8 @@ function buildBook(opt = {}) {
 }
 
 const VOLUMES = {
-  '4': { dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
-  '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
+  '4': { dataDir: 'data', imgPrefix: 'pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
+  '4.5': { dataDir: 'data45', imgPrefix: 'pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
 };
 
 for (const v of ['5', '6', '7', '8', '9', '9.5', '10', '11', '12']) {
@@ -97,7 +97,7 @@ for (const v of ['5', '6', '7', '8', '9', '9.5', '10', '11', '12']) {
   ) {
     VOLUMES[v] = {
       dataDir,
-      imgPrefix: `/pages${slug}/`,
+      imgPrefix: `pages${slug}/`,
       volume: `Cilt ${v}`,
       titlesFile: path.join(ROOT, dataDir, 'chapters.json'),
     };
@@ -155,6 +155,11 @@ const server = http.createServer((req, res) => {
       const body = Buffer.from(JSON.stringify({ error: String(e.message || e) }));
       return send(req, res, 500, MIME['.json'], body);
     }
+  }
+
+  if (pathname === '/api/volumes') {
+    const body = Buffer.from(JSON.stringify({ volumes: Object.keys(VOLUMES) }));
+    return send(req, res, 200, MIME['.json'], body);
   }
 
   if (pathname === '/api/book') {

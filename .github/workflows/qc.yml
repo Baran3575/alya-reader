@@ -5,6 +5,8 @@ on:
     paths:
       - 'data/**'
       - 'data45/**'
+      - 'data*/**'
+      - 'mt/**'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'

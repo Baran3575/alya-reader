@@ -166,14 +166,18 @@ function generateMarkdownSummary(result, violations, options) {
   lines.push('');
   lines.push(`**Mod**: ${options.strict ? 'Strict (Sıkı)' : 'Standart'}${options.checkRegression ? ' + Regresyon Kapısı' : ''}`);
   lines.push('');
-  lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Durum |');
-  lines.push('|---|---|---|---|---|---|');
+  lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Hizalama | Kelime Oranı | Durum |');
+  lines.push('|---|---|---|---|---|---|---|---|');
 
   for (const vol of Object.keys(result)) {
     const r = result[vol];
     const status = r.fails.length === 0 ? '✓ Başarılı' : `✗ Başarısız (${r.fails.length} ihlal)`;
     const baseAvg = r.baseline && r.baseline.avg !== undefined ? r.baseline.avg.toFixed(2) : '-';
-    lines.push(`| ${r.label} | ${r.quality.total} | ${r.quality.avg.toFixed(2)} | ${baseAvg} | ${r.quality.flagged} | ${status} |`);
+    const alignStr = r.alignment ? `${r.alignment.inspectedPages}/${r.alignment.usablePages}` : '-';
+    const ratioStr = r.alignment ? `${(r.alignment.avgWordRatio * 100).toFixed(1)}%` : '-';
+    lines.push(
+      `| ${r.label} | ${r.quality.total} | ${r.quality.avg.toFixed(2)} | ${baseAvg} | ${r.quality.flagged} | ${alignStr} | ${ratioStr} | ${status} |`
+    );
   }
 
   lines.push('');

@@ -7,8 +7,22 @@ const { isUsableSourcePage, resolveVolumeDir } = require('./fidelity');
 const ROOT = path.join(__dirname, '..', '..');
 
 const NEG_EN = /\b(not|n't|no|never|none|nothing|nobody|cannot|hardly|neither|nowhere)\b/i;
-const NEG_TR =
-  /(?:(?<!\p{L})(?:hayır|yok|yoktu|yoktur|yoksa|değil\p{L}*|asla|hiç|hiçbir\p{L}*|kimse\p{L}*|olmaz|olmadan|olmayacak|istemem|istemiyor\p{L}*|sanmıyorum|imkânsız|imkansız|nafile|boşuna|nadiren)(?!\p{L})|(?:ma|me|mı|mi|mu|mü)(?:dı|di|du|dü|tı|ti|tu|tü|mış|miş|muş|müş|yor|yacak|yecek|yabilir|yebil|acak|ecek|z|dık|dik|duk|dük|dığ|diğ|duğ|düğ|yan|yen|yalım|yelim|yın|yin|dan|den|maksızın|meksizin|mak|mek|sın|sin|sa|se|malı|meli|makta|mekte)\p{L}*|(?:ama|eme)(?:dı|di|du|dü|mış|miş|yor|yacak|yecek|z|m|yız|yiz)\p{L}*|(?:sız|siz|suz|süz)\p{L}*)/iu;
+const NEG_TR = new RegExp(
+  '(?:' +
+    '(?<!\\p{L})(?:hayır|yok\\p{L}*|değil\\p{L}*|asla|hiç\\p{L}*|kimse\\p{L}*|olmaz|olmadan|olmayacak|olmadığ\\p{L}*|istemem|istemiyor\\p{L}*|sanmıyorum|imkânsız|imkansız|nafile|boşuna|nadiren|henüz|artık|ancak|sadece|yalnızca|zor|güçlükle|neredeyse|pek|çekin\\p{L}*|reddet\\p{L}*|redded\\p{L}*|vazgeç\\p{L}*|kaçın\\p{L}*|önle\\p{L}*|engel\\p{L}*|yasak\\p{L}*|aksine|tersine|yerine|dışında|hariç|uzak\\p{L}*|eksik\\p{L}*|farksız\\p{L}*|habersiz\\p{L}*)(?!\\p{L})' +
+    '|' +
+    '(?<!\\p{L})(?:de|ye)(?:medi|miyor|mez|meyecek|memiş|meden|memeli|mesin|mese)\\p{L}*' +
+    '|' +
+    '(?<=\\p{L}{2})(?:ma|me)(?:dı|di|du|dü|mış|miş|muş|müş|yacak|yecek|yabilir|yebil|z|zsın|zsin|zlar|zler|dık|dik|dığ|diğ|yan|yen|yalım|yelim|yın|yin|dan|den|maksızın|meksizin|malı|meli|makta|mekte|sın|sin)\\p{L}*' +
+    '|' +
+    '(?<=\\p{L}{2})(?:mı|mi|mu|mü)yor\\p{L}*' +
+    '|' +
+    '(?<=\\p{L})(?:ama|eme)(?:dı|di|du|dü|mış|miş|yacak|yecek|z|m|yız|yiz)\\p{L}*' +
+    '|' +
+    '(?<=\\p{L}{2})(?:sız|siz|suz|süz)(?:ca|ce|ça|çe|lık|lik|luk|lük|dı|di|du|dü|ım|im|um|üm|sın|sin|sun|sün)?(?!\\p{L})' +
+  ')',
+  'iu'
+);
 
 function hasEnNeg(text) {
   return NEG_EN.test(String(text || ''));
@@ -61,10 +75,12 @@ function evaluateMeaning(src, tr) {
       for (let i = 0; i < en.length; i++) {
         const e = hasEnNeg(en[i]);
         const m = hasTrNeg(t[i]);
-        if (e && en[i].length > 25) comparableNegCount++;
-        if (e && !m && en[i].length > 40) {
-          pageMissingNeg++;
-          rows.push({ page: p.page, i, en: e, tr: m, mode: 'exact', t: t[i] });
+        if (e && en[i].length > 40) {
+          comparableNegCount++;
+          if (!m) {
+            pageMissingNeg++;
+            rows.push({ page: p.page, i, en: e, tr: m, mode: 'exact', t: t[i] });
+          }
         }
       }
     } else {
@@ -76,10 +92,12 @@ function evaluateMeaning(src, tr) {
           .join(' ');
         const e = hasEnNeg(en[i]);
         const m = hasTrNeg(windowText);
-        if (e && en[i].length > 25) comparableNegCount++;
-        if (e && !m && en[i].length > 40) {
-          pageMissingNeg++;
-          rows.push({ page: p.page, i, en: e, tr: m, mode: 'proportional', t: t[j] });
+        if (e && en[i].length > 40) {
+          comparableNegCount++;
+          if (!m) {
+            pageMissingNeg++;
+            rows.push({ page: p.page, i, en: e, tr: m, mode: 'proportional', t: t[j] });
+          }
         }
       }
     }

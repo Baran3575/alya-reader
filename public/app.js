@@ -38,8 +38,40 @@
     state.page = LS.get('page:' + v, 1);
     load().catch(() => {});
   }
-  $('vol4').addEventListener('click', () => switchVolume('4'));
-  $('vol45').addEventListener('click', () => switchVolume('4.5'));
+
+  function ensureVolumeButtons(volKeys) {
+    const seg = document.querySelector('.seg-vol');
+    if (!seg || !Array.isArray(volKeys)) return;
+    for (const v of volKeys) {
+      let btn = seg.querySelector(`[data-vol="${v}"]`);
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'vol' + String(v).replace('.', '');
+        btn.dataset.vol = v;
+        btn.className = 'seg-btn';
+        btn.type = 'button';
+        btn.title = 'Cilt ' + v;
+        btn.textContent = v;
+        seg.appendChild(btn);
+      }
+      if (!btn.dataset.bound) {
+        btn.dataset.bound = '1';
+        btn.addEventListener('click', () => switchVolume(v));
+      }
+    }
+  }
+
+  ensureVolumeButtons(
+    window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols
+      ? Object.keys(window.ALYA_BUNDLE.vols)
+      : ['4', '4.5']
+  );
+  if (!window.ALYA_BUNDLE && typeof fetch === 'function') {
+    fetch('api/volumes')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && Array.isArray(d.volumes) && ensureVolumeButtons(d.volumes))
+      .catch(() => {});
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -115,8 +147,9 @@
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
-    $('vol4').classList.toggle('is-on', state.vol === '4');
-    $('vol45').classList.toggle('is-on', state.vol === '4.5');
+    for (const btn of document.querySelectorAll('.seg-vol .seg-btn[data-vol]')) {
+      btn.classList.toggle('is-on', btn.dataset.vol === state.vol);
+    }
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
