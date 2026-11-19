@@ -1,43 +1,43 @@
 {
  "4": {
   "avg": 0.14,
-  "flagged": 23,
-  "paragraphs": 3118,
+  "flagged": 22,
+  "paragraphs": 3136,
   "usablePages": 269,
   "negMismatches": 11
  },
  "5": {
   "avg": 0.08,
   "flagged": 19,
-  "paragraphs": 2815,
+  "paragraphs": 2817,
   "usablePages": 240,
   "negMismatches": 15
  },
  "6": {
-  "avg": 0.05,
-  "flagged": 11,
-  "paragraphs": 2970,
+  "avg": 0.04,
+  "flagged": 10,
+  "paragraphs": 2976,
   "usablePages": 245,
   "negMismatches": 13
  },
  "7": {
-  "avg": 0.06,
-  "flagged": 15,
-  "paragraphs": 3229,
+  "avg": 0.05,
+  "flagged": 14,
+  "paragraphs": 3248,
   "usablePages": 260,
   "negMismatches": 11
  },
  "8": {
   "avg": 0.06,
   "flagged": 15,
-  "paragraphs": 3106,
+  "paragraphs": 3109,
   "usablePages": 251,
   "negMismatches": 9
  },
  "9": {
   "avg": 0.07,
   "flagged": 17,
-  "paragraphs": 2622,
+  "paragraphs": 2637,
   "usablePages": 239,
   "negMismatches": 15
  },
@@ -50,8 +50,8 @@
  },
  "11": {
   "avg": 0.07,
-  "flagged": 24,
-  "paragraphs": 3116,
+  "flagged": 23,
+  "paragraphs": 3122,
   "usablePages": 295,
   "negMismatches": 9
  },
@@ -63,11 +63,11 @@
   "negMismatches": 1
  },
  "4.5": {
-  "avg": 0.09,
-  "flagged": 14,
-  "paragraphs": 2288,
+  "avg": 0.07,
+  "flagged": 11,
+  "paragraphs": 2514,
   "usablePages": 332,
-  "negMismatches": 13
+  "negMismatches": 15
  },
  "9.5": {
   "avg": 0.04,

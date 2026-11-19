@@ -188,7 +188,7 @@ main {
   margin: 0 0 0.95em;
   font-size: var(--reader-size);
   line-height: 1.72;
-  color: var(--fg-soft);
+  color: var(--fg-strong);
   text-wrap: pretty;
 }
 /* konuşma: beyaz */
@@ -196,9 +196,10 @@ main {
 .reader p.dialog-ru {
   color: var(--fg-strong);
 }
-/* iç düşünce: yumuşak arka planla uyumlu, geri planda */
+/* iç düşünce: aynı beyaz, sadece italik ayrım */
 .reader p.thought {
-  color: var(--thought);
+  color: var(--fg-strong);
+  font-style: italic;
 }
 /* Rusça replikler: {} korunur, vurgu rengi */
 .reader .ru-dialog {
@@ -638,4 +639,167 @@ input[type='range']::-moz-range-thumb {
   .seg-btn {
     transition: none;
   }
+}
+
+/* ---------- kütüphane (cilt / bölüm listesi) ---------- */
+.reader[hidden],
+.lib[hidden] {
+  display: none;
+}
+
+.lib {
+  width: 100%;
+  max-width: 34rem;
+}
+
+.lib-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--line);
+}
+.lib-back {
+  min-height: 36px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--fg-soft);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.lib-back[hidden] {
+  display: none;
+}
+.lib-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.lib-actions {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem 0 0.2rem;
+}
+.lib-actions[hidden] {
+  display: none;
+}
+.mini {
+  min-height: 34px;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--fg-soft);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.lib-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.7rem 0 0;
+}
+
+/* cilt kartı */
+.lib-card {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lib-card.is-current {
+  border-color: var(--accent);
+}
+.lib-num {
+  flex: 0 0 auto;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.lib-info {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
+}
+.lib-name {
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+.lib-meta,
+.lib-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.lib-go {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+/* bölüm satırı */
+.lib-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.2rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+}
+.lib-row + .lib-row {
+  border-top: 1px solid var(--line);
+}
+.lib-row.is-current {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.lib-row.is-current .lib-name {
+  color: var(--accent);
+}
+.lib-row.is-read .lib-name {
+  color: var(--muted);
+}
+.lib-main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.6rem 0.4rem;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.lib-check {
+  flex: 0 0 auto;
+  width: 44px;
+  border: 0;
+  background: none;
+  color: var(--line);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.lib-check.is-on {
+  color: var(--accent);
 }
