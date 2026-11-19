@@ -22,18 +22,38 @@ const MIME = {
 
 const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
 
+function readBundleArt(artFile = path.join(PUB, 'bundle-art.js')) {
+  try {
+    if (!fs.existsSync(artFile)) return {};
+    const raw = fs.readFileSync(artFile, 'utf8');
+    const m = raw.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+    return m ? JSON.parse(m[1]) : {};
+  } catch {
+    return {};
+  }
+}
+
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
   const imgPrefix = opt.imgPrefix || '/pages/';
   const volume = opt.volume || 'Cilt 4';
   const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
+  const pubDir = opt.pubDir || PUB;
+  const volKey = opt.volKey || (dataDir === 'data45' || /45/.test(imgPrefix) || /4\.5/.test(volume) ? '4.5' : '4');
+  const embeddedArt =
+    opt.artMap ||
+    (typeof globalThis.window !== 'undefined' && globalThis.window && globalThis.window.ALYA_ART) ||
+    readBundleArt(path.join(pubDir, 'bundle-art.js'));
+  const volArt = (embeddedArt && embeddedArt[volKey]) || {};
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
   const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
   const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
 
+  let anyScan = false;
   const pages = source.map((p) => {
     const key = String(p.page);
+    const padKey = key.padStart(3, '0');
     const trParas = Array.isArray(tr[key]) ? tr[key] : [];
     const enParas = String(p.text || '')
       .split('\n')
@@ -45,21 +65,34 @@ function buildBook(opt = {}) {
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
+    const relImg = imgPrefix.replace(/^\/+/, '') + padKey + '.webp';
+    const hasScan = fs.existsSync(path.join(pubDir, relImg));
+    if (hasScan) anyScan = true;
+    const hasEmbeddedArt = Boolean(volArt[padKey]);
+
     // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
-    const cleanLen = String(p.text || '')
+    // kapak sayfaları (1-3) yalnızca tarama dosyası veya gömülü görsel varsa art sayılır;
+    // "(TN: ...)" gibi kısa çevirmen notu kuyruk sayfaları (örn. Cilt 4 s.282) dışlanır.
+    const cleanText = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
-      .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
+      .trim();
+    const cleanLen = cleanText.length;
+    const isTranslatorTail = /\(?\b(?:TN|ÇN|T\/N)\s*:/i.test(cleanText);
+    const art = p.page <= 3
+      ? cleanLen < 220 && (hasScan || hasEmbeddedArt)
+      : cleanLen < 220 && !isTranslatorTail;
 
-    return {
+    const entry = {
       n: p.page,
-      img: imgPrefix + String(p.page).padStart(3, '0') + '.webp',
+      img: imgPrefix + padKey + '.webp',
       tr: usable ? trParas.filter(Boolean) : [],
       en: usable ? enParas : [],
       art,
     };
+    if (hasScan) entry.scan = true;
+    return entry;
   });
 
   // bölümleri ingilizce başlıklardan bul, Türkçe adları chapters.json'dan al
@@ -80,7 +113,7 @@ function buildBook(opt = {}) {
     chapters.push({ page: p.n, label, title });
   }
 
-  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
+  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, scans: anyScan, chapters, pages };
 }
 
 const VOLUMES = {
@@ -161,6 +194,14 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/') pathname = '/index.html';
 
+  if (pathname === '/bundle.js' && (getBook('4').book.scans || getBook('4.5').book.scans)) {
+    const liveVols = { '4': getBook('4').book, '4.5': getBook('4.5').book };
+    const dynBody = Buffer.from(
+      'window.ALYA_BUNDLE=' + JSON.stringify({ vols: liveVols }) + ';\nwindow.ALYA_BUNDLE_VERSION="local-scans";\n'
+    );
+    return send(req, res, 200, MIME['.js'], dynBody);
+  }
+
   // dizin dışına çıkmayı engelle
   const filePath = path.join(PUB, path.normalize(pathname));
   if (!filePath.startsWith(PUB)) return send(req, res, 403, 'text/plain', Buffer.from('403'));
@@ -192,4 +233,4 @@ server.listen(PORT, () => {
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { buildBook, getBook, readBundleArt, start };

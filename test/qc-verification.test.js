@@ -189,6 +189,155 @@ function testSchemaValidation() {
   }
 }
 
+const os = require('os');
+const { buildBook, readBundleArt } = require('../server');
+
+function testArtFlagDetection() {
+  console.log('Testing server.js art flag detection and tail TN exclusion...');
+  const b4 = buildBook({
+    volKey: '4',
+    dataDir: 'data',
+    imgPrefix: '/pages/',
+    volume: 'Cilt 4',
+    titlesFile: path.join(ROOT, 'data', 'chapters.json'),
+  });
+  const b45 = buildBook({
+    volKey: '4.5',
+    dataDir: 'data45',
+    imgPrefix: '/pages45/',
+    volume: 'Cilt 4.5',
+    titlesFile: path.join(ROOT, 'data45', 'chapters.json'),
+  });
+
+  // Cover pages 1-3 without local scans or ALYA_ART entries must be art: false
+  for (const n of [1, 2, 3]) {
+    assert.strictEqual(b4.pages[n - 1].art, false, `Vol 4 page ${n} should be art: false without scans/art`);
+    assert.strictEqual(b45.pages[n - 1].art, false, `Vol 4.5 page ${n} should be art: false without scans/art`);
+  }
+
+  // Vol 4 page 282 "(TN: ...)" tail page must be excluded from art: true
+  assert.strictEqual(b4.pages[281].n, 282);
+  assert.strictEqual(b4.pages[281].art, false, 'Vol 4 page 282 translator note must not be flagged as art');
+
+  // Mixed art+text pages must remain art: true
+  assert.strictEqual(b4.pages[74].art, true, 'Vol 4 page 75 should remain art: true');
+  assert(b4.pages[74].tr.length > 0, 'Vol 4 page 75 should retain Turkish text');
+  assert.strictEqual(b45.pages[82].art, true, 'Vol 4.5 page 83 should remain art: true');
+  assert(b45.pages[82].tr.length > 0, 'Vol 4.5 page 83 should retain Turkish text');
+
+  // Total real illustrations: 15 in Vol 4 + 15 in Vol 4.5 = 30
+  const artCount4 = b4.pages.filter((p) => p.art).length;
+  const artCount45 = b45.pages.filter((p) => p.art).length;
+  assert.strictEqual(artCount4, 15, `Expected 15 art pages in Vol 4, got ${artCount4}`);
+  assert.strictEqual(artCount45, 15, `Expected 15 art pages in Vol 4.5, got ${artCount45}`);
+
+  // Cover pages 1-3 qualify as art when ALYA_ART or local scan files exist
+  const bWithArtMap = buildBook({
+    volKey: '4',
+    dataDir: 'data',
+    imgPrefix: '/pages/',
+    volume: 'Cilt 4',
+    artMap: { '4': { '001': 'data:image/webp;base64,AAAA' } },
+  });
+  assert.strictEqual(bWithArtMap.pages[0].art, true, 'Cover page 1 should be art: true when ALYA_ART entry exists');
+  assert.strictEqual(bWithArtMap.pages[1].art, false, 'Cover page 2 should remain art: false without asset');
+
+  const tmpPub = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-pub-'));
+  try {
+    fs.mkdirSync(path.join(tmpPub, 'pages'), { recursive: true });
+    fs.writeFileSync(path.join(tmpPub, 'pages', '002.webp'), Buffer.from('RIFF'));
+    const bWithScan = buildBook({
+      volKey: '4',
+      dataDir: 'data',
+      imgPrefix: '/pages/',
+      volume: 'Cilt 4',
+      pubDir: tmpPub,
+      artMap: { '4': {} },
+    });
+    assert.strictEqual(bWithScan.pages[1].art, true, 'Cover page 2 should be art: true when local scan exists');
+    assert.strictEqual(bWithScan.pages[1].scan, true, 'Cover page 2 should mark scan: true when local scan exists');
+  } finally {
+    fs.rmSync(tmpPub, { recursive: true, force: true });
+  }
+  console.log('  ✓ Art flag detection and cover/tail rules verified');
+}
+
+function testBundleArtPreservation() {
+  console.log('Testing bundle-art.js preservation and pruning during bundle rebuild...');
+  const artPath = path.join(ROOT, 'public', 'bundle-art.js');
+  const bundlePath = path.join(ROOT, 'public', 'bundle.js');
+  const beforeArt = fs.readFileSync(artPath, 'utf8');
+  const beforeBundle = fs.readFileSync(bundlePath, 'utf8');
+  try {
+    const parsedBefore = readBundleArt(artPath);
+    assert.strictEqual(Object.keys(parsedBefore['4'] || {}).length, 15, 'Vol 4 should have 15 embedded illustrations');
+    assert.strictEqual(Object.keys(parsedBefore['4.5'] || {}).length, 15, 'Vol 4.5 should have 15 embedded illustrations');
+    assert(!parsedBefore['4']['282'], 'Misflagged page 282 must be pruned from bundle-art.js');
+
+    // Inject a synthetic art:false entry ("282") and rebuild without local scans:
+    // valid entries must be preserved while art:false entry "282" is pruned.
+    const injected = {
+      '4': { ...parsedBefore['4'], '282': 'data:image/webp;base64,UklGRg==' },
+      '4.5': { ...parsedBefore['4.5'] },
+    };
+    fs.writeFileSync(artPath, 'window.ALYA_ART=' + JSON.stringify(injected) + ';\n');
+
+    execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build_bundle.js')], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    });
+
+    const parsedAfter = readBundleArt(artPath);
+    assert.strictEqual(Object.keys(parsedAfter['4'] || {}).length, 15, 'All 15 Vol 4 illustrations must be preserved');
+    assert.strictEqual(Object.keys(parsedAfter['4.5'] || {}).length, 15, 'All 15 Vol 4.5 illustrations must be preserved');
+    assert(!parsedAfter['4']['282'], 'Injected art:false entry 282 must be pruned on rebuild');
+    console.log('  ✓ bundle-art.js preservation and art:false pruning verified');
+  } finally {
+    fs.writeFileSync(artPath, beforeArt);
+    fs.writeFileSync(bundlePath, beforeBundle);
+  }
+}
+
+function testFrontmatterAndFanUrlLeaks() {
+  console.log('Testing frontmatter cleanup and fan-URL / Discord / OCR leak gates...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const v45Path = path.join(ROOT, 'data45', 'paragraphs_final.json');
+  const orig4 = fs.readFileSync(v4Path, 'utf8');
+  const orig45 = fs.readFileSync(v45Path, 'utf8');
+
+  const d4 = JSON.parse(orig4);
+  const d45 = JSON.parse(orig45);
+  assert.deepStrictEqual(d4['3'], [], 'Vol 4 page 3 OCR noise must be cleared');
+  assert.deepStrictEqual(d4['12'], [], 'Vol 4 page 12 ad must be cleared');
+  assert.deepStrictEqual(d45['7'], [], 'Vol 4.5 page 7 fan credits must be cleared');
+  assert.deepStrictEqual(d45['347'], [], 'Vol 4.5 page 347 translator afterword must be cleared');
+  assert.strictEqual(d45['8'][0], 'İçindekiler', 'Vol 4.5 page 8 should start with İçindekiler');
+  assert.strictEqual(d45['8'].length, 14, 'Vol 4.5 page 8 should list İçindekiler + 13 chapters');
+
+  try {
+    // 1. Intentional fan URL / Discord leak
+    const leakUrl = JSON.parse(orig45);
+    leakUrl['9'][0] += ' Bize katılın: discord.gg/roshidere ve https://glucosetl.wordpress.com/';
+    fs.writeFileSync(v45Path, JSON.stringify(leakUrl));
+    const resUrl = runCLI(['--volume', '4.5', '--strict'], false);
+    assert.strictEqual(resUrl.code, 1, 'Fan URL / Discord invite must fail CLI');
+    assert(resUrl.out.includes('hayran bağlantısı/Discord'), 'Diagnostics must mention fan URL / Discord');
+
+    // 2. Intentional OCR noise leak
+    fs.writeFileSync(v45Path, orig45);
+    const leakOcr = JSON.parse(orig4);
+    leakOcr['3'] = ['V1 Ar l O-p y C Jycc'];
+    fs.writeFileSync(v4Path, JSON.stringify(leakOcr));
+    const resOcr = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(resOcr.code, 1, 'OCR noise must fail CLI');
+    assert(resOcr.out.includes('OCR gürültüsü'), 'Diagnostics must mention OCR noise');
+    console.log('  ✓ Frontmatter cleanup and fan-URL / OCR zero-tolerance gates verified');
+  } finally {
+    fs.writeFileSync(v4Path, orig4);
+    fs.writeFileSync(v45Path, orig45);
+  }
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -199,6 +348,9 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
+  testArtFlagDetection();
+  testBundleArtPreservation();
+  testFrontmatterAndFanUrlLeaks();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 

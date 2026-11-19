@@ -1,8 +1,10 @@
 :root {
   --bg: #121110;
   --bg-soft: #191817;
+  --panel: #191817;
   --fg: #e9e5df;
   --fg-soft: #b6b0a7;
+  --dim: #9c948a;
   --muted: #8b857c;
   --line: #2a2825;
   --accent: #c9a227;
@@ -14,8 +16,10 @@
 [data-theme='light'] {
   --bg: #fbf9f5;
   --bg-soft: #f3efe8;
+  --panel: #f3efe8;
   --fg: #1e1c19;
   --fg-soft: #4a463f;
+  --dim: #666057;
   --muted: #7d776d;
   --line: #e4ded4;
   --accent: #9a6b12;
@@ -612,7 +616,7 @@ figure.page-img {
 }
 
 figure.page-img img {
-  cursor: zoom-out;
+  cursor: zoom-in;
   box-shadow: 0 6px 26px rgba(0, 0, 0, 0.28);
 }
 

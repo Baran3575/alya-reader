@@ -4,6 +4,33 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const FAN_URL_RE = /(?:https?\s*:\s*\/\s*\/|discord\s*\.\s*gg\b|(?:glucosetl|novelupdates|lightnovelreader|jnovels|mp4directs|goldenagato|zerobooks)\b|[a-z0-9-]+\s*\.\s*wordpress\s*\.\s*com\b|\b[a-z0-9-]{3,}\.(?:com|org|net|gg|me)(?:\/|\b))/giu;
+
+function isOcrNoise(text) {
+  const clean = String(text || '').trim();
+  if (!clean) return false;
+  if (/^[◇─—–….\s“”‘’!?()[\]{}]+$/u.test(clean)) return false;
+  const tokens = clean.split(/\s+/).filter(Boolean);
+  if (tokens.length < 4) return false;
+  const junkTokens = tokens.filter((w) => {
+    const bare = w.replace(/^[“”‘’()[\]{},.;:!?…—–-]+|[“”‘’()[\]{},.;:!?…—–-]+$/gu, '');
+    if (!bare) return false;
+    if (/^[bcçdfgğhjklmnprsştvyzqxw]$/iu.test(bare)) return true;
+    if (
+      /\d/.test(bare) &&
+      /[A-Za-z]/.test(bare) &&
+      !/^\d+\.$/.test(bare) &&
+      !/^(?:\d+(?:st|nd|rd|th)|V\d+|MP\d+|3D|2D)$/i.test(bare)
+    ) {
+      return true;
+    }
+    if (/^[A-Za-z]-[A-Za-z]$/.test(bare)) return true;
+    if (/[/\\|<>@#$%^&*=+]/.test(bare) && bare.length <= 4) return true;
+    return false;
+  });
+  const longWords = tokens.filter((w) => /[\p{L}]{3,}/u.test(w));
+  return junkTokens.length >= 2 && longWords.length / tokens.length < 0.35;
+}
 
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
@@ -62,8 +89,11 @@ function runVerify(filePath) {
     const clean = x.t.replace(/https?:\s*\/\/[^\n]+/gi, '');
     return a + (clean.match(EN_RESIDUE_RE) || []).length;
   }, 0);
+  const countOcrNoise = paras.filter((x) => isOcrNoise(x.t)).length;
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
   row('  ', count(TN_RE), 'çevirmen notu');
+  row('  ', count(FAN_URL_RE), 'hayran bağlantısı/Discord');
+  row('  ', countOcrNoise, 'OCR gürültüsü');
 
   return { rows, paras, pageCount: Object.keys(f).length };
 }
@@ -74,4 +104,4 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify };
+module.exports = { runVerify, FAN_URL_RE, isOcrNoise };

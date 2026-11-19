@@ -10,7 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify } = require('./verify');
+const { runVerify, FAN_URL_RE, isOcrNoise } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
 
@@ -45,6 +45,8 @@ const ZERO_TOLERANCE = [
   'boş paragraf',
   'İngilizce kalıntı',
   'çevirmen notu',
+  'hayran bağlantısı/Discord',
+  'OCR gürültüsü',
 ];
 
 function parseArgs() {
@@ -140,6 +142,31 @@ function findTranslatorNotesDetails(data) {
   return matches;
 }
 
+function findFanUrlDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const m = text.match(FAN_URL_RE);
+      if (m && m.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: m, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findOcrNoiseDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      if (isOcrNoise(text)) {
+        matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
 function generateMarkdownSummary(result, violations, options) {
   const lines = [];
   lines.push('### Çeviri Kalite Kapısı Raporu (QC Matrix)');
@@ -225,6 +252,10 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('hayran bağlantısı/Discord')) {
+          details = findFanUrlDetails(data);
+        } else if (row[2].includes('OCR gürültüsü')) {
+          details = findOcrNoiseDetails(data);
         }
         hardFails.push({ label: row[2], value: row[1], details });
       }
@@ -377,6 +408,8 @@ function main() {
         'düz tırnak',
         'İngilizce kalıntı',
         'çevirmen notu',
+        'hayran bağlantısı/Discord',
+        'OCR gürültüsü',
       ];
       for (const k of displayKeys) {
         const row = r.verify.find((x) => x.label.includes(k));
@@ -413,5 +446,7 @@ module.exports = {
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findFanUrlDetails,
+  findOcrNoiseDetails,
   generateMarkdownSummary,
 };

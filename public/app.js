@@ -70,12 +70,29 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: gömülü illüstrasyon varsa data URI, yoksa dosya yolu */
-  function imgSrc(p, vol) {
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa doğrulanmış tarama yolu */
+  const failedScans = new Set();
+
+  function embeddedArt(p, vol) {
+    if (!p) return '';
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
-    if (pack && pack[key]) return pack[key];
-    return p.img;
+    return (pack && pack[key]) || '';
+  }
+
+  function hasScanFile(p, vol) {
+    if (!p || !p.scan) return false;
+    return !failedScans.has((vol || state.vol) + ':' + p.n);
+  }
+
+  function hasImage(p, vol) {
+    return Boolean(embeddedArt(p, vol) || hasScanFile(p, vol));
+  }
+
+  function imgSrc(p, vol) {
+    const emb = embeddedArt(p, vol);
+    if (emb) return emb;
+    return hasScanFile(p, vol) ? p.img : '';
   }
 
   /* veri kaynakları: localStorage -> gömülü paket -> sunucu */
@@ -183,15 +200,34 @@
     return out;
   }
 
-  function figureFor(p, caption) {
+  function figureFor(p, caption, onFail) {
+    const src = imgSrc(p);
+    if (!src) return null;
+    const volAtRender = state.vol;
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = imgSrc(p);
+    img.src = src;
     img.alt = 'Sayfa ' + p.n;
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => scheduleProgress(), { once: true });
+    img.addEventListener(
+      'error',
+      () => {
+        if (!embeddedArt(p, volAtRender)) failedScans.add(volAtRender + ':' + p.n);
+        const parent = fig.parentElement;
+        fig.hidden = true;
+        fig.remove();
+        if (typeof onFail === 'function') {
+          onFail();
+        } else if (parent && parent.classList.contains('pg') && parent.children.length === 0) {
+          parent.remove();
+        }
+        scheduleProgress();
+      },
+      { once: true }
+    );
     fig.appendChild(img);
     if (caption) {
       const cap = document.createElement('figcaption');
@@ -199,7 +235,10 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => {
+      const currentSrc = imgSrc(p, volAtRender);
+      if (currentSrc) openLightbox(currentSrc, 'Sayfa ' + p.n);
+    });
     return fig;
   }
 
@@ -223,12 +262,68 @@
   }
 
   /* ---------------- çizim (tek orijinal sayfa) ---------------- */
+  function cleanSourceLines(enLines) {
+    const lines = (Array.isArray(enLines) ? enLines : [])
+      .map((s) =>
+        String(s || '')
+          .replace(/\(?\b(?:TN|ÇN|T\/N)\s*:[^)]*\)?/gi, '')
+          .trim()
+      )
+      .filter((s) => s && !/(Goldenagato|mp4directs|jnovels|zerobooks|^Page\s+\d+\b)/i.test(s));
+    if (!lines.length) return [];
+    const isToc = lines.some((l) => /^Table of contents$/i.test(l));
+    if (isToc) return lines;
+    const blocks = [];
+    let cur = [];
+    const endPunct = /[.!?"”’)]$/;
+    for (const ln of lines) {
+      if (cur.length) {
+        const prev = cur[cur.length - 1];
+        if (endPunct.test(prev) && (/^["“'(\[]/.test(ln) || prev.length < 52)) {
+          blocks.push(cur.join(' '));
+          cur = [];
+        }
+      }
+      cur.push(ln);
+    }
+    if (cur.length) blocks.push(cur.join(' '));
+    return blocks;
+  }
+
+  function renderOriginalFallback(sec, p) {
+    sec.classList.add('pg-text-single');
+    const hasTr = Boolean(p && Array.isArray(p.tr) && p.tr.length > 0);
+    const note = document.createElement('p');
+    note.className = 'empty-note';
+    if (!hasTr) {
+      note.textContent =
+        'Bu sayfanın tarama görseli bu sürümde yer almıyor. · Original page scan is not included in this edition.';
+      sec.appendChild(note);
+      return;
+    }
+    const enBlocks = cleanSourceLines(p.en);
+    note.textContent = enBlocks.length
+      ? 'Sayfa taraması bu sürümde yer almıyor; İngilizce kaynak metin gösteriliyor. · Original page scan unavailable; showing English source text.'
+      : 'Sayfa taraması bu sürümde yer almıyor; Türkçe metin gösteriliyor. · Original page scan unavailable; showing Turkish text.';
+    sec.appendChild(note);
+    const blocks = enBlocks.length ? enBlocks : p.tr;
+    for (const t of blocks) {
+      if (!t) continue;
+      const el = document.createElement('p');
+      if (/^[“"—–-]/.test(t)) el.className = 'dialog';
+      el.textContent = t;
+      sec.appendChild(el);
+    }
+  }
+
   function renderPage() {
     const n = Math.min(Math.max(1, state.page), state.book.total);
+    state.page = n;
     const p = state.book.pages[n - 1];
     const idx = chapterIndex(n);
     state.chapter = idx;
     const ch = chapters()[idx];
+    const [startPage, endPage] = chapterRange(idx);
 
     reader.innerHTML = '';
 
@@ -249,7 +344,13 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false));
+    if (p && hasImage(p)) {
+      const fig = figureFor(p, false, () => renderOriginalFallback(sec, p));
+      if (fig) sec.appendChild(fig);
+      else renderOriginalFallback(sec, p);
+    } else {
+      renderOriginalFallback(sec, p);
+    }
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -272,8 +373,22 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
+    $('pageRange').value = idx + 1;
+    $('navChapter').textContent = ch.label;
+    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('prevBtn').disabled = n <= 1;
+    $('nextBtn').disabled = n >= state.book.total;
+    $('tocLabel').textContent = ch.label;
+    for (const li of $('tocList').children) {
+      li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
+    }
+    $('modeText').classList.toggle('is-on', false);
+    $('modePage').classList.toggle('is-on', true);
+    $('modeBtn').textContent = 'Orijinal';
+
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
+    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -336,13 +451,20 @@
         continue;
       }
 
-      const isIllustration = p.tr.length === 0 || p.art === true;
-      if (isIllustration) {
-        sec.classList.add('pg-art');
-        if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true));
-        if (p.tr.length === 0) {
-          frag.appendChild(sec);
+      const showFigure = p.art === true && hasImage(p);
+      if (!showFigure && p.tr.length === 0) continue;
+
+      if (showFigure) {
+        const fig = figureFor(p, true);
+        if (fig) {
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(fig);
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
+          }
+        } else if (p.tr.length === 0) {
           continue;
         }
       }
@@ -399,8 +521,17 @@
     markTocRead();
     LS.set('mode', state.mode);
 
-    // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
-    const anchorPt = targetPage > startPage ? reader.querySelector('.pg[data-page="' + targetPage + '"]') : null;
+    // çeviriye dönerken görünen sayfaya dön (temizlenen sayfalarda en yakın sayfaya hizala), bölüm değişiminde başa dön
+    let anchorPt = null;
+    if (targetPage > startPage) {
+      anchorPt = reader.querySelector('.pg[data-page="' + targetPage + '"]');
+      if (!anchorPt) {
+        for (const el of reader.querySelectorAll('.pg[data-page]')) {
+          anchorPt = el;
+          if (Number(el.dataset.page) >= targetPage) break;
+        }
+      }
+    }
     if (anchorPt) requestAnimationFrame(() => anchorPt.scrollIntoView({ block: 'start' }));
     else window.scrollTo({ top: 0, behavior: 'auto' });
     scheduleProgress();
@@ -474,13 +605,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && p.art && hasScanFile(p) && !embeddedArt(p)) imgs.push(p.img);
     }
     const nxt = chapters()[idx + 1];
     if (nxt) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && p.art && hasScanFile(p) && !embeddedArt(p)) imgs.push(p.img);
       }
     }
     imgs.slice(0, 4).forEach((src) => {

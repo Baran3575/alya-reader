@@ -4,14 +4,30 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { buildBook } = require('../server.js');
+const { buildBook, readBundleArt } = require('../server.js');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'public', 'bundle.js');
+const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+const existingArt = readBundleArt(ART_OUT);
 
 const vols = {
-  4: buildBook({ dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') }),
-  '4.5': buildBook({ dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') }),
+  4: buildBook({
+    volKey: '4',
+    dataDir: 'data',
+    imgPrefix: '/pages/',
+    volume: 'Cilt 4',
+    titlesFile: path.join(ROOT, 'data/chapters.json'),
+    artMap: existingArt,
+  }),
+  '4.5': buildBook({
+    volKey: '4.5',
+    dataDir: 'data45',
+    imgPrefix: '/pages45/',
+    volume: 'Cilt 4.5',
+    titlesFile: path.join(ROOT, 'data45/chapters.json'),
+    artMap: existingArt,
+  }),
 };
 
 // sayfa görsellerini de paketle: data URI olarak gömülür (küçük olanlar)
@@ -23,16 +39,22 @@ for (const [k, book] of Object.entries(vols)) {
   }
 }
 
-// illüstrasyon sayfalarının görselleri de gömülür (data URI) — sunucusuz inline okuma için
+// illüstrasyon sayfalarının görselleri de gömülür (data URI) — sunucusuz inline okuma için.
+// Yerel .webp klasörleri yoksa mevcut gömülü görseller korunur; art: false olanlar ayıklanır.
 const IMG_DIRS = { '4': 'public/pages/', '4.5': 'public/pages45/' };
 const art = { '4': {}, '4.5': {} };
 for (const [k, book] of Object.entries(vols)) {
+  const prevVolArt = (existingArt && existingArt[k]) || {};
   for (const p of book.pages) {
     if (!p.art) continue;
-    const f = path.join(ROOT, IMG_DIRS[k], String(p.n).padStart(3, '0') + '.webp');
-    if (!fs.existsSync(f)) continue;
-    const b64 = fs.readFileSync(f).toString('base64');
-    art[k][String(p.n).padStart(3, '0')] = 'data:image/webp;base64,' + b64;
+    const padKey = String(p.n).padStart(3, '0');
+    const f = path.join(ROOT, IMG_DIRS[k], padKey + '.webp');
+    if (fs.existsSync(f)) {
+      const b64 = fs.readFileSync(f).toString('base64');
+      art[k][padKey] = 'data:image/webp;base64,' + b64;
+    } else if (prevVolArt[padKey]) {
+      art[k][padKey] = prevVolArt[padKey];
+    }
   }
 }
 
@@ -49,7 +71,7 @@ fs.writeFileSync(OUT, body);
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
   'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
-fs.writeFileSync(path.join(ROOT, 'public', 'bundle-art.js'), artBody);
+fs.writeFileSync(ART_OUT, artBody);
 console.log('illüstrasyon:', Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0), 'görsel |',
   (artBody.length / 1048576).toFixed(2), 'MB');
 const kb = (body.length / 1024).toFixed(0);
