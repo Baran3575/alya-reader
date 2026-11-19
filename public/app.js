@@ -199,30 +199,6 @@
     return 'Cilt ' + volId;
   }
 
-  function syncUrl() {
-    if (!state.book) return;
-    const vEnc = encodeURIComponent(state.vol);
-    const chIdx = state.chapter;
-    if (window.location.protocol === 'file:') {
-      const nextHash = '#vol=' + vEnc + '&ch=' + chIdx;
-      if (window.location.hash !== nextHash) {
-        try {
-          history.replaceState(null, '', nextHash);
-        } catch {
-          window.location.hash = nextHash;
-        }
-      }
-      return;
-    }
-    const nextUrl = window.location.pathname + '?vol=' + vEnc + '&ch=' + chIdx;
-    const curUrl = window.location.pathname + window.location.search + window.location.hash;
-    if (curUrl !== nextUrl) {
-      try {
-        history.replaceState(null, '', nextUrl);
-      } catch {}
-    }
-  }
-
   function fetchLocalJson(relUrl) {
     if (window.location.protocol === 'file:') {
       return new Promise((resolve) => {
@@ -278,7 +254,7 @@
   window.addEventListener('resize', measureChrome);
   window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
 
-  /* ---------------- cilt / bölüm çekmecesi + okundu işaretleri ---------------- */
+  /* ---------------- cilt / bölüm listesi + okundu işaretleri ---------------- */
   function readSet(vol) {
     const v = LS.get('read:' + vol, []);
     return Array.isArray(v) ? v : [];
@@ -922,7 +898,6 @@
       LS.set('page', n);
       LS.set('page:' + state.vol, n);
     }
-    syncUrl();
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -1096,7 +1071,6 @@
     }
     markTocRead();
     LS.set('mode', state.mode);
-    syncUrl();
 
     // çeviriye dönerken görünen sayfaya dön, bölüm değişiminde başa dön
     const anchorPt = targetPage > startPage ? reader.querySelector('.pg[data-page="' + targetPage + '"]') : null;
@@ -1305,35 +1279,6 @@
     },
     { passive: true }
   );
-
-  function handleUrlRouteChange() {
-    const r = readUrlRoute();
-    if (!r.v && r.ch === null && r.page === null) return;
-    const targetVol =
-      r.v && (!state.volumes.length || state.volumes.some((x) => String(x.id) === r.v))
-        ? r.v
-        : state.vol;
-    if (libOpen) hideLibrary();
-    if (targetVol !== state.vol) {
-      state.vol = targetVol;
-      state.pendingChapter = r.ch;
-      state.fromDeepLink = true;
-      state.page = r.page !== null ? r.page : LS.get('page:' + targetVol, 1);
-      load().catch(() => {});
-    } else if (r.ch !== null && state.book && r.ch !== state.chapter) {
-      const max = chapters().length - 1;
-      const idx = Math.min(Math.max(0, r.ch), max);
-      state.fromDeepLink = true;
-      state.page = chapters()[idx].page;
-      render();
-    } else if (r.page !== null && state.book && r.page !== state.page) {
-      state.fromDeepLink = true;
-      state.page = Math.min(Math.max(1, r.page), state.book.total);
-      render();
-    }
-  }
-  window.addEventListener('popstate', handleUrlRouteChange);
-  window.addEventListener('hashchange', handleUrlRouteChange);
 
   applyTheme();
   applySize();
