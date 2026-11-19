@@ -42,13 +42,15 @@ function testCleanCheckoutBuildPreservesArtAndExcludesBackups() {
     const bakFiles = files.filter((f) => f.endsWith('.bak'));
     assert.strictEqual(bakFiles.length, 0, 'dist/ must contain zero *.bak files');
 
-    // Verify all registered volumes have books/<vol>.json
+    // Verify all registered volumes have books/v<vol>.json and books/<vol>.json
     for (const volKey of Object.keys(VOLUMES)) {
+      const vRel = 'books/v' + volKey + '.json';
       const rel = 'books/' + volKey + '.json';
+      assert(files.includes(vRel), 'dist/' + vRel + ' must exist');
       assert(files.includes(rel), 'dist/' + rel + ' must exist');
-      const parsed = JSON.parse(fs.readFileSync(path.join(tmpDist, rel), 'utf8'));
-      assert(parsed.total > 0 && Array.isArray(parsed.pages), rel + ' must contain valid book payload');
-      assert(!parsed.pages[0].img.startsWith('/'), rel + ' page image paths must be relative for subpath hosting');
+      const parsed = JSON.parse(fs.readFileSync(path.join(tmpDist, vRel), 'utf8'));
+      assert(parsed.total > 0 && Array.isArray(parsed.pages), vRel + ' must contain valid book payload');
+      assert(!parsed.pages[0].img.startsWith('/'), vRel + ' page image paths must be relative for subpath hosting');
       if (volKey !== '4' && volKey !== '4.5') {
         for (const p of parsed.pages) {
           if (p.art) {
@@ -58,13 +60,21 @@ function testCleanCheckoutBuildPreservesArtAndExcludesBackups() {
       }
     }
 
-    // Verify all 31 illustrations (> 4 MB) are preserved
-    const artBytes = fs.statSync(path.join(tmpDist, 'bundle-art.js')).size;
-    assert(artBytes > 4000000, 'dist/bundle-art.js must exceed 4 MB, got ' + artBytes);
+    // Verify lightweight manifest in bundle.js + all 31 illustrations (> 3.9 MB) in books/art-4.json & art-4.5.json
     const ctx = { window: {} };
+    vm.runInNewContext(fs.readFileSync(path.join(tmpDist, 'bundle.js'), 'utf8'), ctx);
     vm.runInNewContext(fs.readFileSync(path.join(tmpDist, 'bundle-art.js'), 'utf8'), ctx);
-    assert.strictEqual(Object.keys(ctx.window.ALYA_ART['4']).length, 16, 'Vol 4 must preserve 16 illustrations');
-    assert.strictEqual(Object.keys(ctx.window.ALYA_ART['4.5']).length, 15, 'Vol 4.5 must preserve 15 illustrations');
+    assert(ctx.window.ALYA_BUNDLE && ctx.window.ALYA_BUNDLE.vols['4'], 'dist/bundle.js must contain manifest');
+    assert(!ctx.window.ALYA_BUNDLE.vols['4'].pages, 'dist/bundle.js must stay a lightweight manifest');
+    assert.strictEqual(ctx.window.ALYA_ART_INDEX['4'], 16, 'ALYA_ART_INDEX Vol 4 count must be 16');
+    assert.strictEqual(ctx.window.ALYA_ART_INDEX['4.5'], 15, 'ALYA_ART_INDEX Vol 4.5 count must be 15');
+
+    const art4 = JSON.parse(fs.readFileSync(path.join(tmpDist, 'books', 'art-4.json'), 'utf8'));
+    const art45 = JSON.parse(fs.readFileSync(path.join(tmpDist, 'books', 'art-4.5.json'), 'utf8'));
+    const artBytes = info.artBytes;
+    assert(artBytes > 3900000, 'Embedded art chunks must exceed 3.9 MB, got ' + artBytes);
+    assert.strictEqual(Object.keys(art4).length, 16, 'Vol 4 must preserve 16 illustrations');
+    assert.strictEqual(Object.keys(art45).length, 15, 'Vol 4.5 must preserve 15 illustrations');
     assert.strictEqual(info.artCount, 31, 'Total preserved illustration count must be 31');
 
     // Verify SHA-1 content hash in dist/sw.js
@@ -316,7 +326,11 @@ async function testReadBookStaticFallbackOn404() {
 
   const storage = new Map();
   const windowObj = {
-    ALYA_BUNDLE: null,
+    ALYA_BUNDLE: {
+      vols: {
+        '4': { label: 'Cilt 4', total: 1, chapters: [{ page: 1, label: 'Bölüm 1', title: 'Test Başlığı' }], artCount: 0 },
+      },
+    },
     ALYA_ART: {},
     ALYA_BUNDLE_VERSION: 'testver',
     innerHeight: 800,
@@ -352,7 +366,7 @@ async function testReadBookStaticFallbackOn404() {
     encodeURIComponent,
     fetch: async (url) => {
       fetchedUrls.push(url);
-      if (url.includes('api/book')) {
+      if (url === './books/v4.json' || url.includes('api/book')) {
         return {
           ok: false,
           status: 404,
@@ -371,7 +385,7 @@ async function testReadBookStaticFallbackOn404() {
           },
         };
       }
-      return { ok: false, status: 404, async json() { throw new Error('unexpected'); } };
+      return { ok: false, status: 404, async json() { jsonCalledOn404 = true; throw new Error('unexpected'); } };
     },
   };
   windowObj.fetch = context.fetch;
@@ -383,10 +397,12 @@ async function testReadBookStaticFallbackOn404() {
   await new Promise((r) => setTimeout(r, 30));
 
   assert.strictEqual(jsonCalledOn404, false, 'readBook must check res.ok and never call res.json() on HTTP 404');
-  assert(fetchedUrls.some((u) => u.includes('api/book?v=4')), 'readBook should attempt api/book first');
+  assert(fetchedUrls.includes('./books/v4.json'), 'readBook should attempt ./books/v4.json chunk first');
+  assert(fetchedUrls.some((u) => u.includes('api/book?v=4')), 'readBook should attempt api/book fallback');
   assert(fetchedUrls.includes('./books/4.json'), 'readBook must fall back to ./books/4.json');
+  assert(!fetchedUrls.some((u) => u.includes('art-4.json')), 'ensureArt must skip fetch when manifest artCount === 0');
   assert.strictEqual(getEl('brandSub').textContent, 'Cilt 4 · Türkçe', 'Reader UI must render fallback book metadata');
-  console.log('  ✓ readBook checks res.ok and loads ./books/4.json cleanly without JSON errors on HTTP 404');
+  console.log('  ✓ readBook guards manifest-only bundle, checks res.ok, and loads ./books/4.json cleanly on HTTP 404');
 }
 
 async function main() {

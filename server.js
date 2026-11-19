@@ -75,6 +75,17 @@ function buildBook(opt = {}) {
   } catch {}
 
   const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
+  const rawImgDir = path.join(pubDir, imgPrefix.replace(/^\/+/, ''));
+  const hasRawImgDir = fs.existsSync(rawImgDir);
+  let seedArt = null;
+  if (!hasStructuredChapters && !hasRawImgDir) {
+    const seedArtFile = path.join(rootDir, dataDir, 'art.json');
+    if (fs.existsSync(seedArtFile)) {
+      try {
+        seedArt = JSON.parse(fs.readFileSync(seedArtFile, 'utf8'));
+      } catch {}
+    }
+  }
 
   const pages = source.map((p) => {
     const key = String(p.page);
@@ -114,7 +125,8 @@ function buildBook(opt = {}) {
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
+    const padKey = String(p.page).padStart(3, '0');
+    const art = seedArt ? Boolean(seedArt[padKey]) : p.page > 3 && cleanLen < 220;
 
     return {
       n: p.page,
@@ -240,13 +252,32 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktaları (/books/v<cilt>.json, /books/<cilt>.json, /books/art-<cilt>.json) desteği
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
+    const builtBook = path.join(PUB, 'books', `v${bookJsonMatch[1]}.json`);
+    if (fs.existsSync(builtBook)) {
+      try {
+        return send(req, res, 200, MIME['.json'], fs.readFileSync(builtBook));
+      } catch {}
+    }
     try {
       const loaded = getBook(bookJsonMatch[1]);
       return send(req, res, 200, MIME['.json'], loaded.json);
     } catch {}
+  }
+
+  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
+  if (artJsonMatch && VOLUMES[artJsonMatch[1]]) {
+    const volKey = artJsonMatch[1];
+    const builtArt = path.join(PUB, 'books', `art-${volKey}.json`);
+    const seedArt = path.join(ROOT, VOLUMES[volKey].dataDir, 'art.json');
+    const srcArt = fs.existsSync(builtArt) ? builtArt : fs.existsSync(seedArt) ? seedArt : null;
+    if (srcArt) {
+      try {
+        return send(req, res, 200, MIME['.json'], fs.readFileSync(srcArt));
+      } catch {}
+    }
   }
 
   if (pathname === '/') pathname = '/index.html';

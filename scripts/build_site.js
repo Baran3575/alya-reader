@@ -8,13 +8,13 @@ const { buildBundles } = require('./build_bundle.js');
 
 const ROOT = path.join(__dirname, '..');
 const GENERATED_TOP_FILES = new Set(['bundle.js', 'bundle-art.js', 'sw.js']);
-const GITIGNORED_SCAN_DIRS = new Set(['pages', 'pages45']);
+const GITIGNORED_TOP_DIRS = new Set(['pages', 'pages45', 'books']);
 
 function shouldExclude(relPosix, isTopLevel, isDir) {
   const base = path.posix.basename(relPosix);
   if (/\.bak$/i.test(base)) return true;
   if (isTopLevel && GENERATED_TOP_FILES.has(base)) return true;
-  if (isTopLevel && isDir && GITIGNORED_SCAN_DIRS.has(base.toLowerCase())) return true;
+  if (isTopLevel && isDir && GITIGNORED_TOP_DIRS.has(base.toLowerCase())) return true;
   return false;
 }
 
@@ -71,9 +71,19 @@ function verifyDist(distDir, bundleInfo, swVersion) {
     }
   }
   for (const [volKey, book] of Object.entries(bundleInfo.vols)) {
-    const bookJson = path.join(distDir, 'books', volKey + '.json');
-    if (!fs.existsSync(bookJson)) {
+    const chunkJson = path.join(distDir, 'books', 'v' + volKey + '.json');
+    const legacyJson = path.join(distDir, 'books', volKey + '.json');
+    if (!fs.existsSync(chunkJson)) {
+      throw new Error('Eksik statik cilt parçası: dist/books/v' + volKey + '.json');
+    }
+    if (!fs.existsSync(legacyJson)) {
       throw new Error('Eksik statik cilt dosyası: dist/books/' + volKey + '.json');
+    }
+    if (bundleInfo.art[volKey] && Object.keys(bundleInfo.art[volKey]).length > 0) {
+      const artJson = path.join(distDir, 'books', 'art-' + volKey + '.json');
+      if (!fs.existsSync(artJson)) {
+        throw new Error('Eksik gömülü illüstrasyon parçası: dist/books/art-' + volKey + '.json');
+      }
     }
     for (const p of book.pages) {
       if (!p.art) continue;
@@ -112,6 +122,7 @@ function buildSite(opt = {}) {
     rootDir,
     outDir: distDir,
     booksDir: path.join(distDir, 'books'),
+    emitLegacyBookFiles: true,
     volumes,
     artSourceFile: path.join(publicDir, 'bundle-art.js'),
     quiet,

@@ -10,3 +10,6 @@ data45/back_en.json
 .deepl-key
 .stitch/captures/
 .cache/
+
+# üretilen cilt parçaları (npm run build:bundle)
+public/books/

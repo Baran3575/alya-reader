@@ -57,21 +57,30 @@ jobs:
             assert(fs.existsSync("dist/bundle.js"), "Missing dist/bundle.js");
             assert(fs.existsSync("dist/bundle-art.js"), "Missing dist/bundle-art.js");
 
-            const artStat = fs.statSync("dist/bundle-art.js");
-            assert(artStat.size > 4000000, "Expected dist/bundle-art.js > 4 MB, got " + artStat.size);
             const ctx = { window: {} };
+            vm.runInNewContext(fs.readFileSync("dist/bundle.js", "utf8"), ctx);
             vm.runInNewContext(fs.readFileSync("dist/bundle-art.js", "utf8"), ctx);
-            const totalArt = Object.values(ctx.window.ALYA_ART).reduce((n, v) => n + Object.keys(v).length, 0);
-            assert(totalArt >= 31, "Expected >= 31 illustrations, got " + totalArt);
+            assert(ctx.window.ALYA_BUNDLE && ctx.window.ALYA_BUNDLE.vols["4"], "Missing manifest in dist/bundle.js");
+            assert(!ctx.window.ALYA_BUNDLE.vols["4"].pages, "dist/bundle.js must stay lightweight manifest");
 
+            const art4 = JSON.parse(fs.readFileSync("dist/books/art-4.json", "utf8"));
+            const art45 = JSON.parse(fs.readFileSync("dist/books/art-4.5.json", "utf8"));
+            const totalArt = Object.keys(art4).length + Object.keys(art45).length;
+            const totalArtBytes = fs.statSync("dist/books/art-4.json").size + fs.statSync("dist/books/art-4.5.json").size;
+            assert(totalArt >= 31, "Expected >= 31 embedded illustrations, got " + totalArt);
+            assert(totalArtBytes > 3900000, "Expected art-4/art-4.5 > 3.9 MB, got " + totalArtBytes);
+
+            const embeddedByVol = { "4": art4, "4.5": art45 };
             for (const vol of Object.keys(VOLUMES)) {
-              const bookPath = path.join("dist", "books", vol + ".json");
-              assert(fs.existsSync(bookPath), "Missing " + bookPath);
-              const book = JSON.parse(fs.readFileSync(bookPath, "utf8"));
+              const vBookPath = path.join("dist", "books", "v" + vol + ".json");
+              const legacyBookPath = path.join("dist", "books", vol + ".json");
+              assert(fs.existsSync(vBookPath), "Missing " + vBookPath);
+              assert(fs.existsSync(legacyBookPath), "Missing " + legacyBookPath);
+              const book = JSON.parse(fs.readFileSync(vBookPath, "utf8"));
               for (const p of book.pages) {
                 if (!p.art) continue;
                 const pad = String(p.n).padStart(3, "0");
-                const hasEmbedded = Boolean(ctx.window.ALYA_ART[vol] && ctx.window.ALYA_ART[vol][pad]);
+                const hasEmbedded = Boolean(embeddedByVol[vol] && embeddedByVol[vol][pad]);
                 const hasAsset = fs.existsSync(path.join("dist", p.img));
                 assert(hasEmbedded || hasAsset, "Missing illustration for Vol " + vol + ": " + p.img);
               }
