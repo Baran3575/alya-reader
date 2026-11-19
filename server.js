@@ -29,6 +29,19 @@ const TR_CHAPTER = {
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
+// Kaynak flipbook / kaynak sayfa bağlantıları (Orijinal görünüm için)
+const FLIP_URLS = {
+  '5': 'https://online.fliphtml5.com/hlsms/zusi/',
+  '6': 'https://online.fliphtml5.com/hlsms/mfba/',
+  '7': 'https://online.fliphtml5.com/utpiy/ekus/',
+  '8': 'https://online.fliphtml5.com/utpiy/tlew/',
+  '9': 'https://online.fliphtml5.com/utpiy/ctbm/',
+  '10': 'https://online.fliphtml5.com/dzxyw/fhfj/',
+};
+const SOURCE_URLS = {
+  '9.5': 'https://glucosetl.xyz/translations/roshidere/behind-the-scenes',
+};
+
 const VOLUMES = Object.fromEntries(
   VOLUME_KEYS.map((k) => {
     if (k === '4') {
@@ -40,6 +53,8 @@ const VOLUMES = Object.fromEntries(
           imgPrefix: '/pages/',
           volume: 'Cilt 4',
           titlesFile: path.join(ROOT, 'data/chapters.json'),
+          flip: FLIP_URLS['4'] || null,
+          source: SOURCE_URLS['4'] || null,
         },
       ];
     }
@@ -52,6 +67,8 @@ const VOLUMES = Object.fromEntries(
         imgPrefix: `/pages${suffix}/`,
         volume: `Cilt ${k}`,
         titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
+        flip: FLIP_URLS[k] || null,
+        source: SOURCE_URLS[k] || null,
       },
     ];
   })
