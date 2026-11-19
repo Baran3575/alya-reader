@@ -1,5 +1,5 @@
 // Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
-// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js, public/bundle-art.js ve public/books/*.json üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
@@ -10,17 +10,35 @@ const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+const BOOKS_DIR = path.join(ROOT, 'public', 'books');
 
 function loadExistingArtBundle() {
-  if (!fs.existsSync(ART_OUT)) return {};
-  try {
-    const code = fs.readFileSync(ART_OUT, 'utf8');
-    const sandbox = { window: {} };
-    vm.runInNewContext(code, sandbox, { timeout: 2000 });
-    return sandbox.window.ALYA_ART || {};
-  } catch {
-    return {};
+  const out = {};
+  for (const k of ['4', '4.5']) {
+    const chunkFile = path.join(BOOKS_DIR, `art-${k}.json`);
+    if (fs.existsSync(chunkFile)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
+        if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+          out[k] = parsed;
+        }
+      } catch {}
+    }
   }
+  if (fs.existsSync(ART_OUT)) {
+    try {
+      const code = fs.readFileSync(ART_OUT, 'utf8');
+      const sandbox = { window: {} };
+      vm.runInNewContext(code, sandbox, { timeout: 2000 });
+      const legacy = sandbox.window.ALYA_ART || {};
+      for (const k of ['4', '4.5']) {
+        if (!out[k] && legacy[k] && Object.keys(legacy[k]).length > 0) {
+          out[k] = legacy[k];
+        }
+      }
+    } catch {}
+  }
+  return out;
 }
 
 const existingArt = loadExistingArtBundle();
@@ -61,35 +79,45 @@ for (const k of VOLUME_KEYS) {
   }
 }
 
-const raw = JSON.stringify({ vols });
+// cilt başına ayrı JSON parçaları (ilk yükleme hafif olsun)
+fs.mkdirSync(BOOKS_DIR, { recursive: true });
+const manifestVols = {};
+for (const [k, book] of Object.entries(vols)) {
+  fs.writeFileSync(path.join(BOOKS_DIR, 'v' + k + '.json'), JSON.stringify(book));
+  const artFile = path.join(BOOKS_DIR, 'art-' + k + '.json');
+  if (art[k] && Object.keys(art[k]).length) {
+    fs.writeFileSync(artFile, JSON.stringify(art[k]));
+  } else if (fs.existsSync(artFile)) {
+    fs.unlinkSync(artFile);
+  }
+  manifestVols[k] = { label: book.volume || 'Cilt ' + k, total: book.total, chapters: book.chapters };
+}
+
+const raw = JSON.stringify({ vols: manifestVols });
 const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
 
 const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
+  '/* yalnızca cilt manifesti; metin public/books/v<CİLT>.json dosyalarından yüklenir */\n' +
   'window.ALYA_BUNDLE=' + raw + ';\n' +
   'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
 
 fs.writeFileSync(OUT, body);
 
-const artCount = Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0);
 const artBody =
-  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
-  'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
-if (artCount > 0 && Object.keys(existingArt).length === 0) {
-  fs.writeFileSync(ART_OUT, artBody);
-  console.log('illüstrasyon (gömülü Cilt 4/4.5):', artCount, 'görsel |', (artBody.length / 1048576).toFixed(2), 'MB');
-} else if (!fs.existsSync(ART_OUT) || fs.statSync(ART_OUT).size < 256) {
-  fs.writeFileSync(ART_OUT, artBody);
-  console.log('illüstrasyon (gömülü Cilt 4/4.5):', artCount, 'görsel |', (artBody.length / 1048576).toFixed(2), 'MB');
-} else {
-  const hasDiskUpdate = ['4', '4.5'].some((k) => fs.existsSync(path.join(ROOT, VOLUMES[k].imgDir)));
-  if (hasDiskUpdate) {
-    fs.writeFileSync(ART_OUT, artBody);
-    console.log('illüstrasyon (gömülü Cilt 4/4.5):', artCount, 'görsel |', (artBody.length / 1048576).toFixed(2), 'MB');
-  } else {
-    console.log('illüstrasyon: mevcut public/bundle-art.js korundu |', (fs.statSync(ART_OUT).size / 1048576).toFixed(2), 'MB');
-  }
-}
+  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
+  'window.ALYA_ART_INDEX=' +
+  JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) +
+  ';\n';
+fs.writeFileSync(ART_OUT, artBody);
+
+console.log(
+  'illüstrasyon (gömülü Cilt 4/4.5):',
+  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  'görsel | indeks:',
+  (artBody.length / 1024).toFixed(1),
+  'KB'
+);
 const kb = (body.length / 1024).toFixed(0);
 console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
 for (const [k, b] of Object.entries(vols)) {

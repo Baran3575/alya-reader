@@ -396,39 +396,40 @@ function testRussianDialogueDomRendering() {
   const { renderParagraph } = require(path.join(ROOT, 'public', 'app.js'));
   const doc = createMockDocument();
 
-  // 1. Brace-initial Russian line strips braces and gets .dialog + .dialog-ru
+  // 1. Brace-initial Russian line keeps braces and gets .dialog + .dialog-ru
   const pBrace = renderParagraph('{Denizanasından korkuyorum! Masa-kun, yardım et!}', doc);
   assert.strictEqual(pBrace.tagName, 'P');
   assert.strictEqual(pBrace.className, 'dialog dialog-ru', 'Brace-initial line must get dialog and dialog-ru');
-  assert.strictEqual(pBrace.childNodes.length, 1);
-  assert.strictEqual(pBrace.childNodes[0].tagName, 'SPAN');
-  assert.strictEqual(pBrace.childNodes[0].className, 'ru-dialog');
-  assert.strictEqual(pBrace.textContent, 'Denizanasından korkuyorum! Masa-kun, yardım et!');
-  assert(!pBrace.textContent.includes('{') && !pBrace.textContent.includes('}'), 'Raw braces must be stripped');
+  assert.strictEqual(pBrace.childNodes.length, 3, 'opening brace, span, closing brace');
+  assert.strictEqual(pBrace.childNodes[1].tagName, 'SPAN');
+  assert.strictEqual(pBrace.childNodes[1].className, 'ru-dialog');
+  assert.strictEqual(pBrace.textContent, '{Denizanasından korkuyorum! Masa-kun, yardım et!}');
+  assert(pBrace.textContent.includes('{') && pBrace.textContent.includes('}'), 'Braces must stay visible like the source');
 
   // 2. Quote-initial line with inline {…} keeps .dialog (without .dialog-ru)
   const pQuote = renderParagraph('“Geçen gün Rusça {onlara dokunabilirsin} dememiş miydin…?”', doc);
   assert.strictEqual(pQuote.className, 'dialog', 'Quote-initial line must keep standard .dialog');
-  assert.strictEqual(pQuote.childNodes.length, 3);
-  assert.strictEqual(pQuote.childNodes[1].tagName, 'SPAN');
-  assert.strictEqual(pQuote.childNodes[1].className, 'ru-dialog');
-  assert.strictEqual(pQuote.childNodes[1].textContent, 'onlara dokunabilirsin');
+  assert.strictEqual(pQuote.childNodes.length, 5, 'text, {, span, }, text');
+  assert.strictEqual(pQuote.childNodes[2].tagName, 'SPAN');
+  assert.strictEqual(pQuote.childNodes[2].className, 'ru-dialog');
+  assert.strictEqual(pQuote.childNodes[2].textContent, 'onlara dokunabilirsin');
+  assert.strictEqual(pQuote.textContent, '“Geçen gün Rusça {onlara dokunabilirsin} dememiş miydin…?”');
 
   // 3. Romanized tooltip data on {Sen daha güzelsin.}
   const pRoma = renderParagraph('{Sen daha güzelsin.} Bu fısıltı kayboldu.', doc);
-  assert.strictEqual(pRoma.childNodes[0].dataset.ru, 'Ty krasivaya.');
-  assert.strictEqual(pRoma.childNodes[0].title, 'Ty krasivaya.');
+  assert.strictEqual(pRoma.childNodes[1].dataset.ru, 'Ty krasivaya.');
+  assert.strictEqual(pRoma.childNodes[1].title, 'Ty krasivaya.');
 
   // 4. XSS payload inside and outside {…} never invokes innerHTML or creates unexpected elements
   const xssInput = '{<img src=x onerror=alert(1)>} & <script>alert("xss")</script>';
   const pXss = renderParagraph(xssInput, doc);
-  assert.strictEqual(pXss.childNodes.length, 2);
-  assert.strictEqual(pXss.childNodes[0].tagName, 'SPAN');
-  assert.strictEqual(pXss.childNodes[0].childNodes.length, 1);
-  assert.strictEqual(pXss.childNodes[0].childNodes[0].nodeType, 3, 'Span child must be a pure TextNode');
-  assert.strictEqual(pXss.childNodes[0].textContent, '<img src=x onerror=alert(1)>');
-  assert.strictEqual(pXss.childNodes[1].nodeType, 3, 'Trailing content must be a pure TextNode');
-  assert.strictEqual(pXss.childNodes[1].textContent, ' & <script>alert("xss")</script>');
+  assert.strictEqual(pXss.childNodes.length, 4, '{, span, }, trailing text');
+  assert.strictEqual(pXss.childNodes[1].tagName, 'SPAN');
+  assert.strictEqual(pXss.childNodes[1].childNodes.length, 1);
+  assert.strictEqual(pXss.childNodes[1].childNodes[0].nodeType, 3, 'Span child must be a pure TextNode');
+  assert.strictEqual(pXss.childNodes[1].textContent, '<img src=x onerror=alert(1)>');
+  assert.strictEqual(pXss.childNodes[3].nodeType, 3, 'Trailing content must be a pure TextNode');
+  assert.strictEqual(pXss.childNodes[3].textContent, ' & <script>alert("xss")</script>');
 
   // 5. Unmatched '{' falls back safely to plain text via createTextNode (standalone and before valid span)
   const pUnmatched = renderParagraph('{Kapanmamış süslü parantez', doc);
@@ -438,38 +439,56 @@ function testRussianDialogueDomRendering() {
   assert.strictEqual(pUnmatched.textContent, '{Kapanmamış süslü parantez');
 
   const pMixedUnmatched = renderParagraph('{açık {Merhaba}', doc);
-  assert.strictEqual(pMixedUnmatched.childNodes.length, 2);
+  assert.strictEqual(pMixedUnmatched.childNodes.length, 4);
   assert.strictEqual(pMixedUnmatched.childNodes[0].nodeType, 3);
   assert.strictEqual(pMixedUnmatched.childNodes[0].textContent, '{açık ');
-  assert.strictEqual(pMixedUnmatched.childNodes[1].tagName, 'SPAN');
-  assert.strictEqual(pMixedUnmatched.childNodes[1].textContent, 'Merhaba');
+  assert.strictEqual(pMixedUnmatched.childNodes[2].tagName, 'SPAN');
+  assert.strictEqual(pMixedUnmatched.childNodes[2].textContent, 'Merhaba');
 
-  // 6. Parenthetical (…) inner monologue remains untouched plain text
+  // 6. Parenthetical (…) inner monologue keeps its words, marked as .thought
   const pThought = renderParagraph('(Ondan hiç nefret etmiyordum.)', doc);
-  assert.strictEqual(pThought.className, '');
+  assert.strictEqual(pThought.className, 'thought');
   assert.strictEqual(pThought.childNodes.length, 1);
   assert.strictEqual(pThought.childNodes[0].nodeType, 3);
   assert.strictEqual(pThought.textContent, '(Ondan hiç nefret etmiyordum.)');
 
-  // 7. Bundle and bundle-art integrity check
-  const artStat = fs.statSync(path.join(ROOT, 'public', 'bundle-art.js'));
-  assert(artStat.size > 1000000, 'public/bundle-art.js must retain embedded WebP data URIs');
+  // 7. Manifest + cilt parçaları bütünlüğü
   const bundleContent = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8');
-  assert(bundleContent.includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}'), 'bundle.js must contain repaired 149.4');
-  assert(bundleContent.includes('{Sen daha güzelsin.}'), 'bundle.js must contain repaired 267.2');
-  const bundleMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
-  assert(bundleMatch, 'bundle.js must define window.ALYA_BUNDLE');
-  const bundleJson = JSON.parse(bundleMatch[1]);
-  for (const [volKey, book] of Object.entries(bundleJson.vols)) {
+  const manifestMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
+  assert(manifestMatch, 'bundle.js must define window.ALYA_BUNDLE manifest');
+  const manifest = JSON.parse(manifestMatch[1]);
+  assert(manifest.vols['4'] && manifest.vols['4'].total > 0, 'manifest must list Cilt 4');
+  assert(manifest.vols['12'] && manifest.vols['12'].total > 0, 'manifest must list Cilt 12');
+  assert(!manifest.vols['4'].pages, 'manifest must not embed full page data');
+
+  const booksDir = path.join(ROOT, 'public', 'books');
+  if (!fs.existsSync(booksDir)) {
+    console.log('  (books/ yok — parça denetimi atlandı, npm run build:bundle ile üretilir)');
+  }
+  const volFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => f.endsWith('.json') && !f.startsWith('art-'))
+    : [];
+  if (fs.existsSync(booksDir)) assert(volFiles.length >= 11, 'public/books must contain one chunk per volume');
+
+  const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
+  const flat4 = vol4.pages.flatMap((p) => p.tr);
+  assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
+  assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
+
+  const art4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'art-4.json'), 'utf8'));
+  assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
+
+  for (const file of volFiles) {
+    const book = JSON.parse(fs.readFileSync(path.join(booksDir, file), 'utf8'));
     for (const pg of book.pages) {
       for (const line of pg.tr) {
-        assert(!/[『』「」]/.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain corner brackets`);
-        assert(!/\p{Script=Cyrillic}/u.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain Cyrillic`);
+        assert(!/[『』「」]/.test(line), `${file} p.${pg.n} tr must not contain corner brackets`);
+        assert(!/\p{Script=Cyrillic}/u.test(line), `${file} p.${pg.n} tr must not contain Cyrillic`);
       }
     }
   }
 
-  console.log('  ✓ Safe {…} DOM spans, tooltip metadata, unmatched brace fallback, bundle integrity, and XSS resistance verified');
+  console.log('  ✓ Safe {…} DOM spans, tooltip metadata, unmatched brace fallback, volume chunk integrity, and XSS resistance verified');
 }
 
 function testIntentionalUnbalancedDelimiters() {
