@@ -13,27 +13,29 @@ const path = require('path');
 const { runVerify } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
+const { VOLUME_SPECS, PHASES, getActiveVolumes } = require('../volumes');
 
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
+const MAX_FLAGGED_SHARE_STRICT = 0.005; // < 0.5% 3+ puanlı paragraf sınırı
 
-const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
-};
+const VOLUMES = Object.fromEntries(
+  Object.entries(VOLUME_SPECS).map(([key, spec]) => [
+    key,
+    {
+      tr: path.posix.join(spec.dataDir, 'paragraphs_final.json'),
+      label: spec.label,
+      phase: spec.phase,
+      maxAvgStrict: 0.12,
+      maxFlaggedShareStrict: MAX_FLAGGED_SHARE_STRICT,
+    },
+  ])
+);
 
-// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
+// Bölüm bazlı birleştirme sonrası sayfa sınırı tırnak istisnaları sıfırlandı
 const KNOWN_PAGE_SPLIT_QUOTES = {
-  '4': new Set([
-    '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
-    '173.4', '175.14', '190.13', '196.13', '197.7', '217.8', '233.6', '234.6',
-    '235.1', '254.14',
-  ]),
-  '4.5': new Set([
-    '12.2', '25.7', '32.5', '33.2', '47.3', '50.3', '67.4', '122.0',
-    '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
-    '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
-  ]),
+  '4': new Set(),
+  '4.5': new Set(),
 };
 
 const ZERO_TOLERANCE = [
@@ -47,21 +49,34 @@ const ZERO_TOLERANCE = [
   'çevirmen notu',
 ];
 
-function parseArgs() {
-  const args = process.argv.slice(2);
+function parseArgs(argv = process.argv.slice(2)) {
+  const args = argv;
   const json = args.includes('--json');
   const update = args.includes('--update-baseline');
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = getActiveVolumes(ROOT).map((v) => v.key);
+  if (selected.length === 0) selected = ['4', '4.5'];
+
+  let phase = null;
+  const phaseIdx = args.indexOf('--phase');
+  if (phaseIdx > -1 && args[phaseIdx + 1]) {
+    phase = Number(args[phaseIdx + 1]);
+    if (PHASES[phase]) {
+      selected = [...PHASES[phase].volumes];
+    } else {
+      selected = [`invalid_phase_${args[phaseIdx + 1]}`];
+    }
+  }
+
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
     selected = [val];
   }
 
-  return { args, json, update, strict, checkRegression, selected };
+  return { args, json, update, strict, checkRegression, selected, phase };
 }
 
 function validateSchema(filePath) {
@@ -103,9 +118,20 @@ function findUnclosedQuotes(data, vol) {
   for (const [pg, arr] of Object.entries(data)) {
     arr.forEach((text, i) => {
       const key = `${pg}.${i}`;
-      const curlyQuotes = (text.match(/[“”]/g) || []).length;
-      if (curlyQuotes % 2 !== 0 && !known.has(key)) {
-        unclosed.push({ key, text: text.slice(0, 100), count: curlyQuotes });
+      if (known.has(key)) return;
+      const openCount = (text.match(/“/g) || []).length;
+      const closeCount = (text.match(/”/g) || []).length;
+      let balance = 0;
+      let inverted = false;
+      for (const ch of text) {
+        if (ch === '“') balance++;
+        else if (ch === '”') {
+          balance--;
+          if (balance < 0) inverted = true;
+        }
+      }
+      if (openCount !== closeCount || inverted) {
+        unclosed.push({ key, text: text.slice(0, 100), count: openCount + closeCount });
       }
     });
   }
@@ -174,11 +200,49 @@ function generateMarkdownSummary(result, violations, options) {
   return lines.join('\n');
 }
 
+function checkPhasePrerequisites(targetPhase, rootDir = ROOT) {
+  const errors = [];
+  if (!targetPhase || targetPhase <= 1 || !PHASES[targetPhase]) return errors;
+
+  // Faz 2..5 başlamadan / geçmeden önce Faz 1 (Cilt 4 & 4.5) hedefleri (< 0.12 ort., < %0.5 3+ puanlı) sağlanmalıdır.
+  for (const prereqVol of PHASES[1].volumes) {
+    const cfg = VOLUMES[prereqVol];
+    const abs = path.resolve(rootDir, cfg.tr);
+    if (!fs.existsSync(abs)) {
+      errors.push(`Faz 1 önkoşul dosyası eksik: ${cfg.tr}`);
+      continue;
+    }
+    const schema = validateSchema(abs);
+    if (!schema.ok) {
+      errors.push(`Faz 1 (${cfg.label}) şema hatası`);
+      continue;
+    }
+    const q = evaluateData(schema.data);
+    const share = q.total > 0 ? q.flagged / q.total : 0;
+    if (q.avg >= cfg.maxAvgStrict || share >= cfg.maxFlaggedShareStrict) {
+      errors.push(
+        `Faz 1 (${cfg.label}) eşiği sağlanmadı: avg=${q.avg} (<${cfg.maxAvgStrict}), 3+ oran=${(share * 100).toFixed(2)}% (<0.5%)`
+      );
+    }
+  }
+  return errors;
+}
+
 function main() {
-  const { json, update, strict, checkRegression, selected } = parseArgs();
+  const { json, update, strict, checkRegression, selected, phase } = parseArgs();
   const baseline = fs.existsSync(BASELINE_FILE) ? JSON.parse(fs.readFileSync(BASELINE_FILE, 'utf8')) : {};
   const result = {};
   const violations = [];
+
+  if (phase && phase >= 2) {
+    const prereqErrors = checkPhasePrerequisites(phase, ROOT);
+    if (prereqErrors.length > 0) {
+      violations.push({
+        vol: `Faz ${phase}`,
+        fails: prereqErrors.map((msg) => ({ label: 'önceki faz kapısı', value: msg })),
+      });
+    }
+  }
 
   for (const vol of selected) {
     const cfg = VOLUMES[vol];
@@ -262,12 +326,20 @@ function main() {
 
     // 5. Kalite Puanı Eşik ve Regresyon Kapısı
     if (strict) {
-      // Strict Mod Gating (Requirement 3: average score below 0.20 for Vol 4)
-      if (cfg.maxAvgStrict !== undefined && q.avg > cfg.maxAvgStrict) {
+      // Strict Mod Gating: tüm aktif ciltler için ortalama ceza < 0.12 ve 3+ puanlı oran < %0.5
+      if (cfg.maxAvgStrict !== undefined && q.avg >= cfg.maxAvgStrict) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
           value: q.avg,
-          baseline: cfg.maxAvgStrict,
+          baseline: `< ${cfg.maxAvgStrict}`,
+        });
+      }
+      const flaggedShare = q.total > 0 ? q.flagged / q.total : 0;
+      if (cfg.maxFlaggedShareStrict !== undefined && flaggedShare >= cfg.maxFlaggedShareStrict) {
+        hardFails.push({
+          label: '3+ puanlı paragraf oranı (strict %0.5 sınırı aşıldı)',
+          value: `${(flaggedShare * 100).toFixed(2)}% (${q.flagged}/${q.total})`,
+          baseline: '< 0.50%',
         });
       }
       if (base.avg !== undefined && q.avg > base.avg + 0.01) {
@@ -409,6 +481,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
+  MAX_FLAGGED_SHARE_STRICT,
+  parseArgs,
+  checkPhasePrerequisites,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,

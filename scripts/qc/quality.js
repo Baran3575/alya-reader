@@ -5,10 +5,10 @@ const path = require('path');
 
 // Ağırlıklı izler: [ad, regex, puan]
 const SIGNS = [
-  ['kalıp: bir şekilde', /bir şekilde/g, 2],
-  ['kalıp: bir nevi', /bir nevi/g, 2],
-  ['kalıp: söz konusu', /söz konusu/g, 3],
-  ['kalıp: -lı bir şekilde', /lı bir şekilde|li bir şekilde/g, 3],
+  ['kalıp: bir şekilde', /(?<!l[ıiuü]\s)bir şekilde/giu, 2],
+  ['kalıp: bir nevi', /bir nevi/giu, 2],
+  ['kalıp: söz konusu', /söz konusu/giu, 3],
+  ['kalıp: -lı bir şekilde', /l[ıiuü]\s+bir şekilde/giu, 3],
   ['kalıp: olmasına rağmen', /olmasına rağmen/g, 1],
   ['kalıp: açısından', /açısından/g, 1],
   ['kalıp: konusunda', /konusunda/g, 1],
