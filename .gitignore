@@ -8,3 +8,6 @@ data*/back_en.json
 .stitch/captures/
 .cache/
 dist/
+
+# üretilen cilt parçaları (npm run build:bundle)
+public/books/

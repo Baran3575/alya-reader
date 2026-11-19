@@ -18,9 +18,24 @@ fs.rmSync(DIST, { recursive: true, force: true });
 fs.cpSync(PUB, DIST, { recursive: true });
 fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
 
+// dist/ altında 4MB kaynak bundle-art.js yerine hafif indeks bırak (görseller dist/books/art-*.json içindedir)
+const distArtJs = path.join(DIST, 'bundle-art.js');
+if (fs.existsSync(distArtJs)) {
+  const firstLines = fs.readFileSync(distArtJs, 'utf8').split('\n').slice(0, 2).join('\n') + '\n';
+  fs.writeFileSync(distArtJs, firstLines);
+}
+
 // 3) Statik /books/<vol>.json dosyalarını üret ve görsel bütünlüğünü doğrula
 const booksDir = path.join(DIST, 'books');
 fs.mkdirSync(booksDir, { recursive: true });
+
+for (const embeddedVol of ['4', '4.5']) {
+  const artJson = path.join(booksDir, `art-${embeddedVol}.json`);
+  if (!fs.existsSync(artJson)) {
+    console.error(`✗ Eksik gömülü illüstrasyon paketi: books/art-${embeddedVol}.json`);
+    process.exit(1);
+  }
+}
 
 let builtCount = 0;
 let missingAssets = 0;

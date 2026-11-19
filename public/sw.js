@@ -1,7 +1,7 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
 // Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
-const VERSION = 'alya-v5';
-const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
+const VERSION = 'alya-v6';
+const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -27,7 +27,7 @@ self.addEventListener('fetch', (e) => {
   // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
     /\/pages\d*\//.test(url.pathname) ||
-    /\/(?:books|volumes)\/[0-9.]+\.json$/.test(url.pathname) ||
+    /\/(?:books|volumes)\/(?:v|art-)?[0-9.]+\.json$/.test(url.pathname) ||
     url.pathname.endsWith('/api/book') ||
     url.pathname.endsWith('/bundle.js') ||
     url.pathname.endsWith('/bundle-art.js');

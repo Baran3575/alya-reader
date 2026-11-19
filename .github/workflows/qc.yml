@@ -6,6 +6,7 @@ on:
       - 'data*/**'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
+      - 'scripts/polish_volume.js'
       - 'scripts/norm_typo.js'
       - 'scripts/fix_boundaries.js'
       - '.github/workflows/qc.yml'

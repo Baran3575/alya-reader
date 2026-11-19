@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const vm = require('vm');
 
 const ROOT = __dirname;
 const PUB = path.join(ROOT, 'public');
@@ -92,6 +93,25 @@ function matchPageHeading(firstLine) {
   return null;
 }
 
+let EMBEDDED_ART_CACHE = null;
+function getEmbeddedArt() {
+  if (EMBEDDED_ART_CACHE) return EMBEDDED_ART_CACHE;
+  const artPath = path.join(PUB, 'bundle-art.js');
+  if (!fs.existsSync(artPath)) {
+    EMBEDDED_ART_CACHE = {};
+    return EMBEDDED_ART_CACHE;
+  }
+  try {
+    const code = fs.readFileSync(artPath, 'utf8');
+    const sandbox = { window: {} };
+    vm.runInNewContext(code, sandbox, { timeout: 2000 });
+    EMBEDDED_ART_CACHE = sandbox.window.ALYA_ART || {};
+  } catch {
+    EMBEDDED_ART_CACHE = {};
+  }
+  return EMBEDDED_ART_CACHE;
+}
+
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
   const imgPrefix = opt.imgPrefix || '/pages/';
@@ -140,6 +160,13 @@ function buildBook(opt = {}) {
     }
 
     // Geriye dönük Cilt 4 / Cilt 4.5 davranışı
+    const relDiskPath = path.join(PUB, imgUrl.replace(/^\/+/, ''));
+    const hasDiskImg = fs.existsSync(relDiskPath);
+    const volKeyForArt = dataDir === 'data45' ? '4.5' : '4';
+    const padKey = String(p.page).padStart(3, '0');
+    const embeddedVolArt = getEmbeddedArt()[volKeyForArt] || {};
+    const hasEmbedArt = Boolean(embeddedVolArt[padKey]);
+
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const isSingleHeading = Boolean(enParas.length === 1 && matchPageHeading(enParas[0]));
@@ -150,15 +177,17 @@ function buildBook(opt = {}) {
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
+    const art = p.page > 3 && cleanLen < 220 && (hasDiskImg || hasEmbedArt);
 
-    return {
+    const item = {
       n: p.page,
       img: imgUrl,
       tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
     };
+    if (hasDiskImg) item.hasScan = true;
+    return item;
   });
 
   let chapters = [];
@@ -302,13 +331,25 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Statik JSON uç noktası (/books/<v>.json veya /volumes/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/(?:books|volumes)\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktası (/books/v<v>.json, /books/<v>.json veya /volumes/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/(?:books\/v?|volumes\/)([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);
       return send(req, res, 200, MIME['.json'], loaded.json);
     } catch {}
+  }
+
+  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
+  if (artJsonMatch) {
+    const diskArt = path.join(PUB, 'books', `art-${artJsonMatch[1]}.json`);
+    if (!fs.existsSync(diskArt)) {
+      const pack = getEmbeddedArt()[artJsonMatch[1]];
+      if (pack && Object.keys(pack).length) {
+        return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(pack)));
+      }
+      return send(req, res, 404, MIME['.json'], Buffer.from('{}'));
+    }
   }
 
   if (pathname === '/') pathname = '/index.html';
