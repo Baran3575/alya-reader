@@ -1,0 +1,17 @@
+[
+  {
+    "page": 156,
+    "find": "Şey… Denizde yeterince eğlendin mi?”",
+    "replace": "“Şey… Denizde yeterince eğlendin mi?”"
+  },
+  {
+    "page": 172,
+    "find": "Banyoda sadece üç duş olduğu için beş kişi aynı anda duş alamıyordu; bu yüzden sırasını beklemek zorundaydı. Bu yüzden duş almak için sırasını beklemek zorundaydı. Aslında, iki senpai sırayı önce kouhai’lerine bırakmaya çalıştılar, ancak Yuki, “Madem ki bizde.",
+    "replace": "Banyoda sadece üç duş vardı, bu yüzden beş kişi aynı anda duş alamıyor ve sıranın gelmesini beklemek gerekiyordu. Aslında iki senpai sırayı önce kouhai’lerine bırakmaya çalıştı, ama Yuki “Madem saçlarımız uzun, yıkanması da uzun sürer” diyerek geri durdu."
+  },
+  {
+    "page": 175,
+    "find": "“En ilgi çekici olan şey… Böyle söylememem gerekse de, sende de o.",
+    "replace": "“En dikkat çekici şey… Böyle söylememem gerekse de, okul gezisinde benzer bir manzarayla karşılaşma fırsatın olmadı mı?”"
+  }
+]

@@ -8,12 +8,20 @@
   "t": "“Eh, o yeteneğini sonra gösterirsin… Ama önce hadi şuna binelim!!”"
  },
  {
-  "page": 68,
-  "i": 5,
+  "page": 59,
+  "i": 2,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "Evet…"
+ },
+ {
+  "page": 81,
+  "i": 4,
   "en": true,
   "tr": false,
   "mode": "exact",
-  "t": "“Ha! Evet!!!”"
+  "t": "Çenesini kaldırıp böyle dedikten sonra Alisa yatağa uzandı."
  },
  {
   "page": 131,
@@ -32,12 +40,12 @@
   "t": "“Ah, evet, doğru.”"
  },
  {
-  "page": 165,
-  "i": 7,
+  "page": 178,
+  "i": 9,
   "en": true,
   "tr": false,
-  "mode": "exact",
-  "t": "Masachika, gözleri yaşla dolu bir hâlde yere bakan, sıkılı dişlerinin arasından hırıltıyla hıçkırık arası bir ses çıkaran Alisa’dan özür diledi. Sonra Alisa aniden arkasını döndü, birkaç adım atıp Masachika’ya sırtını dönerek çömeldi."
+  "mode": "proportional",
+  "t": "Bunu söyledikten sonra Yuki hızla oturma odasına gitti. Başını kaldırıp baktığında, Ayano da Maria ve Chisaki’nin bulunduğu odaya doğru ilerliyordu."
  },
  {
   "page": 180,

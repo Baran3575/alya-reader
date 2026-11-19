@@ -758,9 +758,7 @@
     for (const li of $('tocList').children) {
       li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
     }
-    $('modeText').classList.toggle('is-on', state.mode === 'text');
-    $('modePage').classList.toggle('is-on', state.mode === 'page');
-    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+    syncModeToggle();
 
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     state.page = targetPage;
@@ -895,15 +893,21 @@
   $('prevBtn').addEventListener('click', prev);
   $('nextBtn').addEventListener('click', next);
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
-  $('modeBtn').addEventListener('click', () => {
-    state.mode = state.mode === 'text' ? 'page' : 'text';
-    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
-    render();
-  });
+  $('modeBtn').addEventListener('click', () => switchMode(state.mode === 'text' ? 'page' : 'text'));
+  function syncModeToggle() {
+    const label = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+    const target = state.mode === 'text' ? 'Orijinal metne geç (v)' : 'Çeviriye geç (v)';
+    const main = $('modeToggle');
+    if (main) {
+      main.textContent = label;
+      main.title = target;
+      main.setAttribute('aria-pressed', state.mode === 'text' ? 'false' : 'true');
+    }
+    const legacy = $('modeBtn');
+    if (legacy) legacy.textContent = label;
+  }
   function syncModeButtons() {
-    $('modeText').classList.toggle('is-on', state.mode === 'text');
-    $('modePage').classList.toggle('is-on', state.mode === 'page');
-    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+    syncModeToggle();
   }
   function switchMode(mode) {
     if (state.mode === mode) return;
@@ -916,8 +920,7 @@
     readerEl.classList.add('is-switching');
     window.scrollTo({ top: 0, behavior: 'auto' });
   }
-  $('modeText').addEventListener('click', () => switchMode('text'));
-  $('modePage').addEventListener('click', () => switchMode('page'));
+  $('modeToggle').addEventListener('click', () => switchMode(state.mode === 'text' ? 'page' : 'text'));
 
   function toggleToc() {} // sade arayüzde ayrı panel yok (bölüm seçici <select>)
 
@@ -953,7 +956,7 @@
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
     else if (e.key === 't') $('themeBtn').click();
-    else if (e.key === 'v') (state.mode === 'text' ? $('modePage') : $('modeText')).click();
+    else if (e.key === 'v') switchMode(state.mode === 'text' ? 'page' : 'text');
     else return;
     e.preventDefault();
   });

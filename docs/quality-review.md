@@ -8,15 +8,15 @@ Puan: metin kalitesi göstergelerinin ağırlıklı toplamı (düşük = daha te
 | 4 | Başlangıç — Kapak ve görseller | 80 | 4.7 | 0 | bir şey: 1, gerçekten: 1, tarafından: 1 | s.13(3) |
 | 4 | Önsöz — Unutmak İstediğim Geçmiş | 1079 | 5.1 | 2 | senin/benim/onun: 8, bir şey: 3, gerçekten: 2, cümle başı Ama: 1 | s.16(4), s.17(4), s.18(4), s.15(2) |
 | 4 | Bölüm 1 — Karın fetişi diye bir şey duymadım hiç | 4244 | 6.9 | 3 | senin/benim/onun: 18, bir şey: 15, cümle başı Ama: 11, gerçekten: 7 | s.31(6), s.38(6), s.22(5), s.25(4) |
-| 4 | Bölüm 2 — Otaku'lar gerçekten sinir bozucu | 4242 | 7.4 | 5 | sadece: 10, cümle başı Ama: 8, bir şey: 7, gerçekten: 6 | s.50(8), s.57(8), s.68(6), s.56(5) |
-| 4 | Bölüm 3 — Ha? Gerçekten mi? | 5774 | 8.3 | 1 | senin/benim/onun: 18, bir şey: 16, sadece: 14, olduğunu: 14 | s.90(16), s.80(15), s.91(14), s.76(9) |
+| 4 | Bölüm 2 — Otaku'lar gerçekten sinir bozucu | 4242 | 7.3 | 5 | sadece: 10, cümle başı Ama: 8, bir şey: 7, gerçekten: 6 | s.50(8), s.57(8), s.68(6), s.56(5) |
+| 4 | Bölüm 3 — Ha? Gerçekten mi? | 5774 | 8.1 | 1 | senin/benim/onun: 18, bir şey: 16, sadece: 14, olduğunu: 14 | s.90(16), s.80(15), s.76(9), s.84(9) |
 | 4 | Bölüm 4 — Hayır, durum öyle değil | 3025 | 6.9 | 2 | cümle başı Ama: 14, gerçekten: 10, bir şey: 6, sadece: 5 | s.110(6), s.117(6), s.105(4), s.107(4) |
-| 4 | Bölüm 5 — O sumo değil | 5408 | 7.5 | 6 | sadece: 13, bir şey: 12, cümle başı Ama: 9, senin/benim/onun: 9 | s.146(9), s.149(9), s.127(3), s.139(3) |
-| 4 | Bölüm 6 — Bir kaplumbağa olmak istiyorum | 3868 | 8.0 | 0 | sadece: 16, senin/benim/onun: 15, bir şey: 14, gerçekten: 8 | s.156(14), s.170(13), s.166(8), s.163(7) |
-| 4 | Bölüm 7 — Sanki Süzülüyor Gibi | 4386 | 8.3 | 0 | bir şey: 15, sadece: 13, gerçekten: 11, cümle başı Ve: 7 | s.182(14), s.186(13), s.184(9), s.180(8) |
+| 4 | Bölüm 5 — O sumo değil | 5408 | 7.4 | 6 | sadece: 13, bir şey: 12, cümle başı Ama: 9, senin/benim/onun: 9 | s.146(9), s.149(9), s.127(3), s.139(3) |
+| 4 | Bölüm 6 — Bir kaplumbağa olmak istiyorum | 3868 | 7.7 | 0 | sadece: 16, senin/benim/onun: 15, bir şey: 14, gerçekten: 8 | s.170(13), s.156(10), s.166(8), s.163(7) |
+| 4 | Bölüm 7 — Sanki Süzülüyor Gibi | 4391 | 8.1 | 0 | bir şey: 15, sadece: 13, gerçekten: 11, cümle başı Ve: 7 | s.182(14), s.186(13), s.184(9), s.180(8) |
 | 4 | Bölüm 8 — Deliryum sırasında beklenmedik sürprizler mi? | 4060 | 7.3 | 2 | bir şey: 13, cümle başı Ama: 13, olduğunu: 10, senin/benim/onun: 9 | s.211(11), s.205(6), s.212(5), s.213(5) |
 | 4 | Bölüm 9 — Senin tarafından zorba olarak nitelendirilmek istemiyorum | 3626 | 7.3 | 1 | senin/benim/onun: 13, cümle başı Ama: 11, bir şey: 7, olduğunu: 5 | s.233(10), s.232(7), s.230(4), s.223(3) |
-| 4 | Bölüm 10 — Sevgi Duyguları | 5578 | 7.5 | 3 | cümle başı Ama: 24, bir şey: 14, senin/benim/onun: 12, sadece: 9 | s.265(9), s.264(7), s.269(5), s.270(5) |
+| 4 | Bölüm 10 — Sevgi Duyguları | 5581 | 7.6 | 3 | cümle başı Ama: 24, bir şey: 14, senin/benim/onun: 12, sadece: 9 | s.265(9), s.264(7), s.269(5), s.270(5) |
 | 4 | Sonsöz — Unutulmaması Gereken Bir Geçmiş | 2206 | 7.4 | 0 | olduğunu: 9, bir şey: 7, cümle başı Ama: 7, cümle başı Ve: 3 | s.277(8), s.281(5), s.274(3), s.280(3) |
 | 5 | İllüstrasyonlar — İllüstrasyonlar | 0 | 0.0 | 0 | — | — |
 | 5 | Prolog — Rastlamak | 1897 | 8.2 | 0 | senin/benim/onun: 8, sadece: 5, bir şey: 4, gerçekten: 3 | s.9(13), s.6(11), s.12(10), s.8(9) |
