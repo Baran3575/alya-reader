@@ -10,7 +10,7 @@ const NAMES = [
 const SKIP_CREDIT_RE =
   /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
 
-const TERMINAL_SENT_RE = /[.!?"”'\u2019…~)\]»*}◇』⋆♪]$/;
+const TERMINAL_SENT_RE = /[.!?"”'\u2019…~)\]»*}◇⋆♪]$/;
 
 const words = (t) => (String(t || '').match(/[\p{L}\p{N}]+/gu) || []).length;
 const sents = (t) => (String(t || '').match(/[.!?…]/g) || []).length;
