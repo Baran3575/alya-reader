@@ -90,8 +90,12 @@ function polish(text, glossary = loadGlossary()) {
     if (t) t = t.charAt(0).toLocaleUpperCase('tr') + t.slice(1);
   }
 
-  // 3) noktalama / boşluk ve kıvrık tırnak düzeltmeleri
+  // 3) noktalama / boşluk, Rusça fısıltı ayracı {...} ve kıvrık tırnak düzeltmeleri
   t = t
+    .replace(/\{\s+/g, '{')
+    .replace(/\s+\}/g, '}')
+    .replace(/(?<=[\p{L}\p{N},.;:!?…”])\{/gu, ' {')
+    .replace(/\}(?=[\p{L}\p{N}“])/gu, '} ')
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/\s+([,.;:!?])/g, '$1')
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')

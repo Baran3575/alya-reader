@@ -2,12 +2,12 @@
   "titles": {
     "1": "İllüstrasyonlar",
     "12": "Küçük Kardeş Modu, Etkinleştir",
-    "17": "Eziciliğimden Önce Titreme",
+    "17": "Ezici Sevimliliğimin Karşısında Titreyin!",
     "39": "Ayano Havaya Karışıyor",
-    "53": "Biz sadece yatakta sarılıyoruz ve konuşuyoruz",
-    "72": "Alisa’nın Beyin Zamanını ve Zamanını Yok Etmek",
+    "53": "Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var?",
+    "72": "Alisa’nın Beynini Defalarca Yok Etmek",
     "105": "Sır Paylaşım Oturumu Başlıyor",
-    "130": "Patronlar Arkadan Çıkıyor",
+    "130": "Patronlar Perde Arkasından Ortaya Çıkıyor",
     "152": "Kötü öğretir",
     "172": "Meryem Ana, Hizmetçi ve Yarık",
     "198": "Perde Yükseliyor",
@@ -29,8 +29,8 @@
     },
     {
       "label": "Bölüm 1",
-      "title": "Eziciliğimden Önce Titreme",
-      "enTitle": "Tremble Before My Overwhelming",
+      "title": "Ezici Sevimliliğimin Karşısında Titreyin!",
+      "enTitle": "Tremble Before My Overwhelming Cuteness!",
       "startPage": 17
     },
     {
@@ -41,14 +41,14 @@
     },
     {
       "label": "Bölüm 3",
-      "title": "Biz sadece yatakta sarılıyoruz ve konuşuyoruz",
-      "enTitle": "We’re Just Cuddlin’ in Bed and Talking",
+      "title": "Biz sadece yatakta sarılıyoruz ve aşktan bahsediyoruz; Bununla ilgili bir sorun mu var?",
+      "enTitle": "We’re Just Cuddlin’ in Bed and Talking ’Bout Love; Got a Problem With That?",
       "startPage": 53
     },
     {
       "label": "Bölüm 4",
-      "title": "Alisa’nın Beyin Zamanını ve Zamanını Yok Etmek",
-      "enTitle": "Destroying Alisa’s Brain Time and Time",
+      "title": "Alisa’nın Beynini Defalarca Yok Etmek",
+      "enTitle": "Destroying Alisa’s Brain Time and Time Again",
       "startPage": 72
     },
     {
@@ -59,8 +59,8 @@
     },
     {
       "label": "Bölüm 6",
-      "title": "Patronlar Arkadan Çıkıyor",
-      "enTitle": "The Bosses Emerge from Behind the",
+      "title": "Patronlar Perde Arkasından Ortaya Çıkıyor",
+      "enTitle": "The Bosses Emerge from Behind the Scenes",
       "startPage": 130
     },
     {

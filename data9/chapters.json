@@ -3,7 +3,7 @@
     "1": "İllüstrasyonlar",
     "8": "Buna rağmen Yuki hâlâ bir çocuktu",
     "12": "Ve Her Şey Uyluk Oldu",
-    "32": "Ve böylece Çocuk ve Annesi",
+    "32": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
     "52": "Ve Hepsi Hiçbir Şeye Dönüştü",
     "71": "Ve Masachika Bir Karar Verdi",
     "89": "Ve Sonra Kanun Gerçek Oldu",
@@ -12,6 +12,7 @@
     "181": "Ve Böylece Tohumlar Ekildi",
     "200": "Ve böylece ikisi karşı karşıya geldi",
     "226": "Böylece Kendim Oldum",
+    "235": "Soğuk Bir Adamın Kalbi",
     "253": "Sonsöz"
   },
   "chapters": [
@@ -35,8 +36,8 @@
     },
     {
       "label": "Bölüm 2",
-      "title": "Ve böylece Çocuk ve Annesi",
-      "enTitle": "And So The Child And His Mother’s",
+      "title": "Ve Böylece Çocuk ile Annesinin Gözleri Buluştu",
+      "enTitle": "And So The Child And His Mother’s Eyes Met",
       "startPage": 32
     },
     {
@@ -86,6 +87,12 @@
       "title": "Böylece Kendim Oldum",
       "enTitle": "So I Became Myself",
       "startPage": 226
+    },
+    {
+      "label": "Yan Hikâye",
+      "title": "Soğuk Bir Adamın Kalbi",
+      "enTitle": "The Heart Of A Cold Man",
+      "startPage": 235
     },
     {
       "label": "Sonsöz",

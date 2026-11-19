@@ -3,17 +3,19 @@
     "1": "İllüstrasyonlar",
     "8": "Sihirbazım",
     "11": "Bu Adamlar Bu İşe Çok Girmiş",
-    "31": "Bir Otaku’nun Romantizmi",
-    "58": "Ben Bunu Daha Ciddiye Aldım",
-    "82": "Dürüst olmak gerekirse, Kalbim Oldukça Dalgalandı",
-    "103": "Bir biçimde Daha İyi Hissediyorum",
-    "127": "Savaş Gücü Önemlidir, Değil mi?",
-    "158": "Şiddet Herşeyi Çözer",
-    "188": "Verim Vermezse Yoktur",
-    "204": "Sözümü Tutacağım",
-    "224": "Ona Teşekkür Etmek İstiyorum ve Şunu Söylemek İstiyorum:",
-    "244": "Şimdi, Sadece Şu Anda",
-    "263": "Sonsöz"
+    "32": "Bir Otaku’nun Romantizmi",
+    "59": "Tartışmadan Daha Ciddiye Aldım",
+    "83": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
+    "104": "Bir biçimde Daha İyi Hissediyorum",
+    "128": "Savaş Gücü Önemlidir, Değil mi?",
+    "159": "Şiddet Herşeyi Çözer",
+    "189": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
+    "205": "Sözümü Tutacağım",
+    "225": "Ona teşekkür etmek ve veda etmek istiyorum",
+    "245": "Şimdi, Sadece Şu Anda",
+    "258": "Slit-Paisen’in Doğduğu Gün",
+    "264": "Sonsöz",
+    "266": "Yuri Dünyayı Kurtarıyor"
   },
   "chapters": [
     {
@@ -37,68 +39,80 @@
     {
       "label": "Bölüm 2",
       "title": "Bir Otaku’nun Romantizmi",
-      "enTitle": "An Otaku’s Romance",
-      "startPage": 31
+      "enTitle": "An Otaku&rsquo;s Romance",
+      "startPage": 32
     },
     {
       "label": "Bölüm 3",
-      "title": "Ben Bunu Daha Ciddiye Aldım",
-      "enTitle": "I Took It More Seriously Than The",
-      "startPage": 58
+      "title": "Tartışmadan Daha Ciddiye Aldım",
+      "enTitle": "I Took It More Seriously Than The Debate",
+      "startPage": 59
     },
     {
       "label": "Bölüm 4",
-      "title": "Dürüst olmak gerekirse, Kalbim Oldukça Dalgalandı",
-      "enTitle": "Honestly, My Heart Wavered Quite A",
-      "startPage": 82
+      "title": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
+      "enTitle": "Honestly, My Heart Wavered Quite A Bit",
+      "startPage": 83
     },
     {
       "label": "Bölüm 5",
       "title": "Bir biçimde Daha İyi Hissediyorum",
-      "enTitle": "I’m Feeling Better, In A Way",
-      "startPage": 103
+      "enTitle": "I&rsquo;m Feeling Better, In A Way",
+      "startPage": 104
     },
     {
       "label": "Bölüm 6",
       "title": "Savaş Gücü Önemlidir, Değil mi?",
       "enTitle": "Combat Strength Is Important, Right?",
-      "startPage": 127
+      "startPage": 128
     },
     {
       "label": "Bölüm 7",
       "title": "Şiddet Herşeyi Çözer",
       "enTitle": "Violence Solves Everything",
-      "startPage": 158
+      "startPage": 159
     },
     {
       "label": "Bölüm 8",
-      "title": "Verim Vermezse Yoktur",
-      "enTitle": "If It Doesn’t Yield, Then There’s No",
-      "startPage": 188
+      "title": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
+      "enTitle": "If It Doesn&rsquo;t Yield, Then There&rsquo;s No Choice But To Break It",
+      "startPage": 189
     },
     {
       "label": "Bölüm 9",
       "title": "Sözümü Tutacağım",
-      "enTitle": "I’ll Keep My Word",
-      "startPage": 204
+      "enTitle": "I&rsquo;ll Keep My Word",
+      "startPage": 205
     },
     {
       "label": "Bölüm 10",
-      "title": "Ona Teşekkür Etmek İstiyorum ve Şunu Söylemek İstiyorum:",
-      "enTitle": "I Want To Thank Her And Say",
-      "startPage": 224
+      "title": "Ona teşekkür etmek ve veda etmek istiyorum",
+      "enTitle": "I Want To Thank Her And Say Goodbye",
+      "startPage": 225
     },
     {
       "label": "Epilog",
       "title": "Şimdi, Sadece Şu Anda",
       "enTitle": "Now, Only At This Moment",
-      "startPage": 244
+      "startPage": 245
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Slit-Paisen’in Doğduğu Gün",
+      "enTitle": "The Day Slit-Paisen Was Born",
+      "startPage": 258
     },
     {
       "label": "Sonsöz",
       "title": "Sonsöz",
       "enTitle": "Afterword",
-      "startPage": 263
+      "startPage": 264
+    },
+    {
+      "label": "Ek Hikâye",
+      "title": "Yuri Dünyayı Kurtarıyor",
+      "enTitle": "Yuri Saves The World",
+      "startPage": 266
     }
   ]
 }

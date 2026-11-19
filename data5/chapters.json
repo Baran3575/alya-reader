@@ -3,10 +3,10 @@
     "1": "İllüstrasyonlar",
     "5": "Rastlamak",
     "16": "Kavuşma ve Veda",
-    "31": "Bunun bir rüya olması şu anlama gelmez:",
-    "53": "O Yolda Ne Yapacaktı?",
+    "31": "Rüya olması gerçek olduğu anlamına gelmez…",
+    "53": "O tarafta ne yapacaktı?",
     "78": "Bir Erkeğin Allığına Kim İhtiyaç Duyar?",
-    "101": "Rus Dere veya Açığa Çıkan Aşk",
+    "101": "Rus Dere veya Kısaca Açığa Çıkan Aşk",
     "124": "Gerçekten Bunda Suçlu Olmadığımı Düşünüyorum",
     "149": "Üzgünüm, Suçluyum",
     "174": "Erkeklerin Yüzü Bu yüzden Kızarır…",
@@ -36,14 +36,14 @@
     },
     {
       "label": "Bölüm 2",
-      "title": "Bunun bir rüya olması şu anlama gelmez:",
-      "enTitle": "Just Because It’s A Dream Doesn’t Mean",
+      "title": "Rüya olması gerçek olduğu anlamına gelmez…",
+      "enTitle": "Just Because It’s A Dream Doesn’t Mean It’s Real…",
       "startPage": 31
     },
     {
       "label": "Bölüm 3",
-      "title": "O Yolda Ne Yapacaktı?",
-      "enTitle": "What Was He Going To Do On The",
+      "title": "O tarafta ne yapacaktı?",
+      "enTitle": "What Was He Going To Do On The Side?",
       "startPage": 53
     },
     {
@@ -54,8 +54,8 @@
     },
     {
       "label": "Bölüm 5",
-      "title": "Rus Dere veya Açığa Çıkan Aşk",
-      "enTitle": "Russian Dere, or Exposed Love For",
+      "title": "Rus Dere veya Kısaca Açığa Çıkan Aşk",
+      "enTitle": "Russian Dere, or Exposed Love For Short",
       "startPage": 101
     },
     {

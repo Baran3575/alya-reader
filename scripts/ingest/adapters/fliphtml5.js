@@ -9,7 +9,7 @@ const vm = require('vm');
 const { execFileSync } = require('child_process');
 const { ensureDir, readCacheBuffer, writeCacheBuffer, readCacheJson, writeCacheJson } = require('../lib/cache');
 const { listDriveFolder, downloadDriveBuffer } = require('../lib/gdrive');
-const { extractEpubIllustrationsInOrder } = require('../lib/epub');
+const { extractEpubIllustrationsInOrder, parseEpubPackage, decodeXmlEntities } = require('../lib/epub');
 const { isFullPageIllustration, writeWebp, getImageDimensions } = require('../lib/webp');
 
 const UA =
@@ -202,7 +202,56 @@ function cleanFlipPageText(rawText) {
 }
 
 const CHAPTER_START_RE =
-  /^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+\d+|Side\s+Story(?:\s+\d+)?|Short\s+Story(?:\s+\d+)?|Bonus\s+Short\s+Story(?:\s+\d+)?)\b(?:\s*[:—–-]\s*(.*))?$/i;
+  /^(Prologue|Epilogue|Afterword|Interlude|Chapter\s+\d+|Side\s+Story(?:\s+\d+)?|Short\s+Story(?:\s+\d+)?|Bonus\s+Short\s+Story(?:\s+\d+)?|Bookwalker\s+SS|Afterword\s+SS|Anecdote)\b(?:\s*[:—–-]\s*(.*))?$/i;
+
+function normalizeLabelKey(rawLabel) {
+  return String(rawLabel || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function extractTocTitleMap(rawPages, epubBuffer = null) {
+  const map = new Map();
+
+  const registerLine = (line) => {
+    const clean = String(line || '')
+      .replace(/\[\d+\]/g, '')
+      .replace(/\s+\.{2,}\s*\d+$/, '')
+      .replace(/\s+\d{1,3}$/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const m = clean.match(
+      /^(?:Bookwalker\s+Exclusive\s+Bonus:\s*)?(Prologue|Epilogue|Afterword|Interlude|Chapter\s+\d+|Side\s+Story(?:\s+\d+)?|Short\s+Story(?:\s+\d+)?|Bonus\s+Short\s+Story(?:\s+\d+)?|Bookwalker\s+SS|Afterword\s+SS|Anecdote)\s*[-:—–]\s*(.+)$/i
+    );
+    if (m) {
+      const k = normalizeLabelKey(m[1]);
+      const sub = m[2].trim();
+      if (sub && (!map.has(k) || sub.length > map.get(k).length)) {
+        map.set(k, sub);
+      }
+    }
+  };
+
+  for (const pg of rawPages.slice(0, 16)) {
+    if (!/Table of Contents/i.test(pg)) continue;
+    for (const ln of String(pg).split(/\r?\n/)) registerLine(ln);
+  }
+
+  if (epubBuffer) {
+    try {
+      const { spineDocs } = parseEpubPackage(epubBuffer);
+      for (const doc of spineDocs) {
+        const m =
+          doc.xhtml.match(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/i) ||
+          doc.xhtml.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+        if (m) {
+          const txt = decodeXmlEntities(m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+          registerLine(txt);
+        }
+      }
+    } catch {}
+  }
+
+  return map;
+}
 
 function looksLikeWrappedTitleContinuation(line2, line3) {
   if (!line2 || !line3) return false;
@@ -210,14 +259,13 @@ function looksLikeWrappedTitleContinuation(line2, line3) {
   if (/^[“"‘'—]/.test(line3)) return false;
   const words3 = line3.split(/\s+/).filter(Boolean);
   if (words3.length === 0 || words3.length > 6 || line3.length > 44) return false;
-  // Başlık devamı genelde büyük harfle başlar veya kısa tamamlayıcı kelimelerdir; tam cümle değildir
   if (/\b(?:he|she|they|was|were|had|said|asked|looked|walked|thought)\b/i.test(line3) && line3.endsWith('.')) {
     return false;
   }
   return true;
 }
 
-function detectPageHeading(text) {
+function detectPageHeading(text, canonicalTitles = new Map()) {
   const lines = String(text || '').split('\n').map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return null;
 
@@ -225,12 +273,27 @@ function detectPageHeading(text) {
   if (!m) return null;
 
   const rawLabel = m[1].trim();
+  const labelKey = normalizeLabelKey(rawLabel);
   const isAfterword = /^Afterword$/i.test(rawLabel);
   let subtitle = (m[2] || '').trim();
   let consumedLines = 1;
 
-  // Afterword (Sonsöz) alt başlık taşımaz; 2. satır doğrudan yazarın ilk cümlesidir
-  if (
+  const knownFullSub = canonicalTitles.get(labelKey);
+
+  if (!isAfterword && knownFullSub) {
+    subtitle = knownFullSub;
+    // Sayfa başındaki sarmalanmış alt başlık satırlarını tüket
+    const normFull = knownFullSub.toLowerCase().replace(/[^a-z0-9]/g, '');
+    let acc = m[2] ? m[2].toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+    let idx = 1;
+    while (idx < Math.min(lines.length, 5) && acc.length < normFull.length) {
+      const cand = lines[idx].toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!cand || !normFull.startsWith(acc + cand.slice(0, Math.min(6, cand.length)))) break;
+      acc += cand;
+      consumedLines = idx + 1;
+      idx++;
+    }
+  } else if (
     !isAfterword &&
     !subtitle &&
     lines.length >= 2 &&
@@ -252,10 +315,10 @@ function detectPageHeading(text) {
   else if (isAfterword) trLabel = 'Sonsöz';
   else if (/^Interlude$/i.test(rawLabel)) trLabel = 'Ara Bölüm';
   else if (/^Chapter\s+(\d+)$/i.test(rawLabel)) trLabel = 'Bölüm ' + rawLabel.match(/\d+/)[0];
-  else if (/^(?:Bonus\s+)?Short\s+Story(?:\s+(\d+))?$/i.test(rawLabel)) {
+  else if (/^(?:Bonus\s+)?Short\s+Story(?:\s+(\d+))?$/i.test(rawLabel) || /^(?:Bookwalker|Afterword)\s+SS$/i.test(rawLabel)) {
     const n = rawLabel.match(/\d+/);
     trLabel = n ? `Kısa Hikâye ${n[0]}` : 'Ek Hikâye';
-  } else if (/^Side\s+Story(?:\s+(\d+))?$/i.test(rawLabel)) {
+  } else if (/^Side\s+Story(?:\s+(\d+))?$/i.test(rawLabel) || /^Anecdote$/i.test(rawLabel)) {
     const n = rawLabel.match(/\d+/);
     trLabel = n ? `Yan Hikâye ${n[0]}` : 'Yan Hikâye';
   }
@@ -409,8 +472,11 @@ async function ingestFlipVolume(volCfg, opts = {}) {
     }
   }
 
-  // Temiz illüstrasyonları çıkar
+  // Temiz illüstrasyonları ve kanonik bölüm başlıklarını çıkar
   console.log(`  [görsel] GlucoseTL arşivinden temiz illüstrasyonlar çıkarılıyor (Cilt ${volCfg.key})...`);
+  const epubBufForTitles =
+    cfg.artSource.type === 'epub' ? await downloadDriveBuffer(cfg.artSource.epubFileId) : null;
+  const canonicalTitles = extractTocTitleMap(primaryPages, epubBufForTitles);
   const illustrations = await extractCleanIllustrations(volCfg.key, cfg.artSource);
   let frontIlls = illustrations.filter((x) => x.isFront);
   let midIlls = illustrations.filter((x) => !x.isFront);
@@ -421,7 +487,7 @@ async function ingestFlipVolume(volCfg, opts = {}) {
 
   // Metin sayfalarını temizle ve ilk gerçek hikâye sayfasını bul
   const cleanedPages = primaryPages.map((raw) => cleanFlipPageText(raw));
-  let firstStoryIdx = cleanedPages.findIndex((t) => Boolean(detectPageHeading(t)) || t.length >= 260);
+  let firstStoryIdx = cleanedPages.findIndex((t) => Boolean(detectPageHeading(t, canonicalTitles)) || t.length >= 260);
   if (firstStoryIdx < 0) firstStoryIdx = 0;
 
   // Son gerçek hikâye sayfasını bul (sondaki boş/reklam sayfalarını kırp)
@@ -434,7 +500,7 @@ async function ingestFlipVolume(volCfg, opts = {}) {
   const bodyItems = [];
   for (let i = firstStoryIdx; i <= lastStoryIdx; i++) {
     const txt = cleanedPages[i];
-    const heading = detectPageHeading(txt);
+    const heading = detectPageHeading(txt, canonicalTitles);
     if (!txt) {
       bodyItems.push({ kind: 'empty', srcIdx: i });
     } else {

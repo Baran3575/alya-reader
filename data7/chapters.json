@@ -3,17 +3,17 @@
     "1": "İllüstrasyonlar",
     "7": "Bu",
     "14": "Yeniden Birleşme",
-    "42": "Bu Türe İhtiyacımız Yoktu",
-    "69": "Dur Bir Dakika, Cowlick’im Az Önce Yaptı",
-    "99": "Yüzyılın En Büyük Duygusu",
-    "128": "Bir Karakter Yaratacaksanız,",
-    "161": "Kalbe Zarar Veren Senpai ve",
-    "185": "Büyük Bir Yuvarlanan Top Muhtemelen",
+    "42": "Bu Tür Öngörülere İhtiyacımız Yoktu",
+    "69": "Bir dakika, Cowlick’im ayağa mı kalktı?",
+    "99": "Yüzyılın En Büyük Karışıklık Duygusu",
+    "128": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
+    "161": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
+    "185": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
     "210": "Gerçekten Büyüdün, Değil mi?",
     "226": "Rastlamak",
     "242": "At Yarışması",
     "259": "Bu",
-    "269": "Çocukluğundan Beri",
+    "269": "Çocukluk Arkadaşı Olduğu Zamanlardan",
     "274": "Sonsöz"
   },
   "chapters": [
@@ -37,38 +37,38 @@
     },
     {
       "label": "Bölüm 2",
-      "title": "Bu Türe İhtiyacımız Yoktu",
-      "enTitle": "We Didn’t Need This Kind of",
+      "title": "Bu Tür Öngörülere İhtiyacımız Yoktu",
+      "enTitle": "We Didn’t Need This Kind of Foreshadowing",
       "startPage": 42
     },
     {
       "label": "Bölüm 3",
-      "title": "Dur Bir Dakika, Cowlick’im Az Önce Yaptı",
-      "enTitle": "Wait a Minute, Did My Cowlick Just",
+      "title": "Bir dakika, Cowlick’im ayağa mı kalktı?",
+      "enTitle": "Wait a Moment, Did My Cowlick Just Stand Up?",
       "startPage": 69
     },
     {
       "label": "Bölüm 4",
-      "title": "Yüzyılın En Büyük Duygusu",
-      "enTitle": "The Century’s Greatest Sense of",
+      "title": "Yüzyılın En Büyük Karışıklık Duygusu",
+      "enTitle": "The Century’s Greatest Sense of Confusion",
       "startPage": 99
     },
     {
       "label": "Bölüm 5",
-      "title": "Bir Karakter Yaratacaksanız,",
-      "enTitle": "If You’re Gonna Create a Character,",
+      "title": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
+      "enTitle": "If You’re Gonna Create a Character, Let’s Cast Aside the Shame",
       "startPage": 128
     },
     {
       "label": "Bölüm 6",
-      "title": "Kalbe Zarar Veren Senpai ve",
-      "enTitle": "The Senpai Who’s Bad for the Heart and",
+      "title": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
+      "enTitle": "The Senpai Who’s Bad for the Heart and the Senpai Who’s Kind for the Heart",
       "startPage": 161
     },
     {
       "label": "Bölüm 7",
-      "title": "Büyük Bir Yuvarlanan Top Muhtemelen",
-      "enTitle": "A Big Rolling Ball Would Probably",
+      "title": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
+      "enTitle": "A Big Rolling Ball Would Probably Cause an Accident",
       "startPage": 185
     },
     {
@@ -97,8 +97,8 @@
     },
     {
       "label": "Yan Hikâye",
-      "title": "Çocukluğundan Beri",
-      "enTitle": "From When She Was Just a Childhood",
+      "title": "Çocukluk Arkadaşı Olduğu Zamanlardan",
+      "enTitle": "From When She Was Just a Childhood Friend",
       "startPage": 269
     },
     {
