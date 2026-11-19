@@ -158,7 +158,10 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const dry = args.includes('--dry') || args.includes('--dry-run');
   const abs = resolveTargetFile(args);
-  const data = JSON.parse(fs.readFileSync(abs, 'utf8'));
+  const rawOrig = fs.readFileSync(abs, 'utf8');
+  const indentMatch = rawOrig.match(/^\{\n( +)"/);
+  const indent = indentMatch ? indentMatch[1].length : 0;
+  const data = JSON.parse(rawOrig);
 
   const { report } = fixBoundaries(data);
 
@@ -168,7 +171,8 @@ if (require.main === module) {
   report.stripped.slice(0, 20).forEach((x) => console.log('  temiz ', x));
 
   if (!dry) {
-    fs.writeFileSync(abs, JSON.stringify(data));
+    const formatted = indent ? JSON.stringify(data, null, indent) + '\n' : JSON.stringify(data);
+    fs.writeFileSync(abs, formatted);
     console.log('yazıldı:', abs, '| paragraf:', Object.values(data).flat().length);
   } else {
     console.log('(dry-run, yazılmadı)');

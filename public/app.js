@@ -603,9 +603,7 @@
         sec.appendChild(proseWrap);
       } else if (p.tr && p.tr.length) {
         for (const line of p.tr) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          sec.appendChild(el);
+          if (line) sec.appendChild(renderParagraph(line));
         }
       } else {
         const empty = document.createElement('p');

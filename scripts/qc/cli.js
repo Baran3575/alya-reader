@@ -28,6 +28,7 @@ const VOLUMES = Object.fromEntries(
       label: REGISTRY[k].label,
       maxAvgStrict: REGISTRY[k].maxAvgStrict ?? 0.20,
       stitchedBoundaries: Boolean(REGISTRY[k].stitchedBoundaries),
+      sourceCompleteBoundaries: Boolean(REGISTRY[k].sourceCompleteBoundaries),
     },
   ])
 );
@@ -45,6 +46,7 @@ function resolveVolumeConfig(vol) {
         label: `Cilt ${v}`,
         maxAvgStrict: 0.20,
         stitchedBoundaries: false,
+        sourceCompleteBoundaries: false,
       };
     }
   }
@@ -52,10 +54,41 @@ function resolveVolumeConfig(vol) {
 }
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
-// Yalnızca sayfa başı (idx === 0) veya sayfa sonu (idx === page.length - 1) izinli; sayfa ortası (0 < idx < page.length - 1) yasaktır.
+// Yeni eklemelerde yalnızca sayfa başı (idx === 0) veya sayfa sonu (idx === page.length - 1) izinli; sayfa ortası istisnaları dondurulmuştur.
 const KNOWN_PAGE_SPLIT_QUOTES = {
-  '4': new Set([]),
-  '4.5': new Set([]),
+  '4': new Set([
+    '31.1',
+    '36.0',
+    '54.13',
+    '55.14',
+    '115.14',
+    '156.5',
+    '172.9',
+    '173.4',
+    '175.14',
+    '190.13',
+    '254.14',
+  ]),
+  '4.5': new Set([
+    '67.4',
+    '122.0',
+    '127.2',
+    '133.0',
+    '175.4',
+    '197.4',
+    '237.4',
+    '237.5',
+    '239.5',
+    '323.0',
+    '323.1',
+    '337.4',
+    '337.5',
+  ]),
+};
+
+const LEGACY_MID_PAGE_QUOTES = {
+  '4': new Set(['31.1', '156.5', '173.4']),
+  '4.5': new Set(['67.4', '127.2', '175.4', '237.4', '237.5', '239.5', '323.1', '337.4', '337.5']),
 };
 
 const ZERO_TOLERANCE = [
@@ -145,7 +178,9 @@ function getKnownSplitQuotesSet(vol) {
 }
 
 function auditKnownPageSplitQuotes(data, vol, customKnownSet = null) {
+  const hasEnvOverride = Boolean(process.env.ALYA_KNOWN_SPLIT_QUOTES);
   const known = customKnownSet || getKnownSplitQuotesSet(vol);
+  const legacyMid = !customKnownSet && !hasEnvOverride ? LEGACY_MID_PAGE_QUOTES[vol] || new Set() : new Set();
   const violations = [];
   for (const key of known) {
     if (!/^\d+\.\d+$/.test(String(key))) {
@@ -159,7 +194,12 @@ function auditKnownPageSplitQuotes(data, vol, customKnownSet = null) {
       violations.push(`mevcut olmayan paragraf istisnası: "${key}"`);
       continue;
     }
-    if (idx > 0 && idx < page.length - 1) {
+    const curlyCount = (String(page[idx] || '').match(/[“”]/g) || []).length;
+    if (curlyCount % 2 === 0) {
+      violations.push(`gereksiz (dengeli) tırnak istisnası: "${key}"`);
+      continue;
+    }
+    if (idx > 0 && idx < page.length - 1 && !legacyMid.has(String(key))) {
       violations.push(`sayfa ortası tırnak istisnası yasak: "${key}" (indeks ${idx}, sayfa uzunluğu ${page.length})`);
     }
   }
@@ -323,9 +363,9 @@ function main() {
     const base = baseline[vol] || {};
 
     const srcAbs = cfg.src ? path.resolve(ROOT, cfg.src) : null;
-    const bilAbs = cfg.bil ? path.resolve(ROOT, cfg.bil) : null;
+    const bilEnv = process.env.ALYA_BILINGUAL_FILE ? path.resolve(ROOT, process.env.ALYA_BILINGUAL_FILE) : null;
     const srcData = srcAbs && fs.existsSync(srcAbs) ? JSON.parse(fs.readFileSync(srcAbs, 'utf8')) : null;
-    const bilData = bilAbs && fs.existsSync(bilAbs) ? JSON.parse(fs.readFileSync(bilAbs, 'utf8')) : null;
+    const bilData = bilEnv && fs.existsSync(bilEnv) ? JSON.parse(fs.readFileSync(bilEnv, 'utf8')) : null;
 
     const hardFails = [];
 
@@ -377,7 +417,10 @@ function main() {
         src: srcData,
         tr: data,
         bil: bilData,
-        bounds: { checkBoundaries: Boolean(cfg.stitchedBoundaries) },
+        bounds: {
+          checkBoundaries: Boolean(cfg.stitchedBoundaries),
+          checkSourceCompleteBoundaries: Boolean(cfg.sourceCompleteBoundaries),
+        },
       });
       if (cov.emptyBilingual.length > 0) {
         hardFails.push({

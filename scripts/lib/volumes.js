@@ -5,7 +5,8 @@ const ROOT = path.join(__dirname, '..', '..');
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-const STITCHED_BOUNDARY_VOLUMES = new Set(['4', '4.5', '11', '12']);
+const STITCHED_BOUNDARY_VOLUMES = new Set(['11', '12']);
+const SOURCE_COMPLETE_BOUNDARY_VOLUMES = new Set(['4', '5', '10', '11', '12']);
 
 function makeVolume(key) {
   if (key === '4') {
@@ -25,7 +26,8 @@ function makeVolume(key) {
       finalFile: path.join(ROOT, 'data', 'paragraphs_final.json'),
       finalRel: 'data/paragraphs_final.json',
       maxAvgStrict: 0.20,
-      stitchedBoundaries: true,
+      stitchedBoundaries: false,
+      sourceCompleteBoundaries: true,
     };
   }
   const suffix = key.replace('.', '');
@@ -48,6 +50,7 @@ function makeVolume(key) {
     finalRel: `${dataDir}/paragraphs_final.json`,
     maxAvgStrict: 0.20,
     stitchedBoundaries: STITCHED_BOUNDARY_VOLUMES.has(key),
+    sourceCompleteBoundaries: SOURCE_COMPLETE_BOUNDARY_VOLUMES.has(key),
   };
 }
 

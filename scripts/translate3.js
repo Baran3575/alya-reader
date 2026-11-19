@@ -3,6 +3,15 @@
 const fs = require('fs');
 const path = require('path');
 const { ROOT, resolveVolume, parseVolumeArg } = require('./lib/volumes');
+const {
+  TERMINAL_END_RE,
+  HONORIFIC_CONT_RE,
+  NAME_TAIL_RE,
+  isUnfinishedParagraph,
+  splitFirstSentenceFragment,
+  joinFragments,
+  stitchPageParagraphMap,
+} = require('./ingest/lib/paginate');
 
 function resolveVolumePaths(vol = '4') {
   const v = String(vol || '4').trim();
@@ -39,10 +48,6 @@ const NOISE =
 
 const SKIP_PAGE_RE =
   /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
-
-const TERMINAL_END_RE = /[.!?"”'\u2019…~)\]»*}◇⋆]$/;
-const HONORIFIC_CONT_RE = /^(kun|chan|san|sama|senpai)\b/i;
-const NAME_TAIL_RE = /\b(Masachika|Alisa|Alya|Maria|Masha|Yuki|Ayano|Sayaka|Nonoa|Chisaki|Touya|Suou|Kujou|Sarashina|Kenzaki|Kimishima)$/;
 
 function stripInlineNoise(line) {
   return String(line || '')
@@ -111,55 +116,6 @@ function paragraphs(text) {
   return out;
 }
 
-function countChars(str, re) {
-  return (String(str || '').match(re) || []).length;
-}
-
-function isUnfinishedParagraph(text) {
-  const t = String(text || '').trim();
-  if (!t) return false;
-  if (!TERMINAL_END_RE.test(t)) return true;
-  if (countChars(t, /\(/g) > countChars(t, /\)/g)) return true;
-  if (countChars(t, /["“”]/g) % 2 !== 0) return true;
-  return false;
-}
-
-function splitFirstSentenceFragment(text, opts = {}) {
-  const s = String(text || '').trim();
-  if (!s) return ['', ''];
-  if (opts.needCloseParen) {
-    const idx = s.indexOf(')');
-    if (idx > -1) {
-      let end = idx + 1;
-      while (end < s.length && /[.!?…"”'\u2019]/.test(s[end])) end++;
-      return [s.slice(0, end).trim(), s.slice(end).trim()];
-    }
-  }
-  if (opts.needCloseQuote) {
-    const m = s.match(/^[\s\S]*?["”]/);
-    if (m) {
-      const head = m[0].trim();
-      const rest = s.slice(m[0].length).trim();
-      return [head, rest];
-    }
-  }
-  const m = s.match(/^([\s\S]*?[.!?…]+(?:["”'\u2019)\]]+)?)(?:\s+([\s\S]+))?$/);
-  if (m) {
-    return [m[1].trim(), (m[2] || '').trim()];
-  }
-  return [s, ''];
-}
-
-function joinFragments(left, right) {
-  const a = String(left || '').trim();
-  const b = String(right || '').trim();
-  if (!a) return b;
-  if (!b) return a;
-  if (a.endsWith('-')) return a + b;
-  if (NAME_TAIL_RE.test(a) && HONORIFIC_CONT_RE.test(b)) return a + '-' + b;
-  return a + ' ' + b;
-}
-
 function stitchPages(pages) {
   const perPage = new Map();
   const stitchOrder = [];
@@ -178,31 +134,7 @@ function stitchPages(pages) {
     }
   }
 
-  for (let i = 0; i < stitchOrder.length - 1; i++) {
-    const curKey = stitchOrder[i];
-    const nextKey = stitchOrder[i + 1];
-    const curParas = perPage.get(curKey);
-    const nextParas = perPage.get(nextKey);
-    if (!curParas || !curParas.length || !nextParas || !nextParas.length) continue;
-
-    const lastIdx = curParas.length - 1;
-    const lastPara = curParas[lastIdx];
-    const nextFirst = nextParas[0];
-
-    const needCloseParen = countChars(lastPara, /\(/g) > countChars(lastPara, /\)/g);
-    const needCloseQuote = countChars(lastPara, /["“”]/g) % 2 !== 0 && !/^["“]/.test(nextFirst);
-    const lacksEnd = !TERMINAL_END_RE.test(lastPara.trim());
-    const nextLooksCont = /^[a-zçğıöşü,;:)\]]/.test(nextFirst) || HONORIFIC_CONT_RE.test(nextFirst);
-
-    if (lacksEnd || needCloseParen || needCloseQuote || nextLooksCont) {
-      const [head, tail] = splitFirstSentenceFragment(nextFirst, { needCloseParen, needCloseQuote });
-      curParas[lastIdx] = joinFragments(lastPara, head);
-      if (tail) nextParas[0] = tail;
-      else nextParas.shift();
-    }
-  }
-
-  return perPage;
+  return stitchPageParagraphMap(perPage, stitchOrder);
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

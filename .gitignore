@@ -1,8 +1,8 @@
 node_modules/
 public/pages/
 public/pages45/
-data/back_en.json
-data45/back_en.json
+data*/back_en.json
+data*/bilingual.json
 *.log
 *.pid
 .deepl-key
@@ -11,5 +11,4 @@ data45/back_en.json
 dist/
 
 # üretilen cilt parçaları (npm run build:bundle)
-public/books/*
-!public/books/art-*.json
+public/books/

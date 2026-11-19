@@ -1,6 +1,7 @@
 // Automated verification of QC CLI, Schema, and Regression Gating
 const { execFileSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const assert = require('assert');
 
@@ -221,21 +222,33 @@ function testOmittedPageAndLowCoverageRatio() {
 }
 
 function testEmptyBilingualSlot() {
-  console.log('Testing empty {g:"", d:""} slot detection in bilingual.json...');
-  const bil45Path = path.join(ROOT, 'data45', 'bilingual.json');
-  const orig = fs.readFileSync(bil45Path, 'utf8');
+  console.log('Testing empty {g:"", d:""} slot detection in bilingual file and mergeBilingual...');
+  const { mergeBilingual } = require('../scripts/merge');
+  const tmpBilPath = path.join(os.tmpdir(), `alya-test-bil-${process.pid}.json`);
   try {
-    const bil = JSON.parse(orig);
-    bil['329'][3] = { g: '', d: '' };
-    fs.writeFileSync(bil45Path, JSON.stringify(bil));
+    const sampleBil = {
+      '329': [
+        { g: 'Birinci paragraf.', d: 'Birinci paragraf.' },
+        { g: 'İkinci paragraf.', d: 'İkinci paragraf.' },
+        { g: 'Üçüncü paragraf.', d: 'Üçüncü paragraf.' },
+        { g: '', d: '' },
+      ],
+    };
+    fs.writeFileSync(tmpBilPath, JSON.stringify(sampleBil));
 
-    const res = runCLI(['--volume', '4.5', '--strict'], false);
+    const res = runCLI(['--volume', '4.5', '--strict'], false, { ALYA_BILINGUAL_FILE: tmpBilPath });
     assert.strictEqual(res.code, 1, 'Empty bilingual slot must exit 1');
     assert(res.out.includes('boş bilingual çeviri yuvası'), 'Diagnostics must mention empty bilingual slot');
     assert(res.out.includes('329.3'), 'Diagnostics must identify slot 329.3');
-    console.log('  ✓ Empty bilingual slot caught with exact page.index diagnostic');
+
+    assert.throws(
+      () => mergeBilingual(sampleBil, {}, null, { strictEmpty: true }),
+      /Boş çeviri yuvaları bulundu/,
+      'mergeBilingual with strictEmpty:true must throw on empty {g:"", d:""} slot'
+    );
+    console.log('  ✓ Empty bilingual slot caught in both QC CLI and mergeBilingual strictEmpty');
   } finally {
-    fs.writeFileSync(bil45Path, orig);
+    if (fs.existsSync(tmpBilPath)) fs.unlinkSync(tmpBilPath);
   }
 }
 
@@ -244,10 +257,10 @@ function testBoundaryAndLowercaseFragmentGate() {
   const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
   const orig = fs.readFileSync(v4Path, 'utf8');
   try {
-    // 1. Unfinished cross-page boundary
+    // 1. Unfinished cross-page boundary on a source-complete page (p.15 ends with a complete EN sentence)
     const splitData = JSON.parse(orig);
-    const lastIdx = splitData['14'].length - 1;
-    splitData['14'][lastIdx] = 'Son cümle sayfa sonunda yarım kaldı';
+    const lastIdx = splitData['15'].length - 1;
+    splitData['15'][lastIdx] = 'Son cümle sayfa sonunda yarım kaldı';
     fs.writeFileSync(v4Path, JSON.stringify(splitData));
 
     const res1 = runCLI(['--volume', '4', '--strict'], false);
@@ -372,11 +385,17 @@ function testPipelineStitcherAndRestoredPassages() {
   const tr4 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'paragraphs_final.json'), 'utf8'));
   const tr45 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data45', 'paragraphs_final.json'), 'utf8'));
   assert.deepStrictEqual(tr4['12'], [], 'Vol 4 p.12 spam page must be empty');
+  assert.strictEqual(tr4['30'].length, 16, 'Vol 4 p.30 canonical 16-paragraph scene must be restored');
+  assert(tr4['30'].some((p) => p.includes('gardiyan')), 'Vol 4 p.30 must include canonical warden skit');
+  assert(tr4['255'].length >= 12, 'Vol 4 p.255 omitted mikoshi paragraphs must be restored');
   assert.deepStrictEqual(tr4['282'], ['“Masachika.”'], 'Vol 4 p.282 epilogue caption must be restored without TN');
   assert(tr4['103'].some((p) => p.includes('Masachika-kun')), 'Vol 4 p.103 must contain stitched Masachika-kun line');
   assert.deepStrictEqual(tr45['7'], [], 'Vol 4.5 p.7 spam page must be empty');
   assert.deepStrictEqual(tr45['347'], [], 'Vol 4.5 p.347 recruitment page must be empty');
   assert.strictEqual(tr45['12'][2], '“!?”', 'Vol 4.5 12.2 reaction must remain intact');
+  assert(tr45['159'][4].endsWith('Ah, kusura bakma.”'), 'Vol 4.5 159.4 cut-off sentence must be completed');
+  assert(tr45['228'][1].includes('arkadan sarıldı') && tr45['228'][2].includes('Şuna bir bak'), 'Vol 4.5 p.228 omitted lines must be restored');
+  assert(tr45['295'][4].includes('Tonkatsu mu? Bu yemek mi?'), 'Vol 4.5 295.4 omitted tonkatsu line must be restored');
   assert(tr45['329'][3] && tr45['329'][3].length > 80, 'Vol 4.5 329.3 empty slot must be restored');
   assert(tr45['330'][3] && tr45['330'][3].length > 80, 'Vol 4.5 330.3 empty slot must be restored');
   assert(tr45['338'][0] && tr45['338'][0].length > 80, 'Vol 4.5 338.0 empty slot must be restored');

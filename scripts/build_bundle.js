@@ -101,7 +101,8 @@ const body =
 fs.writeFileSync(OUT, body);
 
 const artBody =
-  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
+  '/* otomatik üretildi: scripts/build_bundle.js — Cilt 4 ve 4.5 illüstrasyon yedeği ve dizini */\n' +
+  'window.ALYA_ART=' + JSON.stringify(art) + ';\n' +
   'window.ALYA_ART_INDEX=' + JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
 

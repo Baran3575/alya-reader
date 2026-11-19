@@ -3,6 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const vm = require('vm');
 
 const ROOT = __dirname;
 const PUB = path.join(ROOT, 'public');
@@ -196,6 +197,22 @@ function getBook(key) {
   return BOOKS[k];
 }
 
+let CACHED_ART = null;
+function getEmbeddedArt(key) {
+  if (!CACHED_ART) {
+    CACHED_ART = {};
+    const artBundlePath = path.join(PUB, 'bundle-art.js');
+    if (fs.existsSync(artBundlePath)) {
+      try {
+        const sandbox = { window: {} };
+        vm.runInNewContext(fs.readFileSync(artBundlePath, 'utf8'), sandbox, { timeout: 2000 });
+        CACHED_ART = sandbox.window.ALYA_ART || {};
+      } catch {}
+    }
+  }
+  return CACHED_ART[key] || null;
+}
+
 function send(req, res, status, type, body, extra = {}) {
   const headers = { 'Content-Type': type, 'Cache-Control': 'no-cache', ...extra };
   const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
@@ -260,6 +277,18 @@ const server = http.createServer((req, res) => {
         MIME['.json'],
         Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
       );
+    }
+  }
+
+  // Statik illüstrasyon JSON uç noktası (/books/art-<v>.json) yedeği
+  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
+  if (artJsonMatch) {
+    const diskArtPath = path.join(PUB, 'books', `art-${artJsonMatch[1]}.json`);
+    if (!fs.existsSync(diskArtPath)) {
+      const embedded = getEmbeddedArt(artJsonMatch[1]);
+      if (embedded) {
+        return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(embedded)));
+      }
     }
   }
 

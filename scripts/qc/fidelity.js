@@ -10,7 +10,13 @@ const NAMES = [
 const SKIP_CREDIT_RE =
   /(discord\.gg|glucosetl|novelupdates|lightnovelreader|TLed and Edited\s*by|fan translators? and editors?|Volume\s+\d+(?:\.\d+)?,?\s+Fan\s+Translation|Do not reupload our chapters behind ad-link shorteners|Join our Discord|Download all your Favorite Light Novels|Stay up to date On Light Novels)/i;
 
-const TERMINAL_SENT_RE = /[.!?"”'\u2019…~)\]»*}◇⋆♪]$/;
+const TERMINAL_SENT_RE = /[.!?:”"'\u2019…~)\]»*}◇⋆♪]$/;
+const EN_SOURCE_COMPLETE_RE = /[.!?\u2026~♪◇][”"'\u2019)\]]*$/;
+
+function resolveVolumeDir(vol = '4') {
+  const v = String(vol || '4').trim();
+  return v === '4' ? 'data' : 'data' + v.replace(/\./g, '');
+}
 
 const words = (t) => (String(t || '').match(/[\p{L}\p{N}]+/gu) || []).length;
 const sents = (t) => (String(t || '').match(/[.!?…]/g) || []).length;
@@ -109,7 +115,8 @@ function checkCoverageGates({ src, tr, bil = null, bounds = {} }) {
   const maxPageRatio = bounds.maxPageRatio ?? 1.45;
   const minWindowRatio = bounds.minWindowRatio ?? 0.55;
   const maxWindowRatio = bounds.maxWindowRatio ?? 1.32;
-  const checkBoundaries = bounds.checkBoundaries !== false;
+  const checkBoundaries = bounds.checkBoundaries !== undefined ? Boolean(bounds.checkBoundaries) : true;
+  const checkSourceCompleteBoundaries = Boolean(bounds.checkSourceCompleteBoundaries);
 
   const emptyBilingual = [];
   const skippedPages = new Set();
@@ -169,9 +176,18 @@ function checkCoverageGates({ src, tr, bil = null, bounds = {} }) {
       pageParaViolations.push(`s.${p.page}: paragraf sayısı çok düşük (${trParas.length}, EN satır ${enLines})`);
     }
 
-    usableProsePages.push({ page: p.page, key, wEn, wTr, enLines, trParas, rawText: String(p.text || '') });
+    usableProsePages.push({
+      page: p.page,
+      key,
+      wEn,
+      wTr,
+      enLines,
+      enClean,
+      trParas,
+      rawText: String(p.text || ''),
+    });
 
-    if (checkBoundaries) {
+    if (checkBoundaries || checkSourceCompleteBoundaries) {
       trParas.forEach((para, idx) => {
         if (idx > 0 && /^[“‘"(\[—–\-\s]*[a-zçğıöşü]/u.test(para)) {
           splitBoundaryViolations.push(`s.${p.page}.${idx}: paragraf küçük harfle başlıyor ("${para.slice(0, 50)}…")`);
@@ -197,7 +213,8 @@ function checkCoverageGates({ src, tr, bil = null, bounds = {} }) {
       windowViolations.push(`s.${a.page}–${b.page}: pencere paragraf sayısı çok düşük (${winParas})`);
     }
 
-    if (checkBoundaries) {
+    const enCompleteBoundary = checkSourceCompleteBoundaries && EN_SOURCE_COMPLETE_RE.test(a.enClean);
+    if (checkBoundaries || enCompleteBoundary) {
       const lastA = a.trParas[a.trParas.length - 1];
       const firstB = b.trParas[0];
       if (!TERMINAL_SENT_RE.test(lastA)) {
@@ -259,6 +276,7 @@ module.exports = {
   sents,
   nums,
   quotes,
+  resolveVolumeDir,
   isPendingPage,
   isSkippedCreditPage,
   isUsablePage,

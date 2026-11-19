@@ -203,17 +203,30 @@ function stitchMergedPages(out, sourcePages = null) {
   return out;
 }
 
-function mergeBilingual(data, glossary = loadGlossary(), sourcePages = null) {
+function mergeBilingual(data, glossary = loadGlossary(), sourcePages = null, opts = {}) {
   const out = {};
+  const emptySlots = [];
   let pickedD = 0;
   let pickedG = 0;
+
+  const skippedPages = new Set();
+  if (Array.isArray(sourcePages)) {
+    for (const p of sourcePages) {
+      if ((p && p.pending) || SKIP_PAGE_RE.test(String(p.text || ''))) {
+        skippedPages.add(String(p.page));
+      }
+    }
+  }
 
   for (const [page, paras] of Object.entries(data)) {
     if (!Array.isArray(paras)) continue;
     out[page] = paras
-      .map((p) => {
-        const d = (p && p.d) || '';
-        const g = (p && p.g) || '';
+      .map((p, idx) => {
+        const d = String((p && p.d) || '').trim();
+        const g = String((p && p.g) || '').trim();
+        if (!d && !g && !skippedPages.has(String(page))) {
+          emptySlots.push(`${page}.${idx}`);
+        }
         let chosen = d;
         if (!d) chosen = g;
         else if (g && preferGoogle(d, g)) chosen = g;
@@ -224,12 +237,20 @@ function mergeBilingual(data, glossary = loadGlossary(), sourcePages = null) {
       .filter(Boolean);
   }
 
+  if (opts.strictEmpty && emptySlots.length > 0) {
+    const err = new Error(`Boş çeviri yuvaları bulundu (${emptySlots.length}): ${emptySlots.slice(0, 10).join(', ')}`);
+    err.emptySlots = emptySlots;
+    throw err;
+  }
+
   stitchMergedPages(out, sourcePages);
-  return { out, pickedD, pickedG };
+  return { out, pickedD, pickedG, emptySlots };
 }
 
 if (require.main === module) {
-  const volKey = parseVolumeArg(process.argv.slice(2), '4');
+  const argv = process.argv.slice(2);
+  const allowEmpty = argv.includes('--allow-empty');
+  const volKey = parseVolumeArg(argv, '4');
   const volCfg = resolveVolume(volKey);
   if (!volCfg) {
     console.error(`Bilinmeyen cilt: ${volKey}`);
@@ -241,11 +262,17 @@ if (require.main === module) {
     ? JSON.parse(fs.readFileSync(volCfg.sourceFile, 'utf8'))
     : null;
   const glossary = loadGlossary();
-  const { out, pickedD, pickedG } = mergeBilingual(data, glossary, sourcePages);
+  let res;
+  try {
+    res = mergeBilingual(data, glossary, sourcePages, { strictEmpty: !allowEmpty });
+  } catch (err) {
+    console.error('✗ Merge hatası:', err.message);
+    process.exit(1);
+  }
 
-  fs.writeFileSync(volCfg.finalFile, JSON.stringify(out));
-  const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-  console.log(`Cilt ${volCfg.key} | paragraf: ${total} | DeepL: ${pickedD} | Google: ${pickedG} | dosya: ${volCfg.finalRel}`);
+  fs.writeFileSync(volCfg.finalFile, JSON.stringify(res.out, null, 2) + '\n');
+  const total = Object.values(res.out).reduce((a, b) => a + b.length, 0);
+  console.log(`Cilt ${volCfg.key} | paragraf: ${total} | DeepL: ${res.pickedD} | Google: ${res.pickedG} | dosya: ${volCfg.finalRel}`);
 }
 
 module.exports = {

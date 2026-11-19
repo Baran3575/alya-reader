@@ -43,7 +43,7 @@ function normalizeCurlyQuotes(str) {
     .replace(/"/g, '”');
 }
 
-function fixFrontmatterForVolume(vol, rootDir = ROOT) {
+function fixFrontmatterForVolume(vol, rootDir = ROOT, opts = {}) {
   const cfg = resolveVolumeConfig(vol);
   const finPath = path.join(rootDir, cfg.dataDir, 'paragraphs_final.json');
   if (!fs.existsSync(finPath)) return null;
@@ -51,19 +51,28 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
   const rawOrig = fs.readFileSync(finPath, 'utf8');
   const fin = JSON.parse(rawOrig);
   const origSerialized = JSON.stringify(fin);
-  const isPretty = rawOrig.includes('\n ');
+  const indentMatch = rawOrig.match(/^\{\n( +)"/);
+  const indent = indentMatch ? indentMatch[1].length : 0;
   const chaptersPath = path.join(rootDir, cfg.dataDir, 'chapters.json');
   const bilPath = path.join(rootDir, cfg.dataDir, 'bilingual.json');
   const srcPath = path.join(rootDir, cfg.dataDir, 'source.json');
 
   const skipSet = new Set(cfg.skipPages.map(String));
 
-  // source.json varsa kredi/reklam sayfalarını otomatik de yakala
+  // source.json varsa kredi/reklam URL/spam içeren sayfaları yakala
   if (fs.existsSync(srcPath)) {
     const src = JSON.parse(fs.readFileSync(srcPath, 'utf8'));
     for (const p of src) {
+      const pg = String(p.page);
       if (!p.pending && SKIP_CREDIT_RE.test(String(p.text || ''))) {
-        skipSet.add(String(p.page));
+        const curText = Array.isArray(fin[pg]) ? fin[pg].join(' ') : '';
+        if (
+          skipSet.has(pg) ||
+          !curText ||
+          /(?:glucosetl|discord\.\s*gg|novelupdates|lightnovelreader|doxx)/i.test(curText)
+        ) {
+          skipSet.add(pg);
+        }
       }
     }
   }
@@ -72,7 +81,7 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
     fin[pg] = [];
   }
 
-  if (fs.existsSync(bilPath)) {
+  if (opts.updateBilingual && fs.existsSync(bilPath)) {
     const bil = JSON.parse(fs.readFileSync(bilPath, 'utf8'));
     let bilDirty = false;
     for (const pg of skipSet) {
@@ -107,7 +116,7 @@ function fixFrontmatterForVolume(vol, rootDir = ROOT) {
   }
 
   if (JSON.stringify(fin) !== origSerialized) {
-    fs.writeFileSync(finPath, (isPretty ? JSON.stringify(fin, null, 1) : JSON.stringify(fin)) + '\n');
+    fs.writeFileSync(finPath, (indent ? JSON.stringify(fin, null, indent) : JSON.stringify(fin)) + '\n');
   }
   return { vol: String(vol), skipped: [...skipSet], tocPage };
 }

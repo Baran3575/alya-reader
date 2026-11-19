@@ -1,16 +1,82 @@
 [
  {
-  "page": 13,
-  "i": 3,
+  "page": 51,
+  "i": 1,
   "en": true,
   "tr": false,
-  "t": "Bölüm 2: Otaku’lar gerçekten sinir bozucu"
+  "mode": "exact",
+  "t": "“Eh, o yeteneğini sonra gösterirsin… Ama önce hadi şuna binelim!!”"
  },
  {
-  "page": 13,
-  "i": 13,
+  "page": 68,
+  "i": 5,
   "en": true,
   "tr": false,
-  "t": "Resimler"
+  "mode": "exact",
+  "t": "“Ha! Evet!!!”"
+ },
+ {
+  "page": 131,
+  "i": 9,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Deniz varrrr!”"
+ },
+ {
+  "page": 134,
+  "i": 2,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "◇◇◇◇"
+ },
+ {
+  "page": 165,
+  "i": 7,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Masachika, gözleri yaşla dolu bir hâlde yere bakan, sıkılı dişlerinin arasından hırıltıyla hıçkırık arası bir ses çıkaran Alisa’dan özür diledi. Sonra Alisa aniden arkasını döndü, birkaç adım atıp Masachika’ya sırtını dönerek çömeldi."
+ },
+ {
+  "page": 180,
+  "i": 5,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Alisa, kısa bir süre önce yaşanan olayları hatırlayınca yanakları kızardı."
+ },
+ {
+  "page": 246,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Ne kadar düşünse de Masachika’nın aklına gelen tek şey, yaptığı o muziplik oluyordu. Yakınlaşmak bir yana, kızın kendisinden nefret edeceğinden korkuyordu."
+ },
+ {
+  "page": 248,
+  "i": 10,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Tabii~. Ah, istersen kameranı da alabilirim?”"
+ },
+ {
+  "page": 271,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Ara Masachika-chan, dışarı mı çıkıyorsun?”"
+ },
+ {
+  "page": 276,
+  "i": 6,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Neden! Sürekli bu evde kalmanın ne anlamı var ki! Bu evden çıksak daha iyi!”"
  }
 ]
