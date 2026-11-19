@@ -202,7 +202,6 @@ main {
 }
 /* Rusça replikler: {} korunur, vurgu rengi */
 .reader .ru-dialog {
-  font-style: italic;
   color: var(--accent);
   font-style: italic;
 }

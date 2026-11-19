@@ -364,7 +364,7 @@
   /* veri kaynakları: önbellek -> cilt parçası -> gömülü paket -> sunucu API */
   function bundleBook(v) {
     const b = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v];
-    return b || null;
+    return b && Array.isArray(b.pages) ? b : null;
   }
 
   function cachedBook(v) {
