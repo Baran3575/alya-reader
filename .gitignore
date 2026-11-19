@@ -11,3 +11,6 @@ data*/bilingual.json
 .stitch/captures/
 .cache/
 dist/
+
+# üretilen cilt parçaları (npm run build:bundle)
+public/books/

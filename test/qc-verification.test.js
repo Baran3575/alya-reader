@@ -510,25 +510,43 @@ function testRussianDialogueDomRendering() {
   assert.strictEqual(pThought.childNodes[0].nodeType, 3);
   assert.strictEqual(pThought.textContent, '(Ondan hiç nefret etmiyordum.)');
 
-  // 7. Bundle and bundle-art integrity check
-  const artStat = fs.statSync(path.join(ROOT, 'public', 'bundle-art.js'));
-  assert(artStat.size > 1000000, 'public/bundle-art.js must retain embedded WebP data URIs');
+  // 7. Manifest + cilt parçaları bütünlüğü
   const bundleContent = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8');
-  assert(bundleContent.includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}'), 'bundle.js must contain repaired 149.4');
-  assert(bundleContent.includes('{Sen daha güzelsin.}'), 'bundle.js must contain repaired 267.2');
-  const bundleMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
-  assert(bundleMatch, 'bundle.js must define window.ALYA_BUNDLE');
-  const bundleJson = JSON.parse(bundleMatch[1]);
-  for (const [volKey, book] of Object.entries(bundleJson.vols)) {
+  const manifestMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
+  assert(manifestMatch, 'bundle.js must define window.ALYA_BUNDLE manifest');
+  const manifest = JSON.parse(manifestMatch[1]);
+  assert(manifest.vols['4'] && manifest.vols['4'].total > 0, 'manifest must list Cilt 4');
+  assert(manifest.vols['12'] && manifest.vols['12'].total > 0, 'manifest must list Cilt 12');
+  assert(!manifest.vols['4'].pages, 'manifest must not embed full page data');
+
+  const booksDir = path.join(ROOT, 'public', 'books');
+  if (!fs.existsSync(booksDir)) {
+    console.log('  (books/ yok — parça denetimi atlandı, npm run build:bundle ile üretilir)');
+  }
+  const volFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => f.endsWith('.json') && !f.startsWith('art-'))
+    : [];
+  if (fs.existsSync(booksDir)) assert(volFiles.length >= 11, 'public/books must contain one chunk per volume');
+
+  const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
+  const flat4 = vol4.pages.flatMap((p) => p.tr);
+  assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
+  assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
+
+  const art4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'art-4.json'), 'utf8'));
+  assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
+
+  for (const file of volFiles) {
+    const book = JSON.parse(fs.readFileSync(path.join(booksDir, file), 'utf8'));
     for (const pg of book.pages) {
       for (const line of pg.tr) {
-        assert(!/[『』「」]/.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain corner brackets`);
-        assert(!/\p{Script=Cyrillic}/u.test(line), `bundle.js Vol ${volKey} p.${pg.n} tr must not contain Cyrillic`);
+        assert(!/[『』「」]/.test(line), `${file} p.${pg.n} tr must not contain corner brackets`);
+        assert(!/\p{Script=Cyrillic}/u.test(line), `${file} p.${pg.n} tr must not contain Cyrillic`);
       }
     }
   }
 
-  console.log('  ✓ Safe {…} DOM spans, tooltip metadata, unmatched brace fallback, bundle integrity, and XSS resistance verified');
+  console.log('  ✓ Safe {…} DOM spans, tooltip metadata, unmatched brace fallback, volume chunk integrity, and XSS resistance verified');
 }
 
 function testIntentionalUnbalancedDelimiters() {
