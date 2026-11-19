@@ -8,6 +8,8 @@ on:
     paths:
       - 'data*/**'
       - 'scripts/**'
+      - 'test/**'
+      - 'server.js'
       - '.github/workflows/**'
       - 'package.json'
   pull_request:

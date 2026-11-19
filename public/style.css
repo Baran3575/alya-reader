@@ -223,7 +223,7 @@ body {
 .toc-list li.is-current button {
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
-.toc-list li.is-read .ch-label {
+.toc-list li.is-read:not(.is-current) .ch-label {
   color: var(--muted);
 }
 .toc-list li.is-read .ch-label::after {
