@@ -290,8 +290,8 @@ const server = http.createServer((req, res) => {
     return res.end(req.method === 'HEAD' ? undefined : body);
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktası (/books/<v>.json ve /books/v<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch) {
     const active = loadVolumes();
     const bKey = bookJsonMatch[1];

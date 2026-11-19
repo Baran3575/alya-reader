@@ -1,5 +1,6 @@
 // Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler + üstveri.
-// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
+// İlk yüklemenin hafif olması için public/bundle.js içinde yalnızca cilt/bölüm manifesti tutar,
+// tam metin ve gömülü illüstrasyon parçalarını public/books/v<cilt>.json ve public/books/art-<cilt>.json olarak üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
@@ -10,6 +11,7 @@ const { ROOT, ENABLED_VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+const BOOKS_DIR = path.join(ROOT, 'public', 'books');
 
 function loadExistingArtBundle() {
   if (!fs.existsSync(ART_OUT)) return {};
@@ -88,24 +90,51 @@ for (const id of ENABLED_VOLUME_KEYS) {
   });
 }
 
-const raw = JSON.stringify({ vols });
+// Cilt başına ayrı JSON parçaları (ilk yükleme hafif olsun)
+fs.mkdirSync(BOOKS_DIR, { recursive: true });
+const manifestVols = {};
+for (const id of ENABLED_VOLUME_KEYS) {
+  const book = vols[id];
+  if (!book) continue;
+  fs.writeFileSync(path.join(BOOKS_DIR, 'v' + id + '.json'), JSON.stringify(book));
+  const artFile = path.join(BOOKS_DIR, 'art-' + id + '.json');
+  if (art[id] && Object.keys(art[id]).length) {
+    fs.writeFileSync(artFile, JSON.stringify(art[id]));
+  } else if (fs.existsSync(artFile)) {
+    fs.unlinkSync(artFile);
+  }
+  manifestVols[id] = {
+    label: book.volume || 'Cilt ' + id,
+    subtitle: book.subtitle || '',
+    embedArt: Boolean(book.embedArt),
+    status: book.status || 'complete',
+    statusNote: book.statusNote || '',
+    total: book.total,
+    chapters: book.chapters,
+  };
+}
+
+const raw = JSON.stringify({ vols: manifestVols });
 const volumesRaw = JSON.stringify(volumeMeta);
 const hash = crypto
   .createHash('sha1')
-  .update(volumesRaw + '\n' + raw)
+  .update(volumesRaw + '\n' + raw + '\n' + JSON.stringify(Object.keys(vols).map((k) => [k, vols[k].total])))
   .digest('hex')
   .slice(0, 12);
 
 const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
+  '/* yalnızca cilt manifesti; metin public/books/v<CİLT>.json dosyalarından yüklenir */\n' +
   'window.ALYA_VOLUMES=' + volumesRaw + ';\n' +
   'window.ALYA_BUNDLE=' + raw + ';\n' +
   'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
 
 fs.writeFileSync(OUT, body);
 
+const artIndex = Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]));
 const artBody =
-  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
+  '/* otomatik üretildi: scripts/build_bundle.js — gömülü illüstrasyon arşivi + cilt başına art-<cilt>.json dizini */\n' +
+  'window.ALYA_ART_INDEX=' + JSON.stringify(artIndex) + ';\n' +
   'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
 
