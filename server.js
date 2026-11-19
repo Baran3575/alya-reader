@@ -248,7 +248,7 @@ function buildBook(opt = {}) {
   };
 }
 
-const VOLUME_ORDER = ['4', '4.5', '5', '6'];
+const VOLUME_ORDER = ['4', '4.5', '5', '6', '7', '8'];
 
 const VOLUMES = Object.fromEntries(
   VOLUME_ORDER.map((k) => [k, ALL_VOLUME_SPECS[k]])

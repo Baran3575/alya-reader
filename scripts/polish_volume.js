@@ -68,10 +68,18 @@ const LITERARY_RULES = [
   [/(?<!\p{L})tuhaf bir şekilde(?!\p{L})/giu, 'tuhaf biçimde'],
   [/(?<!\p{L})garip bir şekilde(?!\p{L})/giu, 'tuhaf biçimde'],
   [/(?<!\p{L})normal bir şekilde(?!\p{L})/giu, 'normalce'],
+  [/(?<!\p{L})sert bir şekilde(?!\p{L})/giu, 'sertçe'],
+  [/(?<!\p{L})sert nasılsa(?!\p{L})/giu, 'sertçe'],
+  [/(?<!\p{L})kısa bir şekilde(?!\p{L})/giu, 'kısaca'],
+  [/(?<!\p{L})kısa nasılsa(?!\p{L})/giu, 'kısaca'],
+  [/(?<!\p{L})yumuşak bir şekilde(?!\p{L})/giu, 'yumuşakça'],
+  [/(?<!\p{L})yumuşak nasılsa(?!\p{L})/giu, 'yumuşakça'],
+  [/(?<!\p{L})kaba bir şekilde(?!\p{L})/giu, 'kabaca'],
+  [/(?<!\p{L})zarif bir şekilde(?!\p{L})/giu, 'zarifçe'],
   [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, 'uygun biçimde'],
-  [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü)) bir şekilde(?!\p{L})/gu, '$1 biçimde'],
   [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, 'hiçbir biçimde'],
-  [/(?<!\p{L})bir şekilde(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Nasılsa' : 'nasılsa')],
+  [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü|sız|siz|suz|süz|sal|sel|ik|ük|uk|ak|ek)) bir şekilde(?!\p{L})/gu, '$1 biçimde'],
+  [/(?<!\p{L})bir şekilde(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir yolunu bulup' : 'bir yolunu bulup')],
   [/(?<!\p{L})bir nevi(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir tür' : 'bir tür')],
   [/(?<!\p{L})söz konusu olduğunda(?!\p{L})/giu, 'konu bu olunca'],
   [/(?<!\p{L})söz konusu olan(?!\p{L})/giu, 'bahsedilen'],
@@ -119,7 +127,8 @@ function splitOverlongSentences(text) {
       continue;
     }
     // Tırnak içinde konuşma bölünmesin diye yalnızca dengeli tırnaklı yan cümle bağlaçlarında böl
-    const splitRe = /,\s+(ama|fakat|ancak|çünkü|bu yüzden|üstelik|hatta|bunun üzerine|ne var ki|öte yandan|sonra da|ardından)\s+/iu;
+    const splitRe =
+      /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra)\s+/iu;
     const m = splitRe.exec(s);
     if (m && m.index > 35) {
       const left = s.slice(0, m.index).trim();
@@ -198,8 +207,9 @@ function cleanZeroTolerance(text, glossary, preserveQuotes = false) {
     .replace(/…+\.+/g, '…')
     .replace(/\.+…+/g, '…')
     .replace(/[!?]\.+/g, (m) => m[0])
-    .replace(/([!?])\1{3,}/g, (m, c) => c.repeat(3))
-    .replace(/~{2,}/g, '~')
+    .replace(/([!?])\1+/g, '$1')
+    .replace(/[─━―]{2,}/g, '—')
+    .replace(/[〜~]{2,}/g, '~')
     .replace(/—{3,}/g, '——')
     .replace(/…{4,}/g, '……')
     .replace(/(?:^|(?<=[.!?]\s))—\s+/g, '—')

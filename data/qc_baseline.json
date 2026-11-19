@@ -5,14 +5,24 @@
   "paragraphs": 3083
  },
  "5": {
-  "avg": 0.05,
-  "flagged": 14,
+  "avg": 0.04,
+  "flagged": 12,
   "paragraphs": 2977
  },
  "6": {
-  "avg": 0.03,
-  "flagged": 9,
+  "avg": 0.02,
+  "flagged": 8,
   "paragraphs": 3230
+ },
+ "7": {
+  "avg": 0.02,
+  "flagged": 11,
+  "paragraphs": 3421
+ },
+ "8": {
+  "avg": 0.02,
+  "flagged": 13,
+  "paragraphs": 3322
  },
  "4.5": {
   "avg": 0.08,
