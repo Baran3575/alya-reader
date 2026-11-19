@@ -1,11 +1,11 @@
 {
  "4": {
-  "avg": 0.15,
-  "flagged": 24,
-  "paragraphs": 3065
+  "avg": 0.14,
+  "flagged": 23,
+  "paragraphs": 3064
  },
  "4.5": {
-  "avg": 0.25,
+  "avg": 0.24,
   "flagged": 48,
   "paragraphs": 2273
  }
