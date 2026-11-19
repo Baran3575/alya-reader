@@ -317,7 +317,7 @@ function testFabricatedPage30FailsCLI() {
 }
 
 function testMergeEmptyBilingualGuard() {
-  console.log('Testing merge.js and scripts45/merge.js empty { d, g } guard...');
+  console.log('Testing merge.js empty { d, g } guard...');
   const tmpBi = path.join(ROOT, 'data', '_tmp_test_bilingual.json');
   const tmpOut = path.join(ROOT, 'data', '_tmp_test_out.json');
   try {
@@ -331,23 +331,22 @@ function testMergeEmptyBilingualGuard() {
       })
     );
 
-    for (const scriptRel of ['scripts/merge.js', 'scripts45/merge.js']) {
-      let failed = false;
-      try {
-        execFileSync(process.execPath, [path.join(ROOT, scriptRel), tmpBi, tmpOut], {
-          cwd: ROOT,
-          encoding: 'utf8',
-          stdio: 'pipe',
-        });
-      } catch (err) {
-        failed = true;
-        assert.strictEqual(err.status, 1, `${scriptRel} must exit with code 1 on empty bilingual entry`);
-        assert((err.stderr || '').includes('1.1'), `${scriptRel} must identify empty entry 1.1`);
-      }
-      assert(failed, `${scriptRel} should have failed on empty entry`);
-      assert(!fs.existsSync(tmpOut), `${scriptRel} must not write output when empty entries exist`);
+    const scriptRel = 'scripts/merge.js';
+    let failed = false;
+    try {
+      execFileSync(process.execPath, [path.join(ROOT, scriptRel), tmpBi, tmpOut], {
+        cwd: ROOT,
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+    } catch (err) {
+      failed = true;
+      assert.strictEqual(err.status, 1, `${scriptRel} must exit with code 1 on empty bilingual entry`);
+      assert((err.stderr || '').includes('1.1'), `${scriptRel} must identify empty entry 1.1`);
     }
-    console.log('  ✓ merge.js and scripts45/merge.js fail with code 1 on empty bilingual entries');
+    assert(failed, `${scriptRel} should have failed on empty entry`);
+    assert(!fs.existsSync(tmpOut), `${scriptRel} must not write output when empty entries exist`);
+    console.log('  ✓ merge.js fails with code 1 on empty bilingual entries');
   } finally {
     if (fs.existsSync(tmpBi)) fs.unlinkSync(tmpBi);
     if (fs.existsSync(tmpOut)) fs.unlinkSync(tmpOut);

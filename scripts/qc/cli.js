@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js                         # Kayıtlı tüm ciltler (4 – 12)
+//   node scripts/qc/cli.js --volume <4..12>        # Belirli cilt
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -11,31 +11,28 @@
 const fs = require('fs');
 const path = require('path');
 const { runVerify } = require('./verify');
-const { evaluateData, score } = require('./quality');
+const { evaluateData } = require('./quality');
 const { validatePatches } = require('../patch');
 const { evaluateFidelity } = require('./fidelity');
 const { evaluateEntityParity } = require('./faith_en');
 const { evaluateMeaning } = require('./audit_meaning');
+const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
 
-const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
-// Faz 1 – Faz 5 cilt kaydı (Cilt 4, 4.5 ve gelecek ciltler 5..12)
-const VOLUMES = {
-  '4': { src: 'data/source.json', tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { src: 'data45/source.json', tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
-  '5': { src: 'data5/source.json', tr: 'data5/paragraphs_final.json', label: 'Cilt 5', maxAvgStrict: 0.25 },
-  '6': { src: 'data6/source.json', tr: 'data6/paragraphs_final.json', label: 'Cilt 6', maxAvgStrict: 0.25 },
-  '7': { src: 'data7/source.json', tr: 'data7/paragraphs_final.json', label: 'Cilt 7', maxAvgStrict: 0.25 },
-  '8': { src: 'data8/source.json', tr: 'data8/paragraphs_final.json', label: 'Cilt 8', maxAvgStrict: 0.25 },
-  '9': { src: 'data9/source.json', tr: 'data9/paragraphs_final.json', label: 'Cilt 9', maxAvgStrict: 0.25 },
-  '9.5': { src: 'data95/source.json', tr: 'data95/paragraphs_final.json', label: 'Cilt 9.5', maxAvgStrict: 0.25 },
-  '10': { src: 'data10/source.json', tr: 'data10/paragraphs_final.json', label: 'Cilt 10', maxAvgStrict: 0.25 },
-  '11': { src: 'data11/source.json', tr: 'data11/paragraphs_final.json', label: 'Cilt 11', maxAvgStrict: 0.25 },
-  '12': { src: 'data12/source.json', tr: 'data12/paragraphs_final.json', label: 'Cilt 12', maxAvgStrict: 0.25 },
-};
+const VOLUMES = Object.fromEntries(
+  VOLUME_KEYS.map((k) => [
+    k,
+    {
+      src: `${REGISTRY[k].dataDir}/source.json`,
+      tr: REGISTRY[k].finalRel,
+      label: REGISTRY[k].label,
+      maxAvgStrict: 0.20,
+    },
+  ])
+);
 
-// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
+// Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar (yalnızca salt okunur Cilt 4 / 4.5)
 const KNOWN_PAGE_SPLIT_QUOTES = {
   '4': new Set([
     '31.1', '36.0', '54.13', '55.14', '115.14', '137.1', '156.5', '172.9',
@@ -50,7 +47,7 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
 };
 
 function getAvailableVolumes() {
-  return Object.keys(VOLUMES).filter((v) => {
+  return VOLUME_KEYS.filter((v) => {
     const cfg = VOLUMES[v];
     return fs.existsSync(path.resolve(ROOT, cfg.tr)) || fs.existsSync(path.resolve(ROOT, cfg.src));
   });
@@ -169,7 +166,12 @@ function generateMarkdownSummary(result, violations, options) {
   lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Hizalama | Kelime Oranı | Durum |');
   lines.push('|---|---|---|---|---|---|---|---|');
 
-  for (const vol of Object.keys(result)) {
+  const orderedVols = [
+    ...VOLUME_KEYS.filter((v) => result[v]),
+    ...Object.keys(result).filter((v) => !VOLUME_KEYS.includes(v)),
+  ];
+
+  for (const vol of orderedVols) {
     const r = result[vol];
     const status = r.fails.length === 0 ? '✓ Başarılı' : `✗ Başarısız (${r.fails.length} ihlal)`;
     const baseAvg = r.baseline && r.baseline.avg !== undefined ? r.baseline.avg.toFixed(2) : '-';
@@ -264,7 +266,7 @@ function main() {
       });
     }
 
-    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için veya checkRegression aktifken)
+    // 4. Yama Doğrulama ve Regresyon (Cilt 4 için)
     if (vol === '4') {
       const patchesFile = path.join(ROOT, 'scripts', 'patches.json');
       if (fs.existsSync(patchesFile)) {
@@ -286,7 +288,6 @@ function main() {
 
     // 5. Kalite Puanı Eşik ve Regresyon Kapısı
     if (strict) {
-      // Strict Mod Gating (Requirement 3: average score below 0.20 for Vol 4)
       if (cfg.maxAvgStrict !== undefined && q.avg > cfg.maxAvgStrict) {
         hardFails.push({
           label: 'ortalama puan (strict limit aşıldı)',
@@ -341,12 +342,13 @@ function main() {
       try {
         const srcData = JSON.parse(fs.readFileSync(absSrcFile, 'utf8'));
         const fidelity = evaluateFidelity(srcData, data, {
+          volume: vol,
           minRatio: 0.55,
           maxRatio: 1.35,
           minWordsForRatio: 25,
         });
         const entity = evaluateEntityParity(srcData, data);
-        const meaning = evaluateMeaning(srcData, data);
+        const meaning = evaluateMeaning(srcData, data, { volume: vol });
 
         alignment = {
           usablePages: meaning.usablePages,
@@ -463,7 +465,6 @@ function main() {
 
   const markdownSummary = generateMarkdownSummary(result, violations, { strict, checkRegression });
 
-  // GitHub Actions Step Summary desteği
   if (process.env.GITHUB_STEP_SUMMARY) {
     try {
       fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdownSummary + '\n\n');
@@ -488,7 +489,11 @@ function main() {
       )
     );
   } else {
-    for (const vol of Object.keys(result)) {
+    const orderedVols = [
+      ...VOLUME_KEYS.filter((v) => result[v]),
+      ...Object.keys(result).filter((v) => !VOLUME_KEYS.includes(v)),
+    ];
+    for (const vol of orderedVols) {
       const r = result[vol];
       console.log('\n== ' + r.label + ' (' + r.file + ')');
       console.log(
@@ -558,6 +563,7 @@ if (require.main === module) {
 
 module.exports = {
   VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
   getAvailableVolumes,
   validateSchema,
   findUnclosedQuotes,

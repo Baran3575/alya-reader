@@ -1,5 +1,5 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
-// Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
+// Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
 const VERSION = 'alya-v4';
 const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
@@ -24,9 +24,10 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
     /\/pages\d*\//.test(url.pathname) ||
+    /\/books\/[0-9.]+\.json$/.test(url.pathname) ||
     url.pathname.endsWith('/api/book') ||
     url.pathname.endsWith('/bundle.js') ||
     url.pathname.endsWith('/bundle-art.js');

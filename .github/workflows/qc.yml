@@ -21,17 +21,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vol: ['4', '4.5']
+        vol: ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Doğrulama (verify.js)
-        env:
-          ALYA_TR_FILE: ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
-        run: node scripts/qc/verify.js
-      - name: Kalite puanı (quality.js)
-        run: node scripts/qc/quality.js ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
-      - name: Eşik kapısı (cli.js)
-        run: node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict
+      - name: Doğrulama ve Kalite Kapısı (Cilt ${{ matrix.vol }})
+        run: |
+          TR_FILE=$(node -e "console.log(require('./scripts/lib/volumes').resolveVolume('${{ matrix.vol }}').finalRel)")
+          ALYA_TR_FILE="$TR_FILE" node scripts/qc/verify.js
+          node scripts/qc/quality.js "$TR_FILE"
+          node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict

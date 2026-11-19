@@ -30,7 +30,8 @@ function cleanSourceForFidelity(raw) {
     .trim();
 }
 
-function isUsableSourcePage(pageObj) {
+function isUsableSourcePage(pageObj, vol = '4') {
+  if (!pageObj || pageObj.pending) return false;
   const raw = String((pageObj && pageObj.text) || '');
   const rawWords = raw.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
   const alpha = rawWords.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
@@ -43,7 +44,7 @@ function isUsableSourcePage(pageObj) {
       .trim().length;
     if (serverCleanLen < 220) return false;
   }
-  const paras = sourceParagraphs(raw);
+  const paras = sourceParagraphs(raw, vol);
   if (!paras.length) return false;
   const cleanWords = (cleanSourceForFidelity(raw).match(/[\p{L}\p{N}]+/gu) || []).length;
   return cleanWords >= 6;
@@ -55,6 +56,7 @@ const nums = (t) => (String(t || '').match(/\d+/g) || []).sort().join(',');
 const quotes = (t) => (String(t || '').match(/[“”"]/g) || []).length / 2;
 
 function evaluateFidelity(src, tr, options = {}) {
+  const vol = String(options.volume || '4');
   const minRatio = options.minRatio !== undefined ? options.minRatio : 0.55;
   const maxRatio = options.maxRatio !== undefined ? options.maxRatio : 1.35;
   const minWordsForRatio = options.minWordsForRatio !== undefined ? options.minWordsForRatio : 25;
@@ -70,12 +72,12 @@ function evaluateFidelity(src, tr, options = {}) {
 
   for (let idx = 0; idx < src.length; idx++) {
     const p = src[idx];
-    if (!isUsableSourcePage(p)) continue;
+    if (!isUsableSourcePage(p, vol)) continue;
 
     const pgKey = String(p.page);
     const trArr = Array.isArray(tr[pgKey]) ? tr[pgKey].filter((x) => String(x || '').trim().length > 0) : [];
     const enClean = cleanSourceForFidelity(p.text);
-    let enParas = sourceParagraphs(p.text);
+    let enParas = sourceParagraphs(p.text, vol);
 
     // Strip standalone chapter heading paragraph removed by fix_headings.js
     if (enParas.length > 0 && /^(?:Prologue|Epilogue|Chapter\s+\d+)\s*[:–—-]/i.test(enParas[0])) {
@@ -100,8 +102,8 @@ function evaluateFidelity(src, tr, options = {}) {
 
     // Account for cross-page continuation merged into previous page's final paragraph
     let allowPrevContinuation = false;
-    if (idx > 0 && mergedEnParas.length > 0 && isUsableSourcePage(src[idx - 1])) {
-      const prevParas = sourceParagraphs(src[idx - 1].text);
+    if (idx > 0 && mergedEnParas.length > 0 && isUsableSourcePage(src[idx - 1], vol)) {
+      const prevParas = sourceParagraphs(src[idx - 1].text, vol);
       const prevLast = prevParas[prevParas.length - 1] || '';
       const prevTrArr = Array.isArray(tr[String(src[idx - 1].page)])
         ? tr[String(src[idx - 1].page)].filter((x) => String(x || '').trim().length > 0)
@@ -187,7 +189,7 @@ if (require.main === module) {
   const src = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'source.json'), 'utf8'));
   const tr = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'paragraphs_final.json'), 'utf8'));
 
-  const res = evaluateFidelity(src, tr);
+  const res = evaluateFidelity(src, tr, { volume: vol });
   const { rows, avg } = res;
   const low = rows.filter((r) => r.ratio < 0.72).sort((a, b) => a.ratio - b.ratio);
   const high = rows.filter((r) => r.ratio > 1.18).sort((a, b) => b.ratio - a.ratio);

@@ -1,0 +1,36 @@
+{
+  "titles": {
+    "1": "İllüstrasyonlar",
+    "26": "Birlikte İlk Dansımız",
+    "33": "Son Dansı Kim Paylaşacak?",
+    "74": "Herkesle Noel Arifesi"
+  },
+  "chapters": [
+    {
+      "label": "İllüstrasyonlar",
+      "title": "İllüstrasyonlar",
+      "enTitle": "Illustrations",
+      "startPage": 1
+    },
+    {
+      "label": "Prolog",
+      "title": "Birlikte İlk Dansımız",
+      "enTitle": "Our First Dance Together",
+      "startPage": 26
+    },
+    {
+      "label": "Bölüm 1",
+      "title": "Son Dansı Kim Paylaşacak?",
+      "enTitle": "Who Will Share the Last Dance?",
+      "startPage": 33
+    },
+    {
+      "label": "Bölüm 2",
+      "title": "Herkesle Noel Arifesi",
+      "enTitle": "Christmas Eve with Everyone",
+      "startPage": 74,
+      "pending": true,
+      "statusNote": "Kaynak çeviri henüz tamamlanmadı ([Translation In Progress])."
+    }
+  ]
+}

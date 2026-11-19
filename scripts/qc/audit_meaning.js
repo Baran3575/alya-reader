@@ -1,7 +1,7 @@
 // Anlam denetimi: olumsuzluk ve diyalog tutarlılığı (EN kaynak vs TR çeviri)
 const fs = require('fs');
 const path = require('path');
-const { paragraphs, stripTranslatorNotes } = require('../../mt/paragraphs');
+const { paragraphs, sourceParagraphs, stripTranslatorNotes } = require('../../mt/paragraphs');
 const { isUsableSourcePage, resolveVolumeDir } = require('./fidelity');
 
 const ROOT = path.join(__dirname, '..', '..');
@@ -32,7 +32,8 @@ function hasTrNeg(text) {
   return NEG_TR.test(String(text || ''));
 }
 
-function evaluateMeaning(src, tr) {
+function evaluateMeaning(src, tr, options = {}) {
+  const vol = String(options.volume || '4');
   const rows = [];
   const severePages = [];
   let usablePages = 0;
@@ -42,13 +43,16 @@ function evaluateMeaning(src, tr) {
   let proportionalPages = 0;
 
   for (const p of src) {
-    if (!isUsableSourcePage(p)) continue;
+    if (!isUsableSourcePage(p, vol)) continue;
     usablePages++;
 
     const k = String(p.page);
-    let en = paragraphs(p.text || '')
-      .map((s) => stripTranslatorNotes(s))
-      .filter(Boolean);
+    let en =
+      vol === '4' || vol === '4.5'
+        ? paragraphs(p.text || '')
+            .map((s) => stripTranslatorNotes(s))
+            .filter(Boolean)
+        : sourceParagraphs(p.text || '', vol);
 
     if (en.length > 0 && /^(?:Prologue|Epilogue|Chapter\s+\d+)\s*[:–—-]/i.test(en[0])) {
       const rest = en[0].replace(/^(?:Prologue|Epilogue|Chapter\s+\d+)\s*[:–—-]\s*/i, '');
@@ -150,7 +154,7 @@ if (require.main === module) {
     const dir = resolveVolumeDir(vol);
     const src = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'source.json'), 'utf8'));
     const tr = JSON.parse(fs.readFileSync(path.join(ROOT, dir, 'paragraphs_final.json'), 'utf8'));
-    const res = evaluateMeaning(src, tr);
+    const res = evaluateMeaning(src, tr, { volume: vol });
     console.log(
       `Cilt ${vol} — incelenen sayfa: ${res.inspectedPages}/${res.usablePages} (atlanan: ${res.skippedPages}, birebir: ${res.exactAlignedPages}, oransal: ${res.proportionalPages}) | olumsuzluk uyuşmazlığı: ${res.rows.length}`
     );

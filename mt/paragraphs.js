@@ -3,7 +3,7 @@ const NOISE_LINE_RE =
   /(Goldenagato|mp4directs|jnovels|zerobooks|Download all your Favorite|Stay up to date On Light Novels|Join our Discord and meet Thousands|Page\s+\d+)/i;
 
 const TN_BLOCK_RE =
-  /\(\s*(?:TN|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\)|$)|\[\s*(?:TN|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\]|$)/gi;
+  /\(\s*(?:TN|T\/N|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\)|$)|\[\s*(?:TN|T\/N|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\]|$)|(?:^|\n)\s*(?:TN|T\/N|TL\s*Note|Translator['’]?s?\s*Note)\s*:[^\n]*/gi;
 
 function stripTranslatorNotes(text) {
   return String(text || '').replace(TN_BLOCK_RE, ' ').replace(/\s+/g, ' ').trim();
@@ -54,10 +54,52 @@ function paragraphs(text) {
   return out;
 }
 
-function sourceParagraphs(text) {
-  return paragraphs(text)
-    .map((p) => stripTranslatorNotes(p))
-    .filter(Boolean);
+function sourceParagraphs(text, vol = '4') {
+  const v = String(vol || '4');
+  if (v === '4' || v === '4.5') {
+    return paragraphs(text)
+      .map((p) => stripTranslatorNotes(p))
+      .filter(Boolean);
+  }
+
+  const cleanedLines = String(text || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .filter((ln) => !NOISE_LINE_RE.test(ln))
+    .join('\n')
+    .trim();
+  if (!cleanedLines) return [];
+
+  let rawBlocks;
+  if (cleanedLines.includes('\n\n')) {
+    rawBlocks = cleanedLines.split(/\n{2,}/);
+  } else {
+    const lines = cleanedLines
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    rawBlocks = [];
+    let cur = [];
+    const endPunct = /[.!?"”’…)~}]$/;
+    for (const ln of lines) {
+      if (cur.length) {
+        const prev = cur[cur.length - 1];
+        const prevEnds = endPunct.test(prev);
+        const newDialogue = /^["“‘'{—]/.test(ln);
+        const shortPrev = prev.length < 52 && prevEnds;
+        if (prevEnds && (newDialogue || shortPrev)) {
+          rawBlocks.push(cur.join(' '));
+          cur = [];
+        }
+      }
+      cur.push(ln);
+    }
+    if (cur.length) rawBlocks.push(cur.join(' '));
+  }
+
+  return rawBlocks
+    .map((b) => stripTranslatorNotes(b.replace(/\s+/g, ' ').trim()))
+    .filter((s) => s && !/^[,;:.~`´\s-]+$/.test(s));
 }
 
 module.exports = { paragraphs, sourceParagraphs, stripTranslatorNotes, NOISE_LINE_RE, TN_BLOCK_RE };
