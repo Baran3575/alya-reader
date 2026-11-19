@@ -18,10 +18,16 @@
     </a>
 
     <nav class="tools">
-      <div class="seg seg-vol" role="group" aria-label="Cilt seçimi">
-        <button id="vol4" class="seg-btn is-on" type="button" title="Cilt 4">4</button>
-        <button id="vol45" class="seg-btn" type="button" title="Cilt 4.5">4.5</button>
+      <div class="seg seg-vol" id="volSeg" role="group" aria-label="Cilt seçimi">
+        <button class="seg-btn is-on" type="button" data-vol="4" title="Cilt 4">4</button>
+        <button class="seg-btn" type="button" data-vol="4.5" title="Cilt 4.5">4.5</button>
+        <button class="seg-btn" type="button" data-vol="5" title="Cilt 5">5</button>
+        <button class="seg-btn" type="button" data-vol="6" title="Cilt 6">6</button>
       </div>
+      <button class="toc-btn vol-btn" id="volBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Cilt seçimi">
+        <span id="volBtnLabel">Cilt 4</span>
+        <span class="caret">▾</span>
+      </button>
       <button class="toc-btn" id="tocBtn" type="button" aria-haspopup="true" aria-expanded="false">
         <span id="tocLabel">Bölüm</span>
         <span class="caret">▾</span>
@@ -37,6 +43,11 @@
       <button class="icon" id="themeBtn" type="button" title="Tema (t)">☾</button>
     </nav>
   </header>
+
+  <div class="toc-panel vol-panel" id="volPanel" hidden>
+    <p class="toc-head">Cilt Seçimi</p>
+    <ul class="toc-list vol-list" id="volList" role="listbox" aria-label="Ciltler"></ul>
+  </div>
 
   <div class="toc-panel" id="tocPanel" hidden>
     <p class="toc-head">İçindekiler</p>
@@ -64,8 +75,7 @@
     <img alt="" />
   </div>
 
-  <script src="bundle.js"></script>
-  <script src="bundle-art.js"></script>
-  <script src="app.js"></script>
+  <script src="bundle-art.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>

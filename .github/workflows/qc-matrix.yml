@@ -8,6 +8,8 @@ on:
     paths:
       - 'data/**'
       - 'data45/**'
+      - 'data5/**'
+      - 'data6/**'
       - 'scripts/**'
       - '.github/workflows/**'
       - 'package.json'
@@ -25,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        volume: ['4', '4.5']
+        volume: ['4', '4.5', '5', '6']
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +39,7 @@ jobs:
 
       - name: Ensure source files remain read-only
         run: |
-          chmod 444 data/source.json data45/source.json
+          chmod 444 data/source.json data45/source.json data5/source.json data6/source.json
 
       - name: Dry-run patch regression test (Volume 4)
         if: matrix.volume == '4'
@@ -48,4 +50,4 @@ jobs:
 
       - name: Verify source files were untouched
         run: |
-          git diff --exit-code data/source.json data45/source.json
+          git diff --exit-code data/source.json data45/source.json data5/source.json data6/source.json

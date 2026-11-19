@@ -1,0 +1,41 @@
+{
+  "version": "2b894a9737cd",
+  "volumes": [
+    {
+      "id": "4",
+      "short": "4",
+      "label": "Cilt 4",
+      "total": 282,
+      "chapters": 13,
+      "version": "4a23845865f2",
+      "file": "books/4.json"
+    },
+    {
+      "id": "4.5",
+      "short": "4.5",
+      "label": "Cilt 4.5",
+      "total": 347,
+      "chapters": 14,
+      "version": "6f7a376fd1a4",
+      "file": "books/4.5.json"
+    },
+    {
+      "id": "5",
+      "short": "5",
+      "label": "Cilt 5",
+      "total": 275,
+      "chapters": 15,
+      "version": "feee9f2b2dda",
+      "file": "books/5.json"
+    },
+    {
+      "id": "6",
+      "short": "6",
+      "label": "Cilt 6",
+      "total": 278,
+      "chapters": 16,
+      "version": "4db957b806fe",
+      "file": "books/6.json"
+    }
+  ]
+}

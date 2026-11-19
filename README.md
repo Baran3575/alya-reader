@@ -37,13 +37,15 @@ scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
 
 | Dosya | İçerik |
 |---|---|
-| `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.045 paragraf |
-| `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.281 paragraf |
-| `data/source.json`, `data45/source.json` | İngilizce kaynak katmanı |
-| `data/chapters.json`, `data45/chapters.json` | Bölüm başlıkları + sayfa aralıkları |
+| `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.083 paragraf |
+| `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.294 paragraf |
+| `data5/paragraphs_final.json` | **Cilt 5 Türkçe çeviri** — 275 sayfa, 3.175 paragraf |
+| `data6/paragraphs_final.json` | **Cilt 6 Türkçe çeviri** — 278 sayfa, 3.420 paragraf |
+| `data*/source.json` | İngilizce kaynak katmanı (salt okunur) |
+| `data*/chapters.json` | Bölüm başlıklarının Türkçesi |
 | `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
 | `scripts/qc/verify.js` | imla/noktalama denetimi (`ALYA_TR_FILE` ile dosya seçilir) |
-| `scripts/qc/cli.js` | birleşik kalite kapısı (`--volume 4`, `--strict`, `--check-regression`, `--json`, `--update-baseline`) |
+| `scripts/qc/cli.js` | birleşik kalite kapısı (`--volume <4\|4.5\|5\|6>`, `--strict`, `--check-regression`, `--json`, `--update-baseline`) |
 | `scripts/patch.js` | yama doğrulama ve uygulama (`--dry-run` ile regresyon kontrolü) |
 | `scripts/naturalize.js` | deterministik doğallaştırma: `--context-only` / `--dry` |
 | `scripts/norm_typo.js` | dizgi normalizasyonu (noktalama yığılması, tilde, harf uzatma) |
@@ -51,31 +53,34 @@ scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
 
 Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, kaynak tonu korunur (küfür yumuşatılmaz), özel adlar tutarlı (Masachika, Kuze, Alisa/Alya, Maria/Masha), kıvrık tırnak, çevirmen notu/İngilizce kalıntı yok.
 
-### Sürekli doğrulama (GitHub Actions)
+### Sürekli doğrulama ve GitHub Pages dağıtımı (GitHub Actions)
 
-Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` iki cildi paralel matris içinde doğrular:
+Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` dört cildi (`4`, `4.5`, `5`, `6`) paralel matris içinde doğrular:
 `scripts/patch.js --dry-run` + `scripts/qc/cli.js --volume <cilt> --strict --check-regression`. Taban çizgisi `data/qc_baseline.json`
-(Cilt 4: ortalama 0.15 / 24 bayrak; Cilt 4.5: 0.27 / 53). Kapı kırmızıysa çeviri bozulmuştur.
+(Cilt 4: ortalama 0.04 / 0 bayrak; Cilt 4.5: 0.09 / 0 bayrak; Cilt 5: 0.07 / 0 bayrak; Cilt 6: 0.05 / 0 bayrak).
+
+`master`/`main` dalına yapılan push işlemlerinde `.github/workflows/pages.yml` kalite testlerini çalıştırır, `node scripts/build_bundle.js` ile statik paketi üretir ve `public/` dizinini GitHub Pages'e dağıtır.
 
 Yerel çalıştırma:
 
 ```bash
-npm test                             # test paketi + birleşik QC regresyon kapısı
-node scripts/qc/cli.js               # iki cilt
-node scripts/qc/cli.js --volume 4 --strict
-node scripts/qc/cli.js --volume 4.5 --strict
+npm test                             # test paketi + birleşik QC regresyon kapısı (4 cilt)
+node scripts/qc/cli.js               # tüm ciltler (4, 4.5, 5, 6)
+node scripts/qc/cli.js --volume 5 --strict
+node scripts/qc/cli.js --volume 6 --strict
 node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
 ```
 
-### Sunucusuz (çevrimdışı) okuma
+### Statik (GitHub Pages) ve sunucusuz (çevrimdışı) okuma
 
-`scripts/build_bundle.js` iki cildin Türkçe + İngilizce metnini ve **illüstrasyon görsellerini**
-tarayıcı paketine gömer:
+`scripts/build_bundle.js` dört cildin Türkçe + İngilizce metnini ve illüstrasyon görsellerini
+statik dosyalara paketler:
 
-| Dosya | İçerik | Boyut |
-|---|---|---|
-| `public/bundle.js` | `window.ALYA_BUNDLE` — iki cildin sayfa/paragraf/EN verisi + bölüm listesi | ~1,5 MB |
-| `public/bundle-art.js` | `window.ALYA_ART` — 31 illüstrasyon, `data:image/webp;base64` olarak gömülü | ~4,0 MB |
+| Dosya | İçerik |
+|---|---|
+| `public/books/<cilt>.json` | GitHub Pages / HTTP üzerinde hızlı tek-cilt yükleme için cilt bazlı JSON + `books/index.json` |
+| `public/bundle.js` | `window.ALYA_BUNDLE` — `file://` ve çevrimdışı yedek için birleşik veri paketi |
+| `public/bundle-art.js` | `window.ALYA_ART` — Cilt 4 ve 4.5'in 31 illüstrasyonu (`data:image/webp;base64`), Cilt 5 ve 6 illüstrasyonları ise `public/pages5/` ve `public/pages6/` altındadır |
 
 Okuyucu veriyi şu sırayla bulur: **localStorage** (`alya4:book:<cilt>`) → gömülü paket → `/api/book`.
 Yani ilk açılıştan sonra sunucu kapalı olsa da, hatta `index.html` doğrudan `file://` ile açılsa da okuma sürer.

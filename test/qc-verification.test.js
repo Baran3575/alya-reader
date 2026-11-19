@@ -28,16 +28,26 @@ function runCLI(args = [], expectSuccess = true) {
 }
 
 function testCleanPass() {
-  console.log('Testing clean pass for Vol 4 and Vol 4.5...');
-  const v4 = runCLI(['--volume', '4', '--strict', '--check-regression'], true);
-  assert(v4.out.includes('✓ Tüm eşikler içinde'), 'Vol 4 should pass clean');
+  console.log('Testing clean pass for Vol 4, Vol 4.5, Vol 5, and Vol 6...');
+  for (const vol of ['4', '4.5', '5', '6']) {
+    const res = runCLI(['--volume', vol, '--strict', '--check-regression'], true);
+    assert(res.out.includes('✓ Tüm eşikler içinde'), `Vol ${vol} should pass clean`);
+  }
 
-  const v45 = runCLI(['--volume', '4.5', '--strict', '--check-regression'], true);
-  assert(v45.out.includes('✓ Tüm eşikler içinde'), 'Vol 4.5 should pass clean');
+  const all = runCLI(['--strict'], true);
+  for (const label of ['Cilt 4', 'Cilt 4.5', 'Cilt 5', 'Cilt 6']) {
+    assert(all.out.includes(label), `${label} should run in default matrix`);
+  }
 
-  const both = runCLI(['--strict'], true);
-  assert(both.out.includes('Cilt 4') && both.out.includes('Cilt 4.5'), 'Both volumes should run');
-  console.log('  ✓ Clean passes verified');
+  const { getBook } = require('../server');
+  for (const vol of ['4', '4.5', '5', '6']) {
+    const { book } = getBook(vol);
+    assert(book.total > 0, `Vol ${vol} must have total > 0`);
+    const nonEmpty = book.pages.filter((p) => Array.isArray(p.tr) && p.tr.length > 0).length;
+    assert(nonEmpty > 0, `Vol ${vol} must have non-empty Turkish pages`);
+    assert(book.chapters.length >= 2, `Vol ${vol} must have detected chapters`);
+  }
+  console.log('  ✓ Clean passes and book builds verified for all 4 volumes');
 }
 
 function testTurkishDotlessCharacters() {

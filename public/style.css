@@ -533,13 +533,16 @@ input[type='range']::-moz-range-thumb {
   display: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 680px) {
   .seg {
     display: none;
   }
   .mode-compact {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 0.65rem;
   }
   .brand-sub {
     display: none;
@@ -548,10 +551,16 @@ input[type='range']::-moz-range-thumb {
     font-size: 0.76rem;
   }
   .toc-btn {
-    max-width: 7.5rem;
+    max-width: 7.4rem;
+    min-height: 40px;
+    padding: 0.38rem 0.58rem;
+  }
+  .icon {
+    min-height: 40px;
+    min-width: 40px;
   }
   .toc-panel {
-    top: 52px;
+    top: 56px;
     left: 0.5rem;
     right: 0.5rem;
     width: auto;
@@ -564,20 +573,41 @@ input[type='range']::-moz-range-thumb {
     line-height: 1.72;
   }
 }
-/* cilt seçici */
+/* cilt seçici (4–6 cilt için masaüstü sekme, mobil ve 7+ cilt için açılır panel) */
 .seg-vol .seg-btn {
-  padding: 0.32rem 0.52rem;
-  font-size: 0.74rem;
-  min-width: 2.05rem;
+  padding: 0.36rem 0.58rem;
+  font-size: 0.75rem;
+  min-width: 2.15rem;
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
-@media (max-width: 640px) {
+.vol-btn {
+  display: none;
+  font-variant-numeric: tabular-nums;
+}
+[data-vol-compact='true'] .seg-vol {
+  display: none;
+}
+[data-vol-compact='true'] .vol-btn {
+  display: inline-flex;
+}
+.vol-panel {
+  width: min(21rem, calc(100vw - 1.6rem));
+}
+.vol-list button {
+  min-height: 44px;
+  align-items: center;
+}
+@media (max-width: 680px) {
   .seg.seg-vol {
-    display: inline-flex;
+    display: none;
   }
-  .seg-vol .seg-btn {
-    padding: 0.3rem 0.45rem;
-    font-size: 0.7rem;
+  .vol-btn {
+    display: inline-flex;
+    max-width: 6.4rem;
+  }
+  .vol-panel {
+    width: auto;
   }
 }
 
@@ -766,7 +796,7 @@ figure.page-img.zoom img {
   font: inherit;
   font-size: 0.9rem;
   color: var(--fg);
-  background: var(--panel);
+  background: var(--panel, var(--bg-soft));
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.42rem 0.9rem;

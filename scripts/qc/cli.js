@@ -1,7 +1,7 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Cilt 4 ve 4.5
-//   node scripts/qc/cli.js --volume <4|4.5>        # Belirli cilt
+//   node scripts/qc/cli.js                         # Cilt 4, 4.5, 5 ve 6
+//   node scripts/qc/cli.js --volume <4|4.5|5|6>    # Belirli cilt
 //   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
@@ -17,9 +17,13 @@ const { validatePatches } = require('../patch');
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
+const VOLUME_ORDER = ['4', '4.5', '5', '6'];
+
 const VOLUMES = {
   '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
   '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '5': { tr: 'data5/paragraphs_final.json', label: 'Cilt 5', maxAvgStrict: 0.20 },
+  '6': { tr: 'data6/paragraphs_final.json', label: 'Cilt 6', maxAvgStrict: 0.20 },
 };
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
@@ -34,6 +38,8 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
     '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
     '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
   ]),
+  '5': new Set([]),
+  '6': new Set([]),
 };
 
 const ZERO_TOLERANCE = [
@@ -54,7 +60,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = VOLUME_ORDER.slice();
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -149,7 +155,11 @@ function generateMarkdownSummary(result, violations, options) {
   lines.push('| Cilt | Paragraf | Ort. Puan | Taban Çizgisi | 3+ Puanlı | Durum |');
   lines.push('|---|---|---|---|---|---|');
 
-  for (const vol of Object.keys(result)) {
+  const orderedResultKeys = [
+    ...VOLUME_ORDER.filter((v) => result[v]),
+    ...Object.keys(result).filter((v) => !VOLUME_ORDER.includes(v)),
+  ];
+  for (const vol of orderedResultKeys) {
     const r = result[vol];
     const status = r.fails.length === 0 ? '✓ Başarılı' : `✗ Başarısız (${r.fails.length} ihlal)`;
     const baseAvg = r.baseline && r.baseline.avg !== undefined ? r.baseline.avg.toFixed(2) : '-';
@@ -358,7 +368,11 @@ function main() {
       )
     );
   } else {
-    for (const vol of Object.keys(result)) {
+    const orderedKeys = [
+      ...VOLUME_ORDER.filter((v) => result[v]),
+      ...Object.keys(result).filter((v) => !VOLUME_ORDER.includes(v)),
+    ];
+    for (const vol of orderedKeys) {
       const r = result[vol];
       console.log('\n== ' + r.label + ' (' + r.file + ')');
       console.log(

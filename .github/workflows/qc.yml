@@ -5,6 +5,8 @@ on:
     paths:
       - 'data/**'
       - 'data45/**'
+      - 'data5/**'
+      - 'data6/**'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'
@@ -19,7 +21,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vol: ['4', '4.5']
+        include:
+          - vol: '4'
+            tr_file: 'data/paragraphs_final.json'
+          - vol: '4.5'
+            tr_file: 'data45/paragraphs_final.json'
+          - vol: '5'
+            tr_file: 'data5/paragraphs_final.json'
+          - vol: '6'
+            tr_file: 'data6/paragraphs_final.json'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,9 +37,9 @@ jobs:
           node-version: '20'
       - name: Doğrulama (verify.js)
         env:
-          ALYA_TR_FILE: ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
+          ALYA_TR_FILE: ${{ matrix.tr_file }}
         run: node scripts/qc/verify.js
       - name: Kalite puanı (quality.js)
-        run: node scripts/qc/quality.js ${{ matrix.vol == '4' && 'data/paragraphs_final.json' || 'data45/paragraphs_final.json' }}
+        run: node scripts/qc/quality.js ${{ matrix.tr_file }}
       - name: Eşik kapısı (cli.js)
         run: node scripts/qc/cli.js --volume ${{ matrix.vol }} --strict

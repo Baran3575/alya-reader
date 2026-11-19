@@ -1,11 +1,24 @@
-// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
-// Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
-const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + cilt bazlı kitap verisi.
+// Hem kök dizinde (/) hem de GitHub Pages alt-dizininde (/alya-reader/) çalışır.
+const VERSION = 'alya-v4';
+const SHELL_REL = ['./', 'index.html', 'style.css', 'app.js', 'bundle-art.js', 'books/index.json'];
+
+function scopeUrl(rel) {
+  return new URL(rel, self.registration.scope).href;
+}
+
+function relativeToScope(url) {
+  const scopePath = new URL(self.registration.scope).pathname;
+  if (!url.pathname.startsWith(scopePath)) return null;
+  return url.pathname.slice(scopePath.length);
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(SHELL_REL.map(scopeUrl)).catch(() => {}))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -24,12 +37,16 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
+  const rel = relativeToScope(url);
+  if (rel === null) return;
+
+  // görseller ve büyük statik veri dosyaları: önce önbellek, sonra ağ (books/index.json hariç)
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
-    url.pathname === '/api/book' ||
-    url.pathname === '/bundle.js';
+    /^pages(?:45|5|6)?\//.test(rel) ||
+    (/^books\/.+\.json$/.test(rel) && rel !== 'books/index.json') ||
+    rel === 'api/book' ||
+    rel === 'bundle.js' ||
+    rel === 'bundle-art.js';
 
   if (cacheFirst) {
     e.respondWith(
@@ -50,7 +67,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // kabuk: önce ağ, düşerse önbellek
+  // kabuk ve manifest: önce ağ, düşerse önbellek
   e.respondWith(
     fetch(req)
       .then((res) => {
@@ -60,6 +77,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() => caches.match(req).then((hit) => hit || caches.match(scopeUrl('index.html')))),
   );
 });

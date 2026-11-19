@@ -20,7 +20,40 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
+const TR_CHAPTER = {
+  prologue: 'Önsöz',
+  epilogue: 'Sonsöz',
+  afterword: 'Sonsöz',
+  'author’s note': 'Yazarın Notu',
+  "author's note": 'Yazarın Notu',
+  'bookwalker ss': 'Ek Öykü',
+  'afterword ss': 'Ek Öykü',
+};
+
+function matchChapterHeading(first) {
+  const m = first.match(
+    /^(Prologue|Epilogue|Afterword\s+SS|Afterword|Bookwalker\s+SS|Author[’']s\s+Note|Chapter\s+(\d+))(?:\s*[:–—-]\s*(.*)|\s*$)/i
+  );
+  if (!m) return null;
+  if (m[2]) {
+    return {
+      key: 'Chapter ' + m[2],
+      label: 'Bölüm ' + m[2],
+      rest: (m[3] || '').trim(),
+    };
+  }
+  const raw = m[1].replace(/\s+/g, ' ').trim();
+  const low = raw.toLowerCase();
+  let key = raw;
+  if (low === 'prologue') key = 'Prologue';
+  else if (low === 'epilogue') key = 'Epilogue';
+  else if (low === 'afterword') key = 'Afterword';
+  else if (low === 'afterword ss') key = 'Afterword SS';
+  else if (low === 'bookwalker ss') key = 'Bookwalker SS';
+  else if (low === "author's note" || low === 'author’s note') key = 'Author’s Note';
+  const label = TR_CHAPTER[low] || raw;
+  return { key, label, rest: (m[3] || '').trim() };
+}
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
@@ -45,13 +78,16 @@ function buildBook(opt = {}) {
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
-    const cleanLen = String(p.text || '')
+    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar (kısa dipnot/jenerik sayfaları hariç)
+    const cleanText = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
-      .trim().length;
-    const art = p.page > 3 && cleanLen < 220;
+      .trim();
+    const cleanLen = cleanText.length;
+    const isNoteOnly =
+      cleanLen > 0 && /^(?:\[\d+\]\s*:|P\.\s*S\.|Fan-translated by\b)/i.test(cleanText);
+    const art = p.page > 3 && cleanLen < 220 && !isNoteOnly;
 
     return {
       n: p.page,
@@ -70,22 +106,22 @@ function buildBook(opt = {}) {
   const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
   for (const p of pages) {
     const first = (p.en[0] || '').replace(/\s+/g, ' ');
-    const m = first.match(/^(Prologue|Epilogue|Chapter\s+(\d+))\s*[:–—-]/i);
-    if (!m) continue;
-    const isNum = !!m[2];
-    const key = isNum ? 'Chapter ' + m[2] : m[1][0].toUpperCase() + m[1].slice(1).toLowerCase();
-    const label = isNum ? 'Bölüm ' + m[2] : TR_CHAPTER[m[1].toLowerCase()] || m[1];
-    const rest = first.slice(m[0].length).replace(/^[\s:–—-]+/, '');
-    const title = titles[key] || rest.slice(0, 70);
-    chapters.push({ page: p.n, label, title });
+    const hit = matchChapterHeading(first);
+    if (!hit) continue;
+    const title = titles[hit.key] || hit.rest.slice(0, 70) || hit.label;
+    chapters.push({ page: p.n, label: hit.label, title });
   }
 
   return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
 }
 
+const VOLUME_ORDER = ['4', '4.5', '5', '6'];
+
 const VOLUMES = {
   '4': { dataDir: 'data', imgPrefix: '/pages/', volume: 'Cilt 4', titlesFile: path.join(ROOT, 'data/chapters.json') },
   '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
+  '5': { dataDir: 'data5', imgPrefix: '/pages5/', volume: 'Cilt 5', titlesFile: path.join(ROOT, 'data5/chapters.json') },
+  '6': { dataDir: 'data6', imgPrefix: '/pages6/', volume: 'Cilt 6', titlesFile: path.join(ROOT, 'data6/chapters.json') },
 };
 
 function packBook(key) {
@@ -177,19 +213,20 @@ const server = http.createServer((req, res) => {
 });
 
 function start() {
-server.listen(PORT, () => {
-  console.log('Okuyucu hazır:  http://localhost:' + PORT);
-  console.log('Cilt 4       :', book.total, 'sayfa |', book.chapters.length, 'bölüm');
-  try {
-    const b45 = getBook('4.5').book;
-    console.log('Cilt 4.5     :', b45.total, 'sayfa |', b45.chapters.length, 'bölüm');
-  } catch {
-    console.log('Cilt 4.5     : henüz hazır değil');
-  }
-  console.log('Çeviri       : DeepL + Google (data/paragraphs_final.json, data45/paragraphs_final.json)');
-});
+  server.listen(PORT, () => {
+    console.log('Okuyucu hazır:  http://localhost:' + PORT);
+    for (const k of VOLUME_ORDER) {
+      try {
+        const b = getBook(k).book;
+        console.log(b.volume.padEnd(13) + ':', b.total, 'sayfa |', b.chapters.length, 'bölüm');
+      } catch {
+        console.log(('Cilt ' + k).padEnd(13) + ': henüz hazır değil');
+      }
+    }
+    console.log('Çeviri       : data/, data45/, data5/, data6/ (paragraphs_final.json)');
+  });
 }
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { buildBook, getBook, start, VOLUMES, VOLUME_ORDER };
