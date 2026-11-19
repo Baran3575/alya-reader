@@ -41,7 +41,9 @@ for (const fix of fixes) {
     continue;
   }
   let hit = -1;
-  for (let i = 0; i < arr.length; i++) {
+  if (typeof fix.index === 'number') {
+    if (fix.index < arr.length && (!fix.find || String(arr[fix.index]).includes(fix.find))) hit = fix.index;
+  } else for (let i = 0; i < arr.length; i++) {
     if (String(arr[i]).includes(fix.find) || String(arr[i]) === fix.find) {
       hit = i;
       break;

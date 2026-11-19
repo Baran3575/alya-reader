@@ -47,10 +47,28 @@ node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, çevirmen notu `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` statik okuyucuyu GitHub Pages’e yayınlar.
 
 ```bash
-npm test                                               # tüm birim/entegrasyon testleri + 11 cilt sıkı QC kapısı
+npm test                                               # tüm birim/entegrasyon testleri + sadakat kapısı + 11 cilt sıkı QC
 node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sıkı kalite ve regresyon kontrolü
+npm run fidelity                                       # metne sadakat raporu (cilt ortalamaları + en kötü sayfalar)
+npm run fidelity -- --vol 4 --top 12 --md              # tek cilt, en kötü 12 sayfa, docs/fidelity.md üret
 node scripts/patch.js --dry-run                        # el yaması şema ve regresyon doğrulaması
 ```
+
+### Metne Sadakat (`scripts/qc/fidelity.js`)
+
+Her sayfa kaynak İngilizce metinle yapısal olarak karşılaştırılır: diyalog satırı sayısı
+(`“ ”` / `『 』`), Rusça `{…}` / `【…】` blokları, özel adlar, sayılar, TR/EN kelime oranı ve
+paragraf oranı. 100 = yapı birebir; `<70` inceleme, `<45` kelime oranı içerik atlandığı anlamına
+gelir. `test/fidelity.test.js` bu eşikleri `npm test` içinde zorunlu kılar:
+
+| Kural | Eşik |
+|---|---|
+| Cilt ortalaması | ≥ 80 |
+| Tek sayfa puanı | ≥ 30 |
+| TR/EN kelime oranı | ≥ 0.45 (OCR çöpü olan sayfalarda atlanır) |
+
+Elle çeviri yaparken kural: **kaynak sayfadaki her diyalog satırı ve her anlatım beat’i
+karşılanmalı**; iki konuşma tek paragrafta birleştirilmez, cümle atlanmaz, özetlenmez.
 
 ### Arayüz
 

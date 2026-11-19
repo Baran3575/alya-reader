@@ -1,13 +1,9 @@
 [
-  {
-    "page": 175,
-    "find": "Masachika, öfkeyle kaşlarını kaldıran Alisa’ya mazeret uydururken şaka yollu olarak bunu söyledikten hemen sonra…",
-    "replace": "Masachika, öfkeyle kaşlarını kaldıran Alisa’ya mazeret uydururken şaka yollu bunu söyledikten hemen sonra… birkaç metre ötedeki koridorun köşesinden bir el uzandı."
-  },
-  { "page": 175, "find": "“…", "replace": "“…”" },
-  {
-    "page": 175,
-    "find": "Ve sonunda, duvara tutunan elin arkasından bir siluet belirdi. Üzerinde yeşil kurdeleli bir Seirei Gakuen üniforması var",
-    "replace": "Ve sonunda, duvara tutunan elin arkasından bir siluet belirdi. Yeşil kurdeleli bir Seirei Gakuen üniforması giyiyordu. Siyah saçları beline kadar uzuyordu. Ve o siyah saçların arasından… kan içinde bir kızın yüzü göründü."
-  }
+  { "page": 42, "index": 0, "find": "yasaları", "replace": "“Uoooh~! Maa-chan mayoyla… Çok yaramaz!”" },
+  { "page": 42, "index": 1, "find": "Uoooh~! Maa-chan mayoyla", "replace": null },
+  { "page": 42, "index": 1, "find": "Beyefendi kıçım", "replace": "Beyefendi kıçım! O da arsız küçük bir sapık! Hem o “uoooh~!” da ne? O yüce ve kudretli ifadeyle bir de kızarma! Bu iğrenç!" },
+  { "page": 42, "index": 2, "find": "Gençliğinin", "replace": "Gençliğinin o kadar da saf olmayan hâline hançerler fırlatan Masachika, tam o sırada birdenbire ortaya çıkan küçük şeytan Yuki’yi fark etti." },
+  { "page": 42, "index": 5, "find": "ruhunun derinliklerinden", "replace": "Masachika, ruhunun derinliklerinden dönmeden önce küçük şeytan Yuki’yi uçurmak için bir aparkat atarak çığlık attı." },
+  { "page": 42, "index": 6, "find": "İçsel keşfinin", "replace": "İçsel keşfinin ne kadar işe yaramaz olduğuna içinden dilini şaklatarak, isteksizce her zamanki hâliyle iki kız kardeşin karşısına dikildi." },
+  { "page": 42, "index": 8, "find": "Uuuu", "replace": "“Uoooh~”" }
 ]

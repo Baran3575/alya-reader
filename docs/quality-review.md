@@ -7,17 +7,17 @@ Puan: metin kalitesi göstergelerinin ağırlıklı toplamı (düşük = daha te
 | --- | --- | ---: | ---: | ---: | --- | --- |
 | 4 | Başlangıç — Kapak ve görseller | 80 | 4.7 | 0 | bir şey: 1, gerçekten: 1, tarafından: 1 | s.13(3) |
 | 4 | Önsöz — Unutmak İstediğim Geçmiş | 1079 | 5.1 | 2 | senin/benim/onun: 8, bir şey: 3, gerçekten: 2, cümle başı Ama: 1 | s.16(4), s.17(4), s.18(4), s.15(2) |
-| 4 | Bölüm 1 — Karın fetişi diye bir şey duymadım hiç | 4244 | 6.9 | 3 | senin/benim/onun: 18, bir şey: 15, cümle başı Ama: 11, gerçekten: 7 | s.31(6), s.38(6), s.22(5), s.25(4) |
+| 4 | Bölüm 1 — Karın fetişi diye bir şey duymadım hiç | 4313 | 6.9 | 3 | senin/benim/onun: 18, bir şey: 16, cümle başı Ama: 11, gerçekten: 6 | s.31(6), s.38(6), s.22(5), s.25(4) |
 | 4 | Bölüm 2 — Otaku'lar gerçekten sinir bozucu | 4242 | 7.3 | 5 | sadece: 10, cümle başı Ama: 8, bir şey: 7, gerçekten: 6 | s.50(8), s.57(8), s.68(6), s.56(5) |
 | 4 | Bölüm 3 — Ha? Gerçekten mi? | 5693 | 7.9 | 1 | senin/benim/onun: 17, bir şey: 16, sadece: 15, gerçekten: 14 | s.76(9), s.91(8), s.93(7), s.72(6) |
-| 4 | Bölüm 4 — Hayır, durum öyle değil | 3025 | 6.9 | 2 | cümle başı Ama: 14, gerçekten: 10, bir şey: 6, sadece: 5 | s.110(6), s.117(6), s.105(4), s.107(4) |
+| 4 | Bölüm 4 — Hayır, durum öyle değil | 3288 | 6.8 | 2 | cümle başı Ama: 15, gerçekten: 10, bir şey: 7, sadece: 6 | s.110(6), s.117(6), s.105(4), s.107(4) |
 | 4 | Bölüm 5 — O sumo değil | 5408 | 7.4 | 6 | sadece: 13, bir şey: 12, cümle başı Ama: 9, senin/benim/onun: 9 | s.146(9), s.149(9), s.127(3), s.139(3) |
 | 4 | Bölüm 6 — Bir kaplumbağa olmak istiyorum | 3828 | 7.6 | 0 | sadece: 15, bir şey: 14, senin/benim/onun: 14, gerçekten: 8 | s.166(8), s.163(7), s.167(7), s.152(5) |
 | 4 | Bölüm 7 — Sanki Süzülüyor Gibi | 4349 | 8.0 | 0 | bir şey: 15, sadece: 13, gerçekten: 11, cümle başı Ve: 6 | s.184(9), s.180(8), s.173(6), s.187(6) |
 | 4 | Bölüm 8 — Deliryum sırasında beklenmedik sürprizler mi? | 4060 | 7.3 | 2 | bir şey: 13, cümle başı Ama: 13, olduğunu: 10, senin/benim/onun: 9 | s.211(11), s.205(6), s.212(5), s.213(5) |
 | 4 | Bölüm 9 — Senin tarafından zorba olarak nitelendirilmek istemiyorum | 3626 | 7.3 | 1 | senin/benim/onun: 13, cümle başı Ama: 11, bir şey: 7, olduğunu: 5 | s.233(10), s.232(7), s.230(4), s.223(3) |
-| 4 | Bölüm 10 — Sevgi Duyguları | 5581 | 7.6 | 3 | cümle başı Ama: 24, bir şey: 14, senin/benim/onun: 12, sadece: 9 | s.265(9), s.264(7), s.269(5), s.270(5) |
-| 4 | Sonsöz — Unutulmaması Gereken Bir Geçmiş | 2206 | 7.4 | 0 | olduğunu: 9, bir şey: 7, cümle başı Ama: 7, cümle başı Ve: 3 | s.277(8), s.281(5), s.274(3), s.280(3) |
+| 4 | Bölüm 10 — Sevgi Duyguları | 5762 | 7.6 | 3 | cümle başı Ama: 25, bir şey: 14, senin/benim/onun: 12, sadece: 9 | s.265(9), s.264(7), s.269(5), s.270(5) |
+| 4 | Sonsöz — Unutulmaması Gereken Bir Geçmiş | 2250 | 7.4 | 0 | olduğunu: 10, bir şey: 7, cümle başı Ama: 7, sadece: 3 | s.277(8), s.281(5), s.274(3), s.280(3) |
 | 5 | İllüstrasyonlar — İllüstrasyonlar | 0 | 0.0 | 0 | — | — |
 | 5 | Prolog — Rastlamak | 1898 | 8.1 | 0 | senin/benim/onun: 8, sadece: 5, bir şey: 4, gerçekten: 3 | s.9(13), s.6(11), s.12(10), s.8(9) |
 | 5 | Bölüm 1 — Kavuşma ve Veda | 2780 | 7.2 | 0 | senin/benim/onun: 8, cümle başı Ve: 7, bir şey: 5, gerçekten: 5 | s.30(9), s.16(5), s.27(5), s.29(5) |
@@ -123,27 +123,27 @@ Puan: metin kalitesi göstergelerinin ağırlıklı toplamı (düşük = daha te
 | 4.5 | Başlangıç — Kapak ve görseller | 123 | 15.4 | 0 | — | s.8(3) |
 | 4.5 | Bölüm 1 — Güller ve Yuri | 3704 | 7.7 | 3 | cümle başı Ama: 13, gerçekten: 12, sadece: 10, olduğunu: 8 | s.12(6), s.35(5), s.10(2), s.20(2) |
 | 4.5 | Bölüm 2 — Prenses ve Tanrıça | 3307 | 8.2 | 2 | cümle başı Ama: 13, senin/benim/onun: 12, gerçekten: 10, bir şey: 7 | s.51(7), s.43(6), s.52(6), s.40(4) |
-| 4.5 | Bölüm 3 — Ruh Hali ve İştah | 2551 | 7.4 | 3 | cümle başı Ama: 8, senin/benim/onun: 7, gerçekten: 6, olduğunu: 6 | s.67(9), s.76(5), s.78(5), s.65(3) |
+| 4.5 | Bölüm 3 — Ruh Hali ve İştah | 2576 | 7.4 | 3 | cümle başı Ama: 8, senin/benim/onun: 7, olduğunu: 7, gerçekten: 6 | s.67(9), s.76(5), s.78(5), s.65(3) |
 | 4.5 | Bölüm 4 — Brocon ve Siscon | 2877 | 7.4 | 4 | bir şey: 14, cümle başı Ama: 10, gerçekten: 9, sadece: 9 | s.85(9), s.84(2), s.86(2), s.100(2) |
 | 4.5 | Bölüm 5 — İdeal ve Gerçek | 2865 | 7.4 | 5 | sadece: 11, gerçekten: 10, bir şey: 9, cümle başı Ama: 9 | s.122(6), s.106(2), s.110(2), s.117(2) |
 | 4.5 | Bölüm 6 — Depolar ve Kilitli Odalar | 3262 | 7.5 | 6 | bir şey: 15, cümle başı Ama: 11, sadece: 9, gerçekten: 7 | s.151(10), s.135(3), s.148(3), s.133(2) |
 | 4.5 | Bölüm 7 — Takımyıldızlar ve Diz Çöküş | 4142 | 8.6 | 1 | sadece: 13, gerçekten: 11, bir şey: 9, senin/benim/onun: 9 | s.175(14), s.178(8), s.159(7), s.162(7) |
 | 4.5 | Bölüm 8 — Güzel Kız ve İçine Kapanık Oğlan | 4120 | 8.0 | 1 | senin/benim/onun: 17, sadece: 12, gerçekten: 7, cümle başı Ama: 5 | s.184(10), s.205(10), s.186(8), s.199(7) |
-| 4.5 | Bölüm 9 — Merhametli ve Ore-sama | 4665 | 7.3 | 1 | senin/benim/onun: 14, tarafından: 10, bir şey: 7, gerçekten: 7 | s.239(17), s.231(13), s.235(11), s.237(6) |
+| 4.5 | Bölüm 9 — Merhametli ve Ore-sama | 4650 | 7.3 | 1 | senin/benim/onun: 13, tarafından: 9, bir şey: 7, gerçekten: 7 | s.231(13), s.235(11), s.237(6), s.241(6) |
 | 4.5 | Bölüm 10 — Sakarlık ve Mağaza Çalışanları | 3644 | 8.2 | 1 | bir şey: 9, sadece: 8, gerçekten: 7, cümle başı Ama: 7 | s.247(9), s.252(7), s.257(7), s.246(3) |
 | 4.5 | Bölüm 11 — Yemek ve Muhakeme | 4147 | 8.5 | 2 | olduğunu: 17, sadece: 12, senin/benim/onun: 7, tarafından: 7 | s.290(14), s.272(13), s.271(10), s.282(8) |
 | 4.5 | Bölüm 12 — Sevgili ve Efendi | 3923 | 7.6 | 1 | gerçekten: 17, bir şey: 15, sadece: 10, senin/benim/onun: 9 | s.323(8), s.311(5), s.322(5), s.313(4) |
 | 4.5 | Bölüm 13 — Masachika ve Alya | 2869 | 8.3 | 0 | senin/benim/onun: 11, gerçekten: 10, bir şey: 6, sadece: 6 | s.337(11), s.336(7), s.328(6), s.345(6) |
 | 9.5 | İllüstrasyonlar — İllüstrasyonlar | 0 | 0.0 | 0 | — | — |
 | 9.5 | Kısa Hikâye 1 — Peki, Hadi Kedi Kafeye Gidelim | 3994 | 8.0 | 0 | senin/benim/onun: 21, gerçekten: 11, olduğunu: 6, bir şey: 5 | s.21(8), s.27(6), s.8(5), s.9(5) |
-| 9.5 | Kısa Hikâye 2 — Tamam hadi havuza gidelim | 8337 | 8.1 | 0 | senin/benim/onun: 34, olduğunu: 19, bir şey: 16, sadece: 13 | s.53(10), s.72(9), s.52(8), s.60(8) |
+| 9.5 | Kısa Hikâye 2 — Tamam hadi havuza gidelim | 8334 | 8.1 | 0 | senin/benim/onun: 34, olduğunu: 19, bir şey: 16, sadece: 13 | s.53(10), s.72(9), s.52(8), s.60(8) |
 | 9.5 | Kısa Hikâye 3 — Yeterli Değilse Kendimi Daha Sarılabilir Hale Getireceğim | 1340 | 8.5 | 0 | bir şey: 6, gerçekten: 6, senin/benim/onun: 5, olduğunu: 4 | s.82(4), s.83(4), s.80(3), s.81(2) |
 | 9.5 | Kısa Hikâye 4 — Animasyon Mağazası Memuru Normie Otaku Olmanın Hayalini Kuruyor | 1526 | 8.3 | 0 | senin/benim/onun: 17, sadece: 5, cümle başı Ama: 4, olduğunu: 4 | s.95(22), s.92(13), s.90(8), s.94(7) |
 | 9.5 | Kısa Hikâye 5 — Alya’nın İlk Kelime Sahtekarlığı Oyunu | 913 | 7.2 | 0 | olduğunu: 7, bir şey: 2, sadece: 1, cümle başı Ama: 1 | s.96(7), s.99(2) |
 | 9.5 | Kısa Hikâye 6 — Bir Adamın Rüyası | 903 | 9.5 | 0 | senin/benim/onun: 5, gerçekten: 4, cümle başı Ama: 3, bir şey: 2 | s.102(4), s.103(4), s.105(4), s.106(2) |
 | 9.5 | Kısa Hikâye 7 — Hizmetçi Her Şeyi Gördü | 1008 | 8.8 | 0 | cümle başı Ama: 3, senin/benim/onun: 3, cümle başı Ve: 2, olduğunu: 2 | s.111(5), s.114(5), s.109(4), s.112(3) |
 | 9.5 | Kısa Hikâye 8 — Donna Yarışmayı Buldozerle Geçiyor | 952 | 8.4 | 0 | cümle başı Ama: 3, cümle başı Ve: 3, gerçekten: 2, sadece: 2 | s.121(6), s.118(3), s.120(2) |
-| 9.5 | Kısa Hikâye 9 — Tavşan Paniği! | 1509 | 7.3 | 0 | sadece: 4, cümle başı Ve: 3, senin/benim/onun: 3, bir şey: 2 | s.130(4), s.126(3), s.129(3), s.132(3) |
+| 9.5 | Kısa Hikâye 9 — Tavşan Paniği! | 1483 | 7.3 | 0 | sadece: 4, cümle başı Ve: 3, senin/benim/onun: 3, bir şey: 2 | s.130(4), s.126(3), s.129(3), s.132(3) |
 | 9.5 | Kısa Hikâye 10 — Dostça (?) Uyumluluk Okuma Üçlü | 1304 | 8.0 | 0 | senin/benim/onun: 4, sadece: 3, bir şey: 2, gerçekten: 1 | s.134(4), s.133(3), s.135(3), s.139(3) |
 | 9.5 | Kısa Hikâye 11 — Sensei~, Başkan ve Başkan Yardımcısı Her Fırsatta Rom-Com’daymış gibi Davranmaya Devam Ediyorlar~! | 958 | 7.5 | 0 | cümle başı Ve: 4, gerçekten: 2, sadece: 2, cümle başı Ama: 1 | s.145(6), s.141(3), s.143(3), s.146(2) |
 | 9.5 | Kısa Hikâye 12 — Burası Vücut Geliştirme Kulübü mü, Yoksa Başka Bir Şey mi? | 951 | 7.2 | 0 | cümle başı Ve: 3, senin/benim/onun: 3, cümle başı Ama: 2, bir şey: 1 | s.148(6), s.150(6), s.152(3) |
