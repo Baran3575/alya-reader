@@ -26,7 +26,11 @@ const VOLUMES = {
   '8': { tr: 'data8/paragraphs_final.json', label: 'Cilt 8', maxAvgStrict: 0.20 },
   '9': { tr: 'data9/paragraphs_final.json', label: 'Cilt 9', maxAvgStrict: 0.20 },
   '9.5': { tr: 'data95/paragraphs_final.json', label: 'Cilt 9.5', maxAvgStrict: 0.20 },
+  '10': { tr: 'data10/paragraphs_final.json', label: 'Cilt 10', maxAvgStrict: 0.20 },
+  '11': { tr: 'data11/paragraphs_final.json', label: 'Cilt 11', maxAvgStrict: 0.20 },
 };
+
+const CANONICAL_VOLUMES = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11'];
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
 const KNOWN_PAGE_SPLIT_QUOTES = {
@@ -60,7 +64,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = CANONICAL_VOLUMES.filter((v) => VOLUMES[v]);
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -364,7 +368,7 @@ function main() {
       )
     );
   } else {
-    for (const vol of Object.keys(result)) {
+    for (const vol of CANONICAL_VOLUMES.filter((v) => result[v])) {
       const r = result[vol];
       console.log('\n== ' + r.label + ' (' + r.file + ')');
       console.log(
@@ -415,6 +419,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  CANONICAL_VOLUMES,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,

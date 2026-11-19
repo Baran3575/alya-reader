@@ -58,17 +58,72 @@ def ocr_image_bytes(img_bytes: bytes) -> str:
     return txt
 
 
+SHORT_VALID_WORDS = {
+    "a", "i", "am", "an", "as", "at", "be", "by", "do", "go", "ha", "he", "hi",
+    "hm", "if", "in", "is", "it", "me", "mr", "ms", "my", "no", "of", "oh", "oi",
+    "ok", "on", "or", "ow", "so", "to", "tv", "uh", "um", "up", "us", "vs", "we",
+}
+
+
+def is_ocr_noise_line(ln: str) -> bool:
+    s = ln.strip()
+    if not s:
+        return True
+    # Sayfa numarası veya süs yıldızlarının OCR yanlış okumaları
+    if re.match(r"^\d{1,3}$", s):
+        return True
+    if re.match(r"^(?:atk|ayn)(?:\s*\d+)?$", s, re.I):
+        return True
+    # Dipnot / çevirmen notu satırları
+    if re.match(r"^\[\d+\]\s*:", s) or re.search(r"\bTN\s*:", s) or "literally translating to" in s:
+        return True
+    noise_syms = len(re.findall(r"[\\{}|<>¥©@=^]", s)) + max(0, s.count("/") - 1)
+    if noise_syms >= 2:
+        return True
+    tokens = [re.sub(r"^[^A-Za-z0-9]+|[^A-Za-z0-9]+$", "", t) for t in s.split()]
+    tokens = [t for t in tokens if t]
+    if not tokens:
+        return False
+    valid = sum(
+        1
+        for t in tokens
+        if (re.match(r"^[A-Za-z][A-Za-z’'\-]{2,}$", t) or t.lower() in SHORT_VALID_WORDS or re.match(r"^\d+(?:st|nd|rd|th|s|%)?$", t))
+    )
+    if len(tokens) >= 4 and (valid / len(tokens)) < 0.60:
+        return True
+    if len(tokens) <= 3 and valid == 0 and not re.search(r"[.!?…~]", s):
+        return True
+    return False
+
+
+def strip_inline_ocr_tail(joined: str) -> str:
+    # Karma görsel+metin bloklarında cümlenin sonuna veya başına yapışan çizim gürültüsünü temizle
+    parts = re.split(r"(?<=[.!?…])\s+", joined)
+    kept = [p for p in parts if not is_ocr_noise_line(p)]
+    out = " ".join(kept).strip()
+    # Başta kalmış olabilecek sembol gürültüsünü temizle
+    out = re.sub(r"^(?:[^A-Za-z“\"‘'\[]*\s+){2,}(?=[A-Z“\"‘'\[])", "", out).strip()
+    return out
+
+
 def clean_ocr_paragraphs(raw_text: str) -> list[str]:
     blocks = re.split(r"\n\s*\n", raw_text.replace("\r\n", "\n"))
     paras = []
     for b in blocks:
-        lines = [ln.strip() for ln in b.split("\n") if ln.strip()]
+        raw_lines = [ln.strip() for ln in b.split("\n") if ln.strip()]
+        lines = []
+        for ln in raw_lines:
+            if re.match(r"^(?:atk|ayn)(?:\s*\d+)?$", ln, re.I):
+                lines.append("* * *")
+            elif not is_ocr_noise_line(ln):
+                lines.append(ln)
         if not lines:
             continue
         joined = re.sub(r"\s+", " ", " ".join(lines)).strip()
         # Tire ile satır sonu bölünmelerini birleştir (ör. "stu- dent" -> "student", ama "Vice—" korunsun)
         joined = re.sub(r"([a-z])-\s+([a-z])", r"\1\2", joined)
-        if not joined or PROMO_RE.search(joined):
+        joined = strip_inline_ocr_tail(joined)
+        if not joined or PROMO_RE.search(joined) or is_ocr_noise_line(joined):
             continue
         paras.append(joined)
     return paras
@@ -103,7 +158,10 @@ def classify_and_process_drive_img(args):
     if not force_art and ocr_cache_file.exists():
         cached = json.loads(ocr_cache_file.read_text(encoding="utf-8"))
         if cached["kind"] == "text":
-            return idx, "text", cached["paras"]
+            cleaned_paras = clean_ocr_paragraphs("\n\n".join(cached["paras"]))
+            alpha_words = re.findall(r"[A-Za-z]{3,}", " ".join(cleaned_paras))
+            if len(alpha_words) >= 10:
+                return idx, "text", cleaned_paras
 
     raw = fetch_bytes(url)
     if not raw:
@@ -112,9 +170,9 @@ def classify_and_process_drive_img(args):
         return idx, "art", raw
 
     ocr_txt = ocr_image_bytes(raw)
-    words = re.findall(r"[A-Za-z]{2,}", ocr_txt)
-    if len(words) >= 12:
-        paras = clean_ocr_paragraphs(ocr_txt)
+    paras = clean_ocr_paragraphs(ocr_txt)
+    alpha_words = re.findall(r"[A-Za-z]{3,}", " ".join(paras))
+    if len(alpha_words) >= 10:
         ocr_cache_file.write_text(json.dumps({"kind": "text", "paras": paras}, ensure_ascii=False), encoding="utf-8")
         return idx, "text", paras
     return idx, "art", raw
