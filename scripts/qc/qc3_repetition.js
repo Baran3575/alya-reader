@@ -1,5 +1,5 @@
 // 3. GEÇİŞ — kelime tekrarı: aynı paragrafta sık geçen bağlaç/zarfları çeşitlendir
-const { run } = require('./lib');
+const { run, load, save } = require('./lib');
 
 const SYN = {
   ardından: ['sonra', 'peşinden', 'ardından'],
@@ -11,6 +11,8 @@ const SYN = {
   biraz: ['azıcık', 'biraz'],
 };
 
+const GENITIVE_BEFORE_RE = /’?(?:nın|nin|nun|nün|ın|in|un|ün)\s+$/iu;
+
 function diversify(t) {
   let out = t;
   for (const [word, alts] of Object.entries(SYN)) {
@@ -18,12 +20,18 @@ function diversify(t) {
     const count = (out.match(re) || []).length;
     if (count < 3) continue;
     let n = 0;
-    out = out.replace(re, (m) => {
+    out = out.replace(re, (m, offset, str) => {
       n++;
       if (n < 3) return m; // ilk ikisi kalsın
-      const alt = alts[(n + m.length) % alts.length];
+      let alt = alts[(n + m.length) % alts.length];
+      // Tamlayan eki (-nın/-nin/-ın/-in) sonrasında "sonra" dilbilgisi hatası üretir ("tartışmanın sonra"); "peşinden" kullan veya koru
+      if (word === 'ardından' && alt === 'sonra' && GENITIVE_BEFORE_RE.test(str.slice(0, offset))) {
+        alt = 'peşinden';
+      }
       if (alt === word) return m;
-      return m[0] === m[0].toLocaleUpperCase('tr') ? alt.charAt(0).toLocaleUpperCase('tr') + alt.slice(1) : alt;
+      const first = m[0];
+      const isUpper = first === first.toLocaleUpperCase('tr') && first !== first.toLocaleLowerCase('tr');
+      return isUpper ? alt.charAt(0).toLocaleUpperCase('tr') + alt.slice(1) : alt;
     });
   }
   return out;
@@ -31,7 +39,12 @@ function diversify(t) {
 
 // art arda gelen paragrafların aynı bağlaçla başlamasını engelle
 function varyStarts(arr) {
-  const CONN = { 'Ardından': ['Sonra', 'Peşinden'], 'Sonra': ['Ardından', 'Ondan sonra'], 'Ancak': ['Ama', 'Yalnız'], 'Ama': ['Ancak', 'Yine de'] };
+  const CONN = {
+    Ardından: ['Sonra', 'Peşinden'],
+    Sonra: ['Ardından', 'Ondan sonra'],
+    Ancak: ['Ama', 'Yalnız'],
+    Ama: ['Ancak', 'Yine de'],
+  };
   let changed = 0;
   for (let i = 1; i < arr.length; i++) {
     const m = arr[i].match(/^(Ardından|Sonra|Ancak|Ama)(?!\p{L})/u);
@@ -46,13 +59,6 @@ function varyStarts(arr) {
   return changed;
 }
 
-const { load, save } = require('./lib');
-const data = load();
-let n = 0;
-for (const arr of Object.values(data)) n += varyStarts(arr);
-save(data);
-console.log('3b) paragraf başı tekrarı:', n, 'düzeltme');
-
 // "Ardından" fazlalığı: cümle/paragraf başındaki her ikinci kullanımı çeşitlendir
 let aK = 0;
 function varyArdindan(t) {
@@ -64,5 +70,15 @@ function varyArdindan(t) {
   });
 }
 
-run(varyArdindan, { label: '3c) "Ardından" çeşitleme', show: 3 });
-run(diversify, { label: '3) kelime tekrarı' });
+if (require.main === module) {
+  const data = load();
+  let n = 0;
+  for (const arr of Object.values(data)) n += varyStarts(arr);
+  save(data);
+  console.log('3b) paragraf başı tekrarı:', n, 'düzeltme');
+
+  run(varyArdindan, { label: '3c) "Ardından" çeşitleme', show: 3 });
+  run(diversify, { label: '3) kelime tekrarı' });
+}
+
+module.exports = { diversify, varyStarts, varyArdindan };

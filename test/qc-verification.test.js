@@ -233,7 +233,11 @@ function testQc10StartsApostropheSafety() {
   assert.strictEqual(input['1'][3], 'Yuki masaya oturdu.');
   assert.strictEqual(input['1'][4], 'O gülümsedi.', 'Consecutive nominative Yuki should simplify to O');
   assert.strictEqual(input['1'][6], 'Alisa’nın yüzü kızardı.', 'Possessive Alisa’nın must not become O’nın');
-  console.log('  ✓ qc10_starts.js apostrophe safety verified');
+
+  const { diversify } = require('../scripts/qc/qc3_repetition');
+  const diversified = diversify('Ardından yürüdü, ardından durdu ve Alisa’nın ardından içeri girdi, kısa bir sessizliğin ardından konuştu.');
+  assert(!/Alisa’nın sonra|sessizliğin sonra/u.test(diversified), `Genitive + sonra produced: ${diversified}`);
+  console.log('  ✓ qc10_starts.js apostrophe safety and qc3_repetition.js genitive guard verified');
 }
 
 function testQc1PunctuationQuoteSuffixesAndSpacing() {
