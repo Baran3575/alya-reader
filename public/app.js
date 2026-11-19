@@ -1,4 +1,63 @@
 (() => {
+  const RU_ROMANIZED = {
+    'Sen daha güzelsin.': 'Ty krasivaya.',
+  };
+
+  function renderParagraph(t, doc, glosses = RU_ROMANIZED) {
+    const d = doc || document;
+    const el = d.createElement('p');
+    if (/^[“"—–{-]/.test(t)) {
+      el.className = t[0] === '{' ? 'dialog dialog-ru' : 'dialog';
+    }
+    let pos = 0;
+    while (pos < t.length) {
+      const open = t.indexOf('{', pos);
+      if (open === -1) {
+        el.appendChild(d.createTextNode(t.slice(pos)));
+        break;
+      }
+      if (open > pos) {
+        el.appendChild(d.createTextNode(t.slice(pos, open)));
+      }
+      const close = t.indexOf('}', open + 1);
+      if (close === -1) {
+        el.appendChild(d.createTextNode(t.slice(open)));
+        break;
+      }
+      const nextOpen = t.indexOf('{', open + 1);
+      if (nextOpen !== -1 && nextOpen < close) {
+        el.appendChild(d.createTextNode(t.slice(open, nextOpen)));
+        pos = nextOpen;
+        continue;
+      }
+      const inner = t.slice(open + 1, close);
+      if (!inner) {
+        el.appendChild(d.createTextNode('{}'));
+        pos = close + 1;
+        continue;
+      }
+      const span = d.createElement('span');
+      span.className = 'ru-dialog';
+      span.appendChild(d.createTextNode(inner));
+      const roma = glosses && Object.prototype.hasOwnProperty.call(glosses, inner) ? glosses[inner] : '';
+      if (roma) {
+        span.dataset.ru = roma;
+        span.title = roma;
+      }
+      el.appendChild(span);
+      pos = close + 1;
+    }
+    return el;
+  }
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { renderParagraph, RU_ROMANIZED };
+  }
+  if (typeof window !== 'undefined') {
+    window.ALYA_RENDER_PARAGRAPH = renderParagraph;
+  }
+  if (typeof document === 'undefined') return;
+
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
   const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
@@ -25,12 +84,16 @@
   const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  const initialVol = initialUrlVol || LS.get('vol', '4');
   const state = {
-    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page', 1),
+    page:
+      initialUrlPage > 0
+        ? initialUrlPage
+        : LS.get('page:' + initialVol, initialVol === '4' ? LS.get('page', 1) : 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: initialUrlVol || LS.get('vol', '4'),
+    vol: initialVol,
     book: null,
     chapter: 0,
   };
@@ -84,7 +147,7 @@
   const failedScans = new Set();
 
   function embeddedArt(p, vol) {
-    if (!p) return '';
+    if (!p || !p.art) return '';
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
     return (pack && pack[key]) || '';
@@ -370,13 +433,19 @@
       ? 'Sayfa taraması bu sürümde yer almıyor; İngilizce kaynak metin gösteriliyor. · Original page scan unavailable; showing English source text.'
       : 'Sayfa taraması bu sürümde yer almıyor; Türkçe metin gösteriliyor. · Original page scan unavailable; showing Turkish text.';
     sec.appendChild(note);
-    const blocks = enBlocks.length ? enBlocks : p.tr;
-    for (const t of blocks) {
-      if (!t) continue;
-      const el = document.createElement('p');
-      if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-      el.textContent = t;
-      sec.appendChild(el);
+    if (enBlocks.length) {
+      for (const t of enBlocks) {
+        if (!t) continue;
+        const el = document.createElement('p');
+        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
+        el.textContent = t;
+        sec.appendChild(el);
+      }
+    } else {
+      for (const t of p.tr) {
+        if (!t) continue;
+        sec.appendChild(renderParagraph(t));
+      }
     }
   }
 
@@ -539,13 +608,10 @@
           }
         }
 
-        let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
         for (const t of paras) {
           if (!t) continue;
-          const el = document.createElement('p');
-          if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-          el.textContent = t;
-          sec.appendChild(el);
+          sec.appendChild(renderParagraph(t));
         }
         frag.appendChild(sec);
       }

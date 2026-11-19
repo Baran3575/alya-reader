@@ -37,7 +37,7 @@ if (fs.existsSync(fin45Path) && fs.existsSync(chapters45Path)) {
     ...rows45,
   ];
   fin45['347'] = []; // hayran çevirmen notu / Discord davetleri
-  fs.writeFileSync(fin45Path, JSON.stringify(fin45));
+  fs.writeFileSync(fin45Path, JSON.stringify(fin45, null, 1) + '\n');
 }
 
 // Cilt 6, 7, 8, 9, 10: Glucose Translations / NaCl hayran çeviri künyesi ve Discord/doxx uyarı sayfaları
@@ -55,7 +55,7 @@ for (const [dir, pages] of Object.entries(FAN_CREDIT_PAGES)) {
   for (const p of pages) {
     if (Object.prototype.hasOwnProperty.call(obj, p)) obj[p] = [];
   }
-  fs.writeFileSync(fp, JSON.stringify(obj));
+  fs.writeFileSync(fp, JSON.stringify(obj, null, 1) + '\n');
 }
 
 // Cilt 9.5: siyah-beyaz illüstrasyon Tesseract OCR gürültüsü ve ters eğik çizgi kalıntıları
@@ -87,7 +87,7 @@ if (fs.existsSync(fin95Path)) {
         return true;
       });
   }
-  fs.writeFileSync(fin95Path, JSON.stringify(fin95));
+  fs.writeFileSync(fin95Path, JSON.stringify(fin95, null, 1) + '\n');
 }
 
 console.log('ön/arka hayran künyesi ve OCR gürültüsü sayfaları düzeltildi (Cilt 4 – 10)');

@@ -290,15 +290,22 @@ const server = http.createServer((req, res) => {
 
   if (pathname === '/') pathname = '/index.html';
 
-  if (pathname === '/bundle.js' && (getBook('4').book.scans || getBook('4.5').book.scans)) {
+  if (pathname === '/bundle.js') {
     const liveVols = {};
     for (const k of VOLUME_KEYS) {
       try {
-        liveVols[k] = getBook(k).book;
+        const b = getBook(k).book;
+        liveVols[k] = {
+          ...b,
+          pages: b.pages.map((p) => ({
+            ...p,
+            img: String(p.img || '').replace(/^\/+/, ''),
+          })),
+        };
       } catch {}
     }
     const dynBody = Buffer.from(
-      'window.ALYA_BUNDLE=' + JSON.stringify({ vols: liveVols }) + ';\nwindow.ALYA_BUNDLE_VERSION="local-scans";\n'
+      'window.ALYA_BUNDLE=' + JSON.stringify({ vols: liveVols }) + ';\nwindow.ALYA_BUNDLE_VERSION="live-server";\n'
     );
     return send(req, res, 200, MIME['.js'], dynBody);
   }
