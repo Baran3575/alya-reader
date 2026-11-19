@@ -81,6 +81,7 @@ const LITERARY_RULES = [
   [/(?<!\p{L})kötü bir şekilde(?!\p{L})/giu, 'kötü biçimde'],
   [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, 'uygun biçimde'],
   [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, 'hiçbir biçimde'],
+  [/(?<!\p{L})hiçbir şekilde(?!\p{L})/giu, (m) => (m[0] === 'H' ? 'Hiçbir biçimde' : 'hiçbir biçimde')],
   [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü|sız|siz|suz|süz|sal|sel|ik|ük|uk|ak|ek)) bir şekilde(?!\p{L})/gu, '$1 biçimde'],
   [/(?<!\p{L})bir şekilde(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir yolunu bulup' : 'bir yolunu bulup')],
   [/(?<!\p{L})bir nevi(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir tür' : 'bir tür')],
@@ -139,12 +140,16 @@ function splitOverlongSentences(text) {
     }
     // Tırnak içinde konuşma bölünmesin diye yalnızca dengeli tırnaklı yan cümle bağlaçlarında böl
     const splitRe =
-      /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|bu arada|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra|hem de)\s+/iu;
+      /,\s+(ama|fakat|ancak|çünkü|bu yüzden|bu nedenle|böylece|bu arada|üstelik|hatta|ayrıca|oysa|bunun üzerine|ne var ki|öte yandan|sonra da|ardından|daha sonra|hem de|yine de|dolayısıyla|nitekim|neyse ki|ve)\s+/iu;
     const m = splitRe.exec(s);
     if (m && m.index > 35) {
       const left = s.slice(0, m.index).trim();
-      const conj = m[1].charAt(0).toLocaleUpperCase('tr') + m[1].slice(1);
-      const right = conj + ' ' + s.slice(m.index + m[0].length).trim();
+      const rawConj = m[1].toLocaleLowerCase('tr');
+      const restSlice = s.slice(m.index + m[0].length).trim();
+      const right =
+        rawConj === 've'
+          ? restSlice.charAt(0).toLocaleUpperCase('tr') + restSlice.slice(1)
+          : m[1].charAt(0).toLocaleUpperCase('tr') + m[1].slice(1) + ' ' + restSlice;
       const lQuotes = (left.match(/[“”]/g) || []).length;
       const rQuotes = (right.match(/[“”]/g) || []).length;
       const lWords = left.split(/\s+/).length;
@@ -244,7 +249,12 @@ function cleanZeroTolerance(text, glossary, preserveQuotes = false) {
     }
   }
   t = balanceParentheses(t);
-  t = t.replace(/[ \t]{2,}/g, ' ').replace(/\s+([,.;:!?…])/g, '$1').trim();
+  t = t
+    .replace(/([,.;:!?…~])\s+([”])/g, '$1$2')
+    .replace(/([“])\s+/g, '$1')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\s+([,.;:!?…])/g, '$1')
+    .trim();
   return t;
 }
 

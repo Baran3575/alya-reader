@@ -189,6 +189,64 @@ function testSchemaValidation() {
   }
 }
 
+function testMultiVolumeCatalogAndFeatures() {
+  console.log('Testing 11-volume catalog, standalone TOC headings, chapter-native & ongoing Vol 12...');
+  const { VOLUME_ORDER, VOLUMES, getCatalog, buildBook } = require('../server');
+  const { CANONICAL_VOLUMES } = require('../scripts/qc/cli');
+  const { normalizeFlipHtml5Url } = require('../scripts/volumes');
+
+  const expectedOrder = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
+  assert.deepStrictEqual(VOLUME_ORDER, expectedOrder, 'server.js VOLUME_ORDER must match canonical 11-volume order');
+  assert.deepStrictEqual(CANONICAL_VOLUMES, expectedOrder, 'cli.js CANONICAL_VOLUMES must match canonical 11-volume order');
+
+  assert.strictEqual(
+    normalizeFlipHtml5Url('https://fliphtml5.com/utpiy/ekus'),
+    'https://online.fliphtml5.com/utpiy/ekus/',
+    'FlipHTML5 URLs must normalize to online.fliphtml5.com'
+  );
+
+  const catalog = getCatalog();
+  assert.strictEqual(catalog.length, 11, 'Catalog must expose all 11 volumes');
+
+  // Verify standalone bonus/afterword chapters in Volumes 5-10 without TOC duplicates
+  const expectedChapters = {
+    '5': ['Prologue', 'Epilogue', 'Afterword'],
+    '6': ['Prologue', 'Afterword', 'Afterword SS', 'Bookwalker'],
+    '7': ['Prologue', 'Side Story', 'Afterword'],
+    '8': ['Prologue', 'Epilogue', 'Afterword'],
+    '9': ['Prologue', 'Anecdote', 'Afterword'],
+    '10': ['Prologue', 'Afterword', 'Bookwalker'],
+  };
+
+  for (const [volKey, reqKeys] of Object.entries(expectedChapters)) {
+    const book = buildBook(VOLUMES[volKey]);
+    const foundKeys = book.chapters.map((c) => c.key);
+    const uniqueKeys = new Set(foundKeys);
+    assert.strictEqual(foundKeys.length, uniqueKeys.size, `Volume ${volKey} TOC must not have duplicate chapter keys`);
+    for (const rk of reqKeys) {
+      assert(uniqueKeys.has(rk), `Volume ${volKey} TOC must include standalone section "${rk}" (got: ${foundKeys.join(', ')})`);
+    }
+  }
+
+  // Verify chapter-native flag on 9.5, 11, 12 and page-scan flag on 4..9, 10
+  for (const volKey of expectedOrder) {
+    const book = buildBook(VOLUMES[volKey]);
+    const expectNative = ['9.5', '11', '12'].includes(volKey);
+    assert.strictEqual(Boolean(book.chapterNative), expectNative, `Volume ${volKey} chapterNative mismatch`);
+    assert(book.total > 0 && book.chapters.length > 0, `Volume ${volKey} must have pages and chapters`);
+
+    const bundleVolPath = path.join(ROOT, 'public', 'volumes', `${volKey}.json`);
+    assert(fs.existsSync(bundleVolPath), `Lazy-loaded bundle public/volumes/${volKey}.json must exist`);
+  }
+
+  // Verify Volume 12 ongoing metadata and absence of [Translation In Progress] placeholders
+  const book12 = buildBook(VOLUMES['12']);
+  assert.strictEqual(book12.ongoing, true, 'Volume 12 must be marked ongoing');
+  const raw12 = fs.readFileSync(path.join(ROOT, 'public', 'volumes', '12.json'), 'utf8');
+  assert(!/Translation\s+In\s+Progress/i.test(raw12), 'Volume 12 must not contain [Translation In Progress] placeholders');
+  console.log('  ✓ 11-volume catalog, standalone TOC sections, chapter-native flags, and ongoing Vol 12 verified');
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -199,6 +257,7 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
+  testMultiVolumeCatalogAndFeatures();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 

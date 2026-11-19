@@ -119,6 +119,7 @@ function buildChapterNativeBook(opt, source, tr, titles) {
       const chLabel = p.chapter.label || TR_CHAPTER[chKey.toLowerCase()] || chKey;
       const chTitle = titles[chKey] || p.chapter.titleTr || p.chapter.title || chLabel;
       chapters.push({
+        key: chKey,
         page: p.page,
         label: chLabel,
         title: chTitle,
@@ -135,7 +136,7 @@ function buildChapterNativeBook(opt, source, tr, titles) {
   }
 
   if (chapters.length === 0 && pages.length > 0) {
-    chapters.push({ page: 1, label: 'Bölüm 1', title: opt.volume || 'Bölüm 1' });
+    chapters.push({ key: 'Chapter 1', page: 1, label: 'Bölüm 1', title: opt.volume || 'Bölüm 1' });
   }
 
   return {
@@ -218,7 +219,7 @@ function buildBook(opt = {}) {
   });
 
   // Bölümleri İngilizce başlıklardan bul (yalın Epilogue/Afterword/Side Story/Bookwalker/Anecdote/Interlude dahil)
-  const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
+  const chapters = [{ key: 'Start', page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
   const seenKeys = new Map();
 
   for (const p of pages) {
@@ -232,9 +233,9 @@ function buildBook(opt = {}) {
 
     const count = (seenKeys.get(hit.key) || 0) + 1;
     seenKeys.set(hit.key, count);
-    const lookupKey = count > 1 && titles[`${hit.key} ${count}`] ? `${hit.key} ${count}` : hit.key;
-    const title = (titles[lookupKey] || hit.defaultTitle).slice(0, 80);
-    chapters.push({ page: p.n, label: hit.label, title });
+    const lookupKey = count > 1 ? `${hit.key} ${count}` : hit.key;
+    const title = (titles[lookupKey] || titles[hit.key] || hit.defaultTitle).slice(0, 80);
+    chapters.push({ key: lookupKey, page: p.n, label: hit.label, title });
   }
 
   return {
@@ -248,7 +249,7 @@ function buildBook(opt = {}) {
   };
 }
 
-const VOLUME_ORDER = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11'];
+const VOLUME_ORDER = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
 const VOLUMES = Object.fromEntries(
   VOLUME_ORDER.map((k) => [k, ALL_VOLUME_SPECS[k]])

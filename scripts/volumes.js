@@ -166,4 +166,20 @@ function resolveVolumeDir(volOrDir) {
   return String(volOrDir);
 }
 
-module.exports = { ALL_VOLUME_SPECS, resolveVolumeDir };
+function normalizeFlipHtml5Url(rawUrl) {
+  const u = new URL(String(rawUrl).trim());
+  if (u.hostname === 'fliphtml5.com' || u.hostname === 'www.fliphtml5.com') {
+    u.hostname = 'online.fliphtml5.com';
+  }
+  const segs = u.pathname.split('/').filter(Boolean);
+  if (segs.length >= 2) {
+    u.pathname = `/${segs[0]}/${segs[1]}/`;
+  } else if (!u.pathname.endsWith('/')) {
+    u.pathname += '/';
+  }
+  u.search = '';
+  u.hash = '';
+  return u.toString();
+}
+
+module.exports = { ALL_VOLUME_SPECS, resolveVolumeDir, normalizeFlipHtml5Url };

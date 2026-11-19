@@ -28,9 +28,10 @@ const VOLUMES = {
   '9.5': { tr: 'data95/paragraphs_final.json', label: 'Cilt 9.5', maxAvgStrict: 0.20 },
   '10': { tr: 'data10/paragraphs_final.json', label: 'Cilt 10', maxAvgStrict: 0.20 },
   '11': { tr: 'data11/paragraphs_final.json', label: 'Cilt 11', maxAvgStrict: 0.20 },
+  '12': { tr: 'data12/paragraphs_final.json', label: 'Cilt 12', maxAvgStrict: 0.20 },
 };
 
-const CANONICAL_VOLUMES = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11'];
+const CANONICAL_VOLUMES = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
 const KNOWN_PAGE_SPLIT_QUOTES = {

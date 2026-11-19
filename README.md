@@ -1,103 +1,67 @@
-# Alya Bazen Duygularını Rusça Saklar — Cilt 4 (Türkçe okuyucu)
+# Alya Bazen Duygularını Rusça Saklar — Türkçe Okuyucu (Cilt 4 – 12)
 
-FlipHTML5 üzerindeki 282 sayfalık Cilt 4 taraması, Google Translate ile sayfa sayfa
-Türkçeye çevrildi. Site, çeviriyi ve orijinal sayfa görselini birlikte sunan sade bir
-okuyucudur.
+Roshidere (*Alya Sometimes Hides Her Feelings in Russian*) hafif roman serisinin **Cilt 4, 4.5, 5, 6, 7, 8, 9, 9.5, 10, 11 ve 12** çevirilerini, illüstrasyonlarını ve sayfa taramalarını sunan bağımlılıksız, çevrimdışı uyumlu Türkçe web okuyucusu.
+
+## Desteklenen Ciltler ve Kaynak Formatları
+
+| Cilt | Format | Durum | Kaynak Dizin / Görseller |
+|---|---|---|---|
+| **Cilt 4** | Sayfa taraması (FlipHTML5) | Tamamlandı | `data/` · `public/pages/` · `public/art/v4/` |
+| **Cilt 4.5** | Sayfa taraması (FlipHTML5) | Tamamlandı | `data45/` · `public/pages45/` · `public/art/v45/` |
+| **Cilt 5 – 9** | Sayfa taraması (FlipHTML5) | Tamamlandı | `data5/`..`data9/` · `public/art/v5/`..`v9/` |
+| **Cilt 9.5** | Bölüm-yerel (GlucoseTL) | Tamamlandı | `data95/` · `public/art/v95/` |
+| **Cilt 10** | Sayfa taraması (FlipHTML5) | Tamamlandı | `data10/` · `public/art/v10/` |
+| **Cilt 11** | Bölüm-yerel (EPUB) | Tamamlandı | `data11/` · `public/art/v11/` |
+| **Cilt 12** | Bölüm-yerel (SecreFTLs) | **Devam Ediyor** | `data12/` · `public/art/v12/` |
+
+> **Not:** Bölüm-yerel (*chapter-native*) ciltlerde (**9.5, 11, 12**) taranmış sayfa görüntüsü bulunmadığı için arayüzdeki **Orijinal** sayfa görünümü düğmesi otomatik olarak gizlenir; metin içi illüstrasyonlar tam genişlikte kartlar halinde gösterilir. **Cilt 12** çevirisi kaynakta devam ettiği için yalnızca yayımlanmış bölümler dahil edilir (`[Translation In Progress]` yer tutucuları otomatik atlanır).
 
 ## Çalıştırma
 
 ```bash
-cd ~/alya-reader
 node server.js        # http://localhost:3000
 ```
 
 Farklı port: `PORT=4000 node server.js`
 
-## Yapı
+## Mimari ve Dosya Yapısı
 
 ```
-server.js              bağımlılıksız HTTP sunucusu (API + statik dosyalar, gzip)
-data/source.json       sayfa görsel adları + İngilizce metin katmanı
-data/bilingual.json     paragraf başına DeepL + Google çevirisi
-data/paragraphs_final.json  sitede gösterilen nihai Türkçe metin
-data/glossary.json      isim/terim sözlüğü
-data/chapters.json     bölüm başlıklarının Türkçesi
-public/index.html      arayüz
-public/style.css       tema (koyu varsayılan, açık tema destekli)
-public/app.js          okuyucu mantığı
-public/pages/NNN.webp  282 sayfa görseli
-scripts/translate.js    sayfa bazlı çeviri (ilk sürüm)
-scripts/translate2.js   paragraf bazlı Google çevirisi (eski sürüm)
-scripts/translate3.js   DeepL + Google çift çeviri (kullanılan sürüm)
-scripts/merge.js        iki motoru birleştirir + sözlük/noktalama düzeltmesi
-scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
+server.js                      bağımlılıksız HTTP sunucusu (/api/catalog, /api/book, /volumes/<cilt>.json)
+data*/source.json              kaynak metin ve görsel katmanı (salt okunur)
+data*/paragraphs_final.json    yayında gösterilen edebî Türkçe metin
+data*/chapters.json            Türkçe bölüm başlıkları
+data/glossary.json             tüm ciltler için ortak özel ad ve terim sözlüğü
+data/qc_baseline.json          cilt bazlı kalite puanı ve bayrak taban çizgisi
+public/bundle.js               hafif katalog bildirimi (window.ALYA_CATALOG, ~2 KB)
+public/volumes/<cilt>.json     cilt bazlı tembel yüklenen (lazy-loaded) statik veri paketleri
+public/art/v<cilt>/*.webp      optimize edilmiş WebP illüstrasyonlar
+scripts/volumes.js             11 cildin merkezi yapılandırması ve URL normalleştiricisi
+scripts/ingest/fliphtml5.js    FlipHTML5 WASM config çözücü + görsel/metin içe aktarıcı (Cilt 5–10)
+scripts/ingest/glucosetl_v95.py GlucoseTL Anubis PoW + OCR/görsel içe aktarıcı (Cilt 9.5)
+scripts/ingest/epub_v11.py     EPUB XHTML + illüstrasyon içe aktarıcı (Cilt 11)
+scripts/ingest/secreftls_v12.py SecreFTLs API içe aktarıcı, yarım bölümleri atlar (Cilt 12)
+scripts/translate3.js          --volume destekli DeepL + Google çift motorlu çeviri boru hattı
+scripts/merge.js               --volume destekli birleştirme, sözlük ve tipografi normalizasyonu
+scripts/polish_volume.js       edebî Türkçe doğallaştırma ve sıfır tolerans kalite onarımı
 ```
 
-### Çeviri metinleri (analiz için başlangıç noktası)
+## Kalite Kapısı ve Testler
 
-| Dosya | İçerik |
-|---|---|
-| `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.045 paragraf |
-| `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.281 paragraf |
-| `data/source.json`, `data45/source.json` | İngilizce kaynak katmanı |
-| `data/chapters.json`, `data45/chapters.json` | Bölüm başlıkları + sayfa aralıkları |
-| `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
-| `scripts/qc/verify.js` | imla/noktalama denetimi (`ALYA_TR_FILE` ile dosya seçilir) |
-| `scripts/qc/cli.js` | birleşik kalite kapısı (`--volume 4`, `--strict`, `--check-regression`, `--json`, `--update-baseline`) |
-| `scripts/patch.js` | yama doğrulama ve uygulama (`--dry-run` ile regresyon kontrolü) |
-| `scripts/naturalize.js` | deterministik doğallaştırma: `--context-only` / `--dry` |
-| `scripts/norm_typo.js` | dizgi normalizasyonu (noktalama yığılması, tilde, harf uzatma) |
-| `scripts/fix_boundaries.js` | sayfa sınırı onarımı, OCR çöpü ayıklama |
-
-Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, kaynak tonu korunur (küfür yumuşatılmaz), özel adlar tutarlı (Masachika, Kuze, Alisa/Alya, Maria/Masha), kıvrık tırnak, çevirmen notu/İngilizce kalıntı yok.
-
-### Sürekli doğrulama (GitHub Actions)
-
-Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` iki cildi paralel matris içinde doğrular:
-`scripts/patch.js --dry-run` + `scripts/qc/cli.js --volume <cilt> --strict --check-regression`. Taban çizgisi `data/qc_baseline.json`
-(Cilt 4: ortalama 0.15 / 24 bayrak; Cilt 4.5: 0.27 / 53). Kapı kırmızıysa çeviri bozulmuştur.
-
-Yerel çalıştırma:
+Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` 11 cildin tamamını paralel matris içinde doğrular:
 
 ```bash
-npm test                             # test paketi + birleşik QC regresyon kapısı
-node scripts/qc/cli.js               # iki cilt
-node scripts/qc/cli.js --volume 4 --strict
-node scripts/qc/cli.js --volume 4.5 --strict
-node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
+npm test                                                  # tüm birim testleri + 11 cilt sıkı QC kapısı
+node scripts/qc/cli.js --strict --check-regression        # tüm ciltlerde sıfır tolerans + regresyon kontrolü
+node scripts/qc/cli.js --volume 12 --strict               # tek cilt kontrolü
+node scripts/patch.js --dry-run                           # Cilt 4 yama regresyon önizlemesi
 ```
 
-### Sunucusuz (çevrimdışı) okuma
+## Statik Paketleme ve GitHub Pages Dağıtımı
 
-`scripts/build_bundle.js` iki cildin Türkçe + İngilizce metnini ve **illüstrasyon görsellerini**
-tarayıcı paketine gömer:
+`node scripts/build_bundle.js` komutu her cildi `public/volumes/<cilt>.json` altına ayrı JSON dosyası olarak yazar ve `public/bundle.js` içine yalnızca hafif katalog bildirimini (`~2 KB`) gömer. Böylece ilk açılış anında yalnızca aktif cilt indirilir; hem `https://baran3575.github.io/alya-reader/` alt dizininde hem de yerel sunucuda aynı hızda çalışır.
 
-| Dosya | İçerik | Boyut |
-|---|---|---|
-| `public/bundle.js` | `window.ALYA_BUNDLE` — iki cildin sayfa/paragraf/EN verisi + bölüm listesi | ~1,5 MB |
-| `public/bundle-art.js` | `window.ALYA_ART` — 31 illüstrasyon, `data:image/webp;base64` olarak gömülü | ~4,0 MB |
-
-Okuyucu veriyi şu sırayla bulur: **localStorage** (`alya4:book:<cilt>`) → gömülü paket → `/api/book`.
-Yani ilk açılıştan sonra sunucu kapalı olsa da, hatta `index.html` doğrudan `file://` ile açılsa da okuma sürer.
-`public/sw.js` service worker'ı kabuğu, sayfa görsellerini ve `/api/book` yanıtlarını Cache Storage'a yazar.
-
-```bash
-node scripts/build_bundle.js   # metin/EN/görsel değişince yeniden üret
-```
-
-## Özellikler
-
-- Koyu / açık tema (t), sistem temasına göre başlar
-- Çeviri ve Orijinal (görsel) modu (v)
-- Bölüm seçici: Önsöz, 10 bölüm, Sonsöz
-- Ok tuşları / j-k ile sayfa geçişi, mobilde kaydırma
-- Okunduğu yer, tema ve yazı boyutu tarayıcıda hatırlanır
-- Görsel sayfalarda çeviri yerine orijinal sayfa gösterilir, görsele dokununca yakınlaşır
-
-## Notlar
-
-- Metin, taramadaki gizli metin katmanından alındı; bozuk çıkan birkaç sayfa
-  (kapak, bazı görseller) otomatik olarak "görsel sayfa" kabul edilir.
-- Çeviri **DeepL** (birincil) + **Google Translate** (yedek/karşılaştırma) ile yapıldı;
-  isim ve terimler `data/glossary.json` sözlüğüyle tek yazıma çekildi.
-- `data/bilingual.json` her paragrafın iki motor çevirisini saklar (ileride motor değiştirmek için).
+`.github/workflows/deploy-pages.yml` iş akışı `main` / `master` dalına yapılan her gönderimde:
+1. `npm test` ile 11 cildin kalite kapısını doğrular,
+2. `node scripts/build_bundle.js` ile statik paketleri üretir,
+3. `public/` dizinini (`public/.nojekyll` dahil) GitHub Pages'e otomatik olarak dağıtır.

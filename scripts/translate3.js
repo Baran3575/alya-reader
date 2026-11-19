@@ -190,15 +190,27 @@ async function translateVolume({ dataDir, concurrency = 4, force = false }) {
     } catch {}
   }
 
+  const validPageKeys = new Set(pages.map((p) => String(p.page)));
+  for (const existingKey of Object.keys(done)) {
+    if (!validPageKeys.has(existingKey)) delete done[existingKey];
+  }
+
   const items = [];
   for (const p of pages) {
     const key = String(p.page);
-    if (done[key] && Array.isArray(done[key])) continue;
-    const paras = paragraphs(p.text || '', Boolean(p.chapterNative));
+    const paras = p.art ? [] : paragraphs(p.text || '', Boolean(p.chapterNative));
     if (!paras.length) {
       done[key] = [];
       continue;
     }
+    if (
+      Array.isArray(done[key]) &&
+      done[key].length === paras.length &&
+      done[key].every((x, idx) => x && (x.g || x.d) && (!x.en || x.en === paras[idx]))
+    ) {
+      continue;
+    }
+    delete done[key];
     paras.forEach((t, i) => items.push({ key, i, t, n: paras.length }));
   }
 
@@ -250,7 +262,7 @@ async function translateVolume({ dataDir, concurrency = 4, force = false }) {
       if (!Array.isArray(done[k]) || done[k].length !== it.n) {
         done[k] = new Array(it.n).fill(null).map(() => ({ g: '', d: '' }));
       }
-      done[k][it.i] = { g: (g[idx] || '').trim(), d: (d[idx] || '').trim() };
+      done[k][it.i] = { en: it.t, g: (g[idx] || '').trim(), d: (d[idx] || '').trim() };
     });
 
     completed++;
