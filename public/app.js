@@ -370,6 +370,8 @@
         }
       }
 
+      if (!isIllustration && p.tr.length === 0) continue;
+
       let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
       for (const t of paras) {
         if (!t) continue;

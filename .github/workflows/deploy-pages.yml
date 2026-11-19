@@ -72,6 +72,7 @@ jobs:
             assert(/const VERSION = '\''alya-[0-9a-f]{12}'\'';/.test(sw), "Expected hashed VERSION in dist/sw.js");
             assert(!sw.includes("alya-v3"), "dist/sw.js still contains static alya-v3");
           '
+          git diff --exit-code
 
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'

@@ -9,10 +9,11 @@ const { buildBundles } = require('./build_bundle.js');
 const ROOT = path.join(__dirname, '..');
 const GENERATED_TOP_FILES = new Set(['bundle.js', 'bundle-art.js', 'sw.js']);
 
-function shouldExclude(relPosix, isTopLevel) {
+function shouldExclude(relPosix, isTopLevel, isDir) {
   const base = path.posix.basename(relPosix);
   if (/\.bak$/i.test(base)) return true;
   if (isTopLevel && GENERATED_TOP_FILES.has(base)) return true;
+  if (isTopLevel && isDir && /^pages/i.test(base)) return true;
   return false;
 }
 
@@ -21,7 +22,7 @@ function copyPublicAssets(srcDir, destDir, relBase = '') {
   for (const entry of entries) {
     const relPosix = relBase ? relBase + '/' + entry.name : entry.name;
     const isTopLevel = relBase === '';
-    if (shouldExclude(relPosix, isTopLevel)) continue;
+    if (shouldExclude(relPosix, isTopLevel, entry.isDirectory())) continue;
 
     const srcPath = path.join(srcDir, entry.name);
     const destPath = path.join(destDir, entry.name);

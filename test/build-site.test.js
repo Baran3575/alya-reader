@@ -103,6 +103,7 @@ function testDynamicVolumeScalingAndHashRotation() {
     };
 
     const res1 = buildSite({ rootDir: tmpRoot, publicDir: pubDir, distDir: dist1, volumes: customVolumes, quiet: true });
+    assert(!fs.existsSync(path.join(dist1, 'pages5')), 'Gitignored public/pages* scan directories must not be copied into dist/');
     assert(fs.existsSync(path.join(dist1, 'books', '5.json')), 'Volume 5 static JSON must be emitted automatically');
     const vol5Book = JSON.parse(fs.readFileSync(path.join(dist1, 'books', '5.json'), 'utf8'));
     assert.strictEqual(vol5Book.volume, 'Cilt 5');
