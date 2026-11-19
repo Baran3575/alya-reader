@@ -19,96 +19,115 @@ const SPELLING_FIXES = [
   [/(?<!\p{L})her hangi(?!\p{L})/giu, (m) => (m[0] === 'H' ? 'Herhangi' : 'herhangi')],
 ];
 
+function matchCase(source, replacement) {
+  if (!source || !replacement) return replacement;
+  const first = source.charAt(0);
+  if (first !== first.toLocaleLowerCase('tr')) {
+    return replacement.charAt(0).toLocaleUpperCase('tr') + replacement.slice(1);
+  }
+  return replacement;
+}
+
 const LITERARY_RULES = [
-  [/(?<!\p{L})çok hızlı bir şekilde(?!\p{L})/giu, 'hızla'],
-  [/(?<!\p{L})hızlı bir şekilde(?!\p{L})/giu, 'hızlıca'],
-  [/(?<!\p{L})yavaş bir şekilde(?!\p{L})/giu, 'yavaşça'],
-  [/(?<!\p{L})sessiz bir şekilde(?!\p{L})/giu, 'sessizce'],
-  [/(?<!\p{L})nazik bir şekilde(?!\p{L})/giu, 'nazikçe'],
-  [/(?<!\p{L})sakin bir şekilde(?!\p{L})/giu, 'sakince'],
-  [/(?<!\p{L})kolay bir şekilde(?!\p{L})/giu, 'kolayca'],
-  [/(?<!\p{L})kesin bir şekilde(?!\p{L})/giu, 'kesinlikle'],
-  [/(?<!\p{L})dikkatli bir şekilde(?!\p{L})/giu, 'dikkatlice'],
-  [/(?<!\p{L})ciddi bir şekilde(?!\p{L})/giu, 'ciddiyetle'],
-  [/(?<!\p{L})açık bir şekilde(?!\p{L})/giu, 'açıkça'],
-  [/(?<!\p{L})net bir şekilde(?!\p{L})/giu, 'netçe'],
-  [/(?<!\p{L})doğal bir şekilde(?!\p{L})/giu, 'doğallıkla'],
-  [/(?<!\p{L})düzenli bir şekilde(?!\p{L})/giu, 'düzenlice'],
-  [/(?<!\p{L})istekli bir şekilde(?!\p{L})/giu, 'istekle'],
-  [/(?<!\p{L})endişeli bir şekilde(?!\p{L})/giu, 'endişeyle'],
-  [/(?<!\p{L})öfkeli bir şekilde(?!\p{L})/giu, 'öfkeyle'],
-  [/(?<!\p{L})neşeli bir şekilde(?!\p{L})/giu, 'neşeyle'],
-  [/(?<!\p{L})üzgün bir şekilde(?!\p{L})/giu, 'üzüntüyle'],
-  [/(?<!\p{L})şaşkın bir şekilde(?!\p{L})/giu, 'şaşkınlıkla'],
-  [/(?<!\p{L})utangaç bir şekilde(?!\p{L})/giu, 'utangaçça'],
-  [/(?<!\p{L})beceriksiz bir şekilde(?!\p{L})/giu, 'beceriksizce'],
-  [/(?<!\p{L})umutsuz bir şekilde(?!\p{L})/giu, 'umutsuzca'],
-  [/(?<!\p{L})sabırsız bir şekilde(?!\p{L})/giu, 'sabırsızca'],
-  [/(?<!\p{L})gergin bir şekilde(?!\p{L})/giu, 'gergince'],
-  [/(?<!\p{L})tuhaf bir şekilde(?!\p{L})/giu, 'tuhaf biçimde'],
-  [/(?<!\p{L})garip bir şekilde(?!\p{L})/giu, 'tuhaf biçimde'],
-  [/(?<!\p{L})normal bir şekilde(?!\p{L})/giu, 'normalce'],
-  [/(?<!\p{L})sert bir şekilde(?!\p{L})/giu, 'sertçe'],
-  [/(?<!\p{L})kısa bir şekilde(?!\p{L})/giu, 'kısaca'],
-  [/(?<!\p{L})yumuşak bir şekilde(?!\p{L})/giu, 'yumuşakça'],
-  [/(?<!\p{L})kaba bir şekilde(?!\p{L})/giu, 'kabaca'],
-  [/(?<!\p{L})zarif bir şekilde(?!\p{L})/giu, 'zarifçe'],
-  [/(?<!\p{L})iyi bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'iyice'],
-  [/(?<!\p{L})kötü bir şekilde(?!\p{L})/giu, 'kötü biçimde'],
-  [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, 'uygun biçimde'],
-  [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, 'hiçbir biçimde'],
-  [/(?<!\p{L})hiçbir şekilde(?!\p{L})/giu, (m) => (m[0] === 'H' ? 'Hiçbir biçimde' : 'hiçbir biçimde')],
-  [/(?<!\p{L})alaycı bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'alaycı bir tavırla'],
-  [/(?<!\p{L})şakacı bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'şakacı bir tavırla'],
-  [/(?<!\p{L})düzgün bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'düzgünce'],
-  [/(?<!\p{L})(?:mükemmel|kusursuz) bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'kusursuzca'],
-  [/(?<!\p{L})gelişigüzel bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'kayıtsızca'],
-  [/(?<!\p{L})muzip bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'muzipçe'],
-  [/(?<!\p{L})sıkı bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'sıkıca'],
-  [/(?<!\p{L})çekingen bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'çekingence'],
-  [/(?<!\p{L})derin bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'derinden'],
-  [/(?<!\p{L})rahat bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'rahatça'],
-  [/(?<!\p{L})dalgın bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'dalgınca'],
-  [/(?<!\p{L})masum bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'masumca'],
-  [/(?<!\p{L})sıcak bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'sıcakça'],
-  [/(?<!\p{L})soğuk bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'soğukça'],
-  [/(?<!\p{L})tatlı bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'tatlılıkla'],
-  [/(?<!\p{L})bariz bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'açıkça'],
-  [/(?<!\p{L})kendinden emin bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'kendinden emin bir tavırla'],
-  [/(?<!\p{L})emin bir (?:şekilde|yolunu bulup)(?!\p{L})/giu, 'emin bir tavırla'],
-  [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü|sız|siz|suz|süz|sal|sel|ik|ük|uk|ak|ek)) bir (?:şekilde|yolunu bulup)(?!\p{L})/gu, '$1 biçimde'],
+  [/(?<!\p{L})çok hızlı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'hızla')],
+  [/(?<!\p{L})hızlı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'hızlıca')],
+  [/(?<!\p{L})yavaş bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'yavaşça')],
+  [/(?<!\p{L})sessiz bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sessizce')],
+  [/(?<!\p{L})nazik bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'nazikçe')],
+  [/(?<!\p{L})sakin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sakince')],
+  [/(?<!\p{L})kolay bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kolayca')],
+  [/(?<!\p{L})kesin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kesinlikle')],
+  [/(?<!\p{L})dikkatli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'dikkatlice')],
+  [/(?<!\p{L})ciddi bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'ciddiyetle')],
+  [/(?<!\p{L})açık bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'açıkça')],
+  [/(?<!\p{L})net bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'netçe')],
+  [/(?<!\p{L})doğal bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'doğallıkla')],
+  [/(?<!\p{L})düzenli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'düzenlice')],
+  [/(?<!\p{L})istekli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'istekle')],
+  [/(?<!\p{L})endişeli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'endişeyle')],
+  [/(?<!\p{L})öfkeli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'öfkeyle')],
+  [/(?<!\p{L})neşeli bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'neşeyle')],
+  [/(?<!\p{L})üzgün bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'üzüntüyle')],
+  [/(?<!\p{L})şaşkın bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'şaşkınlıkla')],
+  [/(?<!\p{L})utangaç bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'utangaçça')],
+  [/(?<!\p{L})beceriksiz bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'beceriksizce')],
+  [/(?<!\p{L})umutsuz bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'umutsuzca')],
+  [/(?<!\p{L})sabırsız bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sabırsızca')],
+  [/(?<!\p{L})gergin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'gergince')],
+  [/(?<!\p{L})yorgun bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'yorgunca')],
+  [/(?<!\p{L})içten bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'içtenlikle')],
+  [/(?<!\p{L})tuhaf bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'tuhaf biçimde')],
+  [/(?<!\p{L})garip bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'tuhaf biçimde')],
+  [/(?<!\p{L})normal bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'normalce')],
+  [/(?<!\p{L})sert bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sertçe')],
+  [/(?<!\p{L})kısa bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kısaca')],
+  [/(?<!\p{L})yumuşak bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'yumuşakça')],
+  [/(?<!\p{L})kaba bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kabaca')],
+  [/(?<!\p{L})zarif bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'zarifçe')],
+  [/(?<!\p{L})iyi bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'iyice')],
+  [/(?<!\p{L})kötü bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kötü biçimde')],
+  [/(?<!\p{L})uygun bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'uygun biçimde')],
+  [/(?<!\p{L})herhangi bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'hiçbir biçimde')],
+  [/(?<!\p{L})hiçbir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'hiçbir biçimde')],
+  [/(?<!\p{L})alaycı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'alaycı bir tavırla')],
+  [/(?<!\p{L})şakacı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'şakacı bir tavırla')],
+  [/(?<!\p{L})düzgün bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'düzgünce')],
+  [/(?<!\p{L})(?:mükemmel|kusursuz) bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kusursuzca')],
+  [/(?<!\p{L})gelişigüzel bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kayıtsızca')],
+  [/(?<!\p{L})muzip bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'muzipçe')],
+  [/(?<!\p{L})sıkı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sıkıca')],
+  [/(?<!\p{L})çekingen bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'çekingence')],
+  [/(?<!\p{L})derin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'derinden')],
+  [/(?<!\p{L})rahat bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'rahatça')],
+  [/(?<!\p{L})dalgın bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'dalgınca')],
+  [/(?<!\p{L})masum bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'masumca')],
+  [/(?<!\p{L})sıcak bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'sıcakça')],
+  [/(?<!\p{L})soğuk bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'soğukça')],
+  [/(?<!\p{L})tatlı bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'tatlılıkla')],
+  [/(?<!\p{L})bariz bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'açıkça')],
+  [/(?<!\p{L})kendinden emin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'kendinden emin bir tavırla')],
+  [/(?<!\p{L})emin bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'emin bir tavırla')],
+  [/(?<!\p{L})([A-Za-zÇĞİÖŞÜçğıöşü]+(?:lı|li|lu|lü|sız|siz|suz|süz|sal|sel|ik|ük|uk|ak|ek|gın|gin|gun|gün|kın|kin|kun|kün)) bir şekilde(?!\p{L})/gu, '$1 biçimde'],
   [
-    /(?<!\p{L})(?!(?:ama|fakat|ancak|ve|veya|ya|da|de|ki|sonra|önce|artık|hâlâ|hala|zaten|yine|bile|sadece|yalnızca|bunu|şunu|onu|bu|şu|o|ben|sen|biz|siz|onlar|hepsi|herkes|kimse)(?!\p{L}))([a-zçğıöşü]{3,}) bir (?:şekilde|yolunu bulup)(?!\p{L})/gu,
+    /(?<!\p{L})(?!(?:ama|fakat|ancak|ve|veya|ya|da|de|ki|sonra|önce|artık|hâlâ|hala|zaten|yine|bile|sadece|yalnızca|bunu|şunu|onu|bu|şu|o|ben|sen|biz|siz|onlar|hepsi|herkes|kimse)(?!\p{L}))([a-zçğıöşü]{3,}) bir şekilde(?!\p{L})/gu,
     '$1 biçimde',
   ],
-  [/(?<!\p{L})bir şekilde(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir yolunu bulup' : 'bir yolunu bulup')],
-  [/(?<!\p{L})bir nevi(?!\p{L})/giu, (m) => (m[0] === 'B' ? 'Bir tür' : 'bir tür')],
-  [/(?<!\p{L})söz konusu olduğunda(?!\p{L})/giu, 'konu bu olunca'],
-  [/(?<!\p{L})söz konusu olan(?!\p{L})/giu, 'bahsedilen'],
-  [/(?<!\p{L})söz konusu değildi(?!\p{L})/giu, 'düşünülemezdi'],
-  [/(?<!\p{L})söz konusu değil(?!\p{L})/giu, 'mümkün değil'],
-  [/(?<!\p{L})söz konusuydu(?!\p{L})/giu, 'ortadaydı'],
-  [/(?<!\p{L})söz konusuysa(?!\p{L})/giu, 'gündemdeyse'],
-  [/(?<!\p{L})söz konusu(?!\p{L})/giu, (m) => (m[0] === 'S' ? 'Bahsedilen' : 'bahsedilen')],
+  [
+    /(?<!\p{L})bir şekilde ([^.!?“”{}]{2,45}?(?:lazım|gerek\p{L}*|zorunda\p{L}*|başar\p{L}*|kurtul\p{L}*|kaç\p{L}*))(?!\p{L})/giu,
+    (m, rest) => matchCase(m, `bir yolunu bulup ${rest}`),
+  ],
+  [/(?<!\p{L})bir şekilde(?!\p{L})/giu, (m) => matchCase(m, 'her nasılsa')],
+  [/(?<!\p{L})bir nevi(?!\p{L})/giu, (m) => matchCase(m, 'bir tür')],
+  [/(?<!\p{L})söz konusu olduğunda(?!\p{L})/giu, (m) => matchCase(m, 'konu bu olunca')],
+  [/(?<!\p{L})söz konusu olan(?!\p{L})/giu, (m) => matchCase(m, 'bahsedilen')],
+  [/(?<!\p{L})söz konusu değildi(?!\p{L})/giu, (m) => matchCase(m, 'düşünülemezdi')],
+  [/(?<!\p{L})söz konusu değil(?!\p{L})/giu, (m) => matchCase(m, 'mümkün değil')],
+  [/(?<!\p{L})söz konusuydu(?!\p{L})/giu, (m) => matchCase(m, 'ortadaydı')],
+  [/(?<!\p{L})söz konusuysa(?!\p{L})/giu, (m) => matchCase(m, 'gündemdeyse')],
+  [/(?<!\p{L})söz konusu(?!\p{L})/giu, (m) => matchCase(m, 'bahsedilen')],
   [/(?<!\p{L})olmasına rağmen(?!\p{L})/giu, 'olsa da'],
   [/(?<!\p{L})açısından(?!\p{L})/giu, 'bakımından'],
   [/(?<!\p{L})konusundaki(?!\p{L})/giu, 'hakkındaki'],
   [/(?<!\p{L})konusunda(?!\p{L})/giu, 'hakkında'],
   [/(?<!\p{L})yönelik(?!\p{L})/giu, 'dair'],
-  [/(?<!\p{L})(?:adeta|âdeta)(?!\p{L})/giu, (m) => (m[0] === 'A' || m[0] === 'Â' ? 'Resmen' : 'resmen')],
-  [/(?<!\p{L})farkında olmadan(?!\p{L})/giu, (m) => (m[0] === 'F' ? 'Elinde olmadan' : 'elinde olmadan')],
-  [/(?<!\p{L})fark etmeden(?!\p{L})/giu, (m) => (m[0] === 'F' ? 'İstemeden' : 'istemeden')],
-  [/(?<!\p{L})sanki ([^.!?“”{}]{3,80}?\bgibi\b)/giu, (m, rest) =>
-    m[0] === 'S' ? rest.charAt(0).toLocaleUpperCase('tr') + rest.slice(1) : rest
+  [/(?<!\p{L})(?:adeta|âdeta)(?!\p{L})/giu, (m) => matchCase(m, 'resmen')],
+  [/(?<!\p{L})farkında olmadan(?!\p{L})/giu, (m) => matchCase(m, 'elinde olmadan')],
+  [/(?<!\p{L})fark etmeden(?!\p{L})/giu, (m) => matchCase(m, 'istemeden')],
+  [
+    /(?<!\p{L})sanki\s+((?:[^.!?“”{}]|“[^”]{0,160}”){2,130}?(?:\bgibi(?:ydi|ydim|ydin|ydiler|sin|yim|yiz)?\b|\p{L}+(?:casına|cesine|çasına|çesine)\b))/giu,
+    (m, rest) => matchCase(m, rest),
   ],
   [/(?<!\p{L})Sanki ([^.!?“”{}]{3,60})\./gu, 'Görünüşe bakılırsa $1.'],
-  [/(?<!\p{L})sanki(?!\p{L})/gu, 'galiba'],
+  [/(?<!\p{L})loş bir ışık görünüyordu(?!\p{L})/giu, (m) => matchCase(m, 'loş bir ışık süzülüyordu')],
+  [/(?<!\p{L})net biçimde görünüyordu(?!\p{L})/giu, (m) => matchCase(m, 'net biçimde seçiliyordu')],
+  [/(?<!\p{L})Gözlerinde sadece ([^.!?]{2,40}?) görünüyordu(?!\p{L})/gu, 'Görüş alanında sadece $1 vardı'],
+  [/(?<!\p{L})yürek burkan ve geçici görünüyordu(?!\p{L})/giu, 'yürek burkan ve geçici geliyordu'],
   [/(?<!\p{L})gibi görünüyordu(?!\p{L})/giu, 'gibi duruyordu'],
   [/(?<!\p{L})görünüyordu(?!\p{L})/gu, 'duruyordu'],
-  [/(?<!\p{L})gibiydim(?!\p{L})/gu, 'haldeydim'],
-  [/(?<!\p{L})gibiydin(?!\p{L})/gu, 'haldeydin'],
-  [/(?<!\p{L})gibiydiler(?!\p{L})/gu, 'haldeydiler'],
-  [/(?<!\p{L})gibiydi(?!\p{L})/gu, 'haldeydi'],
+  [/“([^”]{1,140})”\s+(?:der|diyor)\s+gibiydi(?!\p{L})/gu, '“$1” der gibi duruyordu'],
+  [/(\p{L}+yor)\s+gibiydiler(?!\p{L})/gu, '$1 gibi duruyorlardı'],
+  [/(\p{L}+yor)\s+gibiydi(?!\p{L})/gu, '$1 gibi duruyordu'],
+  [/(\p{L}+(?:mış|miş|muş|müş))\s+gibiydi(?!\p{L})/gu, '$1 gibi duruyordu'],
   [/([a-zçğıöşü])ılmaktadır(?!\p{L})/gu, '$1ılıyor'],
   [/([a-zçğıöşü])ilmektedir(?!\p{L})/gu, '$1iliyor'],
   [/([a-zçğıöşü])ulmaktadır(?!\p{L})/gu, '$1uluyor'],
@@ -117,9 +136,9 @@ const LITERARY_RULES = [
   [/([a-zçğıöşü])ilmiştir(?!\p{L})/gu, '$1ildi'],
   [/([a-zçğıöşü])ulmuştur(?!\p{L})/gu, '$1uldu'],
   [/([a-zçğıöşü])ülmüştür(?!\p{L})/gu, '$1üldü'],
-  [/(?<!\p{L})gerçekleştirdi(?!\p{L})/giu, 'yaptı'],
-  [/(?<!\p{L})gerçekleşti(?!\p{L})/giu, 'oldu'],
-  [/(?<!\p{L})ifade etti(?!\p{L})/giu, 'söyledi'],
+  [/(?<!\p{L})gerçekleştirdi(?!\p{L})/giu, (m) => matchCase(m, 'yaptı')],
+  [/(?<!\p{L})gerçekleşti(?!\p{L})/giu, (m) => matchCase(m, 'oldu')],
+  [/(?<!\p{L})ifade etti(?!\p{L})/giu, (m) => matchCase(m, 'söyledi')],
   [/(?<!\p{L})diye söyledi(?!\p{L})/giu, 'dedi'],
   [/(?<!\p{L})Prez[’']in(?!\p{L})/gu, 'Başkan’ın'],
   [/(?<!\p{L})Prez[’']i(?!\p{L})/gu, 'Başkan’ı'],
@@ -146,6 +165,13 @@ const LITERARY_RULES = [
   [/sama’in(?!\p{L})/giu, 'sama’nın'],
   [/sama’i(?!\p{L})/giu, 'sama’yı'],
   [/sama’e(?!\p{L})/giu, 'sama’ya'],
+  [/hime’(?:ın|in)(?!\p{L})/giu, 'hime’nin'],
+  [/hime’(?:ı|i)(?!\p{L})/giu, 'hime’yi'],
+  [/hime’(?:e|a)(?!\p{L})/giu, 'hime’ye'],
+  [/(Sumire|Ayame|Kanae)’(?:ın|in)(?!\p{L})/gu, '$1’nin'],
+  [/(Sumire|Ayame|Kanae)’(?:ı|i)(?!\p{L})/gu, '$1’yi'],
+  [/(Sumire|Ayame|Kanae)’(?:e|a)(?!\p{L})/gu, '$1’ye'],
+  [/(?<!\p{L})bir hoge’um(?!\p{L})/gu, 'bir ahoge’m'],
 ];
 
 function splitOverlongSentences(text) {
@@ -191,17 +217,6 @@ function splitOverlongSentences(text) {
   return modified ? outSents.join(' ') : text;
 }
 
-function reduceExcessiveVe(text) {
-  const veMatches = [...text.matchAll(/(?<!\p{L})ve(?!\p{L})/gu)];
-  if (veMatches.length < 4) return text;
-  let count = 0;
-  return text.replace(/\s+(?<!\p{L})ve(?!\p{L})\s+/gu, (m) => {
-    count++;
-    if (count % 2 === 0) return ', ';
-    return m;
-  });
-}
-
 // Rusça fısıltı bloklarını ({...}) ve köşeli parantez bloklarını ([...]) koruyarak yalnızca dış/uygun metni işle
 function polishPreservingDelims(text, glossary) {
   const protectedSpans = [];
@@ -223,7 +238,6 @@ function polishPreservingDelims(text, glossary) {
   for (const [re, rep] of LITERARY_RULES) masked = masked.replace(re, rep);
 
   masked = splitOverlongSentences(masked);
-  masked = reduceExcessiveVe(masked);
 
   masked = masked
     .replace(/\.{2,}/g, '…')
@@ -286,7 +300,7 @@ function polishVolume(volKey, { dry = false } = {}) {
         const sAfter = score(pg, i, candidate).score;
         // Yalnızca kusur puanını düşüren veya açık ek/tırnak pürüzünü puan artırmadan düzelten adayları kabul et
         const fixedHarmonyOrSpace =
-          /(?:senpai|chan|kun|sama)’(?:in|i|e|den|de|le)|Prez|(?:[“]\s+|\s+[”])/.test(orig) &&
+          /(?:senpai|chan|kun|sama|hime|Sumire|Ayame|Kanae)’(?:ın|in|ı|i|e|a|den|de|le)|bir hoge’um|Prez|(?:[“]\s+|\s+[”])/.test(orig) &&
           sAfter <= sBefore;
         if (sAfter < sBefore || fixedHarmonyOrSpace) {
           nextArr.push(candidate);
