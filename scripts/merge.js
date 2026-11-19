@@ -133,6 +133,7 @@ function polish(text, glossary = loadGlossary()) {
     .replace(/(?<!\d)([,;:])(?=\S)/g, '$1 ')
     .replace(/\.{2,}/g, '…')
     .replace(/…\.+/g, '…')
+    .replace(/,\s*…/g, '…')
     .replace(/([!?])\.+/g, '$1')
     .replace(/[\u201e]/g, '“')
     .replace(/\u2013/g, '—')

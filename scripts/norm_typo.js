@@ -67,6 +67,7 @@ const RULES = [
   // çift/üç nokta düzeltmeleri
   ['üç nokta dönüşümü', /\.{2,}/g, '…'],
   ['üç nokta artı nokta', /…\.+/g, '…'],
+  ['virgül üç nokta', /,\s*…/g, '…'],
   // ünlem/soru sonrası kaçak nokta
   ['ünlem/soru nokta', /([!?])\.+/g, '$1'],
   // ünlem/soru yığılması: en fazla üç işaret
