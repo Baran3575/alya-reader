@@ -10,7 +10,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify } = require('./verify');
+const {
+  runVerify,
+  hasUnbalancedBraces,
+  findDuplicateGlossesInText,
+  findBraceEnglishInText,
+} = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
 
@@ -42,8 +47,11 @@ const ZERO_TOLERANCE = [
   '"?." kalıbı',
   'bitişik/imla hatası',
   'düz tırnak',
+  'dengesiz süslü parantez',
+  'yinelenen köşeli açıklama',
   'boş paragraf',
   'İngilizce kalıntı',
+  'süslü parantezde İngilizce',
   'çevirmen notu',
 ];
 
@@ -140,6 +148,44 @@ function findTranslatorNotesDetails(data) {
   return matches;
 }
 
+function findUnbalancedBracesDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      if (hasUnbalancedBraces(text)) {
+        matches.push({ key: `${pg}.${i}`, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findDuplicateGlossDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const hits = findDuplicateGlossesInText(text);
+      if (hits.length > 0) {
+        matches.push({ key: `${pg}.${i}`, matches: hits, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
+function findBraceEnglishDetails(data) {
+  const matches = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const words = findBraceEnglishInText(text);
+      if (words.length > 0) {
+        matches.push({ key: `${pg}.${i}`, words, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return matches;
+}
+
 function generateMarkdownSummary(result, violations, options) {
   const lines = [];
   lines.push('### Çeviri Kalite Kapısı Raporu (QC Matrix)');
@@ -225,6 +271,12 @@ function main() {
           details = findEnglishResidueDetails(data);
         } else if (row[2].includes('çevirmen notu')) {
           details = findTranslatorNotesDetails(data);
+        } else if (row[2].includes('dengesiz süslü parantez')) {
+          details = findUnbalancedBracesDetails(data);
+        } else if (row[2].includes('yinelenen köşeli açıklama')) {
+          details = findDuplicateGlossDetails(data);
+        } else if (row[2].includes('süslü parantezde İngilizce')) {
+          details = findBraceEnglishDetails(data);
         }
         hardFails.push({ label: row[2], value: row[1], details });
       }
@@ -413,5 +465,8 @@ module.exports = {
   findUnclosedQuotes,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
+  findUnbalancedBracesDetails,
+  findDuplicateGlossDetails,
+  findBraceEnglishDetails,
   generateMarkdownSummary,
 };

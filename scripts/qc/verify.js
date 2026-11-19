@@ -4,6 +4,66 @@ const path = require('path');
 
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
+const ALLOWED_BRACE_NAMES_RE = /^(?:Masaa*chika|Kuze|Alya|Alisa|Masha|Maria|Yuki|Ayano|Sayaka|Chisaki|Touya|Nonoa|Sarashina|Kujou|Kimishima|Suou|Saa|Onii)(?:-(?:kun|chan|san|sama|senpai))?$/i;
+const BRACE_EN_ORTHO_RE = /[qwx]|ch|sh|th|wh|ph|gh|ck|wr|kn|oo|ee|ea|oa|ou|ow|aw|ew|tion|sion|ness|ment|able|ible|ight|ould|ing$|ed$/i;
+const BRACE_EN_WORDS = new Set([
+  'overwrite', 'please', 'sorry', 'never', 'really', 'great', 'cool', 'promise',
+  'because', 'look', 'take', 'hold', 'stop', 'help', 'just', 'only', 'same',
+  'mean', 'feel', 'want', 'need', 'make', 'married', 'marriage', 'couple',
+  'partner', 'partners', 'responsibility', 'regret', 'weird', 'boobs', 'heart',
+  'edge', 'body', 'mole', 'alone', 'again', 'forever', 'gladly', 'accept',
+  'offer', 'free', 'yes', 'are', 'can', 'not', 'don', 'did', 'let', 'see',
+  'say', 'tell', 'give', 'come', 'back', 'here', 'more', 'less', 'very',
+  'much', 'well', 'still', 'even', 'also', 'into', 'over', 'under', 'after',
+  'before', 'until', 'always', 'maybe', 'perhaps', 'actually', 'fact',
+  'specific', 'specifically',
+]);
+
+function hasUnbalancedBraces(text) {
+  let depth = 0;
+  for (const ch of text) {
+    if (ch === '{') {
+      if (depth > 0) return true;
+      depth++;
+    } else if (ch === '}') {
+      if (depth === 0) return true;
+      depth--;
+    }
+  }
+  return depth !== 0;
+}
+
+function findDuplicateGlossesInText(text) {
+  const re = /[“"]([^“”"]+)[”"]\s*\[([^\[\]]+)\]/gu;
+  const hits = [];
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    if (!/\p{Script=Cyrillic}/u.test(m[1])) {
+      hits.push(m[0]);
+    }
+  }
+  return hits;
+}
+
+function findBraceEnglishInText(text) {
+  const spanRe = /\{([^{}]+)\}/g;
+  const wordRe = /(?<!\p{L})[A-Z][a-z]{2,}(?:-(?:kun|chan|san|sama|senpai))?(?!\p{L})/gu;
+  const hits = [];
+  let sm;
+  while ((sm = spanRe.exec(text)) !== null) {
+    const span = sm[1];
+    let wm;
+    wordRe.lastIndex = 0;
+    while ((wm = wordRe.exec(span)) !== null) {
+      const w = wm[0];
+      if (ALLOWED_BRACE_NAMES_RE.test(w)) continue;
+      if (BRACE_EN_ORTHO_RE.test(w) || BRACE_EN_WORDS.has(w.toLowerCase())) {
+        hits.push(w);
+      }
+    }
+  }
+  return hits;
+}
 
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
@@ -24,12 +84,20 @@ function runVerify(filePath) {
   row('  ', count(/["']/g), 'düz tırnak');
   let unbalQ = 0;
   let unbalP = 0;
+  let unbalB = 0;
+  let dupGloss = 0;
+  let braceEn = 0;
   for (const x of paras) {
     if ((x.t.match(/[“”]/g) || []).length % 2) unbalQ++;
     if ((x.t.match(/\(/g) || []).length !== (x.t.match(/\)/g) || []).length) unbalP++;
+    if (hasUnbalancedBraces(x.t)) unbalB++;
+    dupGloss += findDuplicateGlossesInText(x.t).length;
+    braceEn += findBraceEnglishInText(x.t).length;
   }
   row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
   row('  ', unbalP, 'dengesiz parantez');
+  row('  ', unbalB, 'dengesiz süslü parantez');
+  row('  ', dupGloss, 'yinelenen köşeli açıklama');
   row('  ', paras.filter((x) => !x.t.trim()).length, 'boş paragraf');
 
   row('2. doğal ifade', countW('Ancak'), '"Ancak"');
@@ -63,6 +131,7 @@ function runVerify(filePath) {
     return a + (clean.match(EN_RESIDUE_RE) || []).length;
   }, 0);
   row('6. yasaklı', countEnResidue, 'İngilizce kalıntı');
+  row('  ', braceEn, 'süslü parantezde İngilizce');
   row('  ', count(TN_RE), 'çevirmen notu');
 
   return { rows, paras, pageCount: Object.keys(f).length };
@@ -74,4 +143,9 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify };
+module.exports = {
+  runVerify,
+  hasUnbalancedBraces,
+  findDuplicateGlossesInText,
+  findBraceEnglishInText,
+};

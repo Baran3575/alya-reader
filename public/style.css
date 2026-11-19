@@ -326,6 +326,15 @@ main {
   hanging-punctuation: first allow-end;
 }
 
+.reader p.dialog.ru-start {
+  text-indent: 0;
+}
+
+.reader em.ru-whisper {
+  font-style: italic;
+  color: var(--fg-soft);
+}
+
 /* ---------- görsel yakınlaştırma ---------- */
 .lightbox {
   position: fixed;

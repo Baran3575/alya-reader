@@ -288,6 +288,34 @@
     prefetch(chapterIndex(target));
   }
 
+  function appendParagraphText(el, text) {
+    if (text.indexOf('{') === -1) {
+      el.appendChild(document.createTextNode(text));
+      return;
+    }
+    const re = /\{([^{}]+)\}/g;
+    let lastIndex = 0;
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        el.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      }
+      const inner = match[1].trim();
+      if (inner) {
+        const em = document.createElement('em');
+        em.className = 'ru-whisper';
+        em.appendChild(document.createTextNode(inner));
+        el.appendChild(em);
+      } else {
+        el.appendChild(document.createTextNode(match[0]));
+      }
+      lastIndex = re.lastIndex;
+    }
+    if (lastIndex < text.length) {
+      el.appendChild(document.createTextNode(text.slice(lastIndex)));
+    }
+  }
+
   /* ---------------- çizim (bölüm akışı) ---------------- */
   function render() {
     if (!state.book) return;
@@ -351,8 +379,11 @@
       for (const t of paras) {
         if (!t) continue;
         const el = document.createElement('p');
-        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-        el.textContent = t;
+        if (/^[“"—–{-]/.test(t)) el.className = 'dialog';
+        appendParagraphText(el, t);
+        if (el.firstChild && el.firstChild.nodeType === 1 && el.firstChild.classList.contains('ru-whisper')) {
+          el.classList.add('ru-start');
+        }
         sec.appendChild(el);
       }
       frag.appendChild(sec);

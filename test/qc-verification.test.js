@@ -112,6 +112,74 @@ function testIntentionalTranslatorNote() {
   }
 }
 
+function testIntentionalUnbalancedBraces() {
+  console.log('Testing intentional unbalanced {} braces defect...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    data['14'][0] += ' {Ona dokunan… Tek bir kişi bile… Olmadı!';
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const res = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(res.code, 1, 'Should exit code 1');
+    assert(res.out.includes('dengesiz süslü parantez'), 'Diagnostics must mention unbalanced braces');
+    console.log('  ✓ Unbalanced {} braces caught with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testIntentionalDuplicateGloss() {
+  console.log('Testing duplicate [gloss] brackets vs allowed Cyrillic glosses and phone messages...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    data['14'][0] += ' “Maymun, dön de dağına git!” [Dön de dağına git, seni maymun!]';
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const failRes = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(failRes.code, 1, 'Non-Cyrillic quote + [gloss] must exit code 1');
+    assert(failRes.out.includes('yinelenen köşeli açıklama'), 'Diagnostics must mention duplicate gloss');
+
+    const allowedData = JSON.parse(orig);
+    allowedData['14'][0] += ' “Ты красивая.” [Sen daha güzelsin] [Merhaba~ Mesaj geldi.]';
+    fs.writeFileSync(v4Path, JSON.stringify(allowedData));
+
+    const okRes = runCLI(['--volume', '4', '--strict'], true);
+    assert.strictEqual(okRes.code, 0, 'Cyrillic quote + [gloss] and phone messages must pass');
+    console.log('  ✓ Duplicate [gloss] caught while Cyrillic glosses and phone messages pass');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testIntentionalBraceEnglish() {
+  console.log('Testing {Overwrite} defect vs allowed character names like {Masaachika}...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    data['14'][0] += ' (Ama bir dakika, {Overwrite} ne demek acaba…?)';
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const failRes = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(failRes.code, 1, '{Overwrite} must exit code 1');
+    assert(failRes.out.includes('süslü parantezde İngilizce'), 'Diagnostics must mention English inside braces');
+
+    const allowedData = JSON.parse(orig);
+    allowedData['14'][0] += ' {Masaachika} {Masaaachika!}';
+    fs.writeFileSync(v4Path, JSON.stringify(allowedData));
+
+    const okRes = runCLI(['--volume', '4', '--strict'], true);
+    assert.strictEqual(okRes.code, 0, '{Masaachika} must be allowed');
+    console.log('  ✓ {Overwrite} caught while character names like {Masaachika} pass');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
 function testPatchValidationAndRegression() {
   console.log('Testing patch schema and regression gating...');
   const patchesPath = path.join(ROOT, 'scripts', 'patches.json');
@@ -196,6 +264,9 @@ function runAll() {
   testIntentionalEnglishResidue();
   testIntentionalUnclosedQuote();
   testIntentionalTranslatorNote();
+  testIntentionalUnbalancedBraces();
+  testIntentionalDuplicateGloss();
+  testIntentionalBraceEnglish();
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
