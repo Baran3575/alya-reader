@@ -13,7 +13,7 @@ const DEFAULT_ROOT = path.join(__dirname, '..');
 const EN_RESIDUE_RE = /(?<!\p{L})(?:the|and|with|that|this|from|have|would|could|should|about|there|their|which)(?!\p{L})/gui;
 const TN_RE = /(?<!\p{L})(?:ÇN|TN)\s*:/gu;
 
-function validatePatches(patches, data, options = {}) {
+function validatePatches(patches, data) {
   const errors = [];
   const warnings = [];
   const applied = [];
@@ -90,6 +90,18 @@ function validatePatches(patches, data, options = {}) {
   };
 }
 
+function parseExplicitVolume(args) {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if ((a === '--volume' || a === '--vol' || a === '-v') && args[i + 1]) {
+      return String(args[i + 1]).trim();
+    }
+    if (a.startsWith('--volume=')) return a.slice('--volume='.length).trim();
+    if (a.startsWith('--vol=')) return a.slice('--vol='.length).trim();
+  }
+  return null;
+}
+
 function runVolumePatch(cfg, { dryRun = false, explicitVolume = false } = {}) {
   const targetFile = cfg.absTrFile;
   const patchFile = cfg.absPatchesFile;
@@ -136,10 +148,9 @@ if (require.main === module) {
   const dryRun = args.includes('--dry-run') || args.includes('--dry');
   const rootIdx = args.indexOf('--root');
   const rootDir = rootIdx > -1 && args[rootIdx + 1] ? path.resolve(args[rootIdx + 1]) : DEFAULT_ROOT;
-  const vArg = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
+  const vol = parseExplicitVolume(args);
 
-  if (vArg > -1) {
-    const vol = args[vArg + 1];
+  if (vol !== null) {
     const cfg = getVolume(vol, rootDir);
     if (!cfg) {
       console.error(`Hata: Bilinmeyen cilt: ${vol}`);

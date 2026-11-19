@@ -6,6 +6,8 @@ const zlib = require('zlib');
 const {
   loadManifest,
   getVolume,
+  getVolumeList,
+  getVolumeIds,
   getActiveVolumeList,
   getActiveVolumes,
 } = require('./scripts/volumes');
@@ -84,7 +86,11 @@ function parseHeading(line) {
 
 function buildBook(opt = {}) {
   const rootDir = opt.rootDir || ROOT;
-  const cfg = opt.id ? getVolume(opt.id, rootDir) : null;
+  const cfg = opt.id
+    ? getVolume(opt.id, rootDir)
+    : opt.dataDir
+      ? getVolumeList(rootDir).find((v) => v.dataDir === opt.dataDir) || null
+      : getVolume('4', rootDir);
   const dataDir = opt.dataDir || (cfg ? cfg.dataDir : 'data');
   const slug = opt.slug || (cfg ? cfg.slug : dataDir === 'data' ? '4' : dataDir.replace(/^data/, ''));
   const imgPrefix = opt.imgPrefix || (cfg ? cfg.imgPrefix : '/pages/');
@@ -101,57 +107,87 @@ function buildBook(opt = {}) {
       ? opt.tr
       : JSON.parse(fs.readFileSync(path.join(rootDir, dataDir, 'paragraphs_final.json'), 'utf8'));
 
-  let titles = {};
-  if (opt.titles && typeof opt.titles === 'object') {
-    titles = opt.titles;
+  let titlesMeta = {};
+  if (opt.titles !== undefined && opt.titles !== null && typeof opt.titles === 'object') {
+    titlesMeta = opt.titles;
   } else {
     try {
-      titles = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
+      titlesMeta = JSON.parse(fs.readFileSync(titlesFile, 'utf8'));
     } catch {}
   }
 
-  const chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
+  const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
+  const flatTitles =
+    titlesMeta.titles && typeof titlesMeta.titles === 'object' ? titlesMeta.titles : titlesMeta;
+
+  let chapters = [{ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' }];
 
   const pages = source.map((p) => {
     const key = String(p.page);
+    const isPending = Boolean(p.pending);
     const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = String(p.text || '')
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const nnn = String(p.page).padStart(3, '0') + '.webp';
+    const hasStandaloneArt = Boolean(
+      slug && fs.existsSync(path.join(rootDir, 'public', 'art', `vol-${slug}`, nnn))
+    );
+    const leadingSlash = imgPrefix.startsWith('/') ? '/' : '';
+
+    if (hasStructuredChapters) {
+      const relPagesPrefix = imgPrefix.replace(/^\/+/, '');
+      const relDiskPath = path.join(rootDir, 'public', relPagesPrefix, nnn);
+      const hasDiskImg = hasStandaloneArt || fs.existsSync(relDiskPath);
+      const cleanLen = String(p.text || '').replace(/\s+/g, ' ').trim().length;
+      const art = !isPending && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
+      const imgPath = hasStandaloneArt
+        ? `${leadingSlash}art/vol-${slug}/${nnn}`
+        : imgPrefix + nnn;
+      const item = {
+        n: p.page,
+        img: imgPath,
+        tr: isPending ? [] : trParas,
+        art,
+      };
+      if (includeEn) item.en = isPending ? [] : enParas;
+      if (isPending) item.pending = true;
+      return item;
+    }
+
     const heading = parseHeading(enParas[0] || '');
 
     // OCR'ı bozuk sayfaları (kapak, görsel sayfalar) metin saymayalım
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
-    const usable = (words.length >= 6 && alpha / words.length >= 0.4) || Boolean(heading && trParas.length > 0);
+    const usable =
+      !isPending &&
+      ((words.length >= 6 && alpha / words.length >= 0.4) || Boolean(heading && trParas.length > 0));
 
-    // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
     const cleanLen = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
 
-    const nnn = String(p.page).padStart(3, '0') + '.webp';
-    const hasStandaloneArt = Boolean(
-      slug && fs.existsSync(path.join(rootDir, 'public', 'art', `vol-${slug}`, nnn))
-    );
-    const art =
-      hasStandaloneArt ||
-      (p.page > 3 && cleanLen < 220 && !(heading && trParas.length > 0));
+    const relPagesPrefix = imgPrefix.replace(/^\/+/, '');
+    const relDiskPath = path.join(rootDir, 'public', relPagesPrefix, nnn);
+    const hasDiskImg = hasStandaloneArt || fs.existsSync(relDiskPath);
+    const looksLikeArt =
+      hasStandaloneArt || (p.page > 3 && cleanLen < 220 && !(heading && trParas.length > 0));
+    const art = !isPending && looksLikeArt && (Array.isArray(opt.source) || hasDiskImg);
 
     if (heading && (usable || heading)) {
       const mappedTitle =
-        titles[heading.key] ||
-        (heading.fallbackKey ? titles[heading.fallbackKey] : undefined) ||
+        flatTitles[heading.key] ||
+        (heading.fallbackKey ? flatTitles[heading.fallbackKey] : undefined) ||
         heading.rest.slice(0, 70) ||
         (heading.subNum ? `${heading.label} ${heading.subNum}` : heading.label);
       chapters.push({ page: p.page, label: heading.label, title: mappedTitle });
     }
 
-    const leadingSlash = imgPrefix.startsWith('/') ? '/' : '';
     const imgPath = hasStandaloneArt
       ? `${leadingSlash}art/vol-${slug}/${nnn}`
       : imgPrefix + nnn;
@@ -165,8 +201,29 @@ function buildBook(opt = {}) {
     if (includeEn) {
       pageObj.en = usable ? enParas : [];
     }
+    if (isPending) {
+      pageObj.pending = true;
+    }
     return pageObj;
   });
+
+  if (hasStructuredChapters) {
+    chapters = titlesMeta.chapters.map((c) => {
+      const entry = {
+        page: c.startPage || c.page || 1,
+        label: c.label || 'Bölüm',
+        title: c.title || c.enTitle || '',
+      };
+      if (c.pending) {
+        entry.pending = true;
+        entry.statusNote = c.statusNote || 'Kaynak çeviri henüz tamamlanmadı ([Translation In Progress]).';
+      }
+      return entry;
+    });
+    if (chapters.length === 0 || chapters[0].page > 1) {
+      chapters.unshift({ page: 1, label: 'Başlangıç', title: 'Kapak ve görseller' });
+    }
+  }
 
   return {
     title: 'Alya Bazen Duygularını Rusça Saklar',
@@ -276,20 +333,42 @@ const server = http.createServer((req, res) => {
     const reqVol = query.get('v');
     const vKey = active[reqVol] ? reqVol : manifest.defaultVolume;
     const includeEn = query.get('en') === '1';
-    const loaded = getBook(vKey, { includeEn });
-    const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
-    const body = acceptsGzip ? loaded.gzip : loaded.json;
-    const headers = {
-      'Content-Type': MIME['.json'],
-      'Content-Length': body.length,
-      'Cache-Control': 'no-cache',
-    };
-    if (acceptsGzip) {
-      headers['Content-Encoding'] = 'gzip';
-      headers['Vary'] = 'Accept-Encoding';
+    try {
+      const loaded = getBook(vKey, { includeEn });
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} henüz hazır değil: ${e.message}` }))
+      );
     }
-    res.writeHead(200, headers);
-    return res.end(req.method === 'HEAD' ? undefined : body);
+  }
+
+  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
+  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  if (bookJsonMatch) {
+    const active = getActiveVolumes(ROOT);
+    if (active[bookJsonMatch[1]]) {
+      try {
+        const loaded = getBook(bookJsonMatch[1]);
+        return send(req, res, 200, MIME['.json'], loaded.json);
+      } catch {}
+    }
   }
 
   if (pathname === '/') pathname = '/index.html';
@@ -325,6 +404,22 @@ function start() {
   });
 }
 
+const VOLUME_KEYS = getVolumeIds(ROOT);
+const VOLUMES = Object.fromEntries(
+  getVolumeList(ROOT).map((v) => [
+    v.id,
+    {
+      key: v.id,
+      id: v.id,
+      slug: v.slug,
+      dataDir: v.dataDir,
+      imgPrefix: v.imgPrefix,
+      volume: v.label,
+      titlesFile: v.absTitlesFile,
+    },
+  ])
+);
+
 if (require.main === module) start();
 
-module.exports = { buildBook, parseHeading, getBook, start, server };
+module.exports = { VOLUMES, VOLUME_KEYS, buildBook, parseHeading, getBook, start, server };

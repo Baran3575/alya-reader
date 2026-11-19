@@ -31,13 +31,35 @@
   }
   purgeLegacyBookStorage();
 
+  // URL sorgusu (?vol=9.5 veya ?v=12, ?page=10) ile doğrudan cilt/sayfa açma desteği
+  function parseQuery(search) {
+    const out = {};
+    const q = String(search || '').replace(/^\?/, '');
+    if (!q) return out;
+    for (const part of q.split('&')) {
+      if (!part) continue;
+      const eq = part.indexOf('=');
+      const k = decodeURIComponent(eq >= 0 ? part.slice(0, eq) : part);
+      const v = eq >= 0 ? decodeURIComponent(part.slice(eq + 1)) : '';
+      if (!(k in out)) out[k] = v;
+    }
+    return out;
+  }
+  const rawSearch =
+    (typeof window !== 'undefined' && window.location && window.location.search) ||
+    (typeof location !== 'undefined' && location.search) ||
+    '';
+  const urlParams = parseQuery(rawSearch);
+  const initialUrlVol = urlParams.vol || urlParams.v || null;
+  const initialUrlPage = Number(urlParams.page || urlParams.p || 0);
+
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
-    page: LS.get('page', 1),
+    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: String(LS.get('vol', '4')),
+    vol: String(initialUrlVol || LS.get('vol', '4')),
     manifest: null,
     book: null,
     chapter: 0,
@@ -77,7 +99,7 @@
     LS.set('vol', nextVol);
     state.page = LS.get('page:' + nextVol, 1);
     load().catch((err) => {
-      reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
+      reader.innerHTML = '<p class="empty-note">Cilt ' + nextVol + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
 
@@ -120,6 +142,7 @@
     const key = String(p.n).padStart(3, '0');
     const rawImg = String(p.img || '').replace(/^\/+/, '');
     if (rawImg.startsWith('art/')) return rawImg;
+    if (rawImg && !rawImg.startsWith('pages/') && !rawImg.startsWith('pages45/')) return rawImg;
     if (p.art) return 'art/vol-' + volSlug(v) + '/' + key + '.webp';
     return rawImg;
   }
@@ -199,6 +222,7 @@
       const li = document.createElement('li');
       li.dataset.page = ch.page;
       li.dataset.idx = i;
+      if (ch.pending) li.classList.add('is-pending');
       const btn = document.createElement('button');
       btn.type = 'button';
       const lab = document.createElement('span');
@@ -210,7 +234,7 @@
       const pg = document.createElement('span');
       pg.className = 'ch-page';
       const [s, e] = chapterRange(i);
-      pg.textContent = s === e ? s : s + '–' + e;
+      pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
       btn.append(lab, ttl, pg);
       btn.addEventListener('click', () => {
         toggleToc(false);
@@ -230,6 +254,11 @@
     const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
+      const ch = chapters()[i];
+      if (ch && ch.pending) {
+        li.classList.remove('is-read');
+        continue;
+      }
       const end = chapterRange(i)[1];
       li.classList.toggle('is-read', max >= end);
     }
@@ -242,7 +271,7 @@
     const t = out[0];
     const q = t.indexOf('“');
     const looksHeading =
-      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye|Yan\s*Hik[aâ]ye|Bonus\s*(?:SS|Hik[aâ]ye)|Anekdot|Ara\s*Bölüm|Epilog|Prolog|Başlangıç|Prologue|Epilogue|Afterword|Side\s*Story|Anecdote|Interlude|Chapter)\b/i.test(
+      /^(?:\d+\.\s*)?(Bölüm|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye|Yan\s*Hik[aâ]ye|Kısa\s*Hik[aâ]ye|Bonus\s*(?:SS|Hik[aâ]ye)|Anekdot|Ara\s*Bölüm|Epilog|Prolog|Başlangıç|Prologue|Epilogue|Afterword|Side\s*Story|Anecdote|Interlude|Chapter)\b/i.test(
         t
       );
     if (!looksHeading) return out;
@@ -255,7 +284,7 @@
         if (rest.length > 40) out[0] = rest;
         else out.shift();
       } else if (
-        /^(?:\d+\.\s*)?(?:Bölüm(?:\s+\d+)?|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye(?:\s+\d+)?|Yan\s*Hik[aâ]ye(?:\s+\d+)?|Bonus\s*SS(?:\s+\d+)?|Anekdot(?:\s+\d+)?|Ara\s*Bölüm(?:\s+\d+)?|Epilog|Prolog|Prologue|Epilogue|Afterword|Side\s*Story(?:\s+\d+)?|Anecdote(?:\s+\d+)?|Interlude(?:\s+\d+)?)$/i.test(
+        /^(?:\d+\.\s*)?(?:Bölüm(?:\s+\d+)?|Önsöz|Sonsöz|Son\s*Söz|Ek\s*Hik[aâ]ye(?:\s+\d+)?|Yan\s*Hik[aâ]ye(?:\s+\d+)?|Kısa\s*Hik[aâ]ye(?:\s+\d+)?|Bonus\s*SS(?:\s+\d+)?|Anekdot(?:\s+\d+)?|Ara\s*Bölüm(?:\s+\d+)?|Epilog|Prolog|Prologue|Epilogue|Afterword|Side\s*Story(?:\s+\d+)?|Anecdote(?:\s+\d+)?|Interlude(?:\s+\d+)?)$/i.test(
           t.trim()
         )
       ) {
@@ -263,6 +292,21 @@
       }
     }
     return out;
+  }
+
+  function createPendingNotice(ch) {
+    const box = document.createElement('div');
+    box.className = 'pending-card';
+    const badge = document.createElement('p');
+    badge.className = 'pending-badge';
+    badge.textContent = 'Çeviri Beklemede · [Translation In Progress]';
+    const desc = document.createElement('p');
+    desc.className = 'pending-desc';
+    desc.textContent =
+      ch.statusNote ||
+      'Bu bölümün İngilizce kaynak çevirisi henüz yayınlanmadı ([Translation In Progress]). Kaynak metin tamamlandığında Türkçe çevirisi eklenecektir.';
+    box.append(badge, desc);
+    return box;
   }
 
   function figureFor(p, caption) {
@@ -331,7 +375,48 @@
     const sec = document.createElement('section');
     sec.className = 'pg pg-single';
     sec.dataset.page = n;
-    if (p) sec.appendChild(figureFor(p, false));
+
+    if (ch.pending || (p && p.pending)) {
+      sec.appendChild(createPendingNotice(ch));
+    } else if (p) {
+      const hasFullScan = p.art || state.vol === '4' || state.vol === '4.5';
+      if (hasFullScan) {
+        const fig = figureFor(p, false);
+        if (!p.art && p.tr && p.tr.length) {
+          const im = fig.querySelector('img');
+          if (im && typeof im.addEventListener === 'function') {
+            im.addEventListener(
+              'error',
+              () => {
+                fig.remove();
+                for (const line of p.tr) {
+                  const el = document.createElement('p');
+                  el.textContent = line;
+                  sec.appendChild(el);
+                }
+              },
+              { once: true }
+            );
+          }
+        }
+        sec.appendChild(fig);
+      } else if (p.en && p.en.length) {
+        const proseWrap = document.createElement('div');
+        proseWrap.className = 'orig-prose';
+        for (const line of p.en) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          proseWrap.appendChild(el);
+        }
+        sec.appendChild(proseWrap);
+      } else if (p.tr && p.tr.length) {
+        for (const line of p.tr) {
+          const el = document.createElement('p');
+          el.textContent = line;
+          sec.appendChild(el);
+        }
+      }
+    }
     reader.appendChild(sec);
 
     const nav = document.createElement('div');
@@ -398,48 +483,51 @@
       if (pg && pg.tr) for (const t of pg.tr) words += t.split(/\s+/).length;
     }
     const mins = Math.max(1, Math.round(words / 240));
-    meta.textContent =
-      'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
-      ' · ' + pages + ' sayfa · ~' + mins + ' dk';
+    meta.textContent = ch.pending
+      ? 'Durum: Kaynak çeviri devam ediyor'
+      : 'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' + pages + ' sayfa · ~' + mins + ' dk';
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
-    const frag = document.createDocumentFragment();
-    for (let n = startPage; n <= endPage; n++) {
-      const p = state.book.pages[n - 1];
-      if (!p) continue;
-      const sec = document.createElement('section');
-      sec.className = 'pg';
-      sec.dataset.page = p.n;
-
-      if (state.mode === 'page') {
-        sec.appendChild(figureFor(p, true));
-        frag.appendChild(sec);
-        continue;
-      }
-
-      const isIllustration = p.tr.length === 0 || p.art === true;
-      if (isIllustration) {
-        sec.classList.add('pg-art');
-        if (p.tr.length) sec.classList.add('has-text');
-        sec.appendChild(figureFor(p, true));
-        if (p.tr.length === 0) {
-          frag.appendChild(sec);
+    if (ch.pending) {
+      reader.appendChild(createPendingNotice(ch));
+    } else {
+      const frag = document.createDocumentFragment();
+      for (let n = startPage; n <= endPage; n++) {
+        const p = state.book.pages[n - 1];
+        if (!p) continue;
+        if (p.pending) {
+          frag.appendChild(createPendingNotice(ch));
           continue;
         }
-      }
+        const sec = document.createElement('section');
+        sec.className = 'pg';
+        sec.dataset.page = p.n;
 
-      let paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
-      for (const t of paras) {
-        if (!t) continue;
-        const el = document.createElement('p');
-        if (/^[“"—–-]/.test(t)) el.className = 'dialog';
-        el.textContent = t;
-        sec.appendChild(el);
+        const isIllustration = p.art === true;
+        if (isIllustration) {
+          sec.classList.add('pg-art');
+          if (p.tr.length) sec.classList.add('has-text');
+          sec.appendChild(figureFor(p, true));
+          if (p.tr.length === 0) {
+            frag.appendChild(sec);
+            continue;
+          }
+        }
+
+        const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
+        for (const t of paras) {
+          if (!t) continue;
+          const el = document.createElement('p');
+          if (/^[“"—–-]/.test(t)) el.className = 'dialog';
+          el.textContent = t;
+          sec.appendChild(el);
+        }
+        frag.appendChild(sec);
       }
-      frag.appendChild(sec);
+      reader.appendChild(frag);
     }
-    reader.appendChild(frag);
 
     // bölüm sonu
     const last = idx === chapters().length - 1;
@@ -462,7 +550,9 @@
     // durum satırı
     $('pageRange').value = idx + 1;
     $('navChapter').textContent = ch.label;
-    $('navPages').textContent = startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
+    $('navPages').textContent = ch.pending
+      ? 'beklemede'
+      : startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = idx <= 0;
     $('nextBtn').disabled = last;
     $('tocLabel').textContent = ch.label;
@@ -476,8 +566,10 @@
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     LS.set('page', targetPage);
     LS.set('page:' + state.vol, targetPage);
-    const prevMax2 = LS.get('max:' + state.vol, 0);
-    if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    if (!ch.pending) {
+      const prevMax2 = LS.get('max:' + state.vol, 0);
+      if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
+    }
     markTocRead();
     LS.set('mode', state.mode);
 
@@ -556,13 +648,13 @@
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];
-      if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+      if (p && p.art && !p.pending) imgs.push(imgSrc(p));
     }
     const nxt = chapters()[idx + 1];
-    if (nxt) {
+    if (nxt && !nxt.pending) {
       for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
         const p = state.book.pages[n - 1];
-        if (p && (p.art || p.tr.length === 0)) imgs.push(imgSrc(p));
+        if (p && p.art && !p.pending) imgs.push(imgSrc(p));
       }
     }
     imgs.slice(0, 4).forEach((src) => {
@@ -585,9 +677,6 @@
   }
   const next = () => (state.mode === 'page' ? goPage(state.page + 1) : goChapter(state.chapter + 1));
   const prev = () => (state.mode === 'page' ? goPage(state.page - 1) : goChapter(state.chapter - 1));
-  function goto(n) {
-    goChapter(chapterIndex(n), n);
-  }
 
   /* ---------------- olaylar ---------------- */
   $('prevBtn').addEventListener('click', prev);

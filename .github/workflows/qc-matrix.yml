@@ -8,6 +8,7 @@ on:
     paths:
       - 'volumes.json'
       - 'data*/**'
+      - 'public/**'
       - 'scripts/**'
       - '.github/workflows/**'
       - 'package.json'
@@ -42,7 +43,7 @@ jobs:
     name: QC Matrix (Cilt ${{ matrix.volume }})
     needs: discover
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
@@ -56,7 +57,7 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Ensure source files remain read-only
+      - name: Ensure canonical source files remain read-only
         run: |
           node scripts/volumes.js --source-files | xargs chmod 444
 
@@ -66,6 +67,6 @@ jobs:
       - name: Run Unified QC CLI (${{ matrix.volume }})
         run: node scripts/qc/cli.js --volume "${{ matrix.volume }}" --strict --check-regression
 
-      - name: Verify source files were untouched
+      - name: Verify canonical source files were untouched
         run: |
           node scripts/volumes.js --source-files | xargs git diff --exit-code --

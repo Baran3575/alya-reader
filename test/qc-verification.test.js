@@ -205,7 +205,7 @@ function testMultiVolumeDiscoveryAndPatches() {
   const allIds = getVolumeIds(ROOT);
   const expectedIds = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
   assert.deepStrictEqual(allIds, expectedIds, 'volumes.json must register volumes 4 through 12 in order');
-  assert.deepStrictEqual(getActiveVolumeIds(ROOT), ['4', '4.5'], 'Active volumes in repo should be 4 and 4.5');
+  assert.deepStrictEqual(getActiveVolumeIds(ROOT), expectedIds, 'All 11 volumes in repo should be active');
 
   // 2. Dynamic discovery in isolated temp root when adding data5/ and data95/
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'alya-vols-'));
@@ -329,7 +329,7 @@ function testMultiVolumeDiscoveryAndPatches() {
     const prodManifest = JSON.parse(
       fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'manifest.json'), 'utf8')
     );
-    assert.deepStrictEqual(prodManifest.order, ['4', '4.5']);
+    assert.deepStrictEqual(prodManifest.order, expectedIds);
     for (const id of prodManifest.order) {
       const m = prodManifest.volumes[id];
       const chunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.file), 'utf8'));

@@ -1,16 +1,40 @@
 // Dizgi normalizasyonu: tarama kaynaklı noktalama yığılmaları, tilde tekrarları,
 // aşırı harf uzatmaları ve çift boşlukları tek tipleştirir.
-// Kullanım: node scripts/norm_typo.js [dosya] [--dry]
+// Kullanım: node scripts/norm_typo.js [--volume <v>] [dosya] [--dry]
 const fs = require('fs');
 const path = require('path');
+const { resolveVolume, parseVolumeArg } = require('./lib/volumes');
+
+function resolveTargetFile(args) {
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--volume' || a === '--vol' || a === '-v') {
+      i++;
+      continue;
+    }
+    if (a.startsWith('--')) continue;
+    return path.resolve(a);
+  }
+  const volKey = parseVolumeArg(args, '4');
+  const vol = resolveVolume(volKey);
+  if (!vol) {
+    console.error(`Bilinmeyen cilt: ${volKey}`);
+    process.exit(1);
+  }
+  return vol.finalFile;
+}
 
 const args = process.argv.slice(2);
 const dry = args.includes('--dry');
-const file = args.find((a) => !a.startsWith('--')) || 'data/paragraphs_final.json';
-const abs = path.resolve(file);
+const abs = resolveTargetFile(args);
 const data = JSON.parse(fs.readFileSync(abs, 'utf8'));
 
 const RULES = [
+  // çift/üç nokta düzeltmeleri
+  ['üç nokta dönüşümü', /\.{2,}/g, '…'],
+  ['üç nokta artı nokta', /…\.+/g, '…'],
+  // ünlem/soru sonrası kaçak nokta
+  ['ünlem/soru nokta', /([!?])\.+/g, '$1'],
   // ünlem/soru yığılması: en fazla üç işaret
   ['noktalama yığılması', /([!?])\1{3,}/g, (m, c) => c.repeat(3)],
   ['karışık noktalama', /[!?]{4,}/g, (m) => (m.includes('!') ? '!!!' : '???')],
@@ -30,6 +54,7 @@ const RULES = [
 const hits = new Map();
 let changedParas = 0;
 for (const arr of Object.values(data)) {
+  if (!Array.isArray(arr)) continue;
   for (let i = 0; i < arr.length; i++) {
     let t = arr[i];
     for (const [name, re, rep] of RULES) {

@@ -1,8 +1,8 @@
 // Birleşik kalite kapısı: şema doğrulama + imla/noktalama + kalite puanı + eşik kontrolü + yama regresyon kapısı.
 // Kullanım:
-//   node scripts/qc/cli.js                         # Aktif tüm ciltler
+//   node scripts/qc/cli.js                         # Aktif tüm ciltler (4 – 12)
 //   node scripts/qc/cli.js --volume <cilt>         # Belirli cilt (4 .. 12)
-//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (hata payı sıfır)
+//   node scripts/qc/cli.js --strict                # Sıkı eşik kapısı (ort. puan <= 0.20, hata payı sıfır)
 //   node scripts/qc/cli.js --check-regression      # Taban çizgisi ve yama regresyon kontrolü
 //   node scripts/qc/cli.js --json                  # Makine okunur JSON çıktısı
 //   node scripts/qc/cli.js --update-baseline       # Taban çizgisini mevcut değerlerle güncelle
@@ -13,9 +13,24 @@ const path = require('path');
 const { runVerify } = require('./verify');
 const { evaluateData } = require('./quality');
 const { validatePatches } = require('../patch');
-const { getVolume, getActiveVolumeIds } = require('../volumes');
+const { loadManifest, getVolume, getActiveVolumeIds } = require('../volumes');
 
 const DEFAULT_ROOT = path.join(__dirname, '..', '..');
+
+const defaultManifest = loadManifest(DEFAULT_ROOT);
+const VOLUMES = Object.fromEntries(
+  defaultManifest.list.map((v) => [
+    v.id,
+    {
+      tr: v.trFile,
+      label: v.label,
+      maxAvgStrict: v.maxAvgStrict,
+    },
+  ])
+);
+const KNOWN_PAGE_SPLIT_QUOTES = Object.fromEntries(
+  defaultManifest.list.map((v) => [v.id, v.knownSplitQuotes])
+);
 
 const ZERO_TOLERANCE = [
   'çift nokta',
@@ -38,10 +53,20 @@ function parseArgs() {
   const rootDir = rootIdx > -1 && args[rootIdx + 1] ? path.resolve(args[rootIdx + 1]) : DEFAULT_ROOT;
 
   let selected = getActiveVolumeIds(rootDir);
-  const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
-  if (volIdx > -1 && args[volIdx + 1]) {
-    const val = String(args[volIdx + 1]);
-    selected = [val];
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if ((a === '--volume' || a === '--vol' || a === '-v') && args[i + 1]) {
+      selected = [String(args[i + 1]).trim()];
+      break;
+    }
+    if (a.startsWith('--volume=')) {
+      selected = [a.slice('--volume='.length).trim()];
+      break;
+    }
+    if (a.startsWith('--vol=')) {
+      selected = [a.slice('--vol='.length).trim()];
+      break;
+    }
   }
 
   return { args, json, update, strict, checkRegression, selected, rootDir };
@@ -389,6 +414,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  KNOWN_PAGE_SPLIT_QUOTES,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,

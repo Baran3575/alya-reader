@@ -6,6 +6,7 @@ on:
       - 'volumes.json'
       - 'data*/**'
       - 'scripts/volumes.js'
+      - 'scripts/lib/volumes.js'
       - 'scripts/qc/**'
       - 'scripts/naturalize.js'
       - 'scripts/norm_typo.js'

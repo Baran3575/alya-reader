@@ -2,7 +2,16 @@
   "defaultVolume": "4",
   "order": [
     "4",
-    "4.5"
+    "4.5",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "9.5",
+    "10",
+    "11",
+    "12"
   ],
   "volumes": {
     "4": {
@@ -14,14 +23,95 @@
       "total": 282,
       "chapters": 13
     },
+    "5": {
+      "id": "5",
+      "slug": "5",
+      "label": "Cilt 5",
+      "file": "bundles/vol-5.json",
+      "hash": "705458f4fa60",
+      "total": 257,
+      "chapters": 14
+    },
+    "6": {
+      "id": "6",
+      "slug": "6",
+      "label": "Cilt 6",
+      "file": "bundles/vol-6.json",
+      "hash": "22e170c8a2db",
+      "total": 262,
+      "chapters": 16
+    },
+    "7": {
+      "id": "7",
+      "slug": "7",
+      "label": "Cilt 7",
+      "file": "bundles/vol-7.json",
+      "hash": "ec497ad01c79",
+      "total": 278,
+      "chapters": 15
+    },
+    "8": {
+      "id": "8",
+      "slug": "8",
+      "label": "Cilt 8",
+      "file": "bundles/vol-8.json",
+      "hash": "0663108a6a97",
+      "total": 269,
+      "chapters": 14
+    },
+    "9": {
+      "id": "9",
+      "slug": "9",
+      "label": "Cilt 9",
+      "file": "bundles/vol-9.json",
+      "hash": "1b3327e1e4f3",
+      "total": 256,
+      "chapters": 14
+    },
+    "10": {
+      "id": "10",
+      "slug": "10",
+      "label": "Cilt 10",
+      "file": "bundles/vol-10.json",
+      "hash": "1eaeaedb7bed",
+      "total": 249,
+      "chapters": 13
+    },
+    "11": {
+      "id": "11",
+      "slug": "11",
+      "label": "Cilt 11",
+      "file": "bundles/vol-11.json",
+      "hash": "7dd7806c2c0a",
+      "total": 312,
+      "chapters": 12
+    },
+    "12": {
+      "id": "12",
+      "slug": "12",
+      "label": "Cilt 12",
+      "file": "bundles/vol-12.json",
+      "hash": "50fe60a06f57",
+      "total": 74,
+      "chapters": 4
+    },
     "4.5": {
       "id": "4.5",
       "slug": "4-5",
       "label": "Cilt 4.5",
       "file": "bundles/vol-4-5.json",
-      "hash": "d97e4f6b24dd",
+      "hash": "adde542f5d57",
       "total": 347,
       "chapters": 14
+    },
+    "9.5": {
+      "id": "9.5",
+      "slug": "9-5",
+      "label": "Cilt 9.5",
+      "file": "bundles/vol-9-5.json",
+      "hash": "b2d86c26cbee",
+      "total": 180,
+      "chapters": 17
     }
   }
 }

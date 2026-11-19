@@ -1,75 +1,24 @@
-# Alya Bazen Duygularını Rusça Saklar — Cilt 4 (Türkçe okuyucu)
+# Alya Bazen Duygularını Rusça Saklar — Cilt 4 – 12 (Türkçe Web Okuyucu)
 
-FlipHTML5 üzerindeki 282 sayfalık Cilt 4 taraması, Google Translate ile sayfa sayfa
-Türkçeye çevrildi. Site, çeviriyi ve orijinal sayfa görselini birlikte sunan sade bir
-okuyucudur.
+Japon light novel serisi *Alya Sometimes Hides Her Feelings in Russian* (*Roshidere*) için **Cilt 4, 4.5, 5, 6, 7, 8, 9, 9.5, 10, 11 ve 12**’yi (toplam 11 cilt) temiz illüstrasyonlar ve edebî Türkçe çeviriyle sunan sade, çevrimdışı destekli web okuyucu.
 
 ## Çalıştırma
 
 ```bash
-cd ~/alya-reader
-node server.js        # http://localhost:3000
+node server.js          # http://localhost:3000 (sıfır harici npm bağımlılığı)
+PORT=4000 node server.js
 ```
 
-Farklı port: `PORT=4000 node server.js`
-
-## Yapı
-
-```
-server.js              bağımlılıksız HTTP sunucusu (API + statik dosyalar, gzip)
-data/source.json       sayfa görsel adları + İngilizce metin katmanı
-data/bilingual.json     paragraf başına DeepL + Google çevirisi
-data/paragraphs_final.json  sitede gösterilen nihai Türkçe metin
-data/glossary.json      isim/terim sözlüğü
-data/chapters.json     bölüm başlıklarının Türkçesi
-public/index.html      arayüz
-public/style.css       tema (koyu varsayılan, açık tema destekli)
-public/app.js          okuyucu mantığı
-public/pages/NNN.webp  282 sayfa görseli
-scripts/translate.js    sayfa bazlı çeviri (ilk sürüm)
-scripts/translate2.js   paragraf bazlı Google çevirisi (eski sürüm)
-scripts/translate3.js   DeepL + Google çift çeviri (kullanılan sürüm)
-scripts/merge.js        iki motoru birleştirir + sözlük/noktalama düzeltmesi
-scripts/fix_headings.js bölüm başlıklarını ilk paragraftan temizler
-```
-
-### Çeviri metinleri (analiz için başlangıç noktası)
-
-| Dosya | İçerik |
-|---|---|
-| `data/paragraphs_final.json` | **Cilt 4 Türkçe çeviri** — `{ "sayfa": ["paragraf", ...] }`, 282 sayfa, 3.045 paragraf |
-| `data45/paragraphs_final.json` | **Cilt 4.5 Türkçe çeviri** — 347 sayfa, 2.281 paragraf |
-| `data/source.json`, `data45/source.json` | İngilizce kaynak katmanı |
-| `data/chapters.json`, `data45/chapters.json` | Bölüm başlıkları + sayfa aralıkları |
-| `scripts/qc/quality.js` | paragraf kalite puanlayıcı: `node scripts/qc/quality.js data/paragraphs_final.json --top 25` |
-| `scripts/qc/verify.js` | imla/noktalama denetimi (`ALYA_TR_FILE` ile dosya seçilir) |
-| `scripts/qc/cli.js` | birleşik kalite kapısı (`--volume 4`, `--strict`, `--check-regression`, `--json`, `--update-baseline`) |
-| `scripts/patch.js` | yama doğrulama ve uygulama (`--dry-run` ile regresyon kontrolü) |
-| `scripts/naturalize.js` | deterministik doğallaştırma: `--context-only` / `--dry` |
-| `scripts/norm_typo.js` | dizgi normalizasyonu (noktalama yığılması, tilde, harf uzatma) |
-| `scripts/fix_boundaries.js` | sayfa sınırı onarımı, OCR çöpü ayıklama |
-
-Kalite ölçütleri: akıcı edebî Türkçe, kalıp ifade/edilgen zinciri yok, kaynak tonu korunur (küfür yumuşatılmaz), özel adlar tutarlı (Masachika, Kuze, Alisa/Alya, Maria/Masha), kıvrık tırnak, çevirmen notu/İngilizce kalıntı yok.
-
-### Sürekli doğrulama (GitHub Actions)
-
-Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` iki cildi paralel matris içinde doğrular:
-`scripts/patch.js --dry-run` + `scripts/qc/cli.js --volume <cilt> --strict --check-regression`. Taban çizgisi `data/qc_baseline.json`
-(Cilt 4: ortalama 0.15 / 24 bayrak; Cilt 4.5: 0.27 / 53). Kapı kırmızıysa çeviri bozulmuştur.
-
-Yerel çalıştırma:
+Tembel yüklenen cilt JSON paketlerini ve GitHub Pages statik sitesini derlemek için:
 
 ```bash
-npm test                             # test paketi + birleşik QC regresyon kapısı
-node scripts/qc/cli.js               # iki cilt
-node scripts/qc/cli.js --volume 4 --strict
-node scripts/qc/cli.js --volume 4.5 --strict
-node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
+npm run build           # public/bundles/manifest.json, vol-<slug>.json ve public/art/ çıktılarını üret
+npm run build:site      # dist/ altında statik site (.nojekyll + bundles/ + art/) üret ve doğrula
 ```
 
 ### Çevrimdışı okuma ve tembel yüklenen paketler
 
-`volumes.json` ve `scripts/volumes.js`, Cilt `4` ile `12` arasındaki tüm hedef ciltleri tek merkezden yönetir.
+`volumes.json` ve `scripts/volumes.js`, Cilt `4` ile `12` arasındaki tüm 11 cildi tek merkezden yönetir.
 `scripts/build_bundle.js` aktif her cilt için yalnızca Türkçe metin parçalarını ve ikili `.webp` illüstrasyonları üretir:
 
 | Dosya | İçerik |
@@ -81,23 +30,39 @@ node scripts/patch.js --dry-run      # yama şeması ve regresyon önizlemesi
 
 Okuyucu başlangıçta yalnızca `manifest.json` ve seçili cildin `vol-<slug>.json` parçasını indirir; `localStorage` yalnız okuma ilerlemesini ve tercihleri (`< 2 KB`) saklar. `public/sw.js` Service Worker’ı kabuğu, cilt JSON parçalarını ve `.webp` görsellerini Cache Storage’a yazar.
 
+## Modüler İçe Aktarma ve Edebî Çeviri Hattı
+
 ```bash
-npm run build   # manifest.json, vol-<slug>.json ve art/ çıktılarını yeniden üret
+# 1. Cilt kaynak metnini ve temiz WebP illüstrasyonlarını çek
+node scripts/ingest/cli.js --volume <5|6|7|8|9|9.5|10|11|12>
+
+# 2. Sözlük, karakter sesi ve Rusça fısıltı ({...}) bağlamıyla edebî Türkçeye çevir
+node scripts/translate_llm.js --volume <4..12>
+
+# 3. Son işleme ve sıkı kalite kapısı (QC)
+node scripts/fix_headings.js --volume <4..12>
+node scripts/naturalize.js --volume <4..12>
+node scripts/norm_typo.js --volume <4..12>
+node scripts/fix_boundaries.js --volume <4..12>
+node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 ```
 
-## Özellikler
+### Kaynak Adaptörleri (`scripts/ingest/adapters/`)
 
-- Koyu / açık tema (t), sistem temasına göre başlar
-- Çeviri ve Orijinal (görsel) modu (v)
-- Bölüm seçici: Önsöz, 10 bölüm, Sonsöz
-- Ok tuşları / j-k ile sayfa geçişi, mobilde kaydırma
-- Okunduğu yer, tema ve yazı boyutu tarayıcıda hatırlanır
-- Görsel sayfalarda çeviri yerine orijinal sayfa gösterilir, görsele dokununca yakınlaşır
+| Cilt | Kaynak Adaptörü | Açıklama |
+|---|---|---|
+| **Cilt 4 & 4.5** | Kanonik depo arşivi | Salt okunur kaynak katmanı + bağımsız WebP sanat paketi |
+| **Cilt 5 – 10** | `fliphtml5.js` | FlipHTML5 & AnyFlip `search_config.js` metin dizini (Scribd Fastly ve WASM `deString.js` atlanır, katalog URL’leri normalize edilir) + GlucoseTL arşivlerinden filigransız WebP illüstrasyonlar |
+| **Cilt 9.5** | `glucosetl95.js` | GlucoseTL Anubis SHA-256 PoW (`difficulty: 4`) çözümü + 7 renkli illüstrasyon + 16 kısa hikâye PNG klasörünün görsel LLM / yerel Tesseract OCR dökümü (~1.400 kr/sayfa) |
+| **Cilt 11** | `epub11.js` | Google Drive EPUB paketi (22 XHTML + gömülü illüstrasyonlar, ~1.400 kr/sayfa) |
+| **Cilt 12** | `secreftls12.js` | SecreFTLs REST API (`Illustrations`, `Prologue`, `Chapter 1` tam çeviri + `Chapter 2` `[Translation In Progress]` için uydurma metin üretmeden `pending: true` durumu) |
 
-## Notlar
+## Sürekli Doğrulama ve Kalite Kapısı (QC)
 
-- Metin, taramadaki gizli metin katmanından alındı; bozuk çıkan birkaç sayfa
-  (kapak, bazı görseller) otomatik olarak "görsel sayfa" kabul edilir.
-- Çeviri **DeepL** (birincil) + **Google Translate** (yedek/karşılaştırma) ile yapıldı;
-  isim ve terimler `data/glossary.json` sözlüğüyle tek yazıma çekildi.
-- `data/bilingual.json` her paragrafın iki motor çevirisini saklar (ileride motor değiştirmek için).
+Pull request ve push işlemlerinde `.github/workflows/qc-matrix.yml` aktif tüm ciltleri paralel matris içinde doğrular (`ortalama puan <= 0.20`, düz tırnak `0`, çevirmen notu `0`, İngilizce kalıntı `0`, kapanmamış tırnak `0`, sayısal sayfa anahtarları `^\d+$`). Ana dala (`main`/`master`) yapılan push işlemlerinde `.github/workflows/deploy-pages.yml` statik okuyucuyu GitHub Pages’e yayınlar.
+
+```bash
+npm test                                               # tüm birim/entegrasyon testleri + 11 cilt sıkı QC kapısı
+node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sıkı kalite ve regresyon kontrolü
+node scripts/patch.js --dry-run                        # el yaması şema ve regresyon doğrulaması
+```

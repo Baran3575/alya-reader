@@ -1,4 +1,4 @@
-// Çevrimdışı önbellek: kabuk dosyaları + tembel yüklenen cilt JSON parçaları + WebP illüstrasyonlar.
+// Çevrimdışı önbellek: kabuk dosyaları + tembel yüklenen cilt JSON parçaları (Cilt 4–12) + WebP illüstrasyonlar.
 // Sunucu veya ağ kapalıyken daha önce açılmış ciltler Cache Storage üzerinden okunur.
 const VERSION = 'alya-v4';
 const SHELL = ['./', './index.html', './style.css', './app.js'];
@@ -51,7 +51,7 @@ self.addEventListener('fetch', (e) => {
           }
           return caches.match(req).then((hit) => hit || res);
         })
-        .catch(() => caches.match(req)),
+        .catch(() => caches.match(req).then((hit) => hit || Response.error())),
     );
     return;
   }
@@ -61,6 +61,7 @@ self.addEventListener('fetch', (e) => {
     /^\/bundles\/vol-[^/]+\.json$/.test(relPath) ||
     relPath.startsWith('/art/') ||
     /^\/pages[^/]*\//.test(relPath) ||
+    /^\/books\/[0-9.]+\.json$/.test(relPath) ||
     relPath === '/api/book';
 
   if (cacheFirst) {
@@ -68,15 +69,13 @@ self.addEventListener('fetch', (e) => {
       caches.match(req).then(
         (hit) =>
           hit ||
-          fetch(req)
-            .then((res) => {
-              if (res && res.ok) {
-                const copy = res.clone();
-                caches.open(VERSION).then((c) => c.put(req, copy));
-              }
-              return res;
-            })
-            .catch(() => hit),
+          fetch(req).then((res) => {
+            if (res && res.ok) {
+              const copy = res.clone();
+              caches.open(VERSION).then((c) => c.put(req, copy));
+            }
+            return res;
+          }),
       ),
     );
     return;
@@ -93,6 +92,11 @@ self.addEventListener('fetch', (e) => {
         }
         return caches.match(req).then((hit) => hit || res);
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html'))),
+      .catch(() =>
+        caches
+          .match(req)
+          .then((hit) => hit || caches.match('./index.html'))
+          .then((hit) => hit || Response.error()),
+      ),
   );
 });
