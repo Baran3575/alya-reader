@@ -1,8 +1,8 @@
 SADAKAT RAPORU — Cilt 4
-sayfa: 269 | kelime EN 70111 / TR 51593 | ortalama TR/EN kelime oranı: 74.3%
-cümle EN 10953 / TR 7239
+sayfa: 269 | kelime EN 70111 / TR 51535 | ortalama TR/EN kelime oranı: 74.2%
+cümle EN 10953 / TR 7243
 
-[1] Kısa kalan sayfalar (<%72): 101
+[1] Kısa kalan sayfalar (<%72): 102
   s 47  58%  EN 286 → TR 167
   s 33  59%  EN 228 → TR 134
   s135  61%  EN 287 → TR 174
@@ -33,7 +33,7 @@ cümle EN 10953 / TR 7239
   s124
   s207
 
-[4] İsim sayısı uyuşmayan sayfalar: 96
+[4] İsim sayısı uyuşmayan sayfalar: 95
   s22  eksik: Masachika  fazla: -
   s23  eksik: Yuki  fazla: -
   s29  eksik: Masachika  fazla: -
@@ -50,4 +50,4 @@ cümle EN 10953 / TR 7239
   s48  eksik: Yuki  fazla: -
   s49  eksik: Yuki  fazla: -
 
-[5] Tırnak (diyalog) dengesi: EN 2157 / TR 2135
+[5] Tırnak (diyalog) dengesi: EN 2157 / TR 2152

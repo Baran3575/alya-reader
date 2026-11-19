@@ -9,6 +9,23 @@ function stripTranslatorNotes(text) {
   return String(text || '').replace(TN_BLOCK_RE, ' ').replace(/\s+/g, ' ').trim();
 }
 
+// Glucosetl/HTML kaynaklarındaki illüstrasyon üstü OCR çöpü ve bozuk sahne ayraçları ({2 wh ok, wf k vb.)
+function isOcrNoise(text) {
+  const t = String(text || '').trim();
+  if (!t) return true;
+  if (/^(?:\{\d+\s+wh\s+ok|wf\s+k|I\s+y)$/i.test(t)) return true;
+  if (t.length < 12) return false;
+  const letters = (t.match(/\p{L}/gu) || []).length;
+  if (letters / t.length < 0.25 && t.length > 30) return true;
+  const junkSymbols = (t.match(/[\\/|<>@=~^_]/g) || []).length;
+  if (junkSymbols >= 3) {
+    const words = t.split(/\s+/).filter((w) => /\p{L}/u.test(w));
+    const short = words.filter((w) => w.replace(/[^\p{L}]/gu, '').length <= 2).length;
+    if (words.length >= 6 && short / words.length > 0.5) return true;
+  }
+  return false;
+}
+
 function paragraphs(text) {
   const lines = (text || '')
     .split('\n')
@@ -99,7 +116,7 @@ function sourceParagraphs(text, vol = '4') {
 
   return rawBlocks
     .map((b) => stripTranslatorNotes(b.replace(/\s+/g, ' ').trim()))
-    .filter((s) => s && !/^[,;:.~`´\s-]+$/.test(s));
+    .filter((s) => s && !/^[,;:.~`´\s-]+$/.test(s) && !isOcrNoise(s));
 }
 
-module.exports = { paragraphs, sourceParagraphs, stripTranslatorNotes, NOISE_LINE_RE, TN_BLOCK_RE };
+module.exports = { paragraphs, sourceParagraphs, stripTranslatorNotes, isOcrNoise, NOISE_LINE_RE, TN_BLOCK_RE };

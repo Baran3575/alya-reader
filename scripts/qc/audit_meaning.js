@@ -161,7 +161,9 @@ if (require.main === module) {
     res.rows
       .slice(0, 8)
       .forEach((r) => console.log(`  s${r.page}.${r.i} en=${r.en} tr=${r.tr} :: ${r.t.slice(0, 100)}`));
-    fs.writeFileSync(path.join(ROOT, dir, 'audit_meaning.json'), JSON.stringify(res.rows, null, 1));
+    if (dir === 'data' || args.includes('--write')) {
+      fs.writeFileSync(path.join(ROOT, dir, 'audit_meaning.json'), JSON.stringify(res.rows, null, 1));
+    }
   }
 }
 
