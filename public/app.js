@@ -138,51 +138,30 @@
     },
   };
 
-  // URL sorgusu (?vol=9.5&ch=2, ?v=6&page=20 veya #vol=12) ile doğrudan cilt/bölüm açma desteği
-  function readUrlRoute() {
-    const searchParams = new URLSearchParams(window.location.search);
-    const hashRaw = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
-    const hashParams = new URLSearchParams(hashRaw);
-    const v =
-      searchParams.get('vol') ||
-      searchParams.get('v') ||
-      hashParams.get('vol') ||
-      hashParams.get('v');
-    const chRaw = searchParams.has('ch') ? searchParams.get('ch') : hashParams.get('ch');
-    const ch = chRaw !== null && chRaw !== '' && /^\d+$/.test(chRaw) ? Number(chRaw) : null;
-    const pageRaw =
-      searchParams.get('page') ||
-      searchParams.get('p') ||
-      hashParams.get('page') ||
-      hashParams.get('p');
-    const page =
-      pageRaw !== null && pageRaw !== '' && /^\d+$/.test(pageRaw) && Number(pageRaw) > 0
-        ? Number(pageRaw)
-        : null;
-    return { v: v ? String(v) : null, ch, page };
-  }
+  // URL sorgusu (?vol=9.5 veya #vol=12) ile doğrudan cilt açma desteği
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialUrlVol = urlParams.get('vol') || urlParams.get('v');
+  const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
 
   const volumesList = buildVolumesList();
-  const initialRoute = readUrlRoute();
-  const savedVol = String(LS.get('vol', volumesList[0] ? volumesList[0].id : '4') || '4');
+  const savedVol = String(LS.get('vol', '4') || '4');
   const initialVol =
-    initialRoute.v && volumesList.some((x) => x.id === initialRoute.v) ? initialRoute.v : savedVol;
+    initialUrlVol && volumesList.some((x) => x.id === initialUrlVol) ? initialUrlVol : savedVol;
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
     page:
-      initialRoute.page !== null
-        ? initialRoute.page
-        : initialRoute.v && initialVol !== savedVol
+      initialUrlPage > 0
+        ? initialUrlPage
+        : initialVol !== savedVol
           ? LS.get('page:' + initialVol, 1)
-          : LS.get('page:' + initialVol, LS.get('page', 1)),
+          : LS.get('page', 1),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
     vol: initialVol,
     volumes: volumesList,
-    pendingChapter: initialRoute.ch,
-    fromDeepLink: Boolean(initialRoute.v || initialRoute.ch !== null || initialRoute.page !== null),
+    pendingChapter: null,
     book: null,
     chapter: 0,
   };
@@ -230,17 +209,16 @@
   function switchVolume(v, targetChapter = null) {
     const nextVol = String(v);
     if (nextVol === state.vol && state.book && targetChapter === null) return Promise.resolve();
-    if (state.book && !state.fromDeepLink) LS.set('page:' + state.vol, state.page);
+    if (state.book) LS.set('page:' + state.vol, state.page);
     state.vol = nextVol;
     state.pendingChapter = targetChapter;
-    state.fromDeepLink = false;
     LS.set('vol', nextVol);
     state.page = LS.get('page:' + nextVol, 1);
     return load().catch((err) => {
       const label = volumeLabel(nextVol);
       state.book = null;
       if ($('volLabel')) $('volLabel').textContent = label;
-      if ($('brandSub')) $('brandSub').textContent = label + ' · Türkçe';
+      $('brandSub').textContent = label + ' · Türkçe';
       reader.innerHTML = '<p class="empty-note">' + label + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
@@ -628,11 +606,11 @@
       return enriched;
     }
 
-    // 1) cilt parçası (sunucu/statik Pages üzerinde books/<cilt>.json, yerel paketlerde books/v<cilt>.json)
-    const candidates =
-      window.location.protocol === 'file:'
-        ? ['books/v' + encodeURIComponent(key) + '.json', 'books/' + encodeURIComponent(key) + '.json']
-        : ['books/' + encodeURIComponent(key) + '.json', 'books/v' + encodeURIComponent(key) + '.json'];
+    // 1) cilt parçası (ilk yüklemede yalnızca açılan cilt iner)
+    const candidates = [
+      'books/v' + encodeURIComponent(key) + '.json',
+      'books/' + encodeURIComponent(key) + '.json',
+    ];
     let book = null;
     for (const rel of candidates) {
       book = await fetchLocalJson(rel);
@@ -678,41 +656,39 @@
       if (state.page < 1 || state.page > state.book.total) state.page = saved;
     }
 
-    if ($('brandSub')) $('brandSub').textContent = state.book.volume + ' · Türkçe';
+    $('brandSub').textContent = state.book.volume + ' · Türkçe';
     if ($('volLabel')) $('volLabel').textContent = state.book.volume;
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
     $('pageRange').max = chapters().length;
 
     const list = $('tocList');
-    if (list) {
-      list.innerHTML = '';
-      chapters().forEach((ch, i) => {
-        const li = document.createElement('li');
-        li.dataset.page = ch.page;
-        li.dataset.idx = i;
-        if (ch.pending) li.classList.add('is-pending');
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        const lab = document.createElement('span');
-        lab.className = 'ch-label';
-        lab.textContent = ch.label;
-        const ttl = document.createElement('span');
-        ttl.className = 'ch-title';
-        ttl.textContent = ch.title;
-        const pg = document.createElement('span');
-        pg.className = 'ch-page';
-        const [s, e] = chapterRange(i);
-        pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
-        btn.append(lab, ttl, pg);
-        btn.addEventListener('click', () => {
-          hideLibrary();
-          goChapter(i);
-        });
-        li.appendChild(btn);
-        list.appendChild(li);
+    list.innerHTML = '';
+    chapters().forEach((ch, i) => {
+      const li = document.createElement('li');
+      li.dataset.page = ch.page;
+      li.dataset.idx = i;
+      if (ch.pending) li.classList.add('is-pending');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const lab = document.createElement('span');
+      lab.className = 'ch-label';
+      lab.textContent = ch.label;
+      const ttl = document.createElement('span');
+      ttl.className = 'ch-title';
+      ttl.textContent = ch.title;
+      const pg = document.createElement('span');
+      pg.className = 'ch-page';
+      const [s, e] = chapterRange(i);
+      pg.textContent = ch.pending ? 'yakında' : s === e ? s : s + '–' + e;
+      btn.append(lab, ttl, pg);
+      btn.addEventListener('click', () => {
+        hideLibrary();
+        goChapter(i);
       });
-    }
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
     syncPickers();
@@ -721,10 +697,9 @@
     render();
   }
 
+  // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
   function markTocRead() {
-    const list = $('tocList');
-    if (!list) return;
-    for (const li of list.children) {
+    for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
       li.classList.toggle('is-read', isRead(String(state.vol), i));
     }
@@ -894,10 +869,8 @@
     syncPickers();
     $('modeText').classList.toggle('is-on', state.mode === 'text');
     $('modePage').classList.toggle('is-on', state.mode === 'page');
-    if (!state.fromDeepLink) {
-      LS.set('page', n);
-      LS.set('page:' + state.vol, n);
-    }
+    LS.set('page', n);
+    LS.set('page:' + state.vol, n);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -906,7 +879,6 @@
     if (libOpen) hideLibrary();
     const target = Math.min(Math.max(1, n), state.book.total);
     if (target === state.page) return;
-    state.fromDeepLink = false;
     state.page = target;
     LS.set('page', target);
     LS.set('page:' + state.vol, target);
@@ -946,14 +918,8 @@
     const mins = Math.max(1, Math.round(words / 240));
     meta.textContent = ch.pending
       ? 'Durum: Kaynak çeviri devam ediyor'
-      : 'Sayfa ' +
-        startPage +
-        (startPage === endPage ? '' : '–' + endPage) +
-        ' · ' +
-        pages +
-        ' sayfa · ~' +
-        mins +
-        ' dk';
+      : 'Sayfa ' + startPage + (startPage === endPage ? '' : '–' + endPage) +
+        ' · ' + pages + ' sayfa · ~' + mins + ' dk';
     head.append(kicker, h1, meta);
     reader.appendChild(head);
 
@@ -1044,30 +1010,24 @@
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = ch.pending
       ? 'beklemede'
-      : startPage === endPage
-        ? 's. ' + startPage
-        : 's. ' + startPage + '–' + endPage;
+      : startPage === endPage ? 's. ' + startPage : 's. ' + startPage + '–' + endPage;
     $('prevBtn').disabled = idx <= 0;
     $('nextBtn').disabled = last;
-    if ($('tocLabel')) $('tocLabel').textContent = ch.label;
-    if ($('tocList')) {
-      for (const li of $('tocList').children) {
-        li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
-      }
+    $('tocLabel').textContent = ch.label;
+    for (const li of $('tocList').children) {
+      li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
     }
     $('modeText').classList.toggle('is-on', state.mode === 'text');
     $('modePage').classList.toggle('is-on', state.mode === 'page');
-    if ($('modeBtn')) $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
 
     const targetPage = Math.min(Math.max(startPage, state.page), endPage);
     if ($('navCount')) $('navCount').textContent = 's. ' + targetPage;
-    if (!state.fromDeepLink) {
-      LS.set('page', targetPage);
-      LS.set('page:' + state.vol, targetPage);
-      if (!ch.pending) {
-        const prevMax2 = LS.get('max:' + state.vol, 0);
-        if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
-      }
+    LS.set('page', targetPage);
+    LS.set('page:' + state.vol, targetPage);
+    if (!ch.pending) {
+      const prevMax2 = LS.get('max:' + state.vol, 0);
+      if (targetPage > prevMax2) LS.set('max:' + state.vol, targetPage);
     }
     markTocRead();
     LS.set('mode', state.mode);
@@ -1095,7 +1055,7 @@
     if (state.mode === 'page') {
       const pct = state.page / state.book.total;
       $('progressBar').style.width = (pct * 100).toFixed(2) + '%';
-      if ($('chPct')) $('chPct').textContent = '%' + Math.round(pct * 100);
+      $('chPct').textContent = '%' + Math.round(pct * 100);
       return;
     }
     const rect = reader.getBoundingClientRect();
@@ -1106,8 +1066,8 @@
     else pct = (window.scrollY - top + 60) / span;
     pct = Math.min(1, Math.max(0, pct));
     $('progressBar').style.width = (pct * 100).toFixed(2) + '%';
-    if ($('chPct')) $('chPct').textContent = '%' + Math.round(pct * 100);
-
+    $('chPct').textContent = '%' + Math.round(pct * 100);
+    // ekranda görünen sayfayı hatırla (çeviri ↔ orijinal geçişi için)
     const mid = window.scrollY + window.innerHeight * 0.35;
     let seen = state.page;
     for (const el of reader.querySelectorAll('.pg[data-page]')) {
@@ -1118,7 +1078,7 @@
     }
     if (seen && seen !== state.page) {
       state.page = seen;
-      if (!state.fromDeepLink) LS.set('page', seen);
+      LS.set('page', seen);
       LS.set('page:' + state.vol, seen);
       const prevMax = LS.get('max:' + state.vol, 0);
       if (seen > prevMax) {
@@ -1168,7 +1128,6 @@
   function goChapter(i, anchorPage) {
     if (!state.book) return;
     if (libOpen) hideLibrary();
-    state.fromDeepLink = false;
     const max = chapters().length - 1;
     const idx = Math.min(Math.max(0, i), max);
     state.page = chapters()[idx].page;
@@ -1185,15 +1144,13 @@
   $('prevBtn').addEventListener('click', prev);
   $('nextBtn').addEventListener('click', next);
   $('pageRange').addEventListener('input', (e) => goChapter(Number(e.target.value) - 1));
-  if ($('modeBtn')) {
-    $('modeBtn').addEventListener('click', () => {
-      switchMode(state.mode === 'text' ? 'page' : 'text');
-    });
-  }
+  $('modeBtn').addEventListener('click', () => {
+    switchMode(state.mode === 'text' ? 'page' : 'text');
+  });
   function syncModeButtons() {
     $('modeText').classList.toggle('is-on', state.mode === 'text');
     $('modePage').classList.toggle('is-on', state.mode === 'page');
-    if ($('modeBtn')) $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
   }
   function switchMode(mode) {
     if (state.mode === mode) return;
@@ -1214,26 +1171,20 @@
     applyTheme();
     LS.set('theme', state.theme);
   });
-  if ($('fontUp')) {
-    $('fontUp').addEventListener('click', () => {
-      state.size = Math.min(1.45, +(state.size + 0.06).toFixed(2));
-      applySize();
-      LS.set('size', state.size);
-    });
-  }
-  if ($('fontDown')) {
-    $('fontDown').addEventListener('click', () => {
-      state.size = Math.max(0.9, +(state.size - 0.06).toFixed(2));
-      applySize();
-      LS.set('size', state.size);
-    });
-  }
-  if ($('homeBtn')) {
-    $('homeBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      goChapter(1 < chapters().length ? 1 : 0);
-    });
-  }
+  $('fontUp').addEventListener('click', () => {
+    state.size = Math.min(1.45, +(state.size + 0.06).toFixed(2));
+    applySize();
+    LS.set('size', state.size);
+  });
+  $('fontDown').addEventListener('click', () => {
+    state.size = Math.max(0.9, +(state.size - 0.06).toFixed(2));
+    applySize();
+    LS.set('size', state.size);
+  });
+  $('homeBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    goChapter(1 < chapters().length ? 1 : 0);
+  });
 
   const lbEl = $('lightbox');
   if (lbEl) lbEl.addEventListener('click', closeLightbox);
