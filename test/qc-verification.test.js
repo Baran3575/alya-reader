@@ -410,3 +410,15 @@ function runAll() {
 }
 
 runAll();
+
+// --- Okuma konumu kalıcılığı (çıkıp girince kaldığı yerden devam) -----------
+(() => {
+  const app = fs.readFileSync(path.join(ROOT, 'public', 'app.js'), 'utf8');
+  assert.ok(/const bootVol = initialUrlVol \|\| LS\.get\('vol', '4'\);/.test(app),
+    'açılışta cilt önce belirlenmeli');
+  assert.ok(/LS\.get\('page:' \+ bootVol, LS\.get\('page', 1\)\)/.test(app),
+    'açılış sayfası cildin kendi kaydından okunmalı');
+  assert.ok(/LS\.set\('page:' \+ state\.vol, /.test(app),
+    'sayfa değişince cilt bazlı kayıt yazılmalı');
+  console.log('   ✓ Okuma konumu cilt bazlı saklanıyor (yeniden açılışta devam)');
+})();

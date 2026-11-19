@@ -88,12 +88,15 @@
   const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+  // Açılışta önce cilt belirlenir; sayfa o cildin kendi kaydından gelir ki
+  // başka ciltten kalan global "page" değeri yanlış yere atmasın.
+  const bootVol = initialUrlVol || LS.get('vol', '4');
   const state = {
-    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page', 1),
+    page: initialUrlPage > 0 ? initialUrlPage : LS.get('page:' + bootVol, LS.get('page', 1)),
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: initialUrlVol || LS.get('vol', '4'),
+    vol: bootVol,
     book: null,
     chapter: 0,
   };
