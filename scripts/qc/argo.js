@@ -31,7 +31,8 @@ const TR_STRONG = [
   'göt', 'götveren', 'yavşak', 'pislik', 'dallama', 'gerizekalı', 'embesil', 'aptal', 'salak',
   'hıyar', 'dingil', 'angut', 'manyak', 'sapık', 'azgın', 'rezil', 'alçak', 'aşağılık',
   'lanet', 'kahretsin', 'cehennem', 'sikerim', 'pezevenk', 'kaltağın',
-  'lan', 'ulan', 'sıçtık', 'sıçtım', 'zırva', 'hay',
+  'lan', 'ulan', 'sıçtık', 'sıçtım', 'zırva', 'palavra', 'hay',
+  'kahrolası', 'lanet olası', 'siktiriboktan', 'sahtekâr', 'düpedüz',
 ];
 // Yumuşatma işaretleri: argo yerine geçmiş zayıf sözcükler.
 const TR_WEAK = [

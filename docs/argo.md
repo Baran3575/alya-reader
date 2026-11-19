@@ -27,6 +27,23 @@ node scripts/qc/argo.js --check    # kapı: yumuşatma varsa çıkış kodu 1
 - Türkçe ek aldığı için kök eşleşmesi kullanılır (`hıyar` → `hıyarın`).
 - Anatomik `ass` sayılmaz (kalça çevirisi doğrudur); yalnızca `asshole/dumbass` sayılır.
 
+## Nüans: her küfür tek karşılıkla çevrilmez
+
+| Kaynak | Karşılıklar (bağlama göre) |
+|---|---|
+| bastard | piç · şerefsiz · alçak · herif |
+| dick | hıyar · pislik · herif |
+| fucking | sikindirik · kahrolası · lanet olası · düpedüz |
+| cunt | orospu · orospu çocuğu (ağır hakaret) |
+| bullshit | boktan bahane · palavra · zırva · saçmalık |
+| shit / crap | bok · kahretsin · zırva |
+| damn fucking … | kahrolası siktiriboktan … · lanet olası … |
+
+Kural: **sertlik korunur, doğallık bozulmaz**. Aynı sayfada aynı küfür hep aynı
+sözcükle karşılanmaz; konuşanın tonuna ve cümlenin ritmine göre seçilir. Denetim
+"yumuşatma" arar — sertlik eşdeğeri olan doğal karşılıklar geçerlidir
+(`kahrolası`, `lanet olası`, `zırva`, `palavra`, `düpedüz` sayılır).
+
 ## Düzeltilen örnekler
 
 | Kaynak | Eski | Yeni |
