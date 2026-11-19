@@ -52,6 +52,9 @@ node scripts/qc/cli.js --strict --check-regression     # tüm ciltler için sık
 npm run fidelity                                       # metne sadakat raporu (cilt ortalamaları + en kötü sayfalar)
 npm run deep                                           # bölüm bazlı derin denetim (kelime seçimi, gramer, noktalama, ani düşüş)
 npm run fix:style -- --dry                             # yazım/noktalama onarımı (deneme), --vol 4 ile tek cilt
+npm run clean                                          # nesnel kusur taraması -> docs/clean-list.md (0 olmalı)
+npm run fix:dialog                                     # sayfa sonunda yarım kalan replikleri birleştirir
+npm run fix:quotes                                     # iç içe alıntı açılışlarını onarır
 npm run fidelity -- --vol 4 --top 12 --md              # tek cilt, en kötü 12 sayfa, docs/fidelity.md üret
 node scripts/patch.js --dry-run                        # el yaması şema ve regresyon doğrulaması
 ```
