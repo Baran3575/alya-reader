@@ -52,19 +52,35 @@ for (const k of VOLUME_KEYS) {
   }
 }
 
-const raw = JSON.stringify({ vols });
+// cilt başına ayrı JSON parçaları (ilk yükleme hafif olsun)
+const BOOKS_DIR = path.join(ROOT, 'public', 'books');
+fs.mkdirSync(BOOKS_DIR, { recursive: true });
+const manifestVols = {};
+for (const [k, book] of Object.entries(vols)) {
+  fs.writeFileSync(path.join(BOOKS_DIR, 'v' + k + '.json'), JSON.stringify(book));
+  const artFile = path.join(BOOKS_DIR, 'art-' + k + '.json');
+  if (art[k] && Object.keys(art[k]).length) {
+    fs.writeFileSync(artFile, JSON.stringify(art[k]));
+  } else if (fs.existsSync(artFile)) {
+    fs.unlinkSync(artFile);
+  }
+  manifestVols[k] = { label: book.volume || 'Cilt ' + k, total: book.total, chapters: book.chapters };
+}
+
+const raw = JSON.stringify({ vols: manifestVols });
 const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
 
 const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
+  '/* yalnızca cilt manifesti; metin public/books/v<CİLT>.json dosyalarından yüklenir */\n' +
   'window.ALYA_BUNDLE=' + raw + ';\n' +
   'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
 
 fs.writeFileSync(OUT, body);
 
 const artBody =
-  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
-  'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
+  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
+  'window.ALYA_ART_INDEX=' + JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
 
 console.log(

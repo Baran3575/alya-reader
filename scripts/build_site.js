@@ -52,6 +52,14 @@ for (const k of VOLUME_KEYS) {
   }
 
   fs.writeFileSync(path.join(booksDir, `${k}.json`), JSON.stringify(book));
+  fs.writeFileSync(path.join(booksDir, `v${k}.json`), JSON.stringify(book));
+  if (k === '4' || k === '4.5') {
+    const artDest = path.join(booksDir, `art-${k}.json`);
+    if (!fs.existsSync(artDest)) {
+      const volArt = (existingArt && existingArt[k]) || {};
+      fs.writeFileSync(artDest, JSON.stringify(volArt));
+    }
+  }
   builtCount++;
 }
 

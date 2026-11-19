@@ -58,14 +58,30 @@ const VOLUMES = Object.fromEntries(
 );
 
 function readBundleArt(artFile = path.join(PUB, 'bundle-art.js')) {
+  const out = {};
   try {
-    if (!fs.existsSync(artFile)) return {};
-    const raw = fs.readFileSync(artFile, 'utf8');
-    const m = raw.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
-    return m ? JSON.parse(m[1]) : {};
-  } catch {
-    return {};
-  }
+    const booksDir = path.join(path.dirname(artFile), 'books');
+    for (const k of ['4', '4.5']) {
+      const chunkFile = path.join(booksDir, `art-${k}.json`);
+      if (fs.existsSync(chunkFile)) {
+        const parsed = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
+        if (parsed && typeof parsed === 'object') out[k] = parsed;
+      }
+    }
+  } catch {}
+  try {
+    if (fs.existsSync(artFile)) {
+      const raw = fs.readFileSync(artFile, 'utf8');
+      const m = raw.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\})\s*;?\s*$/);
+      if (m) {
+        const parsed = JSON.parse(m[1]);
+        for (const [k, v] of Object.entries(parsed || {})) {
+          if (v && typeof v === 'object') out[k] = { ...(out[k] || {}), ...v };
+        }
+      }
+    }
+  } catch {}
+  return out;
 }
 
 function buildBook(opt = {}) {
@@ -141,17 +157,20 @@ function buildBook(opt = {}) {
 
     // görsel (illüstrasyon) sayfaları: kaynak metni çok kısa olan sayfalar
     // kapak sayfaları (1-3) yalnızca tarama dosyası veya gömülü görsel varsa art sayılır;
-    // "(TN: ...)" gibi kısa çevirmen notu kuyruk sayfaları (örn. Cilt 4 s.282) dışlanır.
+    // kısa çevirmen notu / reklam / künye sayfaları (örn. Cilt 4 s.12, s.282; Cilt 4.5 s.7, s.347) dışlanır.
     const cleanText = String(p.text || '')
       .replace(/Page\s+\d+/gi, '')
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim();
     const cleanLen = cleanText.length;
-    const isTranslatorTail = /\(?\b(?:TN|ÇN|T\/N)\s*:/i.test(cleanText);
+    const isNonArtMeta =
+      /\(?\b(?:TN|ÇN|T\/N)\s*:|\b(?:TLed and Edited by|Novel Updates series page|Zerobooks|Jnovels)\b/i.test(cleanText) ||
+      (volKey === '4' && p.page === 12) ||
+      (volKey === '4.5' && (p.page === 7 || p.page === 347));
     const art = p.page <= 3
       ? cleanLen < 220 && (hasScan || hasEmbeddedArt)
-      : cleanLen < 220 && !isTranslatorTail;
+      : cleanLen < 220 && !isNonArtMeta;
 
     const entry = {
       n: p.page,
@@ -279,33 +298,55 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik JSON uç noktaları (/books/v<k>.json, /books/<k>.json, /books/art-<k>.json)
+  const artJsonMatch = pathname.match(/^\/books\/art-([0-9.]+)\.json$/);
+  if (artJsonMatch && VOLUMES[artJsonMatch[1]]) {
+    const vKey = artJsonMatch[1];
+    const diskArt = path.join(PUB, 'books', `art-${vKey}.json`);
+    if (fs.existsSync(diskArt)) {
+      return send(req, res, 200, MIME['.json'], fs.readFileSync(diskArt));
+    }
+    const allArt = readBundleArt(path.join(PUB, 'bundle-art.js'));
+    const payload = (allArt && allArt[vKey]) || {};
+    return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(payload)));
+  }
+
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
-      const loaded = getBook(bookJsonMatch[1]);
-      return send(req, res, 200, MIME['.json'], loaded.json);
+      const b = getBook(bookJsonMatch[1]).book;
+      const relBook = {
+        ...b,
+        pages: b.pages.map((p) => ({
+          ...p,
+          img: String(p.img || '').replace(/^\/+/, ''),
+        })),
+      };
+      return send(req, res, 200, MIME['.json'], Buffer.from(JSON.stringify(relBook)));
     } catch {}
   }
 
   if (pathname === '/') pathname = '/index.html';
 
   if (pathname === '/bundle.js') {
-    const liveVols = {};
+    const manifestVols = {};
+    const verParts = [];
     for (const k of VOLUME_KEYS) {
       try {
         const b = getBook(k).book;
-        liveVols[k] = {
-          ...b,
-          pages: b.pages.map((p) => ({
-            ...p,
-            img: String(p.img || '').replace(/^\/+/, ''),
-          })),
-        };
+        manifestVols[k] = { label: b.volume || 'Cilt ' + k, total: b.total, chapters: b.chapters };
+        const cfg = VOLUMES[k];
+        const st = fs.statSync(path.join(ROOT, cfg.dataDir, 'paragraphs_final.json'));
+        verParts.push(`${k}:${Math.floor(st.mtimeMs)}`);
       } catch {}
     }
+    const ver = require('crypto').createHash('sha1').update(verParts.join('|')).digest('hex').slice(0, 12);
     const dynBody = Buffer.from(
-      'window.ALYA_BUNDLE=' + JSON.stringify({ vols: liveVols }) + ';\nwindow.ALYA_BUNDLE_VERSION="live-server";\n'
+      'window.ALYA_BUNDLE=' +
+        JSON.stringify({ vols: manifestVols }) +
+        ';\nwindow.ALYA_BUNDLE_VERSION=' +
+        JSON.stringify('live-' + ver) +
+        ';\n'
     );
     return send(req, res, 200, MIME['.js'], dynBody);
   }
