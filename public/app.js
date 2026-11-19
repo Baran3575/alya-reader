@@ -100,8 +100,20 @@
       LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
       return embedded;
     }
-    const res = await fetch('api/book?v=' + encodeURIComponent(v));
-    const book = await res.json();
+    let book = null;
+    try {
+      const res = await fetch('./api/book?v=' + encodeURIComponent(v));
+      if (res && res.ok) {
+        book = await res.json();
+      }
+    } catch (e) {}
+    if (!book) {
+      const staticRes = await fetch('./books/' + encodeURIComponent(v) + '.json');
+      if (!staticRes || !staticRes.ok) {
+        throw new Error('HTTP ' + (staticRes ? staticRes.status : 'ağ hatası'));
+      }
+      book = await staticRes.json();
+    }
     try {
       LS.set('book:' + v, book);
       LS.set('bookver:' + v, window.ALYA_BUNDLE_VERSION || 'dev');
@@ -192,6 +204,13 @@
     img.loading = 'lazy';
     img.decoding = 'async';
     img.addEventListener('load', () => scheduleProgress(), { once: true });
+    img.addEventListener(
+      'error',
+      () => {
+        fig.hidden = true;
+      },
+      { once: true },
+    );
     fig.appendChild(img);
     if (caption) {
       const cap = document.createElement('figcaption');
@@ -336,7 +355,11 @@
         continue;
       }
 
-      const isIllustration = p.tr.length === 0 || p.art === true;
+      const artPack = window.ALYA_ART && window.ALYA_ART[state.vol];
+      const hasArtPack = Boolean(artPack && Object.keys(artPack).length > 0);
+      const isIllustration = hasArtPack
+        ? Boolean(p.art || artPack[String(p.n).padStart(3, '0')])
+        : p.tr.length === 0 || p.art === true;
       if (isIllustration) {
         sec.classList.add('pg-art');
         if (p.tr.length) sec.classList.add('has-text');
@@ -471,6 +494,9 @@
   window.addEventListener('resize', scheduleProgress);
 
   function prefetch(idx) {
+    const artPack = window.ALYA_ART && window.ALYA_ART[state.vol];
+    const hasArtPack = Boolean(artPack && Object.keys(artPack).length > 0);
+    if (hasArtPack) return;
     const imgs = [];
     for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
       const p = state.book.pages[n - 1];

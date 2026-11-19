@@ -1,0 +1,97 @@
+name: Build and Deploy GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: QC Gates & Stage dist/
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run test suite and unified QC regression gates
+        run: npm test
+
+      - name: Run strict unified QC CLI gate
+        run: node scripts/qc/cli.js --strict --check-regression
+
+      - name: Stage clean dist/ directory
+        run: npm run build:site
+
+      - name: Verify staged dist/ artifact
+        run: |
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const vm = require("vm");
+            const assert = require("assert");
+            const { VOLUMES } = require("./server.js");
+
+            assert(fs.existsSync("dist/.nojekyll"), "Missing dist/.nojekyll");
+            assert(fs.existsSync("dist/index.html"), "Missing dist/index.html");
+            assert(fs.existsSync("dist/bundle.js"), "Missing dist/bundle.js");
+            assert(fs.existsSync("dist/bundle-art.js"), "Missing dist/bundle-art.js");
+
+            const artStat = fs.statSync("dist/bundle-art.js");
+            assert(artStat.size > 4000000, "Expected dist/bundle-art.js > 4 MB, got " + artStat.size);
+            const ctx = { window: {} };
+            vm.runInNewContext(fs.readFileSync("dist/bundle-art.js", "utf8"), ctx);
+            const totalArt = Object.values(ctx.window.ALYA_ART).reduce((n, v) => n + Object.keys(v).length, 0);
+            assert(totalArt >= 31, "Expected >= 31 illustrations, got " + totalArt);
+
+            for (const vol of Object.keys(VOLUMES)) {
+              assert(fs.existsSync(path.join("dist", "books", vol + ".json")), "Missing dist/books/" + vol + ".json");
+            }
+
+            const sw = fs.readFileSync("dist/sw.js", "utf8");
+            assert(/const VERSION = '\''alya-[0-9a-f]{12}'\'';/.test(sw), "Expected hashed VERSION in dist/sw.js");
+            assert(!sw.includes("alya-v3"), "dist/sw.js still contains static alya-v3");
+          '
+
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

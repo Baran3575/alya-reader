@@ -5,8 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node test/qc-verification.test.js && node scripts/qc/cli.js --strict --check-regression",
-    "test:suite": "node test/qc-verification.test.js",
+    "build:site": "node scripts/build_site.js",
+    "test": "node test/qc-verification.test.js && node test/build-site.test.js && node scripts/qc/cli.js --strict --check-regression",
+    "test:suite": "node test/qc-verification.test.js && node test/build-site.test.js",
     "qc": "node scripts/qc/cli.js",
     "qc:strict": "node scripts/qc/cli.js --strict",
     "qc:v4": "node scripts/qc/cli.js --volume 4 --strict --check-regression",

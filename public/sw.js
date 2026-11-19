@@ -1,11 +1,19 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri + kitap verisi.
 // Sunucu kapalıyken de okuyucu açılır (daha önce bir kez açıldıysa).
 const VERSION = 'alya-v3';
-const SHELL = ['/', '/index.html', '/style.css', '/app.js', '/bundle.js'];
+const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
+
+function scopeUrl(rel = './') {
+  const base = (self.registration && self.registration.scope) || self.location.href;
+  return new URL(rel, base).href;
+}
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(VERSION).then((c) => c.addAll(SHELL).catch(() => {})).then(() => self.skipWaiting()),
+    caches
+      .open(VERSION)
+      .then((c) => c.addAll(SHELL.map((p) => scopeUrl(p))).catch(() => {}))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -24,12 +32,19 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
+  const scopePath = new URL(scopeUrl('./')).pathname;
+  if (!url.pathname.startsWith(scopePath)) return;
+  const relPath = './' + url.pathname.slice(scopePath.length);
+
   // görseller ve kitap verisi: önce önbellek, sonra ağ (ve önbelleğe yaz)
   const cacheFirst =
-    url.pathname.startsWith('/pages/') ||
-    url.pathname.startsWith('/pages45/') ||
-    url.pathname === '/api/book' ||
-    url.pathname === '/bundle.js';
+    relPath.startsWith('./pages/') ||
+    relPath.startsWith('./pages45/') ||
+    /^\.\/pages[^/]*\//.test(relPath) ||
+    relPath.startsWith('./books/') ||
+    relPath === './api/book' ||
+    relPath === './bundle.js' ||
+    relPath === './bundle-art.js';
 
   if (cacheFirst) {
     e.respondWith(
@@ -44,7 +59,7 @@ self.addEventListener('fetch', (e) => {
               }
               return res;
             })
-            .catch(() => hit),
+            .catch(() => hit || (typeof Response !== 'undefined' && Response.error ? Response.error() : undefined)),
       ),
     );
     return;
@@ -60,6 +75,6 @@ self.addEventListener('fetch', (e) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html'))),
+      .catch(() => caches.match(req).then((hit) => hit || caches.match(scopeUrl('./index.html')))),
   );
 });

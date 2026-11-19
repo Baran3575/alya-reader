@@ -1,4 +1,5 @@
 node_modules/
+dist/
 public/pages/
 public/pages45/
 data/back_en.json

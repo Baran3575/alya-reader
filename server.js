@@ -23,13 +23,14 @@ const MIME = {
 const TR_CHAPTER = { prologue: 'Önsöz', epilogue: 'Sonsöz' };
 
 function buildBook(opt = {}) {
+  const rootDir = opt.rootDir || ROOT;
   const dataDir = opt.dataDir || 'data';
   const imgPrefix = opt.imgPrefix || '/pages/';
   const volume = opt.volume || 'Cilt 4';
-  const titlesFile = opt.titlesFile || path.join(ROOT, 'data/chapters.json');
+  const titlesFile = opt.titlesFile || path.join(rootDir, dataDir, 'chapters.json');
 
-  const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
-  const trFile = path.join(ROOT, dataDir, 'paragraphs_final.json');
+  const source = JSON.parse(fs.readFileSync(path.join(rootDir, dataDir, 'source.json'), 'utf8'));
+  const trFile = path.join(rootDir, dataDir, 'paragraphs_final.json');
   const tr = JSON.parse(fs.readFileSync(trFile, 'utf8'));
 
   const pages = source.map((p) => {
@@ -192,4 +193,4 @@ server.listen(PORT, () => {
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { VOLUMES, buildBook, getBook, start };
