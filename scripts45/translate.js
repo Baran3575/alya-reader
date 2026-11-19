@@ -150,11 +150,25 @@ async function deepl(texts) {
   const batches = [];
   for (let i = 0; i < items.length; i += SIZE) batches.push(items.slice(i, i + SIZE));
 
-  let quotaOut = false;
   let b = 0;
   for (const batch of batches) {
     b++;
     const texts = batch.map((x) => x.t);
+
+    let d = new Array(texts.length).fill('');
+    if (DEEPL_KEY) {
+      try {
+        d = await deepl(texts);
+      } catch (e) {
+        if (e.fatal || e.status === 456 || /kota|456/i.test(e.message)) {
+          fs.writeFileSync(OUT, JSON.stringify(done));
+          console.error('!! HATA: DeepL kotası doldu (HTTP 456). Yalnızca Google yedek çevirisine düşülmemesi için işlem durduruldu:', e.message);
+          process.exit(1);
+        } else {
+          d = new Array(texts.length).fill('');
+        }
+      }
+    }
 
     let g = [];
     try {
@@ -166,21 +180,6 @@ async function deepl(texts) {
           g.push((await google([t]))[0] || '');
         } catch {
           g.push('');
-        }
-      }
-    }
-
-    let d = new Array(texts.length).fill('');
-    if (DEEPL_KEY) {
-      try {
-        d = await deepl(texts);
-      } catch (e) {
-        if (e.fatal || /kota|456/i.test(e.message)) {
-          fs.writeFileSync(OUT, JSON.stringify(done));
-          console.error('!! HATA: DeepL kotası doldu (HTTP 456). Yalnızca Google yedek çevirisine düşülmemesi için işlem durduruldu:', e.message);
-          process.exit(1);
-        } else {
-          d = new Array(texts.length).fill('');
         }
       }
     }

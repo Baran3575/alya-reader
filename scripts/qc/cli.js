@@ -463,17 +463,23 @@ function main() {
         r.quality.flagged
       );
 
-      const displayKeys = [
-        'çift nokta',
-        '"?." kalıbı',
-        'bitişik/imla hatası',
-        'düz tırnak',
-        'İngilizce kalıntı',
-        'çevirmen notu',
+      const displayRows = [
+        ['çift nokta', 'çift nokta'],
+        ['"?." kalıbı', '"?." kalıbı'],
+        ['bitişik/imla hatası', 'bitişik/imla hatası'],
+        ['sözlük/özel ad hatası', 'sözlük/özel ad hatası'],
+        ['düz tırnak', 'düz tırnak'],
+        ['ters kıvrık tırnak', 'ters kıvrık tırnak'],
+        ['ayrık tırnak eki', 'ayrık tırnak eki'],
+        ['dengesiz parantez', 'dengesiz parantez'],
+        ['-yyor fiil hatası', '-yyor fiil hatası'],
+        ['küçük harf başlangıç', 'küçük harfle başlayan cümle'],
+        ['İngilizce kalıntı', 'İngilizce kalıntı'],
+        ['çevirmen notu', 'çevirmen notu'],
       ];
-      for (const k of displayKeys) {
-        const row = r.verify.find((x) => x.label.includes(k));
-        if (row) console.log('   ' + k.padEnd(24), row.value);
+      for (const [disp, matchKey] of displayRows) {
+        const row = r.verify.find((x) => x.label.includes(matchKey));
+        if (row) console.log('   ' + disp.padEnd(24), row.value);
       }
 
       if (r.fails.length > 0) {

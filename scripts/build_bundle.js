@@ -46,12 +46,17 @@ const body =
 
 fs.writeFileSync(OUT, body);
 
+const artCount = Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0);
+const artPath = path.join(ROOT, 'public', 'bundle-art.js');
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri (data URI) */\n' +
   'window.ALYA_ART=' + JSON.stringify(art) + ';\n';
-fs.writeFileSync(path.join(ROOT, 'public', 'bundle-art.js'), artBody);
-console.log('illüstrasyon:', Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0), 'görsel |',
-  (artBody.length / 1048576).toFixed(2), 'MB');
+if (artCount > 0 || !fs.existsSync(artPath) || fs.statSync(artPath).size < 256) {
+  fs.writeFileSync(artPath, artBody);
+  console.log('illüstrasyon:', artCount, 'görsel |', (artBody.length / 1048576).toFixed(2), 'MB');
+} else {
+  console.log('illüstrasyon: mevcut public/bundle-art.js korundu |', (fs.statSync(artPath).size / 1048576).toFixed(2), 'MB');
+}
 const kb = (body.length / 1024).toFixed(0);
 console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
 for (const [k, b] of Object.entries(vols)) {
