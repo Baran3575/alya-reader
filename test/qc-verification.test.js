@@ -106,7 +106,13 @@ function testIntentionalTranslatorNote() {
     const res = runCLI(['--volume', '4', '--strict'], false);
     assert.strictEqual(res.code, 1, 'Should exit code 1');
     assert(res.out.includes('çevirmen notu'), 'Diagnostics must mention translator note');
-    console.log('  ✓ Translator note caught with code 1');
+
+    const cnData = JSON.parse(orig);
+    cnData['14'][0] += ' (ÇN: Türkçe çevirmen notu meşrudur.)';
+    fs.writeFileSync(v4Path, JSON.stringify(cnData));
+    const cnRes = runCLI(['--volume', '4', '--strict'], true);
+    assert(cnRes.out.includes('çevirmen notu            0'), 'Legitimate Turkish ÇN note must pass');
+    console.log('  ✓ Translator note caught with code 1 and legitimate ÇN note allowed');
   } finally {
     fs.writeFileSync(v4Path, orig);
   }
