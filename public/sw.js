@@ -1,6 +1,6 @@
 // Çevrimdışı önbellek: kabuk dosyaları + gömülü illüstrasyon paketi + kitap verisi.
 // GitHub Pages alt dizini (/alya-reader/) ve yerel kök dizin altında self.registration.scope ile çalışır.
-const VERSION = 'alya-27bfa1f73fb3';
+const VERSION = 'alya-60432ce8488c';
 const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 function scopeBase() {

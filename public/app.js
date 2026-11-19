@@ -230,8 +230,8 @@
     desc.className = 'scan-fallback-body';
     desc.textContent =
       p.tr && p.tr.length > 0
-        ? 'Yalnızca kitap içi illüstrasyonlar pakete gömülüdür. Sayfanın Türkçe metnini Çeviri görünümünde okuyabilir veya sonraki illüstrasyona geçebilirsiniz.'
-        : 'Yalnızca kitap içi illüstrasyonlar pakete gömülüdür. Bölüm akışına Çeviri görünümünden dönebilir veya sonraki illüstrasyona geçebilirsiniz.';
+        ? 'Pakette yalnızca kitap içi illüstrasyonlar yer alıyor. Türkçe metni Çeviri görünümünde okuyabilir veya sonraki illüstrasyona geçebilirsiniz.'
+        : 'Pakette yalnızca kitap içi illüstrasyonlar yer alıyor. Bölüm akışına Çeviri görünümünden dönebilir veya sonraki illüstrasyona geçebilirsiniz.';
 
     const actions = document.createElement('div');
     actions.className = 'scan-fallback-actions';
