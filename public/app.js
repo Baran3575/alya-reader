@@ -106,78 +106,160 @@
     });
   }
 
-  /* cilt seçici: basınca açılan menü (yana kaydırma yok) */
-  /* alt sayfa perdeleri: mobilde içerik kararması ve dışarı dokunma */
-  function syncBackdrop() {
-    const backdrop = $('sheetBackdrop');
-    if (!backdrop) return;
-    const anyOpen = ['volMenu', 'tocPanel', 'settingsPanel'].some((id) => {
-      const el = $(id);
-      return el && !el.hidden;
-    });
-    backdrop.hidden = !anyOpen;
-    requestAnimationFrame(() => backdrop.classList.toggle('is-open', anyOpen));
-  }
-
   function measureChrome() {
     const bar = document.querySelector('.bar');
-    const nav = document.querySelector('.nav');
-    if (bar) document.documentElement.style.setProperty('--bar-h', bar.offsetHeight + 'px');
-    if (nav) document.documentElement.style.setProperty('--nav-h', nav.offsetHeight + 'px');
+    if (!bar) return;
+    const h = bar.offsetHeight;
+    if (h > 20) document.documentElement.style.setProperty('--bar-h', h + 'px');
   }
-
-  function toggleVolMenu(open) {
-    const menu = $('volMenu');
-    if (!menu) return;
-    const next = open === undefined ? menu.hidden : open;
-    menu.hidden = !next;
-    $('volBtn').setAttribute('aria-expanded', String(!menu.hidden));
-    syncBackdrop();
-  }
-  $('volBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleVolMenu();
-  });
-  function toggleSettings(open) {
-    const panel = $('settingsPanel');
-    if (!panel) return;
-    const next = open === undefined ? panel.hidden : open;
-    panel.hidden = !next;
-    $('settingsBtn').setAttribute('aria-expanded', String(!panel.hidden));
-    syncBackdrop();
-  }
-  $('settingsBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleSettings();
-  });
-  document.addEventListener('click', (e) => {
-    const menu = $('volMenu');
-    if (menu && !menu.hidden && !menu.contains(e.target) && !$('volBtn').contains(e.target)) toggleVolMenu(false);
-    const set = $('settingsPanel');
-    if (set && !set.hidden && !set.contains(e.target) && !$('settingsBtn').contains(e.target)) toggleSettings(false);
-  });
-  $('sheetBackdrop')?.addEventListener('click', () => {
-    toggleVolMenu(false);
-    toggleToc(false);
-    toggleSettings(false);
-  });
   window.addEventListener('resize', measureChrome);
   window.addEventListener('orientationchange', () => setTimeout(measureChrome, 120));
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      toggleVolMenu(false);
-      toggleSettings(false);
+  /* ---------------- cilt / bölüm seçimi + okundu işaretleri ---------------- */
+  const volTitle = {
+    '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
+    '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
+  };
+
+  function readSet(vol) {
+    const v = LS.get('read:' + vol, []);
+    return Array.isArray(v) ? v : [];
+  }
+  function isRead(vol, i) {
+    return readSet(vol).includes(i);
+  }
+  function setRead(vol, i, on) {
+    const set = new Set(readSet(vol));
+    if (on) set.add(i);
+    else set.delete(i);
+    LS.set('read:' + vol, [...set].sort((x, y) => x - y));
+  }
+  function readCount(vol) {
+    return readSet(vol).length;
+  }
+
+  const sheet = $('sheet');
+  let sheetKind = 'vol';
+  let savedScroll = 0;
+
+  function openSheet(kind) {
+    sheetKind = kind;
+    savedScroll = window.scrollY || 0;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    sheet.hidden = false;
+    $('sheetActions').hidden = kind !== 'ch';
+    $('volBtn').setAttribute('aria-expanded', String(kind === 'vol'));
+    $('chBtn').setAttribute('aria-expanded', String(kind === 'ch'));
+    buildSheet();
+    sheet.querySelector('.sheet-body').scrollTop = 0;
+    $('sheetClose').focus({ preventScroll: true });
+  }
+
+  function closeSheet() {
+    sheet.hidden = true;
+    document.documentElement.style.overflow = '';
+    document.body.style.overflow = '';
+    $('volBtn').setAttribute('aria-expanded', 'false');
+    $('chBtn').setAttribute('aria-expanded', 'false');
+    window.scrollTo(0, savedScroll);
+  }
+
+  function buildSheet() {
+    const body = $('sheetBody');
+    body.innerHTML = '';
+    if (sheetKind === 'vol') {
+      $('sheetTitle').textContent = 'Cilt seç';
+      for (const key of Object.keys(volTitle)) {
+        const total = (volTotal(key) || {}).total || 0;
+        const count = volTitle[key];
+        const read = readCount(key);
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = 'row' + (String(state.vol) === key ? ' is-current' : '');
+        row.innerHTML =
+          '<span class="row-main"><span class="row-title">' + count + '</span>' +
+          '<span class="row-meta">' + (total ? total + ' bölüm' : '') +
+          (read ? ' · ' + read + ' okundu' : '') + '</span></span>' +
+          (read ? '<span class="row-dot is-on" aria-hidden="true">✓</span>' : '<span class="row-dot" aria-hidden="true"></span>');
+        row.addEventListener('click', () => {
+          closeSheet();
+          switchVolume(key);
+        });
+        body.appendChild(row);
+      }
+      return;
     }
+
+    const ch = chapters()[state.chapter];
+    $('sheetTitle').textContent = volTitle[String(state.vol)] + (ch ? ' · ' + ch.label : '');
+    const list = chapters();
+    list.forEach((c, i) => {
+      const [s, e] = chapterRange(i);
+      const read = isRead(String(state.vol), i);
+      const wrap = document.createElement('div');
+      wrap.className = 'row' + (i === state.chapter ? ' is-current' : '') + (read ? ' is-read' : '');
+
+      const main = document.createElement('button');
+      main.type = 'button';
+      main.className = 'row-main';
+      main.innerHTML =
+        '<span class="row-title">' + c.label + (c.title ? ' · ' + c.title : '') + '</span>' +
+        '<span class="row-meta">' + (c.pending ? 'yakında' : s === e ? 's. ' + s : 's. ' + s + '–' + e) + '</span>';
+      main.addEventListener('click', () => {
+        closeSheet();
+        goChapter(i);
+      });
+
+      const check = document.createElement('button');
+      check.type = 'button';
+      check.className = 'row-check' + (read ? ' is-on' : '');
+      check.setAttribute('aria-pressed', String(read));
+      check.setAttribute('aria-label', c.label + ' okundu');
+      check.textContent = '✓';
+      check.addEventListener('click', () => {
+        const next = !isRead(String(state.vol), i);
+        setRead(String(state.vol), i, next);
+        check.classList.toggle('is-on', next);
+        check.setAttribute('aria-pressed', String(next));
+        wrap.classList.toggle('is-read', next);
+        markTocRead();
+      });
+
+      wrap.append(main, check);
+      body.appendChild(wrap);
+    });
+  }
+
+  $('volBtn').addEventListener('click', () => openSheet('vol'));
+  $('chBtn').addEventListener('click', () => openSheet('ch'));
+  $('sheetClose').addEventListener('click', closeSheet);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !sheet.hidden) closeSheet();
+  });
+  $('markAllBtn').addEventListener('click', () => {
+    chapters().forEach((c, i) => {
+      if (!c.pending) setRead(String(state.vol), i, true);
+    });
+    buildSheet();
+    markTocRead();
+  });
+  $('clearAllBtn').addEventListener('click', () => {
+    LS.set('read:' + state.vol, []);
+    buildSheet();
+    markTocRead();
   });
 
-  volButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      toggleVolMenu(false);
-      toggleSettings(false);
-      switchVolume(btn.dataset.vol);
-    });
-  });
+  function volTotal(key) {
+    const m = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[key];
+    return m ? { total: m.chapters ? m.chapters.length : 0 } : { total: 0 };
+  }
+
+  function syncPickers() {
+    $('volLabel').textContent = volTitle[String(state.vol)] || 'Cilt ' + state.vol;
+    const ch = chapters()[state.chapter];
+    $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
+  }
 
   /* ---------------- tema / yazı boyutu ---------------- */
   function applyTheme() {
@@ -336,22 +418,17 @@
     });
 
     if (!(state.page >= 1 && state.page <= state.book.total)) state.page = 1;
+    syncPickers();
     markTocRead();
+    measureChrome();
     render();
   }
 
   // içindekilerde okunmuş bölümleri işaretle (en ileri sayfa bazlı)
   function markTocRead() {
-    const max = LS.get('max:' + state.vol, state.page);
     for (const li of $('tocList').children) {
       const i = Number(li.dataset.idx);
-      const ch = chapters()[i];
-      if (ch && ch.pending) {
-        li.classList.remove('is-read');
-        continue;
-      }
-      const end = chapterRange(i)[1];
-      li.classList.toggle('is-read', max >= end);
+      li.classList.toggle('is-read', isRead(String(state.vol), i));
     }
   }
 
@@ -610,6 +687,7 @@
 
     // durum satırı
     $('pageRange').value = idx + 1;
+    syncPickers();
     $('navChapter').textContent = ch.label;
     $('navPages').textContent = ch.pending
       ? 'beklemede'
@@ -749,34 +827,27 @@
     $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
     render();
   });
+  function syncModeButtons() {
+    $('modeText').classList.toggle('is-on', state.mode === 'text');
+    $('modePage').classList.toggle('is-on', state.mode === 'page');
+    $('modeBtn').textContent = state.mode === 'text' ? 'Çeviri' : 'Orijinal';
+  }
   $('modeText').addEventListener('click', () => {
     state.mode = 'text';
+    syncModeButtons();
     render();
   });
   $('modePage').addEventListener('click', () => {
     state.mode = 'page';
+    syncModeButtons();
     render();
   });
 
-  function toggleToc(open) {
-    const panel = $('tocPanel');
-    const nextOpen = open === undefined ? panel.hidden : open;
-    panel.hidden = !nextOpen;
-    $('tocBtn').setAttribute('aria-expanded', String(nextOpen));
-    syncBackdrop();
-  }
-  $('tocBtn').addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleToc();
-  });
-  document.addEventListener('click', (e) => {
-    if (!$('tocPanel').hidden && !$('tocPanel').contains(e.target)) toggleToc(false);
-  });
+  function toggleToc() {} // sade arayüzde ayrı panel yok (bölüm seçici <select>)
 
   $('themeBtn').addEventListener('click', () => {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
-    measureChrome();
-  applyTheme();
+    applyTheme();
     LS.set('theme', state.theme);
   });
   $('fontUp').addEventListener('click', () => {
