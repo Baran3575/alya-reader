@@ -1,199 +1,143 @@
-// Tembel (lazy) cilt paketleri ve manifest üreticisi (Cilt 4 – 12).
-// Sunucuya ihtiyaç duymadan (GitHub Pages veya file://) okuma için:
-//   - public/bundles/manifest.js (< 10 KB)
-//   - public/bundles/book-<cilt>.json (Türkçe + bölüm üstverisi, fetch + CacheStorage için)
-//   - public/bundles/book-<cilt>.js (file:// Türkçe yedek yükleyici)
-//   - public/bundles/bundle-en-<cilt>.json ("Orijinal" modu İngilizce metin parçası)
-//   - public/bundles/bundle-en-<cilt>.js (file:// İngilizce yedek yükleyici)
-//   - public/bundles/art/<cilt>/<sayfa>.webp (Cilt 4 ve 4.5 illüstrasyon görselleri)
+// Tarayıcıya gömülecek veri paketi: Cilt 4 – 12 Türkçe + İngilizce + bölümler.
+// Sunucuya ihtiyaç duymadan okuma için public/bundle.js ve public/bundle-art.js üretir.
 // Kullanım: node scripts/build_bundle.js
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { buildBook, buildBookEn, VOLUMES, VOLUME_KEYS } = require('../server.js');
+const vm = require('vm');
+const { buildBook, buildBookEn } = require('../server.js');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
-const ROOT = path.join(__dirname, '..');
-const PUB = path.join(ROOT, 'public');
-const BUNDLES_DIR = path.join(PUB, 'bundles');
-const LEGACY_BUNDLE = path.join(PUB, 'bundle.js');
-const LEGACY_ART = path.join(PUB, 'bundle-art.js');
+const OUT = path.join(ROOT, 'public', 'bundle.js');
+const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+const BOOKS_DIR = path.join(ROOT, 'public', 'books');
 
-fs.mkdirSync(BUNDLES_DIR, { recursive: true });
-
-// Eski tek parça bundle-art.js varsa, silmeden önce WebP dosyalarını çıkar
-if (fs.existsSync(LEGACY_ART)) {
-  try {
-    const rawArt = fs.readFileSync(LEGACY_ART, 'utf8');
-    const match = rawArt.match(/window\.ALYA_ART\s*=\s*(\{[\s\S]*\})\s*;?/);
-    if (match) {
-      const parsed = JSON.parse(match[1]);
-      for (const [volKey, entries] of Object.entries(parsed)) {
-        const outArtDir = path.join(BUNDLES_DIR, 'art', String(volKey));
-        fs.mkdirSync(outArtDir, { recursive: true });
-        for (const [nnn, dataUri] of Object.entries(entries || {})) {
-          const outFile = path.join(outArtDir, String(nnn).padStart(3, '0') + '.webp');
-          if (fs.existsSync(outFile)) continue;
-          const b64 = String(dataUri).split(',')[1];
-          if (b64) fs.writeFileSync(outFile, Buffer.from(b64, 'base64'));
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('Uyarı: eski bundle-art.js okunamadı:', err.message);
+function loadExistingArtBundle() {
+  const out = { art: {}, index: {} };
+  if (fs.existsSync(ART_OUT)) {
+    try {
+      const code = fs.readFileSync(ART_OUT, 'utf8');
+      const sandbox = { window: {} };
+      vm.runInNewContext(code, sandbox, { timeout: 2000 });
+      if (sandbox.window.ALYA_ART) out.art = sandbox.window.ALYA_ART;
+      if (sandbox.window.ALYA_ART_INDEX) out.index = sandbox.window.ALYA_ART_INDEX;
+    } catch {}
   }
+  for (const k of ['4', '4.5']) {
+    const f = path.join(BOOKS_DIR, `art-${k}.json`);
+    if ((!out.art[k] || !Object.keys(out.art[k]).length) && fs.existsSync(f)) {
+      try {
+        out.art[k] = JSON.parse(fs.readFileSync(f, 'utf8'));
+      } catch {}
+    }
+  }
+  return out;
 }
 
-const manifestVolumes = {};
-const hashAccumulator = crypto.createHash('sha1');
-let totalArtCount = 0;
-let totalArtBytes = 0;
+const existing = loadExistingArtBundle();
+const existingArt = existing.art;
+const vols = {};
+const volsEn = {};
+const art = {};
 
-for (const volKey of VOLUME_KEYS) {
-  const cfg = VOLUMES[volKey];
-  if (!cfg) continue;
-  const srcPath = path.join(ROOT, cfg.dataDir, 'source.json');
-  const trPath = path.join(ROOT, cfg.dataDir, 'paragraphs_final.json');
-  if (!fs.existsSync(srcPath) || !fs.existsSync(trPath)) continue;
+for (const k of VOLUME_KEYS) {
+  const cfg = VOLUMES[k];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
 
-  const relImgPrefix = String(cfg.imgPrefix || 'pages/').replace(/^\/+/, '');
-  const usesBundledArt = volKey === '4' || volKey === '4.5';
-  const artRelDir = usesBundledArt ? `bundles/art/${volKey}/` : relImgPrefix;
-  const outArtDir = path.join(PUB, artRelDir);
-  if (usesBundledArt) fs.mkdirSync(outArtDir, { recursive: true });
+  const book = buildBook({
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+    includeEn: false,
+  });
 
-  const book = buildBook({ ...cfg, volKey });
-  const bookEn = buildBookEn({ ...cfg, volKey });
-
-  // Yerel sayfa taramaları mevcutsa illüstrasyon WebP dosyalarını güncelle ve doğrula
+  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
   for (const p of book.pages) {
-    const nnn = String(p.n).padStart(3, '0');
-    if (p.art) {
-      if (usesBundledArt) {
-        const localScan = path.join(PUB, relImgPrefix, nnn + '.webp');
-        const bundledArt = path.join(outArtDir, nnn + '.webp');
-        if (fs.existsSync(localScan)) {
-          fs.copyFileSync(localScan, bundledArt);
-        }
-        if (fs.existsSync(bundledArt)) {
-          p.img = artRelDir + nnn + '.webp';
-          totalArtCount += 1;
-          totalArtBytes += fs.statSync(bundledArt).size;
-        } else {
-          p.img = relImgPrefix + nnn + '.webp';
-        }
-      } else {
-        p.img = relImgPrefix + nnn + '.webp';
-        const diskImg = path.join(PUB, p.img);
-        if (fs.existsSync(diskImg)) {
-          totalArtCount += 1;
-          totalArtBytes += fs.statSync(diskImg).size;
+    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+  }
+  vols[k] = book;
+  volsEn[k] = buildBookEn({
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.titlesFile,
+  });
+
+  // Cilt 4 ve 4.5 için ham görsel klasörü gitignore'da olduğundan mevcut gömülü data URI'leri koru
+  if (k === '4' || k === '4.5') {
+    art[k] = { ...(existingArt[k] || {}) };
+    const diskDir = path.join(ROOT, cfg.imgDir);
+    if (fs.existsSync(diskDir)) {
+      for (const p of book.pages) {
+        if (!p.art) continue;
+        const pad = String(p.n).padStart(3, '0');
+        const f = path.join(diskDir, `${pad}.webp`);
+        if (fs.existsSync(f)) {
+          art[k][pad] = 'data:image/webp;base64,' + fs.readFileSync(f).toString('base64');
         }
       }
-    } else {
-      p.img = relImgPrefix + nnn + '.webp';
     }
-    delete p.en;
   }
-
-  const jsonRel = `bundles/book-${volKey}.json`;
-  const jsRel = `bundles/book-${volKey}.js`;
-  const enJsonRel = `bundles/bundle-en-${volKey}.json`;
-  const enJsRel = `bundles/bundle-en-${volKey}.js`;
-
-  const rawJson = JSON.stringify(book);
-  const rawEnJson = JSON.stringify(bookEn);
-  const volHash = crypto.createHash('sha1').update(rawJson).digest('hex').slice(0, 12);
-  const enHash = crypto.createHash('sha1').update(rawEnJson).digest('hex').slice(0, 12);
-  hashAccumulator.update(`${volKey}:${volHash}:${enHash};`);
-
-  fs.writeFileSync(path.join(PUB, jsonRel), rawJson);
-  fs.writeFileSync(path.join(PUB, enJsonRel), rawEnJson);
-
-  const jsBody =
-    '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-    '(window.ALYA_CHUNKS=window.ALYA_CHUNKS||{})[' +
-    JSON.stringify(volKey) +
-    ']=' +
-    rawJson +
-    ';\n';
-  fs.writeFileSync(path.join(PUB, jsRel), jsBody);
-
-  const enJsBody =
-    '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-    '(window.ALYA_EN_CHUNKS=window.ALYA_EN_CHUNKS||{})[' +
-    JSON.stringify(volKey) +
-    ']=' +
-    rawEnJson +
-    ';\n';
-  fs.writeFileSync(path.join(PUB, enJsRel), enJsBody);
-
-  manifestVolumes[volKey] = {
-    volume: book.volume,
-    total: book.total,
-    chapters: book.chapters.length,
-    toc: book.chapters.map((c) => {
-      const rawLabel = String(c.label || '');
-      const numMatch = rawLabel.match(/^Bölüm\s+(\d+)$/);
-      const shortLabel = numMatch ? Number(numMatch[1]) : rawLabel;
-      const ttl = c.title || '';
-      if (c.pending) return [c.page, shortLabel, ttl, 1];
-      return ttl ? [c.page, shortLabel, ttl] : [c.page, shortLabel];
-    }),
-    ...(book.fullScans ? { fullScans: true } : {}),
-    hash: volHash,
-    enHash,
-    json: jsonRel,
-    js: jsRel,
-    enJson: enJsonRel,
-    enJs: enJsRel,
-  };
-
-  const paras = book.pages.reduce((acc, p) => acc + p.tr.length, 0);
-  const enPages = Object.keys(bookEn.pages).length;
-  console.log(
-    `  Cilt ${volKey.padEnd(4)}:`,
-    `${String(book.total).padStart(3)} sayfa |`,
-    `${String(paras).padStart(4)} TR paragraf |`,
-    `${String(enPages).padStart(3)} EN sayfa |`,
-    `${String(book.chapters.length).padStart(2)} bölüm |`,
-    `TR ${(Buffer.byteLength(rawJson) / 1024).toFixed(1)} KB + EN ${(Buffer.byteLength(rawEnJson) / 1024).toFixed(1)} KB`
-  );
 }
 
-const version = hashAccumulator.digest('hex').slice(0, 12);
-const order = VOLUME_KEYS.filter((k) => Boolean(manifestVolumes[k]));
-const defaultVol = manifestVolumes['4'] ? '4' : order[0] || '4';
-const manifest = {
-  version,
-  defaultVol,
-  order,
-  volumes: manifestVolumes,
-};
+// cilt başına ayrı JSON parçaları (ilk yükleme hafif olsun; p.en bundle-en-<cilt>.json parçasında)
+fs.mkdirSync(BOOKS_DIR, { recursive: true });
+const manifestVols = {};
+for (const [k, book] of Object.entries(vols)) {
+  const bookRaw = JSON.stringify(book);
+  const enRaw = JSON.stringify(volsEn[k]);
+  const bookHash = crypto.createHash('sha1').update(bookRaw).digest('hex').slice(0, 12);
+  const enHash = crypto.createHash('sha1').update(enRaw).digest('hex').slice(0, 12);
+  fs.writeFileSync(path.join(BOOKS_DIR, 'v' + k + '.json'), bookRaw);
+  fs.writeFileSync(path.join(BOOKS_DIR, 'bundle-en-' + k + '.json'), enRaw);
+  const artFile = path.join(BOOKS_DIR, 'art-' + k + '.json');
+  if (art[k] && Object.keys(art[k]).length) {
+    fs.writeFileSync(artFile, JSON.stringify(art[k]));
+  } else if (fs.existsSync(artFile)) {
+    fs.unlinkSync(artFile);
+  }
+  manifestVols[k] = {
+    label: book.volume || 'Cilt ' + k,
+    total: book.total,
+    hash: bookHash,
+    enHash,
+    chapters: book.chapters,
+  };
+}
 
-const manifestPath = path.join(BUNDLES_DIR, 'manifest.js');
-const manifestBody =
+const raw = JSON.stringify({ vols: manifestVols });
+const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+
+const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-  'window.ALYA_MANIFEST=' +
-  JSON.stringify(manifest) +
-  ';\n';
+  '/* yalnızca cilt manifesti; metin public/books/v<CİLT>.json dosyalarından yüklenir */\n' +
+  'window.ALYA_BUNDLE=' + raw + ';\n' +
+  'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
 
-fs.writeFileSync(manifestPath, manifestBody);
+fs.writeFileSync(OUT, body);
 
-// Eski bloklayıcı tek parça paketleri ve geçici books/ dizinini kaldır
-fs.rmSync(LEGACY_BUNDLE, { force: true });
-fs.rmSync(LEGACY_ART, { force: true });
-fs.rmSync(path.join(PUB, 'books'), { recursive: true, force: true });
+const artIndex = Object.fromEntries(
+  Object.entries(art).map(([k, v]) => {
+    const count = Object.keys(v).length;
+    return [k, count > 0 ? count : existing.index[k] || 0];
+  })
+);
+const artBody =
+  '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
+  'window.ALYA_ART_INDEX=' + JSON.stringify(artIndex) + ';\n';
+fs.writeFileSync(ART_OUT, artBody);
 
 console.log(
-  'manifest:',
-  path.relative(ROOT, manifestPath),
-  Buffer.byteLength(manifestBody) + ' B',
-  '| sürüm:',
-  version
+  'illüstrasyon (gömülü Cilt 4/4.5):',
+  Object.values(art).reduce((a, o) => a + Object.keys(o).length, 0),
+  'görsel |',
+  (artBody.length / 1048576).toFixed(2),
+  'MB'
 );
-console.log(
-  'illüstrasyon:',
-  totalArtCount,
-  'WebP görsel |',
-  (totalArtBytes / 1048576).toFixed(2) + ' MB (istek üzerine tembel yüklenir)'
-);
+const kb = (body.length / 1024).toFixed(0);
+console.log('yazıldı:', path.relative(ROOT, OUT), kb + ' KB', '| sürüm:', hash);
+for (const [k, b] of Object.entries(vols)) {
+  const paras = b.pages.reduce((a, p) => a + p.tr.length, 0);
+  console.log('  Cilt ' + k + ':', b.total, 'sayfa |', paras, 'paragraf |', b.chapters.length, 'bölüm');
+}

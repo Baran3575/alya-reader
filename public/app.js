@@ -64,14 +64,7 @@
 
   const $ = (id) => document.getElementById(id);
   const reader = $('reader');
-
-  const CACHE_NAME = 'alya-v4';
-  const bookCache = new Map();
-  const inflightBooks = new Map();
-  const enCache = new Map();
-  const inflightEn = new Map();
-  const enFailed = new Set();
-  let loadSeq = 0;
+  const volButtons = Array.from(document.querySelectorAll('#volSelector [data-vol]'));
 
   const LS = {
     get(k, d) {
@@ -89,27 +82,20 @@
     },
   };
 
-  function purgeLegacyBooks() {
-    try {
-      const stale = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && (k.startsWith('alya4:book:') || k.startsWith('alya4:bookver:'))) {
-          stale.push(k);
-        }
-      }
-      for (const k of stale) localStorage.removeItem(k);
-    } catch {}
-  }
-  purgeLegacyBooks();
+  const CACHE_NAME = 'alya-v4';
+  try {
+    const stale = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('alya4:book:') || k.startsWith('alya4:bookver:'))) stale.push(k);
+    }
+    for (const k of stale) localStorage.removeItem(k);
+  } catch {}
 
-  const manifest = () => window.ALYA_MANIFEST || { defaultVol: '4', volumes: {} };
-
-  // URL sorgusu (?vol=9.5&page=12) ile doğrudan cilt/sayfa açma desteği
-  const searchStr = (window.location && window.location.search) || '';
-  const urlParams = typeof URLSearchParams !== 'undefined' ? new URLSearchParams(searchStr) : null;
-  const initialUrlVol = urlParams ? urlParams.get('vol') || urlParams.get('v') : null;
-  const initialUrlPage = urlParams ? Number(urlParams.get('page') || urlParams.get('p') || 0) : 0;
+  // URL sorgusu (?vol=9.5 veya #vol=12) ile doğrudan cilt açma desteği
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialUrlVol = urlParams.get('vol') || urlParams.get('v');
+  const initialUrlPage = Number(urlParams.get('page') || urlParams.get('p') || 0);
 
   const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
   const state = {
@@ -117,30 +103,20 @@
     mode: LS.get('mode', 'text'),
     theme: LS.get('theme', prefersLight ? 'light' : 'dark'),
     size: LS.get('size', 1.06),
-    vol: initialUrlVol || LS.get('vol', manifest().defaultVol || '4'),
+    vol: initialUrlVol || LS.get('vol', '4'),
     book: null,
     chapter: 0,
   };
-  if (manifest().volumes && Object.keys(manifest().volumes).length > 0 && !manifest().volumes[state.vol]) {
-    state.vol = manifest().defaultVol || Object.keys(manifest().volumes)[0] || '4';
-  }
 
   /* ---------------- cilt ---------------- */
-  function switchVolume(v, targetPage) {
-    const key = String(v);
-    if (key === String(state.vol)) {
-      if (targetPage && targetPage > 0) goPage(targetPage);
-      return Promise.resolve();
-    }
+  function switchVolume(v) {
+    if (v === state.vol) return Promise.resolve();
     LS.set('page:' + state.vol, state.page);
-    state.vol = key;
-    LS.set('vol', key);
-    state.page = targetPage && targetPage > 0 ? targetPage : LS.get('page:' + key, 1);
+    state.vol = v;
+    LS.set('vol', v);
+    state.page = LS.get('page:' + v, 1);
     return load().catch((err) => {
-      const p = document.createElement('p');
-      p.className = 'empty-note';
-      p.textContent = 'Cilt ' + key + ' yüklenemedi: ' + err.message;
-      reader.replaceChildren(p);
+      reader.innerHTML = '<p class="empty-note">Cilt ' + v + ' yüklenemedi: ' + err.message + '</p>';
     });
   }
 
@@ -158,78 +134,6 @@
     '4': 'Cilt 4', '4.5': 'Cilt 4.5', '5': 'Cilt 5', '6': 'Cilt 6', '7': 'Cilt 7',
     '8': 'Cilt 8', '9': 'Cilt 9', '9.5': 'Cilt 9.5', '10': 'Cilt 10', '11': 'Cilt 11', '12': 'Cilt 12',
   };
-
-  function orderedVolumeKeys() {
-    const m = manifest();
-    const vols = m.volumes || {};
-    if (Array.isArray(m.order) && m.order.length > 0) {
-      return m.order.filter((k) => Boolean(vols[k]));
-    }
-    const keys = Object.keys(vols);
-    if (keys.length > 0) return keys.sort((a, b) => parseFloat(a) - parseFloat(b));
-    return Object.keys(volTitle);
-  }
-
-  function getVolChapters(volKey) {
-    const k = String(volKey);
-    if (state.book && String(state.vol) === k && Array.isArray(state.book.chapters)) {
-      return state.book.chapters;
-    }
-    if (bookCache.has(k) && Array.isArray(bookCache.get(k).chapters)) {
-      return bookCache.get(k).chapters;
-    }
-    const entry = manifest().volumes && manifest().volumes[k];
-    if (entry && Array.isArray(entry.toc)) {
-      return entry.toc.map((row) => {
-        const label = typeof row[1] === 'number' ? 'Bölüm ' + row[1] : String(row[1] || '');
-        return {
-          page: row[0],
-          label,
-          title: row[2] || '',
-          ...(row[3] ? { pending: true } : {}),
-        };
-      });
-    }
-    return [];
-  }
-
-  function getVolTotalPages(volKey) {
-    const k = String(volKey);
-    if (state.book && String(state.vol) === k) return state.book.total;
-    if (bookCache.has(k)) return bookCache.get(k).total;
-    const entry = manifest().volumes && manifest().volumes[k];
-    return (entry && entry.total) || 0;
-  }
-
-  function getVolContainer() {
-    return $('volSelector') || $('volSeg') || document.querySelector('.seg-vol');
-  }
-
-  function initVolumeButtons() {
-    const seg = getVolContainer();
-    if (!seg) return;
-    const vols = manifest().volumes || {};
-    const keys = orderedVolumeKeys();
-    if (keys.length > 0) {
-      seg.innerHTML = '';
-      for (const k of keys) {
-        const btn = document.createElement('button');
-        btn.id = 'vol' + k.replace(/[^a-zA-Z0-9]/g, '');
-        btn.dataset.vol = k;
-        btn.className = 'seg-btn' + (k === String(state.vol) ? ' is-on' : '');
-        btn.type = 'button';
-        btn.title = (vols[k] && vols[k].volume) || volTitle[k] || 'Cilt ' + k;
-        btn.textContent = k;
-        btn.addEventListener('click', () => switchVolume(k));
-        seg.appendChild(btn);
-      }
-      return;
-    }
-    seg.querySelectorAll('[data-vol]').forEach((btn) => {
-      btn.addEventListener('click', () => switchVolume(btn.dataset.vol));
-    });
-  }
-  initVolumeButtons();
 
   function readSet(vol) {
     const v = LS.get('read:' + vol, []);
@@ -265,7 +169,7 @@
     $('chBtn').setAttribute('aria-expanded', 'true');
     $('libActions').hidden = kind !== 'ch';
     $('libBack').hidden = !(kind === 'ch' && volumeKey);
-    buildList(libVol);
+    buildList(volumeKey);
     window.scrollTo(0, 0);
     measureChrome();
   }
@@ -283,99 +187,61 @@
     libList.innerHTML = '';
     if (libKind === 'vol') {
       $('libTitle').textContent = 'Ciltler';
-      for (const key of orderedVolumeKeys()) {
-        const chs = getVolChapters(key);
-        const entry = manifest().volumes && manifest().volumes[key];
-        const total = chs.length || (entry && entry.chapters) || 0;
+      for (const key of Object.keys(volTitle)) {
+        const total = (window.ALYA_BUNDLE?.vols?.[key]?.chapters || []).length;
         const read = readCount(key).length;
         const card = document.createElement('button');
         card.type = 'button';
-        card.dataset.vol = key;
         card.className = 'lib-card' + (String(state.vol) === key ? ' is-current' : '');
-        const numSpan = document.createElement('span');
-        numSpan.className = 'lib-num';
-        numSpan.textContent = key;
-        const infoSpan = document.createElement('span');
-        infoSpan.className = 'lib-info';
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'lib-name';
-        nameSpan.textContent = (entry && entry.volume) || volTitle[key] || 'Cilt ' + key;
-        const metaSpan = document.createElement('span');
-        metaSpan.className = 'lib-meta';
-        metaSpan.textContent = total + ' bölüm · ' + read + '/' + total + ' okundu';
-        infoSpan.append(nameSpan, metaSpan);
-        const goSpan = document.createElement('span');
-        goSpan.className = 'lib-go';
-        goSpan.setAttribute('aria-hidden', 'true');
-        goSpan.textContent = '›';
-        card.append(numSpan, infoSpan, goSpan);
+        card.innerHTML =
+          '<span class="lib-num">' + key + '</span>' +
+          '<span class="lib-info">' +
+          '<span class="lib-name">Cilt ' + key + '</span>' +
+          '<span class="lib-meta">' + total + ' bölüm · ' + read + '/' + total + ' okundu</span>' +
+          '</span>' +
+          '<span class="lib-go" aria-hidden="true">›</span>';
         card.addEventListener('click', () => showLibrary('ch', key));
         libList.appendChild(card);
       }
       return;
     }
 
-    const vk = String(volumeKey || state.vol);
-    $('libTitle').textContent = volTitle[vk] || 'Cilt ' + vk;
-    const list = getVolChapters(vk);
-    if (list.length === 0 && !bookCache.has(vk)) {
-      readBook(vk)
-        .then(() => {
-          if (libOpen && libKind === 'ch' && libVol === vk) chListFor(vk, getVolChapters(vk));
-        })
-        .catch(() => {});
-      return;
-    }
-    chListFor(vk, list);
+    $('libTitle').textContent = 'Cilt ' + volumeKey;
+    const list = (volumeKey === String(state.vol) ? chapters() : (window.ALYA_BUNDLE?.vols?.[volumeKey]?.chapters || []));
+    chListFor(volumeKey, list);
   }
 
   function chListFor(volumeKey, list) {
     libList.innerHTML = '';
-    const volTotalPages = getVolTotalPages(volumeKey);
     list.forEach((c, i) => {
       const label = (c.label || 'Bölüm ' + (i + 1)).replace(/^Cilt [\d.]+ · /, '');
       const title = c.title || '';
       const read = isRead(volumeKey, i);
-      const range = c.page
-        ? (() => {
-            const st = c.page;
-            const nxt = list[i + 1];
-            const en = nxt ? nxt.page - 1 : volTotalPages || st;
-            return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
-          })()
-        : '';
+      const range =
+        volumeKey === String(state.vol) && c.page
+          ? (() => {
+              const [st, en] = chapterRange(i);
+              return c.pending ? 'yakında' : st === en ? 's. ' + st : 's. ' + st + '–' + en;
+            })()
+          : '';
       const row = document.createElement('div');
-      row.className =
-        'lib-row' +
-        (read ? ' is-read' : '') +
+      row.className = 'lib-row' + (read ? ' is-read' : '') +
         (volumeKey === String(state.vol) && i === state.chapter ? ' is-current' : '');
 
       const main = document.createElement('button');
       main.type = 'button';
       main.className = 'lib-main';
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'lib-name';
-      nameSpan.textContent = label;
-      main.appendChild(nameSpan);
-      if (title && title !== label) {
-        const subSpan = document.createElement('span');
-        subSpan.className = 'lib-sub';
-        subSpan.textContent = title;
-        main.appendChild(subSpan);
-      }
-      if (range) {
-        const metaSpan = document.createElement('span');
-        metaSpan.className = 'lib-meta';
-        metaSpan.textContent = range;
-        main.appendChild(metaSpan);
-      }
+      main.innerHTML =
+        '<span class="lib-name">' + label + '</span>' +
+        (title && title !== label ? '<span class="lib-sub">' + title + '</span>' : '') +
+        (range ? '<span class="lib-meta">' + range + '</span>' : '');
       main.addEventListener('click', () => {
-        hideLibrary();
         if (volumeKey !== String(state.vol)) {
-          switchVolume(volumeKey, c.page);
+          switchVolume(volumeKey).then(() => goChapter(i));
         } else {
           goChapter(i);
         }
+        hideLibrary();
       });
 
       const check = document.createElement('button');
@@ -399,18 +265,30 @@
   }
 
   $('volBtn').addEventListener('click', () => {
-    if (libOpen && libKind === 'vol') hideLibrary();
+    if (libOpen) hideLibrary();
     else showLibrary('vol');
   });
   $('chBtn').addEventListener('click', () => {
-    if (libOpen && libKind === 'ch' && libVol === String(state.vol)) hideLibrary();
+    if (libOpen) hideLibrary();
     else showLibrary('ch', String(state.vol));
   });
   $('libBack').addEventListener('click', () => showLibrary('vol'));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && libOpen) {
+      if (libKind === 'ch') showLibrary('vol');
+      else hideLibrary();
+    }
+  });
   $('markAllBtn').addEventListener('click', () => {
-    getVolChapters(libVol).forEach((c, i) => {
-      if (!c.pending) setRead(libVol, i, true);
-    });
+    if (libVol === String(state.vol)) {
+      chapters().forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    } else {
+      (window.ALYA_BUNDLE?.vols?.[libVol]?.chapters || []).forEach((c, i) => {
+        if (!c.pending) setRead(libVol, i, true);
+      });
+    }
     buildList(libVol);
     markTocRead();
   });
@@ -420,9 +298,14 @@
     markTocRead();
   });
 
+  function volTotal(key) {
+    const m = window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[key];
+    return m ? { total: m.chapters ? m.chapters.length : 0 } : { total: 0 };
+  }
+
   function syncPickers() {
-    $('volLabel').textContent = (state.book && state.book.volume) || volTitle[String(state.vol)] || 'Cilt ' + state.vol;
-    const ch = state.book ? chapters()[state.chapter] : null;
+    $('volLabel').textContent = volTitle[String(state.vol)] || 'Cilt ' + state.vol;
+    const ch = chapters()[state.chapter];
     $('chLabel').textContent = ch ? (ch.title ? ch.label + ' · ' + ch.title : ch.label) : 'Bölüm';
   }
 
@@ -455,215 +338,224 @@
   };
 
   /* ---------------- veri ---------------- */
-  /* görsel: göreli WebP dosya yolu */
-  function imgSrc(p) {
-    return p && p.img ? String(p.img).replace(/^\/+/, '') : '';
+  /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
+  function imgSrc(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    if (pack && pack[key]) return pack[key];
+    return String(p.img || '').replace(/^\/+/, '');
   }
 
-  function hasFullScans(vol) {
-    const k = String(vol || state.vol);
-    if (state.book && k === String(state.vol) && typeof state.book.fullScans === 'boolean') {
-      return state.book.fullScans;
-    }
-    if (bookCache.has(k) && typeof bookCache.get(k).fullScans === 'boolean') {
-      return bookCache.get(k).fullScans;
-    }
-    const entry = manifest().volumes && manifest().volumes[k];
-    return Boolean(entry && entry.fullScans);
+  function hasEmbeddedArt(p, vol) {
+    const key = String(p.n).padStart(3, '0');
+    const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
+    return Boolean(pack && pack[key]);
   }
 
-  function loadChunkScript(globalProp, v, jsPath) {
-    return new Promise((resolve, reject) => {
-      const store = window[globalProp];
-      if (store && store[v]) {
-        const hit = store[v];
-        delete store[v];
-        return resolve(hit);
-      }
-      const s = document.createElement('script');
-      s.src = jsPath;
-      s.async = true;
-      s.onload = () => {
-        s.remove();
-        const nextStore = window[globalProp];
-        const hit = nextStore && nextStore[v];
-        if (hit) {
-          delete nextStore[v];
-          resolve(hit);
-        } else {
-          reject(new Error('Paket verisi bulunamadı: ' + v));
+  /* illüstrasyonlar cilt başına parça hâlinde; ilk kullanımda yüklenir */
+  const artLoading = new Map();
+  function ensureArt(v) {
+    window.ALYA_ART = window.ALYA_ART || {};
+    if (window.ALYA_ART[v] && Object.keys(window.ALYA_ART[v]).length) return Promise.resolve();
+    if (window.ALYA_ART_INDEX && !window.ALYA_ART_INDEX[v]) return Promise.resolve();
+    if (artLoading.has(v)) return artLoading.get(v);
+    const p = fetch('books/art-' + encodeURIComponent(v) + '.json')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((pack) => {
+        if (pack) window.ALYA_ART[v] = pack;
+      })
+      .catch(() => {})
+      .finally(() => artLoading.delete(v));
+    artLoading.set(v, p);
+    return p;
+  }
+
+  /* veri kaynakları: bellek (Map) -> CacheStorage -> cilt parçası (books/v<cilt>.json) -> sunucu API */
+  function bundleMeta(v) {
+    return (window.ALYA_BUNDLE && window.ALYA_BUNDLE.vols && window.ALYA_BUNDLE.vols[v]) || null;
+  }
+
+  function bundleBook(v) {
+    const b = bundleMeta(v);
+    return b && Array.isArray(b.pages) ? b : null;
+  }
+
+  function canUseCacheStorage() {
+    return typeof window !== 'undefined' && 'caches' in window && /^https?:$/.test(location.protocol);
+  }
+
+  async function readCacheJson(relUrl) {
+    if (!canUseCacheStorage()) return null;
+    try {
+      const fullUrl = new URL(relUrl, location.href).toString();
+      const cache = await caches.open(CACHE_NAME);
+      const hit = await cache.match(fullUrl);
+      if (!hit) return null;
+      return await hit.json();
+    } catch {
+      return null;
+    }
+  }
+
+  async function writeCacheJson(relUrl, rawText) {
+    if (!canUseCacheStorage()) return;
+    try {
+      const fullUrl = new URL(relUrl, location.href);
+      const cache = await caches.open(CACHE_NAME);
+      if (fullUrl.search) {
+        const keys = await cache.keys();
+        for (const k of keys) {
+          const ku = new URL(typeof k === 'string' ? k : k.url);
+          if (ku.pathname === fullUrl.pathname && ku.search !== fullUrl.search) {
+            await cache.delete(k);
+          }
         }
-      };
-      s.onerror = () => {
-        s.remove();
-        reject(new Error('Paket betiği yüklenemedi: ' + jsPath));
-      };
-      document.head.appendChild(s);
-    });
-  }
-
-  async function fetchJsonCached(relUrl) {
-    const canCache = typeof caches !== 'undefined' && location.protocol.startsWith('http');
-    const absUrl = new URL(relUrl, location.href).href;
-    if (canCache) {
-      try {
-        const cache = await caches.open(CACHE_NAME);
-        const hit = await cache.match(absUrl);
-        if (hit && hit.ok) return await hit.json();
-      } catch {}
-    }
-    const res = await fetch(relUrl);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    if (canCache) {
-      try {
-        const copy = res.clone();
-        const cache = await caches.open(CACHE_NAME);
-        if (typeof cache.keys === 'function' && typeof cache.delete === 'function') {
-          const targetPath = new URL(absUrl).pathname;
-          const keys = await cache.keys();
-          await Promise.all(
-            keys
-              .filter((r) => {
-                const u = typeof r === 'string' ? r : r.url;
-                return u !== absUrl && new URL(u).pathname === targetPath;
-              })
-              .map((r) => cache.delete(r)),
-          );
-        }
-        await cache.put(absUrl, copy);
-      } catch {}
-    }
-    return await res.json();
-  }
-
-  function hydrateBookEn(v, enData) {
-    const book = bookCache.get(v);
-    const pageMap = (enData && enData.pages) || {};
-    if (book && Array.isArray(book.pages)) {
-      for (const p of book.pages) {
-        const lines = pageMap[String(p.n)];
-        p.en = Array.isArray(lines) ? lines : [];
       }
-    }
+      await cache.put(
+        fullUrl.toString(),
+        new Response(rawText, { headers: { 'Content-Type': 'application/json; charset=utf-8' } })
+      );
+    } catch {}
   }
 
-  /* veri kaynakları: bellek içi Map -> CacheStorage / tembel JSON paketi -> file:// JS yedeği -> sunucu */
+  const memBooks = new Map();
+  const inflightBooks = new Map();
+  const memEn = new Map();
+  const inflightEn = new Map();
+  const failedEn = new Set();
+  const missingScans = new Set();
+
   async function readBook(v) {
     const key = String(v);
-    if (bookCache.has(key)) return bookCache.get(key);
-    if (window.ALYA_CHUNKS && window.ALYA_CHUNKS[key]) {
-      const preloaded = window.ALYA_CHUNKS[key];
-      delete window.ALYA_CHUNKS[key];
-      bookCache.set(key, preloaded);
-      if (enCache.has(key)) hydrateBookEn(key, enCache.get(key));
-      return preloaded;
-    }
+    if (memBooks.has(key)) return memBooks.get(key);
     if (inflightBooks.has(key)) return inflightBooks.get(key);
 
     const task = (async () => {
-      const entry = (manifest().volumes && manifest().volumes[key]) || null;
-      const jsonRel = (entry && entry.json) || 'bundles/book-' + key + '.json';
-      const jsRel = (entry && entry.js) || 'bundles/book-' + key + '.js';
-      const versionedJson = entry && entry.hash ? jsonRel + '?v=' + encodeURIComponent(entry.hash) : jsonRel;
+      const meta = bundleMeta(key);
+      const ver = (meta && meta.hash) || window.ALYA_BUNDLE_VERSION || '';
+      const chunkUrl = 'books/v' + encodeURIComponent(key) + '.json' + (ver ? '?v=' + encodeURIComponent(ver) : '');
 
+      const cached = await readCacheJson(chunkUrl);
+      if (cached && Array.isArray(cached.pages)) {
+        memBooks.set(key, cached);
+        return cached;
+      }
+
+      // 1) cilt parçası (ilk yüklemede yalnızca açılan cilt iner; p.en içermez)
       let book = null;
       try {
-        book = await fetchJsonCached(versionedJson);
-      } catch {
-        try {
-          book = await loadChunkScript('ALYA_CHUNKS', key, jsRel);
-        } catch (scriptErr) {
-          if (location.protocol.startsWith('http')) {
-            book = await fetchJsonCached('api/book?v=' + encodeURIComponent(key));
-          } else {
-            throw scriptErr;
+        const res = await fetch(chunkUrl);
+        if (res.ok) {
+          const raw = await res.text();
+          const parsed = JSON.parse(raw);
+          if (parsed && Array.isArray(parsed.pages)) {
+            book = parsed;
+            await writeCacheJson(chunkUrl, raw);
           }
         }
+      } catch {}
+
+      // 2) gömülü tam paket yedeği
+      if (!book) book = bundleBook(key);
+
+      // 3) sunucu API
+      if (!book) {
+        try {
+          const res = await fetch('api/book?v=' + encodeURIComponent(key));
+          if (res.ok) {
+            const raw = await res.text();
+            book = JSON.parse(raw);
+            await writeCacheJson(chunkUrl, raw);
+          }
+        } catch {}
       }
-      bookCache.set(key, book);
-      if (enCache.has(key)) hydrateBookEn(key, enCache.get(key));
+      if (!book) throw new Error('Cilt ' + key + ' yüklenemedi');
+
+      memBooks.set(key, book);
       return book;
-    })();
+    })().finally(() => inflightBooks.delete(key));
 
     inflightBooks.set(key, task);
-    try {
-      return await task;
-    } finally {
-      inflightBooks.delete(key);
-    }
+    return task;
   }
 
-  /* "Orijinal" modu İngilizce metin parçası: yalnızca ihtiyaç duyulduğunda tembel yüklenir */
-  async function readBookEn(v) {
+  /* "Orijinal" görünümü için tembel İngilizce parça (books/bundle-en-<cilt>.json) */
+  function getEnLines(v, pageNum) {
+    const pack = memEn.get(String(v));
+    if (!pack || !pack.pages) return null;
+    const lines = pack.pages[String(pageNum)];
+    return Array.isArray(lines) && lines.length ? lines : null;
+  }
+
+  async function ensureEn(v) {
     const key = String(v);
-    if (enCache.has(key)) {
-      const cached = enCache.get(key);
-      hydrateBookEn(key, cached);
-      return cached;
-    }
-    if (window.ALYA_EN_CHUNKS && window.ALYA_EN_CHUNKS[key]) {
-      const preloaded = window.ALYA_EN_CHUNKS[key];
-      delete window.ALYA_EN_CHUNKS[key];
-      enCache.set(key, preloaded);
-      enFailed.delete(key);
-      hydrateBookEn(key, preloaded);
-      return preloaded;
-    }
+    if (memEn.has(key)) return memEn.get(key);
     if (inflightEn.has(key)) return inflightEn.get(key);
 
     const task = (async () => {
-      const entry = (manifest().volumes && manifest().volumes[key]) || null;
-      const enJsonRel = (entry && entry.enJson) || 'bundles/bundle-en-' + key + '.json';
-      const enJsRel = (entry && entry.enJs) || 'bundles/bundle-en-' + key + '.js';
-      const versionedEnJson =
-        entry && entry.enHash ? enJsonRel + '?v=' + encodeURIComponent(entry.enHash) : enJsonRel;
+      const meta = bundleMeta(key);
+      const ver = (meta && meta.enHash) || window.ALYA_BUNDLE_VERSION || '';
+      const enUrl = 'books/bundle-en-' + encodeURIComponent(key) + '.json' + (ver ? '?v=' + encodeURIComponent(ver) : '');
 
-      let enData = null;
+      const cached = await readCacheJson(enUrl);
+      if (cached && cached.pages) {
+        failedEn.delete(key);
+        memEn.set(key, cached);
+        return cached;
+      }
+
+      let pack = null;
       try {
-        enData = await fetchJsonCached(versionedEnJson);
-      } catch {
-        try {
-          enData = await loadChunkScript('ALYA_EN_CHUNKS', key, enJsRel);
-        } catch (scriptErr) {
-          if (location.protocol.startsWith('http')) {
-            enData = await fetchJsonCached('api/book-en?v=' + encodeURIComponent(key));
-          } else {
-            throw scriptErr;
+        const res = await fetch(enUrl);
+        if (res.ok) {
+          const raw = await res.text();
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.pages) {
+            pack = parsed;
+            await writeCacheJson(enUrl, raw);
           }
         }
+      } catch {}
+
+      if (!pack) {
+        try {
+          const res = await fetch('api/book-en?v=' + encodeURIComponent(key));
+          if (res.ok) {
+            const raw = await res.text();
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.pages) {
+              pack = parsed;
+              await writeCacheJson(enUrl, raw);
+            }
+          }
+        } catch {}
       }
-      enCache.set(key, enData);
-      enFailed.delete(key);
-      hydrateBookEn(key, enData);
-      return enData;
-    })();
+
+      if (pack) {
+        failedEn.delete(key);
+        memEn.set(key, pack);
+      } else {
+        failedEn.add(key);
+      }
+      return pack;
+    })().finally(() => inflightEn.delete(key));
 
     inflightEn.set(key, task);
-    try {
-      return await task;
-    } finally {
-      inflightEn.delete(key);
-    }
+    return task;
   }
 
   async function load() {
-    const seq = ++loadSeq;
-    const targetVol = String(state.vol);
-    const loadedBook = await readBook(targetVol);
-    if (seq !== loadSeq) return;
-    state.book = loadedBook;
+    state.book = await readBook(state.vol);
+    await ensureArt(state.vol);
     const saved = LS.get('page:' + state.vol, 1);
     if (state.page < 1 || state.page > state.book.total) state.page = saved;
 
     $('brandSub').textContent = state.book.volume + ' · Türkçe';
     if ($('volLabel')) $('volLabel').textContent = state.book.volume;
-    const seg = getVolContainer();
-    const btns = seg ? Array.from(seg.children) : Array.from(document.querySelectorAll('.seg-vol .seg-btn'));
-    btns.forEach((btn) => {
-      if (!btn || !btn.classList) return;
-      const on = btn.dataset && btn.dataset.vol === String(state.vol);
-      btn.classList.toggle('is-on', Boolean(on));
-      btn.setAttribute('aria-current', on ? 'true' : 'false');
+    volButtons.forEach((btn) => {
+      const active = btn.dataset.vol === state.vol;
+      btn.classList.toggle('is-on', active);
+      btn.setAttribute('aria-current', active ? 'true' : 'false');
     });
     document.title = 'Alya Bazen Duygularını Rusça Saklar · ' + state.book.volume;
 
@@ -748,64 +640,15 @@
     return box;
   }
 
-  const lazyImgObserver =
-    typeof IntersectionObserver !== 'undefined'
-      ? new IntersectionObserver(
-          (entries, obs) => {
-            for (const entry of entries) {
-              if (!entry.isIntersecting) continue;
-              const img = entry.target;
-              obs.unobserve(img);
-              if (img.dataset.src && !img.getAttribute('src')) {
-                img.src = img.dataset.src;
-              }
-            }
-          },
-          { rootMargin: '200px 0px' },
-        )
-      : null;
-
-  function figureFor(p, caption, eager) {
+  function figureFor(p, caption) {
     const fig = document.createElement('figure');
     fig.className = 'page-img';
-    const src = imgSrc(p);
     const img = document.createElement('img');
+    img.src = imgSrc(p);
     img.alt = 'Sayfa ' + p.n;
+    img.loading = 'lazy';
     img.decoding = 'async';
-    img.addEventListener(
-      'load',
-      () => {
-        fig.classList.add('is-loaded');
-        if (
-          typeof caches !== 'undefined' &&
-          location.protocol.startsWith('http') &&
-          !(navigator.serviceWorker && navigator.serviceWorker.controller) &&
-          img.currentSrc
-        ) {
-          caches
-            .open(CACHE_NAME)
-            .then((c) => c.match(img.currentSrc).then((h) => h || c.add(img.currentSrc)))
-            .catch(() => {});
-        }
-        scheduleProgress();
-      },
-      { once: true },
-    );
-    img.addEventListener(
-      'error',
-      () => {
-        fig.classList.add('is-loaded');
-        fig.hidden = true;
-      },
-      { once: true },
-    );
-    if (eager || !lazyImgObserver) {
-      img.src = src;
-    } else {
-      img.loading = 'lazy';
-      img.dataset.src = src;
-      lazyImgObserver.observe(img);
-    }
+    img.addEventListener('load', () => scheduleProgress(), { once: true });
     fig.appendChild(img);
     if (caption) {
       const cap = document.createElement('figcaption');
@@ -813,7 +656,7 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(src, 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
     return fig;
   }
 
@@ -866,46 +709,66 @@
 
     if (ch.pending || (p && p.pending)) {
       sec.appendChild(createPendingNotice(ch));
-    } else if (p && (p.art || hasFullScans(state.vol))) {
-      sec.appendChild(figureFor(p, false, true));
     } else if (p) {
-      if (!enCache.has(state.vol) && !(p.en && p.en.length) && !enFailed.has(state.vol)) {
-        const loadingNote = document.createElement('p');
-        loadingNote.className = 'empty-note';
-        loadingNote.textContent = 'Orijinal İngilizce metin yükleniyor…';
-        sec.appendChild(loadingNote);
-        const targetVol = state.vol;
-        readBookEn(targetVol)
-          .then(() => {
-            if (state.vol === targetVol && state.mode === 'page') renderPage();
-          })
-          .catch(() => {
-            enFailed.add(targetVol);
-            if (state.vol === targetVol && state.mode === 'page') renderPage();
+      const volKey = String(state.vol);
+      const appendEnOrTr = (container) => {
+        const enLines = (p.en && p.en.length ? p.en : getEnLines(volKey, n));
+        if (enLines && enLines.length) {
+          const proseWrap = document.createElement('div');
+          proseWrap.className = 'orig-prose';
+          for (const line of enLines) {
+            const el = document.createElement('p');
+            el.textContent = line;
+            proseWrap.appendChild(el);
+          }
+          container.appendChild(proseWrap);
+          return;
+        }
+        if (!memEn.has(volKey) && !failedEn.has(volKey)) {
+          const loadingNote = document.createElement('p');
+          loadingNote.className = 'empty-note';
+          loadingNote.textContent = 'Orijinal metin yükleniyor…';
+          container.appendChild(loadingNote);
+          ensureEn(volKey).then(() => {
+            if (state.mode === 'page' && String(state.vol) === volKey && state.page === n) renderPage();
           });
-      } else if (p.en && p.en.length) {
-        const proseWrap = document.createElement('div');
-        proseWrap.className = 'orig-prose';
-        for (const line of p.en) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          proseWrap.appendChild(el);
+          return;
         }
-        sec.appendChild(proseWrap);
-      } else if (p.tr && p.tr.length) {
-        for (const line of p.tr) {
-          sec.appendChild(renderParagraph(line));
+        if (p.tr && p.tr.length) {
+          for (const line of p.tr) {
+            const el = document.createElement('p');
+            el.textContent = line;
+            container.appendChild(el);
+          }
         }
+      };
+
+      const hasFullScan =
+        p.art || hasEmbeddedArt(p) || ((volKey === '4' || volKey === '4.5') && !missingScans.has(volKey));
+      if (hasFullScan) {
+        const fig = figureFor(p, false);
+        if (!p.art && !hasEmbeddedArt(p)) {
+          const img = fig.querySelector('img');
+          if (img) {
+            img.addEventListener(
+              'error',
+              () => {
+                missingScans.add(volKey);
+                fig.remove();
+                appendEnOrTr(sec);
+              },
+              { once: true }
+            );
+          }
+        }
+        sec.appendChild(fig);
       } else {
-        const note = document.createElement('p');
-        note.className = 'empty-note';
-        note.textContent = enFailed.has(state.vol)
-          ? 'Orijinal İngilizce metin çevrimdışı önbellekte bulunamadı.'
-          : 'Bu sayfada metin veya illüstrasyon bulunmuyor.';
-        sec.appendChild(note);
+        appendEnOrTr(sec);
       }
     }
     reader.appendChild(sec);
+    syncModeButtons();
+    LS.set('mode', state.mode);
 
     const nav = document.createElement('div');
     nav.className = 'pg-nav';
@@ -927,23 +790,8 @@
     nav.append(bPrev, label, bNext);
     reader.appendChild(nav);
 
-    $('pageRange').value = idx + 1;
-    syncPickers();
-    $('navChapter').textContent = ch.label;
-    $('navPages').textContent = 's. ' + n + ' / ' + state.book.total;
-    $('prevBtn').disabled = n <= 1;
-    $('nextBtn').disabled = n >= state.book.total;
-    $('tocLabel').textContent = ch.label;
-    for (const li of $('tocList').children) {
-      li.classList.toggle('is-current', Number(li.dataset.idx) === idx);
-    }
-    $('modeText').classList.toggle('is-on', false);
-    $('modePage').classList.toggle('is-on', true);
-    $('modeBtn').textContent = 'Orijinal';
-
     LS.set('page', n);
     LS.set('page:' + state.vol, n);
-    LS.set('mode', state.mode);
     paintProgress();
     window.scrollTo({ top: 0 });
   }
@@ -955,7 +803,7 @@
     LS.set('page', target);
     LS.set('page:' + state.vol, target);
     render();
-    prefetch();
+    prefetch(chapterIndex(target));
   }
 
   /* ---------------- çizim (bölüm akışı) ---------------- */
@@ -1008,10 +856,7 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true || (p.tr.length === 0 && hasFullScans(state.vol));
-        if (!isIllustration && p.tr.length === 0) {
-          continue;
-        }
+        const isIllustration = p.art === true || (p.tr.length === 0 && (state.vol === '4' || state.vol === '4.5' || hasEmbeddedArt(p)));
         if (isIllustration) {
           sec.classList.add('pg-art');
           if (p.tr.length) sec.classList.add('has-text');
@@ -1083,7 +928,7 @@
     if (anchorPt) requestAnimationFrame(() => anchorPt.scrollIntoView({ block: 'start' }));
     else window.scrollTo({ top: 0, behavior: 'auto' });
     scheduleProgress();
-    prefetch();
+    prefetch(idx);
   }
 
   /* ---------------- bölüm içi ilerleme ---------------- */
@@ -1149,13 +994,23 @@
   window.addEventListener('scroll', scheduleProgress, { passive: true });
   window.addEventListener('resize', scheduleProgress);
 
-  function prefetch() {
-    if (state.mode !== 'page' || !state.book) return;
-    const nxt = state.book.pages[state.page];
-    if (nxt && !nxt.pending && (nxt.art || hasFullScans(state.vol))) {
-      const i = new Image();
-      i.src = imgSrc(nxt);
+  function prefetch(idx) {
+    const imgs = [];
+    for (let n = chapters()[idx].page; n <= chapterRange(idx)[1]; n++) {
+      const p = state.book.pages[n - 1];
+      if (p && p.art && !p.pending) imgs.push(imgSrc(p));
     }
+    const nxt = chapters()[idx + 1];
+    if (nxt && !nxt.pending) {
+      for (let n = nxt.page; n <= Math.min(nxt.page + 3, state.book.total); n++) {
+        const p = state.book.pages[n - 1];
+        if (p && p.art && !p.pending) imgs.push(imgSrc(p));
+      }
+    }
+    imgs.slice(0, 4).forEach((src) => {
+      const i = new Image();
+      i.src = src;
+    });
   }
 
   /* ---------------- gezinme ---------------- */
@@ -1229,15 +1084,9 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (closeLightbox()) return;
-      if (libOpen) {
-        if (libKind === 'ch') showLibrary('vol');
-        else hideLibrary();
-        return;
-      }
       return toggleToc(false);
     }
-    if (libOpen) return;
-    if (e.target && typeof e.target.matches === 'function' && e.target.matches('input, select, textarea')) return;
+    if (e.target.matches('input, select, textarea')) return;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'j') next();
     else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'k') prev();
     else if (e.key === 't') $('themeBtn').click();
@@ -1271,9 +1120,6 @@
   applyTheme();
   applySize();
   load().catch((err) => {
-    const p = document.createElement('p');
-    p.className = 'empty-note';
-    p.textContent = 'Kitap verisi yüklenemedi: ' + err.message;
-    reader.replaceChildren(p);
+    reader.innerHTML = '<p class="empty-note">Kitap verisi yüklenemedi: ' + err.message + '</p>';
   });
 })();

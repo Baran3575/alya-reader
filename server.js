@@ -30,13 +30,6 @@ const TR_CHAPTER = {
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-function inferVolKey(dataDir) {
-  if (!dataDir || dataDir === 'data') return '4';
-  if (dataDir === 'data45') return '4.5';
-  if (dataDir === 'data95') return '9.5';
-  return String(dataDir).replace(/^data/, '');
-}
-
 const VOLUMES = Object.fromEntries(
   VOLUME_KEYS.map((k) => {
     if (k === '4') {
@@ -44,25 +37,20 @@ const VOLUMES = Object.fromEntries(
         '4',
         {
           key: '4',
-          volKey: '4',
           dataDir: 'data',
-          imgPrefix: 'pages/',
-          artPrefix: 'bundles/art/4/',
+          imgPrefix: '/pages/',
           volume: 'Cilt 4',
           titlesFile: path.join(ROOT, 'data/chapters.json'),
         },
       ];
     }
     const suffix = k.replace('.', '');
-    const relPrefix = `pages${suffix}/`;
     return [
       k,
       {
         key: k,
-        volKey: k,
         dataDir: `data${suffix}`,
-        imgPrefix: relPrefix,
-        artPrefix: k === '4.5' ? 'bundles/art/4.5/' : relPrefix,
+        imgPrefix: `/pages${suffix}/`,
         volume: `Cilt ${k}`,
         titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
       },
@@ -72,13 +60,8 @@ const VOLUMES = Object.fromEntries(
 
 function buildBook(opt = {}) {
   const dataDir = opt.dataDir || 'data';
-  const volKey = String(opt.volKey || opt.key || inferVolKey(dataDir));
-  const defaultPrefix = volKey === '4' ? 'pages/' : `pages${volKey.replace('.', '')}/`;
-  const relImgPrefix = String(opt.imgPrefix || defaultPrefix).replace(/^\/+/, '');
-  const defaultArtPrefix =
-    volKey === '4' || volKey === '4.5' ? `bundles/art/${volKey}/` : relImgPrefix;
-  const artRelDir = String(opt.artPrefix || defaultArtPrefix).replace(/^\/+/, '');
-  const volume = opt.volume || `Cilt ${volKey}`;
+  const imgPrefix = opt.imgPrefix || '/pages/';
+  const volume = opt.volume || 'Cilt 4';
   const titlesFile = opt.titlesFile || path.join(ROOT, dataDir, 'chapters.json');
 
   const source = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'source.json'), 'utf8'));
@@ -91,11 +74,9 @@ function buildBook(opt = {}) {
   } catch {}
 
   const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
-  const fullScans = !hasStructuredChapters && fs.existsSync(path.join(PUB, relImgPrefix, '001.webp'));
 
   const pages = source.map((p) => {
     const key = String(p.page);
-    const nnn = String(p.page).padStart(3, '0');
     const isPending = Boolean(p.pending);
     const trParas = Array.isArray(tr[key]) ? tr[key].filter(Boolean) : [];
     const enParas = String(p.text || '')
@@ -103,14 +84,17 @@ function buildBook(opt = {}) {
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const fileName = String(p.page).padStart(3, '0') + '.webp';
+    const imgUrl = imgPrefix + fileName;
+
     if (hasStructuredChapters) {
-      const relImg = relImgPrefix + nnn + '.webp';
-      const hasDiskImg = fs.existsSync(path.join(PUB, relImg));
+      const relDiskPath = path.join(PUB, imgUrl.replace(/^\/+/, ''));
+      const hasDiskImg = fs.existsSync(relDiskPath);
       const cleanLen = String(p.text || '').replace(/\s+/g, ' ').trim().length;
       const art = !isPending && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
       const item = {
         n: p.page,
-        img: relImg,
+        img: imgUrl,
         tr: isPending ? [] : trParas,
         en: isPending ? [] : enParas,
         art,
@@ -119,7 +103,7 @@ function buildBook(opt = {}) {
       return item;
     }
 
-    // Cilt 4 / Cilt 4.5 davranışı
+    // Geriye dönük Cilt 4 / Cilt 4.5 davranışı
     const words = String(p.text || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
     const alpha = words.filter((w) => /[A-Za-zÇĞİÖŞÜçğıöşü]{3,}/.test(w)).length;
     const usable = words.length >= 6 && alpha / words.length >= 0.4;
@@ -129,15 +113,11 @@ function buildBook(opt = {}) {
       .replace(/Goldenagato.*$/gim, '')
       .replace(/\s+/g, ' ')
       .trim().length;
-    const artFile = path.join(PUB, artRelDir, nnn + '.webp');
-    const scanFile = path.join(PUB, relImgPrefix, nnn + '.webp');
-    const hasArtImg = fs.existsSync(artFile) || fs.existsSync(scanFile);
-    const art = p.page > 3 && cleanLen < 220 && hasArtImg;
-    const img = art && fs.existsSync(artFile) ? artRelDir + nnn + '.webp' : relImgPrefix + nnn + '.webp';
+    const art = p.page > 3 && cleanLen < 220;
 
     return {
       n: p.page,
-      img,
+      img: imgUrl,
       tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
@@ -176,145 +156,109 @@ function buildBook(opt = {}) {
     }
   }
 
-  if (!opt.includeEn) {
-    for (const p of pages) {
-      delete p.en;
-    }
+  const includeEn = opt.includeEn !== false;
+  if (!includeEn) {
+    for (const p of pages) delete p.en;
   }
 
-  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, fullScans, chapters, pages };
+  return { title: 'Alya Bazen Duygularını Rusça Saklar', volume, total: pages.length, chapters, pages };
 }
 
 function buildBookEn(opt = {}) {
   const full = buildBook({ ...opt, includeEn: true });
   const pages = {};
   for (const p of full.pages) {
-    if (Array.isArray(p.en) && p.en.length > 0) {
-      pages[String(p.n)] = p.en;
-    }
+    if (p.en && p.en.length) pages[String(p.n)] = p.en;
   }
   return { volume: full.volume, total: full.total, pages };
 }
 
-function packPayload(obj) {
-  const raw = JSON.stringify(obj);
-  const json = Buffer.from(raw);
-  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
-  return { data: obj, json, gzip: zlib.gzipSync(json), hash };
+function volumeMtimeKey(cfg) {
+  const files = [
+    path.join(ROOT, cfg.dataDir, 'source.json'),
+    path.join(ROOT, cfg.dataDir, 'paragraphs_final.json'),
+    cfg.titlesFile,
+  ];
+  return files
+    .map((f) => {
+      try {
+        return fs.statSync(f).mtimeMs;
+      } catch {
+        return 0;
+      }
+    })
+    .join(':');
 }
 
-function statMtime(p) {
-  try {
-    return fs.statSync(p).mtimeMs;
-  } catch {
-    return 0;
+function packBook(key) {
+  const cfg = VOLUMES[key];
+  const b = buildBook({ ...cfg, includeEn: false });
+  const relPrefix = cfg.imgPrefix.replace(/^\/+/, '');
+  for (const p of b.pages) {
+    p.img = relPrefix + String(p.n).padStart(3, '0') + '.webp';
   }
+  const raw = JSON.stringify(b);
+  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+  const json = Buffer.from(raw);
+  return { book: b, json, gzip: zlib.gzipSync(json), hash, mtime: volumeMtimeKey(cfg) };
 }
 
-function volMtimeSig(cfg) {
-  if (!cfg) return '';
-  return [
-    statMtime(path.join(ROOT, cfg.dataDir, 'source.json')),
-    statMtime(path.join(ROOT, cfg.dataDir, 'paragraphs_final.json')),
-    statMtime(cfg.titlesFile || path.join(ROOT, cfg.dataDir, 'chapters.json')),
-  ].join(':');
-}
-
-function hasVolData(cfg) {
-  return Boolean(
-    cfg &&
-      fs.existsSync(path.join(ROOT, cfg.dataDir, 'source.json')) &&
-      fs.existsSync(path.join(ROOT, cfg.dataDir, 'paragraphs_final.json'))
-  );
+function packBookEn(key) {
+  const cfg = VOLUMES[key];
+  const b = buildBookEn(cfg);
+  const raw = JSON.stringify(b);
+  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+  const json = Buffer.from(raw);
+  return { bookEn: b, json, gzip: zlib.gzipSync(json), hash, mtime: volumeMtimeKey(cfg) };
 }
 
 const BOOKS = {};
+const BOOKS_EN = {};
+
 function getBook(key) {
   const k = VOLUMES[key] ? key : '4';
-  const cfg = VOLUMES[k];
-  const sig = volMtimeSig(cfg);
-  if (!BOOKS[k] || BOOKS[k].sig !== sig) {
-    const packed = packPayload(buildBook(cfg));
-    BOOKS[k] = { book: packed.data, json: packed.json, gzip: packed.gzip, hash: packed.hash, sig };
-  }
+  const mtime = volumeMtimeKey(VOLUMES[k]);
+  if (!BOOKS[k] || BOOKS[k].mtime !== mtime) BOOKS[k] = packBook(k);
   return BOOKS[k];
 }
 
-const BOOKS_EN = {};
 function getBookEn(key) {
   const k = VOLUMES[key] ? key : '4';
-  const cfg = VOLUMES[k];
-  const sig = volMtimeSig(cfg);
-  if (!BOOKS_EN[k] || BOOKS_EN[k].sig !== sig) {
-    const packed = packPayload(buildBookEn(cfg));
-    BOOKS_EN[k] = { bookEn: packed.data, json: packed.json, gzip: packed.gzip, hash: packed.hash, sig };
-  }
+  const mtime = volumeMtimeKey(VOLUMES[k]);
+  if (!BOOKS_EN[k] || BOOKS_EN[k].mtime !== mtime) BOOKS_EN[k] = packBookEn(k);
   return BOOKS_EN[k];
 }
 
 let MANIFEST_CACHE = null;
-function getManifest() {
-  const availableKeys = VOLUME_KEYS.filter((k) => hasVolData(VOLUMES[k]));
-  if (availableKeys.length === 0) return null;
-  const fullSig = availableKeys.map((k) => `${k}=${volMtimeSig(VOLUMES[k])}`).join('|');
-  if (MANIFEST_CACHE && MANIFEST_CACHE.sig === fullSig) return MANIFEST_CACHE;
-
-  const manifestVolumes = {};
-  const hashAccumulator = crypto.createHash('sha1');
-  for (const volKey of availableKeys) {
-    const trLoaded = getBook(volKey);
-    const enLoaded = getBookEn(volKey);
-    const book = trLoaded.book;
-    hashAccumulator.update(`${volKey}:${trLoaded.hash}:${enLoaded.hash};`);
-    manifestVolumes[volKey] = {
-      volume: book.volume,
+function getBundleManifest() {
+  const mtimes = VOLUME_KEYS.map((k) => volumeMtimeKey(VOLUMES[k])).join('|');
+  if (MANIFEST_CACHE && MANIFEST_CACHE.mtimes === mtimes) return MANIFEST_CACHE;
+  const manifestVols = {};
+  for (const k of VOLUME_KEYS) {
+    const cfg = VOLUMES[k];
+    const src = path.join(ROOT, cfg.dataDir, 'source.json');
+    const fin = path.join(ROOT, cfg.dataDir, 'paragraphs_final.json');
+    if (!fs.existsSync(src) || !fs.existsSync(fin)) continue;
+    const loaded = getBook(k);
+    const loadedEn = getBookEn(k);
+    const book = loaded.book;
+    manifestVols[k] = {
+      label: book.volume || 'Cilt ' + k,
       total: book.total,
-      chapters: book.chapters.length,
-      toc: book.chapters.map((c) => {
-        const rawLabel = String(c.label || '');
-        const numMatch = rawLabel.match(/^Bölüm\s+(\d+)$/);
-        const shortLabel = numMatch ? Number(numMatch[1]) : rawLabel;
-        const ttl = c.title || '';
-        if (c.pending) return [c.page, shortLabel, ttl, 1];
-        return ttl ? [c.page, shortLabel, ttl] : [c.page, shortLabel];
-      }),
-      ...(book.fullScans ? { fullScans: true } : {}),
-      hash: trLoaded.hash,
-      enHash: enLoaded.hash,
-      json: `bundles/book-${volKey}.json`,
-      js: `bundles/book-${volKey}.js`,
-      enJson: `bundles/bundle-en-${volKey}.json`,
-      enJs: `bundles/bundle-en-${volKey}.js`,
+      hash: loaded.hash,
+      enHash: loadedEn.hash,
+      chapters: book.chapters,
     };
   }
-
-  const version = hashAccumulator.digest('hex').slice(0, 12);
-  const defaultVol = manifestVolumes['4'] ? '4' : availableKeys[0] || '4';
-  const manifest = { version, defaultVol, order: availableKeys, volumes: manifestVolumes };
-  const body = Buffer.from(
+  const raw = JSON.stringify({ vols: manifestVols });
+  const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+  const text =
     '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-      'window.ALYA_MANIFEST=' +
-      JSON.stringify(manifest) +
-      ';\n'
-  );
-  MANIFEST_CACHE = { manifest, body, gzip: zlib.gzipSync(body), sig: fullSig };
+    '/* yalnızca cilt manifesti; metin public/books/v<CİLT>.json dosyalarından yüklenir */\n' +
+    'window.ALYA_BUNDLE=' + raw + ';\n' +
+    'window.ALYA_BUNDLE_VERSION=' + JSON.stringify(hash) + ';\n';
+  MANIFEST_CACHE = { mtimes, hash, vols: manifestVols, body: Buffer.from(text) };
   return MANIFEST_CACHE;
-}
-
-function sendPrepacked(req, res, type, jsonBuf, gzipBuf, cacheControl = 'no-cache') {
-  const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '') && jsonBuf.length > 1024;
-  const body = acceptsGzip ? gzipBuf : jsonBuf;
-  const headers = {
-    'Content-Type': type,
-    'Content-Length': body.length,
-    'Cache-Control': cacheControl,
-  };
-  if (acceptsGzip) {
-    headers['Content-Encoding'] = 'gzip';
-    headers['Vary'] = 'Accept-Encoding';
-  }
-  res.writeHead(200, headers);
-  return res.end(req.method === 'HEAD' ? undefined : body);
 }
 
 function send(req, res, status, type, body, extra = {}) {
@@ -356,11 +300,23 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  if (pathname === '/api/book' || pathname === '/api/book-en') {
+  if (pathname === '/api/book') {
     const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
     try {
-      const loaded = pathname === '/api/book-en' ? getBookEn(vKey) : getBook(vKey);
-      return sendPrepacked(req, res, MIME['.json'], loaded.json, loaded.gzip, 'no-cache');
+      const loaded = getBook(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
     } catch (e) {
       return send(
         req,
@@ -372,75 +328,45 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Geliştirme sunucusunda (/bundles/manifest.js, book-<cilt>.json, bundle-en-<cilt>.json)
-  // data*/ üzerindeki güncel çevirileri mtime-duyarlı olarak doğrudan sun
-  if (pathname === '/bundles/manifest.js') {
+  if (pathname === '/api/book-en') {
+    const vKey = VOLUMES[query.get('v')] ? query.get('v') : '4';
     try {
-      const liveManifest = getManifest();
-      if (liveManifest) {
-        return sendPrepacked(req, res, MIME['.js'], liveManifest.body, liveManifest.gzip, 'no-cache');
-      }
-    } catch {}
-  }
-
-  const bundleTrMatch = pathname.match(/^\/bundles\/book-([0-9.]+)\.json$/);
-  if (bundleTrMatch && hasVolData(VOLUMES[bundleTrMatch[1]])) {
-    try {
-      const loaded = getBook(bundleTrMatch[1]);
-      const cache = query.get('v') === loaded.hash ? 'public, max-age=31536000, immutable' : 'no-cache';
-      return sendPrepacked(req, res, MIME['.json'], loaded.json, loaded.gzip, cache);
-    } catch {}
-  }
-
-  const bundleEnMatch = pathname.match(/^\/bundles\/bundle-en-([0-9.]+)\.json$/);
-  if (bundleEnMatch && hasVolData(VOLUMES[bundleEnMatch[1]])) {
-    try {
-      const loaded = getBookEn(bundleEnMatch[1]);
-      const cache = query.get('v') === loaded.hash ? 'public, max-age=31536000, immutable' : 'no-cache';
-      return sendPrepacked(req, res, MIME['.json'], loaded.json, loaded.gzip, cache);
-    } catch {}
-  }
-
-  const bundleTrJsMatch = pathname.match(/^\/bundles\/book-([0-9.]+)\.js$/);
-  if (bundleTrJsMatch && hasVolData(VOLUMES[bundleTrJsMatch[1]])) {
-    try {
-      const vKey = bundleTrJsMatch[1];
-      const loaded = getBook(vKey);
-      const body = Buffer.from(
-        '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-          '(window.ALYA_CHUNKS=window.ALYA_CHUNKS||{})[' +
-          JSON.stringify(vKey) +
-          ']=' +
-          loaded.json.toString('utf8') +
-          ';\n'
-      );
-      return send(req, res, 200, MIME['.js'], body, { 'Cache-Control': 'no-cache' });
-    } catch {}
-  }
-
-  const bundleEnJsMatch = pathname.match(/^\/bundles\/bundle-en-([0-9.]+)\.js$/);
-  if (bundleEnJsMatch && hasVolData(VOLUMES[bundleEnJsMatch[1]])) {
-    try {
-      const vKey = bundleEnJsMatch[1];
       const loaded = getBookEn(vKey);
-      const body = Buffer.from(
-        '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +
-          '(window.ALYA_EN_CHUNKS=window.ALYA_EN_CHUNKS||{})[' +
-          JSON.stringify(vKey) +
-          ']=' +
-          loaded.json.toString('utf8') +
-          ';\n'
+      return send(req, res, 200, MIME['.json'], loaded.json);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} İngilizce metni hazır değil: ${e.message}` }))
       );
-      return send(req, res, 200, MIME['.js'], body, { 'Cache-Control': 'no-cache' });
+    }
+  }
+
+  if (pathname === '/bundle.js' && fs.existsSync(path.join(ROOT, 'data', 'source.json'))) {
+    try {
+      const m = getBundleManifest();
+      return send(req, res, 200, MIME['.js'], m.body);
     } catch {}
   }
 
-  // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  // Statik cilt parçası uç noktaları (/books/v<v>.json, /books/bundle-en-<v>.json, /books/<v>.json)
+  const bookEnMatch = pathname.match(/^\/books\/bundle-en-([0-9.]+)\.json$/);
+  if (bookEnMatch && VOLUMES[bookEnMatch[1]]) {
+    try {
+      const loaded = getBookEn(bookEnMatch[1]);
+      const cache = query.get('v') ? 'public, max-age=31536000, immutable' : 'no-cache';
+      return send(req, res, 200, MIME['.json'], loaded.json, { 'Cache-Control': cache });
+    } catch {}
+  }
+
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);
-      return sendPrepacked(req, res, MIME['.json'], loaded.json, loaded.gzip, 'no-cache');
+      const cache = query.get('v') ? 'public, max-age=31536000, immutable' : 'no-cache';
+      return send(req, res, 200, MIME['.json'], loaded.json, { 'Cache-Control': cache });
     } catch {}
   }
 
@@ -454,11 +380,7 @@ const server = http.createServer((req, res) => {
     if (err) return send(req, res, 404, 'text/plain; charset=utf-8', Buffer.from('Bulunamadı'));
     const ext = path.extname(filePath).toLowerCase();
     const type = MIME[ext] || 'application/octet-stream';
-    const isImmutableImg = ext === '.webp' || ext === '.jpg' || ext === '.png';
-    const isVersionedChunk =
-      (pathname.startsWith('/bundles/book-') || pathname.startsWith('/bundles/bundle-en-')) &&
-      Boolean(query.get('v'));
-    const cache = isImmutableImg || isVersionedChunk
+    const cache = ext === '.webp' || ext === '.jpg' || ext === '.png'
       ? 'public, max-age=31536000, immutable'
       : 'no-cache';
     send(req, res, 200, type, data, { 'Cache-Control': cache });
@@ -482,4 +404,4 @@ function start() {
 
 if (require.main === module) start();
 
-module.exports = { VOLUMES, VOLUME_KEYS, buildBook, buildBookEn, getBook, getBookEn, getManifest, start };
+module.exports = { VOLUMES, VOLUME_KEYS, buildBook, buildBookEn, getBook, getBookEn, getBundleManifest, start };

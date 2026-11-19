@@ -384,10 +384,6 @@ input[type='range']::-moz-range-thumb {
 .pg-art {
   margin: 1.2rem 0 1.6rem;
 }
-.pg-art figure.page-img:not(.is-loaded) {
-  min-height: min(72vh, 560px);
-  justify-content: center;
-}
 .pg-single {
   margin: 0.6rem 0 1rem;
 }

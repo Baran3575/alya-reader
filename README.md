@@ -12,25 +12,8 @@ PORT=4000 node server.js
 Statik GitHub Pages paketini derlemek için:
 
 ```bash
-npm run build:bundle    # public/bundles/ altındaki manifest, TR ve EN tembel cilt parçalarını üret
-npm run build:site      # dist/ altında statik site (.nojekyll + bundles/* + pages* WebP varlıkları)
+npm run build:site      # dist/ altında statik site (.nojekyll + bundle.js + pages* + books/*.json)
 ```
-
-## Tembel Cilt Paketleri ve Çevrimdışı Önbellek (`CacheStorage`)
-
-`scripts/build_bundle.js` 11 cildin tamamını bloklayıcı tekil dosyalar yerine cilt başına tembel (lazy) parçalara ayırır:
-
-| Üretilen Dosya | İçerik | Boyut |
-|---|---|---|
-| `public/bundles/manifest.js` | `window.ALYA_MANIFEST` — 11 cildin sayfa/bölüm dizini (`toc`) ve içerik özetleri | ~9 KB (`< 10 KB`) |
-| `public/bundles/book-<cilt>.json` (ve `.js`) | İlgili cildin Türkçe paragraf + bölüm verisi (`p.en` hariç; `fetch` + `CacheStorage` ve `file://` yedeği) | ~100–430 KB / cilt |
-| `public/bundles/bundle-en-<cilt>.json` (ve `.js`) | **"Orijinal"** görünümü için sayfa bazlı İngilizce kaynak metin (yalnızca Orijinal moduna geçildiğinde yüklenir) | ~90–430 KB / cilt |
-| `public/bundles/art/{4,4.5}/*.webp` & `public/pages5..12/*.webp` | İllüstrasyon görselleri, kaydırma sırasında `IntersectionObserver` ile istek üzerine yüklenir | WebP ikili varlıklar |
-
-- Okuyucu aktif cildi **bellek içi `Map`** → **`CacheStorage` (`alya-v4`) / `bundles/book-<cilt>.json`** → **`bundles/book-<cilt>.js` (`file://` yedeği)** → `api/book` sırasıyla çözer; **"Orijinal"** modunda ise `bundles/bundle-en-<cilt>.json` parçasını yalnızca ihtiyaç duyulduğunda tembel olarak indirip önbelleğe alır.
-- Geliştirme sunucusu (`node server.js`), `data*/` dizinlerindeki `paragraphs_final.json` ve `source.json` dosyalarını `mtime` duyarlı olarak izleyip `/bundles/manifest.js`, `/bundles/book-<cilt>.json` ve `/bundles/bundle-en-<cilt>.json` uç noktalarını canlı içerik özetiyle (`?v=<hash>`) sunar; elle çeviri sırasında yeniden derleme yapmadan güncel metin anında görüntülenir.
-- `window.localStorage` yalnızca hafif okuma konumu, okundu işaretleri ve arayüz ayarlarını (`page`, `page:<cilt>`, `max:<cilt>`, `read:<cilt>`, `vol`, `mode`, `theme`, `size`, toplam `< 5 KB`) saklar; eski `alya4:book:*` kayıtları açılışta otomatik temizlenir.
-- `public/sw.js` service worker’ı kabuğu, `bundles/` paketlerini ve `.webp` görsellerini `self.registration.scope` altında (hem kök dizinde hem GitHub Pages `/<repo>/` alt yollarında) `CacheStorage`’a yazar.
 
 ## Modüler İçe Aktarma ve Edebî Çeviri Hattı
 
@@ -41,12 +24,11 @@ node scripts/ingest/cli.js --volume <5|6|7|8|9|9.5|10|11|12>
 # 2. Sözlük, karakter sesi ve Rusça fısıltı ({...}) bağlamıyla edebî Türkçeye çevir
 node scripts/translate_llm.js --volume <4..12>
 
-# 3. Son işleme, paket üretimi ve sıkı kalite kapısı (QC)
+# 3. Son işleme ve sıkı kalite kapısı (QC)
 node scripts/fix_headings.js --volume <4..12>
 node scripts/naturalize.js --volume <4..12>
 node scripts/norm_typo.js --volume <4..12>
 node scripts/fix_boundaries.js --volume <4..12>
-node scripts/build_bundle.js
 node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 ```
 
@@ -54,7 +36,7 @@ node scripts/qc/cli.js --volume <4..12> --strict --check-regression
 
 | Cilt | Kaynak Adaptörü | Açıklama |
 |---|---|---|
-| **Cilt 4 & 4.5** | Kanonik depo arşivi | Salt okunur kaynak katmanı + `public/bundles/art/` WebP sanat paketi |
+| **Cilt 4 & 4.5** | Kanonik depo arşivi | Salt okunur kaynak katmanı + gömülü WebP sanat paketi |
 | **Cilt 5 – 10** | `fliphtml5.js` | FlipHTML5 & AnyFlip `search_config.js` metin dizini (Scribd Fastly ve WASM `deString.js` atlanır, katalog URL’leri normalize edilir) + GlucoseTL arşivlerinden filigransız WebP illüstrasyonlar |
 | **Cilt 9.5** | `glucosetl95.js` | GlucoseTL Anubis SHA-256 PoW (`difficulty: 4`) çözümü + 7 renkli illüstrasyon + 16 kısa hikâye PNG klasörünün görsel LLM / yerel Tesseract OCR dökümü (~1.400 kr/sayfa) |
 | **Cilt 11** | `epub11.js` | Google Drive EPUB paketi (22 XHTML + gömülü illüstrasyonlar, ~1.400 kr/sayfa) |

@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 // GitHub Pages statik site derleyicisi -> dist/
-// public/ kabuğunu, tembel cilt paketlerini (bundles/book-*.json + bundles/bundle-en-*.json)
-// ve tüm WebP illüstrasyonlarını dist/ dizinine üretir ve doğrular.
+// public/ içeriğini, pages5..pages12 görsellerini ve books/{v,bundle-en-}*.json statik kitap parçalarını dist/ dizinine üretir.
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { ROOT, VOLUME_KEYS } = require('./lib/volumes');
+const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const DIST = path.join(ROOT, 'dist');
 const PUB = path.join(ROOT, 'public');
 
-// 1) Önce güncel manifest, TR ve EN tembel cilt paketlerini üret
+// 1) Önce güncel bundle.js / bundle-art.js üret
 execFileSync(process.execPath, [path.join(__dirname, 'build_bundle.js')], { stdio: 'inherit' });
 
 // 2) dist/ dizinini temizle ve public/ ağacını (.bak yedekleri hariç) kopyala
@@ -21,38 +20,46 @@ fs.cpSync(PUB, DIST, {
 });
 fs.writeFileSync(path.join(DIST, '.nojekyll'), '');
 
-// 3) Tüm cilt paketlerini ve illüstrasyon WebP bütünlüğünü doğrula
-const manifestFile = path.join(DIST, 'bundles', 'manifest.js');
-if (!fs.existsSync(manifestFile)) {
-  console.error('✗ Statik derleme başarısız: dist/bundles/manifest.js bulunamadı.');
-  process.exit(1);
-}
+// 3) Statik /books/v<vol>.json + /books/bundle-en-<vol>.json parçalarını ve görsel bütünlüğünü doğrula
+const booksDir = path.join(DIST, 'books');
+fs.mkdirSync(booksDir, { recursive: true });
 
 let builtCount = 0;
 let missingAssets = 0;
 
 for (const k of VOLUME_KEYS) {
-  const trChunk = path.join(DIST, 'bundles', `book-${k}.json`);
-  const enChunk = path.join(DIST, 'bundles', `bundle-en-${k}.json`);
-  if (!fs.existsSync(trChunk) || !fs.existsSync(enChunk)) continue;
+  const cfg = VOLUMES[k];
+  if (!fs.existsSync(cfg.sourceFile) || !fs.existsSync(cfg.finalFile)) continue;
 
-  const book = JSON.parse(fs.readFileSync(trChunk, 'utf8'));
+  const vPath = path.join(booksDir, `v${k}.json`);
+  const enPath = path.join(booksDir, `bundle-en-${k}.json`);
+  if (!fs.existsSync(vPath) || !fs.existsSync(enPath)) {
+    console.error(`✗ Eksik cilt parçası (Cilt ${k}): books/v${k}.json veya books/bundle-en-${k}.json`);
+    missingAssets++;
+    continue;
+  }
+
+  const book = JSON.parse(fs.readFileSync(vPath, 'utf8'));
   for (const p of book.pages) {
-    if (!p.art) continue;
-    const assetPath = path.join(DIST, String(p.img).replace(/^\/+/, ''));
-    if (!fs.existsSync(assetPath)) {
-      console.error(`✗ Eksik illüstrasyon dosyası (Cilt ${k}): ${p.img}`);
+    if ('en' in p) {
+      console.error(`✗ books/v${k}.json sayfa ${p.n} içinde p.en kalıntısı var`);
       missingAssets++;
     }
+    if (p.art && k !== '4' && k !== '4.5') {
+      const assetPath = path.join(DIST, p.img);
+      if (!fs.existsSync(assetPath)) {
+        console.error(`✗ Eksik illüstrasyon dosyası (Cilt ${k}): ${p.img}`);
+        missingAssets++;
+      }
+    }
   }
+
   builtCount++;
 }
 
 if (missingAssets > 0) {
-  console.error(`✗ Statik derleme başarısız: ${missingAssets} illüstrasyon dosyası eksik.`);
+  console.error(`✗ Statik derleme başarısız: ${missingAssets} varlık/parça doğrulaması başarısız.`);
   process.exit(1);
 }
 
-console.log(
-  `✓ Statik site hazır: dist/ (${builtCount} cilt, .nojekyll + bundles/book-*.json + bundles/bundle-en-*.json + WebP varlıkları doğrulandı).`
-);
+console.log(`✓ Statik site hazır: dist/ (${builtCount} cilt, .nojekyll + books/v*.json + books/bundle-en-*.json + WebP varlıkları doğrulandı).`);

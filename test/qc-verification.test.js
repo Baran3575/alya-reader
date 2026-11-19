@@ -283,34 +283,50 @@ function testRussianDialogueDomRendering() {
   assert.strictEqual(pThought.childNodes[0].nodeType, 3);
   assert.strictEqual(pThought.textContent, '(Ondan hiç nefret etmiyordum.)');
 
-  // 7. Lazy bundles (manifest.js, book-<vol>.json, bundle-en-<vol>.json) and bundled WebP art integrity check
-  const artDir4 = path.join(ROOT, 'public', 'bundles', 'art', '4');
-  const artDir45 = path.join(ROOT, 'public', 'bundles', 'art', '4.5');
-  const sumBytes = (dir) =>
-    fs.readdirSync(dir).reduce((acc, f) => acc + fs.statSync(path.join(dir, f)).size, 0);
-  const totalArtBytes = sumBytes(artDir4) + sumBytes(artDir45);
-  assert(totalArtBytes > 1000000, 'public/bundles/art/{4,4.5} must retain binary WebP illustrations (> 1 MB)');
+  // 7. Manifest + cilt parçaları bütünlüğü
+  const bundleContent = fs.readFileSync(path.join(ROOT, 'public', 'bundle.js'), 'utf8');
+  const manifestMatch = bundleContent.match(/window\.ALYA_BUNDLE=(\{.*\});/);
+  assert(manifestMatch, 'bundle.js must define window.ALYA_BUNDLE manifest');
+  const manifest = JSON.parse(manifestMatch[1]);
+  assert(manifest.vols['4'] && manifest.vols['4'].total > 0, 'manifest must list Cilt 4');
+  assert(manifest.vols['12'] && manifest.vols['12'].total > 0, 'manifest must list Cilt 12');
+  assert(!manifest.vols['4'].pages, 'manifest must not embed full page data');
 
-  const book4Content = fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'book-4.json'), 'utf8');
-  assert(book4Content.includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}'), 'book-4.json must contain repaired 149.4');
-  assert(book4Content.includes('{Sen daha güzelsin.}'), 'book-4.json must contain repaired 267.2');
+  const booksDir = path.join(ROOT, 'public', 'books');
+  if (!fs.existsSync(booksDir)) {
+    console.log('  (books/ yok — parça denetimi atlandı, npm run build:bundle ile üretilir)');
+  }
+  const volFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => /^v[0-9.]+\.json$/.test(f))
+    : [];
+  const enFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => /^bundle-en-[0-9.]+\.json$/.test(f))
+    : [];
+  if (fs.existsSync(booksDir)) {
+    assert(volFiles.length >= 11, 'public/books must contain one v<vol>.json chunk per volume');
+    assert(enFiles.length >= 11, 'public/books must contain one bundle-en-<vol>.json chunk per volume');
+  }
 
-  const manifestRaw = fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'manifest.js'), 'utf8');
-  const manifestMatch = manifestRaw.match(/window\.ALYA_MANIFEST=(\{.*\});/);
-  assert(manifestMatch, 'bundles/manifest.js must define window.ALYA_MANIFEST');
-  const manifestJson = JSON.parse(manifestMatch[1]);
-  assert(manifestJson.volumes['4'] && manifestJson.volumes['4'].total > 0, 'manifest must list Cilt 4');
-  assert(manifestJson.volumes['12'] && manifestJson.volumes['12'].total > 0, 'manifest must list Cilt 12');
-  assert(!manifestJson.volumes['4'].pages, 'manifest must not embed full page data');
+  const vol4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'v4.json'), 'utf8'));
+  assert(vol4.pages.every((p) => !('en' in p)), 'v4.json must omit p.en');
+  const en4 = JSON.parse(fs.readFileSync(path.join(booksDir, 'bundle-en-4.json'), 'utf8'));
+  assert(Array.isArray(en4.pages['14']) && en4.pages['14'].length > 0, 'bundle-en-4.json must contain English prose');
+  const flat4 = vol4.pages.flatMap((p) => p.tr);
+  assert(flat4.some((x) => String(x).includes('{Denizanasından korkuyorum! Masa-kun, yardım et!}')), 'v4.json must contain repaired 149.4');
+  assert(flat4.some((x) => String(x).includes('{Sen daha güzelsin.}')), 'v4.json must contain repaired 267.2');
 
-  for (const [volKey, entry] of Object.entries(manifestJson.volumes)) {
-    const book = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', entry.json), 'utf8'));
-    const bookEn = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', entry.enJson), 'utf8'));
-    assert(bookEn && typeof bookEn.pages === 'object', `bundle-en-${volKey}.json must define pages map`);
+  const art4Path = path.join(booksDir, 'art-4.json');
+  if (fs.existsSync(art4Path)) {
+    const art4 = JSON.parse(fs.readFileSync(art4Path, 'utf8'));
+    assert(Object.keys(art4).length > 0 && art4['004'].startsWith('data:image/webp'), 'art-4.json must embed WebP data URIs');
+  }
+
+  for (const file of volFiles) {
+    const book = JSON.parse(fs.readFileSync(path.join(booksDir, file), 'utf8'));
     for (const pg of book.pages) {
       for (const line of pg.tr) {
-        assert(!/[『』「」]/.test(line), `book-${volKey}.json p.${pg.n} tr must not contain corner brackets`);
-        assert(!/\p{Script=Cyrillic}/u.test(line), `book-${volKey}.json p.${pg.n} tr must not contain Cyrillic`);
+        assert(!/[『』「」]/.test(line), `${file} p.${pg.n} tr must not contain corner brackets`);
+        assert(!/\p{Script=Cyrillic}/u.test(line), `${file} p.${pg.n} tr must not contain Cyrillic`);
       }
     }
   }

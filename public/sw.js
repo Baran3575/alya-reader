@@ -1,23 +1,18 @@
-// Çevrimdışı önbellek: kabuk dosyaları + tembel cilt paketleri (TR & EN) + WebP görseller (Cilt 4–12).
-// Hem kök dizinde (http://localhost:3000/) hem de GitHub Pages alt yollarında (/<repo>/) çalışır.
+// Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
+// Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
 const VERSION = 'alya-v4';
-const SHELL = ['./', 'index.html', 'style.css', 'bundles/manifest.js', 'app.js'];
+const SHELL_REL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 function scopeUrl(rel) {
-  return new URL(rel, self.registration.scope).href;
-}
-
-function scopeRelPath(url) {
-  const scopePath = new URL('./', self.registration.scope).pathname;
-  if (!url.pathname.startsWith(scopePath)) return null;
-  return url.pathname.slice(scopePath.length);
+  const base = (self.registration && self.registration.scope) || self.location.href;
+  return new URL(rel, base).toString();
 }
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches
       .open(VERSION)
-      .then((c) => Promise.all(SHELL.map((rel) => c.add(scopeUrl(rel)).catch(() => {}))))
+      .then((c) => Promise.all(SHELL_REL.map((p) => c.add(scopeUrl(p)).catch(() => {}))))
       .then(() => self.skipWaiting()),
   );
 });
@@ -31,24 +26,32 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+async function putAndPruneQuery(cache, req, res) {
+  const target = new URL(req.url);
+  if (target.search) {
+    const keys = await cache.keys();
+    for (const k of keys) {
+      const ku = new URL(typeof k === 'string' ? k : k.url);
+      if (ku.pathname === target.pathname && ku.search !== target.search) {
+        await cache.delete(k);
+      }
+    }
+  }
+  await cache.put(req, res);
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  const rel = scopeRelPath(url);
-  if (rel === null) return;
-
-  // Cilt paketleri (book-* ve bundle-en-*) ve WebP görseller: önce önbellek, sonra ağ (ve önbelleğe yaz)
-  const isManifest = rel === 'bundles/manifest.js';
+  // görseller ve kitap verisi (Cilt 4–12 /pages*/ ve /books/{v,bundle-en-,art-}*.json dahil): önce önbellek, sonra ağ
   const cacheFirst =
-    (!isManifest && rel.startsWith('bundles/')) ||
-    rel.endsWith('.webp') ||
-    /^pages[^/]*\//.test(rel) ||
-    /^books\/[0-9.]+\.json$/.test(rel) ||
-    rel === 'api/book' ||
-    rel === 'api/book-en';
+    /\/pages\d*\//.test(url.pathname) ||
+    /\/books\/(?:v|bundle-en-|art-)?[0-9.]+\.json$/.test(url.pathname) ||
+    url.pathname.endsWith('/api/book') ||
+    url.pathname.endsWith('/api/book-en');
 
   if (cacheFirst) {
     e.respondWith(
@@ -59,24 +62,7 @@ self.addEventListener('fetch', (e) => {
             .then((res) => {
               if (res && res.ok) {
                 const copy = res.clone();
-                caches.open(VERSION).then(async (c) => {
-                  try {
-                    const isVersionedBundle =
-                      rel.startsWith('bundles/book-') || rel.startsWith('bundles/bundle-en-');
-                    if (isVersionedBundle && url.search && typeof c.keys === 'function') {
-                      const existing = await c.keys();
-                      await Promise.all(
-                        existing
-                          .filter((k) => {
-                            const ku = new URL(typeof k === 'string' ? k : k.url);
-                            return ku.pathname === url.pathname && ku.href !== url.href;
-                          })
-                          .map((k) => c.delete(k)),
-                      );
-                    }
-                    await c.put(req, copy);
-                  } catch {}
-                });
+                caches.open(VERSION).then((c) => putAndPruneQuery(c, req, copy));
               }
               return res;
             })
@@ -86,24 +72,20 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Kabuk ve manifest: önce ağ, düşerse önbellek
+  // kabuk ve manifest (bundle.js): önce ağ (güncel hash için), düşerse önbellek
   e.respondWith(
     fetch(req)
       .then((res) => {
         if (res && res.ok) {
           const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy).catch(() => {}));
+          caches.open(VERSION).then((c) => c.put(req, copy));
         }
         return res;
       })
       .catch(() =>
-        caches.match(req, { ignoreSearch: true }).then((hit) => {
-          if (hit) return hit;
-          if (req.mode === 'navigate' || rel === '' || rel === 'index.html') {
-            return caches.match(scopeUrl('index.html')).then((idx) => idx || caches.match(scopeUrl('./')));
-          }
-          return undefined;
-        }),
+        caches
+          .match(req, { ignoreSearch: true })
+          .then((hit) => hit || (req.mode === 'navigate' ? caches.match(scopeUrl('./index.html')) : undefined)),
       ),
   );
 });
