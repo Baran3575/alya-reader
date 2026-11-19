@@ -129,6 +129,8 @@
   };
 
   const memoryBooks = new Map();
+  const memoryEn = new Map();
+  const enInFlight = new Map();
 
   /* ---------------- cilt ---------------- */
   const defaultVolOrder = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
@@ -201,8 +203,9 @@
   const volSelectEl = $('volSelect');
   if (volSelectEl) {
     volSelectEl.addEventListener('change', (e) => {
-      hideLibrary();
-      switchVolume(e.target.value);
+      const nextVol = String(e.target.value);
+      switchVolume(nextVol);
+      if (libOpen) showLibrary('ch', nextVol);
     });
   }
 
@@ -425,6 +428,7 @@
     else showLibrary('ch', String(state.vol));
   });
   $('libBack')?.addEventListener('click', () => showLibrary('vol'));
+  $('libClose')?.addEventListener('click', hideLibrary);
   $('markAllBtn')?.addEventListener('click', () => {
     const applyMarkAll = (book) => {
       ((book && book.chapters) || []).forEach((c, i) => {
@@ -532,6 +536,51 @@
     const book = await res.json();
     memoryBooks.set(key, book);
     return book;
+  }
+
+  async function readBookEn(v) {
+    const key = String(v);
+    if (memoryEn.has(key)) return memoryEn.get(key);
+    if (enInFlight.has(key)) return enInFlight.get(key);
+
+    const task = (async () => {
+      const manifest = await readManifest();
+      const meta = manifest && manifest.volumes && manifest.volumes[key];
+      const slug = (meta && meta.slug) || volSlug(key);
+      const enRel = (meta && meta.enFile) || 'bundles/bundle-en-' + slug + '.json';
+      const query = meta && meta.enHash ? '?v=' + encodeURIComponent(meta.enHash) : '';
+      try {
+        const res = await fetch(enRel + query);
+        if (res.ok) {
+          const payload = await res.json();
+          const pages = (payload && payload.pages) || payload || {};
+          memoryEn.set(key, pages);
+          return pages;
+        }
+      } catch {}
+
+      const res = await fetch('api/book-en?v=' + encodeURIComponent(key));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const payload = await res.json();
+      const pages = (payload && payload.pages) || payload || {};
+      memoryEn.set(key, pages);
+      return pages;
+    })().finally(() => {
+      enInFlight.delete(key);
+    });
+
+    enInFlight.set(key, task);
+    return task;
+  }
+
+  function getPageEn(vol, p) {
+    if (!p) return [];
+    if (Array.isArray(p.en) && p.en.length > 0) return p.en;
+    const enPages = memoryEn.get(String(vol));
+    if (enPages && Array.isArray(enPages[String(p.n)])) {
+      return enPages[String(p.n)];
+    }
+    return [];
   }
 
   let loadSeq = 0;
@@ -687,7 +736,85 @@
   }
 
   /* ---------------- çizim (tek orijinal sayfa) ---------------- */
+  let pageRenderSeq = 0;
+
+  function appendOrigProse(container, lines) {
+    const proseWrap = document.createElement('div');
+    proseWrap.className = 'orig-prose';
+    for (const line of lines) {
+      const el = document.createElement('p');
+      el.textContent = line;
+      proseWrap.appendChild(el);
+    }
+    container.appendChild(proseWrap);
+  }
+
+  function populateOriginalText(sec, vol, p, seq) {
+    const immediateEn = getPageEn(vol, p);
+    if (immediateEn.length > 0) {
+      appendOrigProse(sec, immediateEn);
+      return;
+    }
+    if (memoryEn.has(String(vol))) {
+      if (p.tr && p.tr.length) {
+        for (const line of p.tr) {
+          sec.appendChild(renderParagraph(line));
+        }
+      }
+      return;
+    }
+
+    const loadingNote = document.createElement('p');
+    loadingNote.className = 'empty-note';
+    loadingNote.textContent = 'Orijinal metin yükleniyor…';
+    sec.appendChild(loadingNote);
+
+    readBookEn(vol)
+      .then(() => {
+        if (
+          seq !== pageRenderSeq ||
+          state.mode !== 'page' ||
+          String(state.vol) !== String(vol) ||
+          sec.isConnected === false
+        ) {
+          return;
+        }
+        sec.innerHTML = '';
+        const loadedEn = getPageEn(vol, p);
+        if (loadedEn.length > 0) {
+          appendOrigProse(sec, loadedEn);
+        } else if (p.tr && p.tr.length) {
+          for (const line of p.tr) {
+            sec.appendChild(renderParagraph(line));
+          }
+        }
+      })
+      .catch(() => {
+        if (
+          seq !== pageRenderSeq ||
+          state.mode !== 'page' ||
+          String(state.vol) !== String(vol) ||
+          sec.isConnected === false
+        ) {
+          return;
+        }
+        sec.innerHTML = '';
+        if (p.tr && p.tr.length) {
+          for (const line of p.tr) {
+            sec.appendChild(renderParagraph(line));
+          }
+        } else {
+          const errEl = document.createElement('p');
+          errEl.className = 'empty-note';
+          errEl.textContent = 'Orijinal metin şu an yüklenemedi.';
+          sec.appendChild(errEl);
+        }
+      });
+  }
+
   function renderPage() {
+    const seq = ++pageRenderSeq;
+    const currentVol = String(state.vol);
     const n = Math.min(Math.max(1, state.page), state.book.total);
     const p = state.book.pages[n - 1];
     const idx = chapterIndex(n);
@@ -717,38 +844,25 @@
     if (ch.pending || (p && p.pending)) {
       sec.appendChild(createPendingNotice(ch));
     } else if (p) {
-      const hasFullScan = p.art || state.vol === '4' || state.vol === '4.5';
+      const hasFullScan = p.art === true || Boolean(state.book.fullScans);
       if (hasFullScan) {
         const fig = figureFor(p, false);
-        if (!p.art && p.tr && p.tr.length) {
+        if (!p.art) {
           const im = fig.querySelector('img');
           if (im && typeof im.addEventListener === 'function') {
             im.addEventListener(
               'error',
               () => {
                 fig.remove();
-                for (const line of p.tr) {
-                  sec.appendChild(renderParagraph(line));
-                }
+                populateOriginalText(sec, currentVol, p, seq);
               },
               { once: true }
             );
           }
         }
         sec.appendChild(fig);
-      } else if (p.en && p.en.length) {
-        const proseWrap = document.createElement('div');
-        proseWrap.className = 'orig-prose';
-        for (const line of p.en) {
-          const el = document.createElement('p');
-          el.textContent = line;
-          proseWrap.appendChild(el);
-        }
-        sec.appendChild(proseWrap);
-      } else if (p.tr && p.tr.length) {
-        for (const line of p.tr) {
-          sec.appendChild(renderParagraph(line));
-        }
+      } else {
+        populateOriginalText(sec, currentVol, p, seq);
       }
     }
     reader.appendChild(sec);

@@ -380,6 +380,9 @@ main {
   color: var(--fg-soft);
   white-space: pre-wrap;
 }
+.orig-prose p:last-child {
+  margin-bottom: 0;
+}
 
 .pending-card {
   margin: 1.2rem 0;
@@ -578,6 +581,9 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.92rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+.lib-close {
+  margin-left: auto;
 }
 
 .lib-actions {

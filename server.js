@@ -225,13 +225,44 @@ function buildBook(opt = {}) {
     }
   }
 
-  return {
+  let hasNonArtScan = false;
+  if (!hasStructuredChapters && !Array.isArray(opt.source)) {
+    const relPagesPrefix = imgPrefix.replace(/^\/+/, '');
+    for (const p of pages) {
+      if (!p.art && !p.pending) {
+        const nnn = String(p.n).padStart(3, '0') + '.webp';
+        if (fs.existsSync(path.join(rootDir, 'public', relPagesPrefix, nnn))) {
+          hasNonArtScan = true;
+          break;
+        }
+      }
+    }
+  }
+
+  const out = {
     title: 'Alya Bazen Duygularını Rusça Saklar',
     id: cfg ? cfg.id : opt.id || '4',
     slug,
     volume,
     total: pages.length,
     chapters,
+    pages,
+  };
+  if (hasNonArtScan) out.fullScans = true;
+  return out;
+}
+
+function buildBookEn(opt = {}) {
+  const b = buildBook({ ...opt, includeEn: true });
+  const pages = {};
+  for (const p of b.pages) {
+    if (!p.pending && Array.isArray(p.en) && p.en.length > 0) {
+      pages[String(p.n)] = p.en;
+    }
+  }
+  return {
+    id: b.id,
+    slug: b.slug,
     pages,
   };
 }
@@ -250,7 +281,21 @@ function packBook(cfg, includeEn = false) {
   return { book: b, json, gzip: zlib.gzipSync(json), mtime: fs.statSync(cfg.absTrFile).mtimeMs };
 }
 
+function packBookEn(cfg) {
+  const en = buildBookEn({
+    id: cfg.id,
+    slug: cfg.slug,
+    dataDir: cfg.dataDir,
+    imgPrefix: cfg.imgPrefix,
+    volume: cfg.label,
+    titlesFile: cfg.absTitlesFile,
+  });
+  const json = Buffer.from(JSON.stringify(en));
+  return { en, json, gzip: zlib.gzipSync(json), mtime: fs.statSync(cfg.absSourceFile).mtimeMs };
+}
+
 const BOOKS = {};
+const BOOKS_EN = {};
 function getBook(key, opt = {}) {
   const includeEn = Boolean(opt.includeEn);
   const active = getActiveVolumes(ROOT);
@@ -266,6 +311,21 @@ function getBook(key, opt = {}) {
     BOOKS[cacheKey] = packBook(cfg, includeEn);
   }
   return BOOKS[cacheKey];
+}
+
+function getBookEn(key) {
+  const active = getActiveVolumes(ROOT);
+  const manifest = loadManifest(ROOT);
+  const resolvedKey = active[key] ? key : manifest.defaultVolume;
+  const cfg = active[resolvedKey] || getVolume(resolvedKey, ROOT);
+  if (!cfg || !cfg.active) {
+    throw new Error(`İstenen cilt hazır değil: ${key}`);
+  }
+  const currentMtime = fs.statSync(cfg.absSourceFile).mtimeMs;
+  if (!BOOKS_EN[cfg.id] || BOOKS_EN[cfg.id].mtime !== currentMtime) {
+    BOOKS_EN[cfg.id] = packBookEn(cfg);
+  }
+  return BOOKS_EN[cfg.id];
 }
 
 function send(req, res, status, type, body, extra = {}) {
@@ -317,6 +377,7 @@ const server = http.createServer((req, res) => {
         slug: v.slug,
         label: v.label,
         file: `bundles/vol-${v.slug}.json`,
+        enFile: `bundles/bundle-en-${v.slug}.json`,
       };
     }
     const payload = {
@@ -359,6 +420,37 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  if (pathname === '/api/book-en') {
+    const active = getActiveVolumes(ROOT);
+    const manifest = loadManifest(ROOT);
+    const reqVol = query.get('v');
+    const vKey = active[reqVol] ? reqVol : manifest.defaultVolume;
+    try {
+      const loaded = getBookEn(vKey);
+      const acceptsGzip = /\bgzip\b/.test(req.headers['accept-encoding'] || '');
+      const body = acceptsGzip ? loaded.gzip : loaded.json;
+      const headers = {
+        'Content-Type': MIME['.json'],
+        'Content-Length': body.length,
+        'Cache-Control': 'no-cache',
+      };
+      if (acceptsGzip) {
+        headers['Content-Encoding'] = 'gzip';
+        headers['Vary'] = 'Accept-Encoding';
+      }
+      res.writeHead(200, headers);
+      return res.end(req.method === 'HEAD' ? undefined : body);
+    } catch (e) {
+      return send(
+        req,
+        res,
+        404,
+        MIME['.json'],
+        Buffer.from(JSON.stringify({ error: `Cilt ${vKey} İngilizce metni hazır değil: ${e.message}` }))
+      );
+    }
+  }
+
   // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
   const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
   if (bookJsonMatch) {
@@ -382,7 +474,10 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(filePath).toLowerCase();
     const type = MIME[ext] || 'application/octet-stream';
     const cache =
-      ext === '.webp' || ext === '.jpg' || ext === '.png'
+      ext === '.webp' ||
+      ext === '.jpg' ||
+      ext === '.png' ||
+      (ext === '.json' && pathname.startsWith('/bundles/') && query.get('v'))
         ? 'public, max-age=31536000, immutable'
         : 'no-cache';
     send(req, res, 200, type, data, { 'Cache-Control': cache });
@@ -422,4 +517,14 @@ const VOLUMES = Object.fromEntries(
 
 if (require.main === module) start();
 
-module.exports = { VOLUMES, VOLUME_KEYS, buildBook, parseHeading, getBook, start, server };
+module.exports = {
+  VOLUMES,
+  VOLUME_KEYS,
+  buildBook,
+  buildBookEn,
+  parseHeading,
+  getBook,
+  getBookEn,
+  start,
+  server,
+};

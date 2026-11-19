@@ -236,14 +236,25 @@ function testMultiVolumeDiscoveryAndPatches() {
       'Adding source.json + paragraphs_final.json must automatically activate volumes'
     );
 
-    // Build bundles in tmpRoot and verify manifest + chunks + zero p.en
+    // Build bundles in tmpRoot and verify manifest + TR chunks (zero p.en) + separate EN chunks
     const built = buildBundles(tmpRoot);
     assert.deepStrictEqual(built.manifest.order, ['4', '5', '9.5']);
-    for (const slug of ['4', '5', '9-5']) {
+    for (const [volId, slug] of [
+      ['4', '4'],
+      ['5', '5'],
+      ['9.5', '9-5'],
+    ]) {
       const chunkFile = path.join(tmpRoot, 'public', 'bundles', `vol-${slug}.json`);
+      const enChunkFile = path.join(tmpRoot, 'public', 'bundles', `bundle-en-${slug}.json`);
       assert(fs.existsSync(chunkFile), `Expected chunk vol-${slug}.json`);
+      assert(fs.existsSync(enChunkFile), `Expected separate English chunk bundle-en-${slug}.json`);
       const chunk = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
       assert(chunk.pages.every((p) => !('en' in p)), `Chunk vol-${slug}.json must omit p.en`);
+      const enChunk = JSON.parse(fs.readFileSync(enChunkFile, 'utf8'));
+      assert.strictEqual(enChunk.id, volId);
+      assert(Array.isArray(enChunk.pages['3']) && enChunk.pages['3'].length > 0, `bundle-en-${slug}.json must include English paragraphs`);
+      assert.strictEqual(built.manifest.volumes[volId].enFile, `bundles/bundle-en-${slug}.json`);
+      assert(built.manifest.volumes[volId].enHash, `manifest.volumes[${volId}] must include enHash`);
     }
 
     // Verify CLI discovers all 3 active volumes automatically
@@ -324,7 +335,7 @@ function testMultiVolumeDiscoveryAndPatches() {
     assert.strictEqual(byPage[10].label, 'Sonsöz');
     assert.strictEqual(byPage[11].label, 'Sonsöz');
 
-    // 4. Verify production bundles & standalone WebP art exist and omit p.en
+    // 4. Verify production bundles (TR + separate EN) & standalone WebP art exist
     buildBundles(ROOT);
     const prodManifest = JSON.parse(
       fs.readFileSync(path.join(ROOT, 'public', 'bundles', 'manifest.json'), 'utf8')
@@ -334,6 +345,10 @@ function testMultiVolumeDiscoveryAndPatches() {
       const m = prodManifest.volumes[id];
       const chunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.file), 'utf8'));
       assert(chunk.pages.every((p) => !('en' in p)), `Production ${m.file} must have zero p.en keys`);
+      assert.strictEqual(m.enFile, `bundles/bundle-en-${m.slug}.json`, `Manifest for ${id} must reference bundle-en-${m.slug}.json`);
+      assert(m.enHash && m.enHash.length === 12, `Manifest for ${id} must have 12-char enHash`);
+      const enChunk = JSON.parse(fs.readFileSync(path.join(ROOT, 'public', m.enFile), 'utf8'));
+      assert(enChunk.pages && Object.keys(enChunk.pages).length > 0, `Production ${m.enFile} must contain English pages`);
       const artDir = path.join(ROOT, 'public', 'art', `vol-${m.slug}`);
       const webps = fs.readdirSync(artDir).filter((f) => f.endsWith('.webp'));
       assert(webps.length > 0, `Expected standalone .webp files in public/art/vol-${m.slug}/`);
@@ -376,23 +391,40 @@ function testMultiVolumeDiscoveryAndPatches() {
       },
     };
 
-    const elStub = () => ({
-      style: {},
-      dataset: {},
-      classList: { add() {}, remove() {}, toggle() {} },
-      children: [],
-      addEventListener() {},
-      setAttribute() {},
-      append() {},
-      appendChild() {},
-      querySelector: () => ({ removeAttribute() {}, setAttribute() {} }),
-      querySelectorAll: () => [],
-      contains: () => false,
-      hidden: true,
-      innerHTML: '',
-      textContent: '',
-      value: '4',
-    });
+    const elStub = () => {
+      const listeners = {};
+      const children = [];
+      const node = {
+        style: {},
+        dataset: {},
+        className: '',
+        classList: { add() {}, remove() {}, toggle() {} },
+        children,
+        addEventListener(evt, fn) {
+          (listeners[evt] = listeners[evt] || []).push(fn);
+        },
+        trigger(evt, arg = {}) {
+          for (const fn of listeners[evt] || []) fn(arg);
+        },
+        setAttribute() {},
+        append(...items) {
+          children.push(...items);
+        },
+        appendChild(item) {
+          children.push(item);
+          return item;
+        },
+        remove() {},
+        querySelector: () => ({ removeAttribute() {}, setAttribute() {}, addEventListener() {} }),
+        querySelectorAll: () => [],
+        contains: () => false,
+        hidden: true,
+        innerHTML: '',
+        textContent: '',
+        value: '4',
+      };
+      return node;
+    };
 
     const elements = new Map();
     const getEl = (id) => {
@@ -404,20 +436,33 @@ function testMultiVolumeDiscoveryAndPatches() {
       defaultVolume: '4',
       order: expectedIds,
       volumes: Object.fromEntries(
-        expectedIds.map((id) => [
-          id,
-          { id, slug: id.replace(/\./g, '-'), label: `Cilt ${id}`, hash: 'abc123def456' },
-        ])
+        expectedIds.map((id) => {
+          const slug = id.replace(/\./g, '-');
+          return [
+            id,
+            {
+              id,
+              slug,
+              label: `Cilt ${id}`,
+              file: `bundles/vol-${slug}.json`,
+              hash: 'abc123def456',
+              enFile: `bundles/bundle-en-${slug}.json`,
+              enHash: 'fed654cba321',
+            },
+          ];
+        })
       ),
     };
 
+    const fetchedUrls = [];
     const sandbox = {
       localStorage: mockLS,
       navigator: { onLine: true },
-      location: { protocol: 'http:' },
+      location: { protocol: 'http:', search: '?vol=4&page=3' },
       requestAnimationFrame: (fn) => fn(),
       Image: function () {},
       window: {
+        location: { protocol: 'http:', search: '?vol=4&page=3' },
         matchMedia: () => ({ matches: false }),
         addEventListener() {},
         scrollTo() {},
@@ -436,8 +481,21 @@ function testMultiVolumeDiscoveryAndPatches() {
         title: '',
       },
       fetch: async (url) => {
-        if (String(url).includes('manifest.json')) {
+        const u = String(url);
+        fetchedUrls.push(u);
+        if (u.includes('manifest.json')) {
           return { ok: true, status: 200, json: async () => elevenManifest };
+        }
+        if (u.includes('bundle-en-')) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: '4',
+              slug: '4',
+              pages: { '3': ['Chapter 1: Morning Tea', 'Masachika sipped his tea quietly at his desk.'] },
+            }),
+          };
         }
         return { ok: true, status: 200, json: async () => syntheticBook };
       },
@@ -455,9 +513,38 @@ function testMultiVolumeDiscoveryAndPatches() {
       0
     );
     assert(totalBytes < 2048, `Expected localStorage < 2048 bytes across 11 volumes, got ${totalBytes}`);
-    console.log(`  ✓ Multi-volume discovery, headings, p.en stripping, patches & localStorage (${totalBytes} B < 2048 B) verified`);
-  } finally {
+
+    // Wait for initial async load() to settle, verify zero bundle-en-* fetch in Çeviri mode,
+    // then switch to Orijinal mode and verify bundle-en-4.json is lazily fetched on demand
+    return new Promise((resolve, reject) => {
+      setImmediate(async () => {
+        try {
+          await new Promise((r) => setImmediate(r));
+          assert(
+            !fetchedUrls.some((u) => u.includes('bundle-en-')),
+            `Default Çeviri mode must not fetch bundle-en-* chunks, got: ${fetchedUrls.join(', ')}`
+          );
+          getEl('modePage').trigger('click');
+          await new Promise((r) => setImmediate(r));
+          await new Promise((r) => setImmediate(r));
+          assert(
+            fetchedUrls.some((u) => u.includes('bundles/bundle-en-4.json?v=fed654cba321')),
+            `Switching to Orijinal mode must lazily fetch bundle-en-4.json, got: ${fetchedUrls.join(', ')}`
+          );
+          console.log(
+            `  ✓ Multi-volume discovery, headings, separate lazy bundle-en-* chunks, patches & localStorage (${totalBytes} B < 2048 B) verified`
+          );
+          resolve();
+        } catch (e) {
+          reject(e);
+        } finally {
+          fs.rmSync(tmpRoot, { recursive: true, force: true });
+        }
+      });
+    });
+  } catch (err) {
     fs.rmSync(tmpRoot, { recursive: true, force: true });
+    throw err;
   }
 }
 
@@ -567,7 +654,11 @@ function testRussianDialogueDomRendering() {
   const volFiles = fs
     .readdirSync(bundlesDir)
     .filter((f) => f.startsWith('vol-') && f.endsWith('.json'));
-  assert(volFiles.length >= 11, 'public/bundles must contain one chunk per volume');
+  const enFiles = fs
+    .readdirSync(bundlesDir)
+    .filter((f) => f.startsWith('bundle-en-') && f.endsWith('.json'));
+  assert.strictEqual(volFiles.length, 11, 'public/bundles must contain 11 Turkish volume chunks');
+  assert.strictEqual(enFiles.length, 11, 'public/bundles must contain 11 separate English chunks');
 
   const vol4 = JSON.parse(fs.readFileSync(path.join(bundlesDir, 'vol-4.json'), 'utf8'));
   const flat4 = vol4.pages.flatMap((p) => p.tr);
@@ -668,7 +759,7 @@ function testIntentionalCornerQuotesAndCyrillic() {
   }
 }
 
-function runAll() {
+async function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
   testRussianDialogueDomRendering();
@@ -681,8 +772,11 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
-  testMultiVolumeDiscoveryAndPatches();
+  await testMultiVolumeDiscoveryAndPatches();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 
-runAll();
+runAll().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

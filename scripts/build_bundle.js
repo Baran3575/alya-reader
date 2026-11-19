@@ -1,8 +1,9 @@
-// Tembel yüklenen Türkçe JSON paketleri + ikili .webp illüstrasyon çıkarıcı.
+// Tembel yüklenen Türkçe + ayrı İngilizce JSON paketleri ve ikili .webp illüstrasyon çıkarıcı.
 // Üretilen dosyalar:
 //   public/bundles/manifest.json
-//   public/bundles/vol-<slug>.json   (p.en olmadan yalnız Türkçe metin ve bölüm verisi)
-//   public/art/vol-<slug>/<NNN>.webp (bağımsız ikili WebP illüstrasyonlar)
+//   public/bundles/vol-<slug>.json       (p.en olmadan yalnız Türkçe metin ve bölüm verisi)
+//   public/bundles/bundle-en-<slug>.json (Orijinal görünüm için ayrı tembel İngilizce kaynak parçası)
+//   public/art/vol-<slug>/<NNN>.webp     (bağımsız ikili WebP illüstrasyonlar)
 // Kullanım: node scripts/build_bundle.js
 
 const fs = require('fs');
@@ -21,8 +22,10 @@ function buildBundles(rootDir = DEFAULT_ROOT) {
 
   const manifestVolumes = {};
   const order = [];
+  const expectedBundleFiles = new Set(['manifest.json']);
   let totalArtFiles = 0;
   let totalChunkBytes = 0;
+  let totalEnBytes = 0;
 
   for (const cfg of activeVolumes) {
     const artDir = path.join(rootDir, 'public', 'art', `vol-${cfg.slug}`);
@@ -39,11 +42,16 @@ function buildBundles(rootDir = DEFAULT_ROOT) {
       imgPrefix: relPagesPrefix,
       volume: cfg.label,
       titlesFile: cfg.absTitlesFile,
-      includeEn: false,
+      includeEn: true,
     });
 
+    const enPages = {};
     for (const p of book.pages) {
+      if (!p.pending && Array.isArray(p.en) && p.en.length > 0) {
+        enPages[String(p.n)] = p.en;
+      }
       delete p.en;
+
       const nnn = String(p.n).padStart(3, '0') + '.webp';
       const srcWebp = path.join(srcPagesDir, nnn);
       const destWebp = path.join(artDir, nnn);
@@ -62,10 +70,24 @@ function buildBundles(rootDir = DEFAULT_ROOT) {
 
     const chunkJson = JSON.stringify(book);
     const hash = crypto.createHash('sha1').update(chunkJson).digest('hex').slice(0, 12);
-    const chunkRel = `bundles/vol-${cfg.slug}.json`;
-    const chunkPath = path.join(rootDir, 'public', chunkRel);
-    fs.writeFileSync(chunkPath, chunkJson + '\n');
+    const chunkFile = `vol-${cfg.slug}.json`;
+    const chunkRel = `bundles/${chunkFile}`;
+    fs.writeFileSync(path.join(bundlesDir, chunkFile), chunkJson + '\n');
+    expectedBundleFiles.add(chunkFile);
     totalChunkBytes += Buffer.byteLength(chunkJson);
+
+    const enPayload = {
+      id: cfg.id,
+      slug: cfg.slug,
+      pages: enPages,
+    };
+    const enJson = JSON.stringify(enPayload);
+    const enHash = crypto.createHash('sha1').update(enJson).digest('hex').slice(0, 12);
+    const enFile = `bundle-en-${cfg.slug}.json`;
+    const enRel = `bundles/${enFile}`;
+    fs.writeFileSync(path.join(bundlesDir, enFile), enJson + '\n');
+    expectedBundleFiles.add(enFile);
+    totalEnBytes += Buffer.byteLength(enJson);
 
     order.push(cfg.id);
     manifestVolumes[cfg.id] = {
@@ -74,9 +96,17 @@ function buildBundles(rootDir = DEFAULT_ROOT) {
       label: cfg.label,
       file: chunkRel,
       hash,
+      enFile: enRel,
+      enHash,
       total: book.total,
       chapters: book.chapters.length,
     };
+  }
+
+  for (const existing of fs.readdirSync(bundlesDir)) {
+    if (!expectedBundleFiles.has(existing)) {
+      fs.rmSync(path.join(bundlesDir, existing), { recursive: true, force: true });
+    }
   }
 
   const defaultVolume = manifestVolumes[manifestCfg.defaultVolume]
@@ -97,20 +127,24 @@ function buildBundles(rootDir = DEFAULT_ROOT) {
     manifest: outManifest,
     totalArtFiles,
     totalChunkBytes,
+    totalEnBytes,
   };
 }
 
 if (require.main === module) {
-  const { manifestPath, manifest, totalArtFiles, totalChunkBytes } = buildBundles(DEFAULT_ROOT);
+  const { manifestPath, manifest, totalArtFiles, totalChunkBytes, totalEnBytes } =
+    buildBundles(DEFAULT_ROOT);
   console.log(
-    `yazıldı: ${path.relative(DEFAULT_ROOT, manifestPath)} | ${manifest.order.length} cilt | ${(totalChunkBytes / 1024).toFixed(0)} KB toplam JSON | ${totalArtFiles} WebP illüstrasyon`
+    `yazıldı: ${path.relative(DEFAULT_ROOT, manifestPath)} | ${manifest.order.length} cilt | ${(totalChunkBytes / 1024).toFixed(0)} KB TR JSON + ${(totalEnBytes / 1024).toFixed(0)} KB EN JSON | ${totalArtFiles} WebP illüstrasyon`
   );
   for (const id of manifest.order) {
     const v = manifest.volumes[id];
     const chunkFile = path.join(DEFAULT_ROOT, 'public', v.file);
+    const enFile = path.join(DEFAULT_ROOT, 'public', v.enFile);
     const kb = (fs.statSync(chunkFile).size / 1024).toFixed(0);
+    const enKb = (fs.statSync(enFile).size / 1024).toFixed(0);
     console.log(
-      `  ${v.label.padEnd(9)}: ${v.file} (${kb} KB, hash=${v.hash}) | ${v.total} sayfa | ${v.chapters} bölüm`
+      `  ${v.label.padEnd(9)}: ${v.file} (${kb} KB) + ${v.enFile} (${enKb} KB) | ${v.total} sayfa | ${v.chapters} bölüm`
     );
   }
 }

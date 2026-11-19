@@ -12,23 +12,24 @@ PORT=4000 node server.js
 Tembel yüklenen cilt JSON paketlerini ve GitHub Pages statik sitesini derlemek için:
 
 ```bash
-npm run build           # public/bundles/manifest.json, vol-<slug>.json ve public/art/ çıktılarını üret
+npm run build           # public/bundles/{manifest,vol-*,bundle-en-*}.json ve public/art/ çıktılarını üret
 npm run build:site      # dist/ altında statik site (.nojekyll + bundles/ + art/) üret ve doğrula
 ```
 
 ### Çevrimdışı okuma ve tembel yüklenen paketler
 
 `volumes.json` ve `scripts/volumes.js`, Cilt `4` ile `12` arasındaki tüm 11 cildi tek merkezden yönetir.
-`scripts/build_bundle.js` aktif her cilt için yalnızca Türkçe metin parçalarını ve ikili `.webp` illüstrasyonları üretir:
+`scripts/build_bundle.js` aktif her cilt için Türkçe metin parçalarını, ayrı İngilizce kaynak parçalarını ve ikili `.webp` illüstrasyonları üretir:
 
 | Dosya | İçerik |
 |---|---|
 | `volumes.json` | Cilt `4`–`12` kayıt defteri, sıkı QC eşikleri ve yama yolları |
-| `public/bundles/manifest.json` | Aktif cilt listesi, sayfa/bölüm sayıları ve içerik özetleri (`?v=<hash>`) |
-| `public/bundles/vol-<slug>.json` | İlgili cildin `p.en` arındırılmış Türkçe sayfa ve bölüm verisi |
+| `public/bundles/manifest.json` | Aktif cilt listesi, sayfa/bölüm sayıları, Türkçe ve İngilizce içerik özetleri (`?v=<hash>`) |
+| `public/bundles/vol-<slug>.json` | İlgili cildin `p.en` arındırılmış Türkçe sayfa ve bölüm verisi (varsayılan **Çeviri** modunda yüklenir) |
+| `public/bundles/bundle-en-<slug>.json` | İlgili cildin ayrı İngilizce kaynak paragrafları (yalnız **Orijinal** moduna geçildiğinde tembel yüklenir) |
 | `public/art/vol-<slug>/NNN.webp` | Bağımsız ikili `.webp` illüstrasyon görselleri |
 
-Okuyucu başlangıçta yalnızca `manifest.json` ve seçili cildin `vol-<slug>.json` parçasını indirir; `localStorage` yalnız okuma ilerlemesini ve tercihleri (`< 2 KB`) saklar. `public/sw.js` Service Worker’ı kabuğu, cilt JSON parçalarını ve `.webp` görsellerini Cache Storage’a yazar.
+Okuyucu başlangıçta yalnızca `manifest.json` ve seçili cildin `vol-<slug>.json` parçasını indirir (**Çeviri** modunda hiçbir İngilizce parça indirilmez); kullanıcı **Orijinal** görünümüne geçtiğinde ilgili cildin `bundle-en-<slug>.json` parçası talep üzerine indirilir. `localStorage` yalnız okuma ilerlemesini ve tercihleri (`< 2 KB`) saklar. `public/sw.js` Service Worker’ı kabuğu, hem `vol-*` hem `bundle-en-*` JSON parçalarını ve `.webp` görsellerini Cache Storage’a yazar.
 
 ## Modüler İçe Aktarma ve Edebî Çeviri Hattı
 
@@ -69,7 +70,7 @@ node scripts/patch.js --dry-run                        # el yaması şema ve reg
 
 ### Arayüz
 
-- Üst çubuk tek satır: yerel **Cilt seçici** (`<select id="volSelect">`) · bölüm adı · Çeviri/Orijinal · tema. Yazı boyutu düğmeleri kaldırıldı, metin sabit boyutta.
-- Bölüm düğmesine dokununca sayfa içi kütüphane açılır: bölümlerde **bölüm adı + sayfa aralığı**, `‹ Ciltler` görünümünde tüm 11 cilt için bölüm ve okundu sayısı.
+- Üst çubuk tek satır: yerel **Cilt seçici** (`<select id="volSelect">`) + **bölüm/cilt çekmecesi** (`#chBtn` → `#libView`) kombinasyonu · Çeviri/Orijinal · tema. Yazı boyutu düğmeleri kaldırıldı, metin sabit boyutta.
+- Bölüm düğmesine dokununca sayfa içi çekmece/kütüphane (`#libView`) açılır: bölümlerde **bölüm adı + sayfa aralığı**, `‹ Ciltler` görünümünde tüm 11 cilt için bölüm ve okundu sayısı, `Kapat` ile okumaya dönüş; çekmece açıkken üstteki `<select>` değiştiğinde ilgili cildin bölüm listesi anında güncellenir.
 - Okundu sistemi elle: her bölüm satırındaki ✓ ile işaretlenir (`alya4:read:<cilt>`), "Hepsini okundu say" / "İşaretleri temizle" düğmeleri vardır. Otomatik işaretleme yok.
 - Alt çubuk: ‹ › düğmeleri, bölüm adı, sayfa aralığı, kaydırıcı. Görsele dokununca tam ekran.
