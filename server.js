@@ -88,6 +88,22 @@ const VOLUMES = {
   '4.5': { dataDir: 'data45', imgPrefix: '/pages45/', volume: 'Cilt 4.5', titlesFile: path.join(ROOT, 'data45/chapters.json') },
 };
 
+for (const v of ['5', '6', '7', '8', '9', '9.5', '10', '11', '12']) {
+  const slug = v.replace('.', '');
+  const dataDir = 'data' + slug;
+  if (
+    fs.existsSync(path.join(ROOT, dataDir, 'source.json')) &&
+    fs.existsSync(path.join(ROOT, dataDir, 'paragraphs_final.json'))
+  ) {
+    VOLUMES[v] = {
+      dataDir,
+      imgPrefix: `/pages${slug}/`,
+      volume: `Cilt ${v}`,
+      titlesFile: path.join(ROOT, dataDir, 'chapters.json'),
+    };
+  }
+}
+
 function packBook(key) {
   const b = buildBook(VOLUMES[key]);
   const json = Buffer.from(JSON.stringify(b));
@@ -192,4 +208,4 @@ server.listen(PORT, () => {
 
 if (require.main === module) start();
 
-module.exports = { buildBook, getBook, start };
+module.exports = { buildBook, getBook, start, VOLUMES };

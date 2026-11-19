@@ -1,16 +1,154 @@
 [
  {
   "page": 13,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "İçindekiler"
+ },
+ {
+  "page": 40,
+  "i": 9,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Az önce… yüzü kızardı mı?”"
+ },
+ {
+  "page": 42,
+  "i": 12,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Hmm~ neyse, boş ver. Seni bu kadar ani buraya çağırdığım için özür dilerim? İşim bitti, o yüzden…”"
+ },
+ {
+  "page": 51,
+  "i": 1,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Eh, o yeteneğini sonra gösterirsin… Ama önce hadi şuna binelim!!”"
+ },
+ {
+  "page": 55,
+  "i": 2,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“İyi! Ama bu sefer en öne oturamayabiliriz…”"
+ },
+ {
+  "page": 62,
   "i": 3,
   "en": true,
   "tr": false,
-  "t": "Bölüm 2: Otaku’lar gerçekten sinir bozucu"
+  "mode": "exact",
+  "t": "Bunu en uç noktaya götürürsek, pek çok kişi Masachika’nın Alisa, Yuki ve Ayano’yu kandırarak… Seçim kampanyasını istediği gibi yönettiğini düşünebilir."
  },
  {
-  "page": 13,
-  "i": 13,
+  "page": 63,
+  "i": 9,
   "en": true,
   "tr": false,
-  "t": "Resimler"
+  "mode": "exact",
+  "t": "“Yüzlerinizdeki ifadeye bakılırsa, sözlerim tam isabet mi etti?” Nonoa’nın gördüğü şey… Ne Masachika ne de Yuki’ydi."
+ },
+ {
+  "page": 66,
+  "i": 8,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Farkında olmayabilirsin, ama bilgin olsun, Kuzecchi o civardaki piyano derslerine giden çocuklar arasında epey ünlü, biliyor musun?”"
+ },
+ {
+  "page": 98,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Nedense elini tutmak istiyorum. Bu yasak mı?”"
+ },
+ {
+  "page": 119,
+  "i": 12,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Söylemesen daha iyi. O iki kişinin adını ölene kadar kendine sakla.”"
+ },
+ {
+  "page": 131,
+  "i": 9,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "“Deniz varrrr!”"
+ },
+ {
+  "page": 134,
+  "i": 2,
+  "en": true,
+  "tr": false,
+  "mode": "proportional",
+  "t": "◇◇◇◇"
+ },
+ {
+  "page": 165,
+  "i": 7,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Masachika, gözleri yaşla dolu bir hâlde yere bakan, sıkılı dişlerinin arasından hırıltıyla hıçkırık arası bir ses çıkaran Alisa’dan özür diledi. Sonra Alisa aniden arkasını döndü, birkaç adım atıp Masachika’ya sırtını dönerek çömeldi."
+ },
+ {
+  "page": 180,
+  "i": 5,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Alisa, kısa bir süre önce yaşanan olayları hatırlayınca yanakları kızardı."
+ },
+ {
+  "page": 201,
+  "i": 5,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "İstem dışı Masachika, bunu nefretle tükürdüğünü fark etti. Aceleyle Maria’nın ağzını kapattı, ancak Maria ne şaşırmış ne de kaşlarını çatmış görünüyordu; sadece aynı bakışla başını yana eğdi."
+ },
+ {
+  "page": 230,
+  "i": 2,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Hmm~, o halde hâlâ güvenli sayılır mı…? Bu arada, 1 ve 2 numaraları kim aldı?” Touya, bunu bir kız arkadaşının yapması durumunda sorun çıkmayacağını düşünmüş olmalıydı. Ancak…"
+ },
+ {
+  "page": 232,
+  "i": 8,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "(Her halükarda, bu kesinlikle yasaktır! Kesinlikle yasaktır!)"
+ },
+ {
+  "page": 246,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "Ne kadar düşünürse düşünsün, Masachika’nın aklına gelen tek şey, yaptığı şakanın anısıydı. Masachika, ona yakınlaşmak yerine, kızın kendisinden nefret edeceğinden endişe ediyordu."
+ },
+ {
+  "page": 271,
+  "i": 0,
+  "en": true,
+  "tr": false,
+  "mode": "exact",
+  "t": "“Ara Masachika-chan, dışarı mı çıkıyorsun?”"
  }
 ]

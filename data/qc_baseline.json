@@ -1,12 +1,16 @@
 {
  "4": {
-  "avg": 0.15,
-  "flagged": 24,
-  "paragraphs": 3076
+  "avg": 0.14,
+  "flagged": 23,
+  "paragraphs": 3114,
+  "usablePages": 269,
+  "negMismatches": 8
  },
  "4.5": {
   "avg": 0.27,
   "flagged": 53,
-  "paragraphs": 2281
+  "paragraphs": 2284,
+  "usablePages": 332,
+  "negMismatches": 7
  }
 }

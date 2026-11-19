@@ -189,9 +189,196 @@ function testSchemaValidation() {
   }
 }
 
+function testLiteraryRestorations() {
+  console.log('Testing literary restorations in Vol 4 and Vol 4.5...');
+  const v4 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'paragraphs_final.json'), 'utf8'));
+  const v45 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data45', 'paragraphs_final.json'), 'utf8'));
+  const bi45 = JSON.parse(fs.readFileSync(path.join(ROOT, 'data45', 'bilingual.json'), 'utf8'));
+
+  // Vol 4 Page 30: zero amusement-park fabrication, 16 canonical bedroom/warden paragraphs
+  assert.strictEqual(v4['30'].length, 16, 'Vol 4 page 30 must have all 16 canonical paragraphs');
+  const p30Joined = v4['30'].join(' ');
+  assert(!/eğlence parkı/i.test(p30Joined), 'Vol 4 page 30 must not contain fabricated amusement-park lines');
+  assert(p30Joined.includes('gardiyan') && p30Joined.includes('sake'), 'Vol 4 page 30 must contain canonical prison-warden skit');
+
+  // Vol 4 Pages 103, 112, 118, 279 completeness
+  assert.strictEqual(v4['103'].length, 10, 'Vol 4 page 103 must have 10 paragraphs');
+  assert(v4['103'].join(' ').includes('Alya-san') && v4['103'].join(' ').includes('Yuki-san'), 'Vol 4 page 103 must restore Alya/Yuki dialogue');
+  assert.strictEqual(v4['112'].length, 13, 'Vol 4 page 112 must have 13 paragraphs');
+  assert.strictEqual(v4['118'].length, 16, 'Vol 4 page 118 must have 16 paragraphs');
+  assert(v4['118'].join(' ').includes('2D') && v4['118'].join(' ').includes('Ayano'), 'Vol 4 page 118 must restore 2D joke and Ayano');
+  assert.strictEqual(v4['279'].length, 11, 'Vol 4 page 279 must have 11 paragraphs');
+  assert(v4['279'].join(' ').includes('Alisa'), 'Vol 4 page 279 must preserve Alisa');
+
+  // Vol 4.5 restored passages: 10.3, 329.3, 330.3, 338.0
+  assert(v45['10'][3].includes('Sayaka') && v45['10'][3].includes('Yuki'), 'Vol 4.5 10.3 must restore omitted sentences');
+  assert.strictEqual(v45['329'].length, 5, 'Vol 4.5 page 329 must have 5 paragraphs');
+  assert.strictEqual(v45['330'].length, 7, 'Vol 4.5 page 330 must have 7 paragraphs');
+  assert(v45['330'][3].includes('Touya') && v45['330'][3].includes('Chisaki') && v45['330'][3].includes('Yuki'), 'Vol 4.5 330.3 must restore Touya, Chisaki, and Yuki');
+  assert.strictEqual(v45['338'].length, 4, 'Vol 4.5 page 338 must have 4 paragraphs');
+  assert(bi45['329'][3].d.trim().length > 0 && bi45['330'][3].d.trim().length > 0 && bi45['338'][0].d.trim().length > 0, 'Vol 4.5 bilingual.json entries must be non-empty');
+  console.log('  ✓ Canonical literary restorations verified');
+}
+
+function testDroppedParagraphFailsCLI() {
+  console.log('Testing injected dropped paragraph defect...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    data['112'].pop(); // Drop a single paragraph from page 112
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const res = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(res.code, 1, 'Dropped paragraph must exit with code 1');
+    assert(res.out.includes('düşürülmüş paragraf'), 'Diagnostics must report dropped paragraph');
+    console.log('  ✓ Dropped paragraph caught with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testLowWordRatioTruncatedPageFailsCLI() {
+  console.log('Testing injected low word-ratio (truncated page) defect...');
+  const v45Path = path.join(ROOT, 'data45', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v45Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    // Truncate each paragraph on page 10 to a couple of words while keeping paragraph count & names
+    data['10'] = [
+      'Yuki usulca gülümsedi.',
+      'Sayaka teşekkür etti.',
+      'Gizli otakular çekinirdi.',
+      'Sayaka ve Yuki düşündü.',
+      '“…”',
+      '“…”',
+    ];
+    fs.writeFileSync(v45Path, JSON.stringify(data));
+
+    const res = runCLI(['--volume', '4.5', '--strict'], false);
+    assert.strictEqual(res.code, 1, 'Low word ratio must exit with code 1');
+    assert(res.out.includes('düşük kelime oranı'), 'Diagnostics must report low word ratio');
+    console.log('  ✓ Low word ratio caught with code 1');
+  } finally {
+    fs.writeFileSync(v45Path, orig);
+  }
+}
+
+function testMissingCharacterNameFailsCLI() {
+  console.log('Testing injected missing character name (entity parity) defect...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    // Replace canonical name Chisaki on page 103 without dropping paragraph or ratio
+    data['103'] = data['103'].map((p) => p.replace(/Chisaki/g, 'başkan yardımcısı'));
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const res = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(res.code, 1, 'Missing character name must exit with code 1');
+    assert(res.out.includes('eksik özel ad'), 'Diagnostics must report missing entity name');
+    console.log('  ✓ Missing character name caught with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testFabricatedPage30FailsCLI() {
+  console.log('Testing fabricated amusement-park rewrite on Vol 4 page 30...');
+  const v4Path = path.join(ROOT, 'data', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v4Path, 'utf8');
+  try {
+    const data = JSON.parse(orig);
+    data['30'] = [
+      '“Sanki senin kasıkların ısınıyormuş gibi konuşmayı bırak!”',
+      '“Sonra çayı devirip üstünü ıslatacaksın, elbisesi içini gösterecek—”',
+      '“O kadarı da fazla!”',
+      'Masachika elini kaldırıp onu susturdu ve derin bir nefes aldı. Yuki gayet memnun, kollarını göğsünde kavuşturdu.',
+      '“Neyse… Sen bari o saçma sapan rol yapmayı bırak. Bugün Ayano da gelecek, dışarı çıkıyoruz.”',
+      '“Ooo, buluşma mı? Söylesene, kiminle?”',
+      '“Kimseyle. Hep birlikte. Bir eğlence parkına.”',
+      '“Hıh~ demek öyle~”',
+      'Yuki yatakta doğrulup esnedi; saçlarını toplarken gözleri hâlâ kısıktı.',
+      '“Bak, gidip üstümü değiştireceğim. Sen de kalk artık, yoksa gerçekten burada bırakırım.”',
+      '“Evet evet~ İnsanın abisi de tam bir gardiyan oluyor…”',
+    ];
+    fs.writeFileSync(v4Path, JSON.stringify(data));
+
+    const res = runCLI(['--volume', '4', '--strict'], false);
+    assert.strictEqual(res.code, 1, 'Fabricated page 30 must fail CLI with code 1');
+    assert(
+      res.out.includes('düşük kelime oranı') && res.out.includes('düşürülmüş paragraf'),
+      'Diagnostics must catch both low word ratio and dropped paragraphs on fabricated page 30'
+    );
+    console.log('  ✓ Fabricated amusement-park scene blocked with code 1');
+  } finally {
+    fs.writeFileSync(v4Path, orig);
+  }
+}
+
+function testMergeEmptyBilingualGuard() {
+  console.log('Testing merge.js and scripts45/merge.js empty { d, g } guard...');
+  const tmpBi = path.join(ROOT, 'data', '_tmp_test_bilingual.json');
+  const tmpOut = path.join(ROOT, 'data', '_tmp_test_out.json');
+  try {
+    fs.writeFileSync(
+      tmpBi,
+      JSON.stringify({
+        '1': [
+          { d: 'Geçerli çeviri metni.', g: 'Geçerli yedek.' },
+          { d: '', g: '   ' },
+        ],
+      })
+    );
+
+    for (const scriptRel of ['scripts/merge.js', 'scripts45/merge.js']) {
+      let failed = false;
+      try {
+        execFileSync(process.execPath, [path.join(ROOT, scriptRel), tmpBi, tmpOut], {
+          cwd: ROOT,
+          encoding: 'utf8',
+          stdio: 'pipe',
+        });
+      } catch (err) {
+        failed = true;
+        assert.strictEqual(err.status, 1, `${scriptRel} must exit with code 1 on empty bilingual entry`);
+        assert((err.stderr || '').includes('1.1'), `${scriptRel} must identify empty entry 1.1`);
+      }
+      assert(failed, `${scriptRel} should have failed on empty entry`);
+      assert(!fs.existsSync(tmpOut), `${scriptRel} must not write output when empty entries exist`);
+    }
+    console.log('  ✓ merge.js and scripts45/merge.js fail with code 1 on empty bilingual entries');
+  } finally {
+    if (fs.existsSync(tmpBi)) fs.unlinkSync(tmpBi);
+    if (fs.existsSync(tmpOut)) fs.unlinkSync(tmpOut);
+  }
+}
+
+function testAuditMeaningZeroSkippedPages() {
+  console.log('Testing audit_meaning.js 100% usable page coverage (zero skipped pages)...');
+  const { evaluateMeaning } = require('../scripts/qc/audit_meaning');
+  const { VOLUMES } = require('../scripts/qc/cli');
+
+  // Verify Faz 1-5 registry covers Volumes 4, 4.5, and 5..12
+  for (const expectedVol of ['4', '4.5', '5', '6', '7', '8', '9', '10', '11', '12']) {
+    assert(VOLUMES[expectedVol], `VOLUMES registry must define volume ${expectedVol}`);
+  }
+
+  for (const vol of ['4', '4.5']) {
+    const src = JSON.parse(fs.readFileSync(path.join(ROOT, VOLUMES[vol].src), 'utf8'));
+    const tr = JSON.parse(fs.readFileSync(path.join(ROOT, VOLUMES[vol].tr), 'utf8'));
+    const res = evaluateMeaning(src, tr);
+    assert(res.usablePages > 250, `Vol ${vol} must detect all usable text pages`);
+    assert.strictEqual(res.skippedPages, 0, `Vol ${vol} must have 0 skipped usable pages`);
+    assert.strictEqual(res.inspectedPages, res.usablePages, `Vol ${vol} must inspect 100% of usable pages`);
+  }
+  console.log('  ✓ Zero skipped pages and Faz 1–5 volume registry verified');
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
+  testLiteraryRestorations();
   testTurkishDotlessCharacters();
   testIntentionalEnglishResidue();
   testIntentionalUnclosedQuote();
@@ -199,6 +386,12 @@ function runAll() {
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();
+  testDroppedParagraphFailsCLI();
+  testLowWordRatioTruncatedPageFailsCLI();
+  testMissingCharacterNameFailsCLI();
+  testFabricatedPage30FailsCLI();
+  testMergeEmptyBilingualGuard();
+  testAuditMeaningZeroSkippedPages();
   console.log('\n=== All Verification Tests Passed Successfully! ===');
 }
 

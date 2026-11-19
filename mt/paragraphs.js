@@ -1,9 +1,19 @@
 // Kaynak sayfa metnini paragraflara böler (çeviri ile aynı bölme kuralı)
+const NOISE_LINE_RE =
+  /(Goldenagato|mp4directs|jnovels|zerobooks|Download all your Favorite|Stay up to date On Light Novels|Join our Discord and meet Thousands|Page\s+\d+)/i;
+
+const TN_BLOCK_RE =
+  /\(\s*(?:TN|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\)|$)|\[\s*(?:TN|TL\s*Note|Translator['’]?s?\s*Note)\s*:[\s\S]*?(?:\]|$)/gi;
+
+function stripTranslatorNotes(text) {
+  return String(text || '').replace(TN_BLOCK_RE, ' ').replace(/\s+/g, ' ').trim();
+}
+
 function paragraphs(text) {
   const lines = (text || '')
     .split('\n')
     .map((s) => s.trim())
-    .filter((s) => s && !/(Goldenagato|mp4directs|jnovels|zerobooks|Page\s+\d+)/i.test(s));
+    .filter((s) => s && !NOISE_LINE_RE.test(s));
   const blocks = [];
   let cur = [];
   const endPunct = /[.!?"”’]$/;
@@ -20,7 +30,11 @@ function paragraphs(text) {
   if (cur.length) blocks.push(cur.join(' '));
   const out = [];
   for (const b of blocks) {
-    const clean = b.replace(/Page\s+\d+/gi, '').replace(/\s+/g, ' ').trim();
+    const clean = b
+      .replace(/Page\s+\d+/gi, '')
+      .replace(NOISE_LINE_RE, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     if (!clean) continue;
     if (clean.length <= 520) {
       out.push(clean);
@@ -40,4 +54,10 @@ function paragraphs(text) {
   return out;
 }
 
-module.exports = { paragraphs };
+function sourceParagraphs(text) {
+  return paragraphs(text)
+    .map((p) => stripTranslatorNotes(p))
+    .filter(Boolean);
+}
+
+module.exports = { paragraphs, sourceParagraphs, stripTranslatorNotes, NOISE_LINE_RE, TN_BLOCK_RE };

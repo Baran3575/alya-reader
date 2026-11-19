@@ -13,13 +13,26 @@ const path = require('path');
 const { runVerify } = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
+const { evaluateFidelity } = require('./fidelity');
+const { evaluateEntityParity } = require('./faith_en');
+const { evaluateMeaning } = require('./audit_meaning');
 
 const ROOT = path.join(__dirname, '..', '..');
 const BASELINE_FILE = path.join(ROOT, 'data', 'qc_baseline.json');
 
+// Faz 1 – Faz 5 cilt kaydı (Cilt 4, 4.5 ve gelecek ciltler 5..12)
 const VOLUMES = {
-  '4': { tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
-  '4.5': { tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '4': { src: 'data/source.json', tr: 'data/paragraphs_final.json', label: 'Cilt 4', maxAvgStrict: 0.20 },
+  '4.5': { src: 'data45/source.json', tr: 'data45/paragraphs_final.json', label: 'Cilt 4.5', maxAvgStrict: 0.28 },
+  '5': { src: 'data5/source.json', tr: 'data5/paragraphs_final.json', label: 'Cilt 5', maxAvgStrict: 0.25 },
+  '6': { src: 'data6/source.json', tr: 'data6/paragraphs_final.json', label: 'Cilt 6', maxAvgStrict: 0.25 },
+  '7': { src: 'data7/source.json', tr: 'data7/paragraphs_final.json', label: 'Cilt 7', maxAvgStrict: 0.25 },
+  '8': { src: 'data8/source.json', tr: 'data8/paragraphs_final.json', label: 'Cilt 8', maxAvgStrict: 0.25 },
+  '9': { src: 'data9/source.json', tr: 'data9/paragraphs_final.json', label: 'Cilt 9', maxAvgStrict: 0.25 },
+  '9.5': { src: 'data95/source.json', tr: 'data95/paragraphs_final.json', label: 'Cilt 9.5', maxAvgStrict: 0.25 },
+  '10': { src: 'data10/source.json', tr: 'data10/paragraphs_final.json', label: 'Cilt 10', maxAvgStrict: 0.25 },
+  '11': { src: 'data11/source.json', tr: 'data11/paragraphs_final.json', label: 'Cilt 11', maxAvgStrict: 0.25 },
+  '12': { src: 'data12/source.json', tr: 'data12/paragraphs_final.json', label: 'Cilt 12', maxAvgStrict: 0.25 },
 };
 
 // Sayfa bölünmesinden kaynaklanan bilinen tek sayıda tırnak içeren paragraflar
@@ -30,11 +43,18 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
     '235.1', '254.14',
   ]),
   '4.5': new Set([
-    '12.2', '25.7', '32.5', '33.2', '47.3', '50.3', '67.4', '122.0',
-    '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
+    '12.1', '12.2', '25.7', '32.5', '33.2', '47.3', '50.3', '67.4', '122.0',
+    '127.2', '133.0', '173.1', '175.4', '197.4', '237.4', '237.5',
     '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
   ]),
 };
+
+function getAvailableVolumes() {
+  return Object.keys(VOLUMES).filter((v) => {
+    const cfg = VOLUMES[v];
+    return fs.existsSync(path.resolve(ROOT, cfg.tr)) || fs.existsSync(path.resolve(ROOT, cfg.src));
+  });
+}
 
 const ZERO_TOLERANCE = [
   'çift nokta',
@@ -54,7 +74,7 @@ function parseArgs() {
   const strict = args.includes('--strict');
   const checkRegression = args.includes('--check-regression');
 
-  let selected = Object.keys(VOLUMES);
+  let selected = getAvailableVolumes();
   const volIdx = args.indexOf('--volume') > -1 ? args.indexOf('--volume') : args.indexOf('--vol');
   if (volIdx > -1 && args[volIdx + 1]) {
     const val = String(args[volIdx + 1]);
@@ -308,11 +328,111 @@ function main() {
       }
     }
 
+    // 6. Kaynak Hizalama ve Sadakat Kapıları (source.json vs paragraphs_final.json)
+    let alignment = null;
+    const absSrcFile = cfg.src ? path.resolve(ROOT, cfg.src) : null;
+    if (!absSrcFile || !fs.existsSync(absSrcFile)) {
+      hardFails.push({ label: 'kaynak dosya yok', value: cfg.src || 'source.json' });
+    } else {
+      try {
+        const srcData = JSON.parse(fs.readFileSync(absSrcFile, 'utf8'));
+        const fidelity = evaluateFidelity(srcData, data, {
+          minRatio: 0.55,
+          maxRatio: 1.35,
+          minWordsForRatio: 25,
+        });
+        const entity = evaluateEntityParity(srcData, data);
+        const meaning = evaluateMeaning(srcData, data);
+
+        alignment = {
+          usablePages: meaning.usablePages,
+          inspectedPages: meaning.inspectedPages,
+          skippedPages: meaning.skippedPages,
+          avgWordRatio: fidelity.avg,
+          lowRatioCount: fidelity.lowRatioPages.length,
+          highRatioCount: fidelity.highRatioPages.length,
+          droppedParaCount: fidelity.droppedParaPages.length,
+          missingEntityPages: entity.missingNamePages.length,
+          negMismatches: meaning.rows.length,
+        };
+
+        if (meaning.skippedPages > 0 || fidelity.emptyUsablePages.length > 0) {
+          hardFails.push({
+            label: 'atlanan / boş sayfa (kaynak hizalama)',
+            value: Math.max(meaning.skippedPages, fidelity.emptyUsablePages.length),
+            details: fidelity.emptyUsablePages.map((p) => `s${p.page}: EN ${p.wEn} kelime -> TR boş`),
+          });
+        }
+
+        if (fidelity.lowRatioPages.length > 0) {
+          hardFails.push({
+            label: 'düşük kelime oranı (kırpılmış/eksik sayfa)',
+            value: fidelity.lowRatioPages.length,
+            details: fidelity.lowRatioPages.map(
+              (p) => `s${p.page}: oran ${(p.ratio * 100).toFixed(1)}% (EN ${p.wEn} -> TR ${p.wTr})`
+            ),
+          });
+        }
+
+        if (fidelity.highRatioPages.length > 0) {
+          hardFails.push({
+            label: 'yüksek kelime oranı (şişkin/uydurma sayfa)',
+            value: fidelity.highRatioPages.length,
+            details: fidelity.highRatioPages.map(
+              (p) => `s${p.page}: oran ${(p.ratio * 100).toFixed(1)}% (EN ${p.wEn} -> TR ${p.wTr})`
+            ),
+          });
+        }
+
+        if (fidelity.droppedParaPages.length > 0) {
+          hardFails.push({
+            label: 'düşürülmüş paragraf (kaynak hizalama)',
+            value: fidelity.droppedParaPages.length,
+            details: fidelity.droppedParaPages.map(
+              (p) => `s${p.page}: beklenen >=${p.minExpectedParas} (kaynak ${p.enParas}), mevcut ${p.trParas}`
+            ),
+          });
+        }
+
+        if (entity.missingNamePages.length > 0) {
+          hardFails.push({
+            label: 'eksik özel ad (varlık tutarlılığı)',
+            value: entity.missingNamePages.length,
+            details: entity.missingNamePages.map(
+              (p) => `s${p.page}: eksik [${p.missNames.join(', ')}]`
+            ),
+          });
+        }
+
+        if (meaning.severePages.length > 0) {
+          hardFails.push({
+            label: 'olumsuzluk/anlam sapması (sayfa bazlı)',
+            value: meaning.severePages.length,
+            details: meaning.severePages.map(
+              (p) => `s${p.page}: ${p.reason} (${p.pageMismatches})`
+            ),
+          });
+        }
+
+        if ((strict || checkRegression) && base.negMismatches !== undefined && meaning.rows.length > base.negMismatches + 2) {
+          hardFails.push({
+            label: 'olumsuzluk uyuşmazlığı regresyonu',
+            value: meaning.rows.length,
+            baseline: base.negMismatches,
+            details: meaning.rows.slice(0, 5).map((r) => `s${r.page}.${r.i}: ${r.t.slice(0, 80)}`),
+          });
+        }
+      } catch (e) {
+        hardFails.push({ label: 'kaynak hizalama hatası', value: e.message });
+      }
+    }
+
     result[vol] = {
       label: cfg.label,
       file: relFile,
       verify: verifyData.rows.map(([label, value, note]) => ({ label: note || label, value })),
       quality: { avg: q.avg, flagged: q.flagged, total: q.total },
+      alignment,
       fails: hardFails,
       baseline: base,
     };
@@ -322,7 +442,13 @@ function main() {
     }
 
     if (update) {
-      baseline[vol] = { avg: q.avg, flagged: q.flagged, paragraphs: q.total };
+      baseline[vol] = {
+        avg: q.avg,
+        flagged: q.flagged,
+        paragraphs: q.total,
+        usablePages: alignment ? alignment.usablePages : undefined,
+        negMismatches: alignment ? alignment.negMismatches : undefined,
+      };
     }
   }
 
@@ -369,6 +495,18 @@ function main() {
         '| 3+ puanlı:',
         r.quality.flagged
       );
+      if (r.alignment) {
+        console.log(
+          '   hizalama:',
+          `${r.alignment.inspectedPages}/${r.alignment.usablePages} sayfa (atlanan: ${r.alignment.skippedPages})`,
+          '| kelime oranı:',
+          `${(r.alignment.avgWordRatio * 100).toFixed(1)}%`,
+          '| eksik özel ad:',
+          r.alignment.missingEntityPages,
+          '| olumsuzluk uyuşmazlığı:',
+          r.alignment.negMismatches
+        );
+      }
 
       const displayKeys = [
         'çift nokta',
@@ -399,6 +537,12 @@ function main() {
         console.log('   ✓ Tüm eşikler içinde');
       }
     }
+    for (const v of violations) {
+      if (!result[v.vol]) {
+        console.log(`\n== Cilt ${v.vol}`);
+        v.fails.forEach((f) => console.log(`   ✗ ${f.label}: ${f.value}`));
+      }
+    }
   }
 
   process.exit(violations.length === 0 ? 0 : 1);
@@ -409,6 +553,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  VOLUMES,
+  getAvailableVolumes,
   validateSchema,
   findUnclosedQuotes,
   findEnglishResidueDetails,

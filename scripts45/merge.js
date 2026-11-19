@@ -98,26 +98,50 @@ function preferGoogle(d, g) {
   return ld >= 2 && lg === 0;
 }
 
-const data = JSON.parse(fs.readFileSync(IN, 'utf8'));
-const glossary = loadGlossary();
-const out = {};
-let pickedD = 0;
-let pickedG = 0;
+function mergeBilingual(data, glossary = loadGlossary()) {
+  const out = {};
+  const emptyEntries = [];
+  let pickedD = 0;
+  let pickedG = 0;
 
-for (const [page, paras] of Object.entries(data)) {
-  if (!Array.isArray(paras)) continue;
-  out[page] = paras.map((p) => {
-    const d = (p && p.d) || '';
-    const g = (p && p.g) || '';
-    let chosen = d;
-    if (!d) chosen = g;
-    else if (g && preferGoogle(d, g)) chosen = g;
-    if (chosen === d && d) pickedD++;
-    else if (chosen === g && g) pickedG++;
-    return polish(chosen, glossary);
-  });
+  for (const [page, paras] of Object.entries(data)) {
+    if (!Array.isArray(paras)) continue;
+    out[page] = paras.map((p, idx) => {
+      const d = typeof (p && p.d) === 'string' ? p.d.trim() : '';
+      const g = typeof (p && p.g) === 'string' ? p.g.trim() : '';
+      if (!d && !g) {
+        emptyEntries.push(`${page}.${idx}`);
+        return '';
+      }
+      let chosen = d;
+      if (!d) chosen = g;
+      else if (g && preferGoogle(d, g)) chosen = g;
+      if (chosen === d && d) pickedD++;
+      else if (chosen === g && g) pickedG++;
+      return polish(chosen, glossary);
+    });
+  }
+
+  return { out, pickedD, pickedG, emptyEntries };
 }
 
-fs.writeFileSync(OUT, JSON.stringify(out));
-const total = Object.values(out).reduce((a, b) => a + b.length, 0);
-console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya: data/paragraphs_final.json');
+if (require.main === module) {
+  const inFile = process.argv[2] ? path.resolve(process.argv[2]) : IN;
+  const outFile = process.argv[3] ? path.resolve(process.argv[3]) : OUT;
+  const data = JSON.parse(fs.readFileSync(inFile, 'utf8'));
+  const glossary = loadGlossary();
+  const { out, pickedD, pickedG, emptyEntries } = mergeBilingual(data, glossary);
+
+  if (emptyEntries.length > 0) {
+    console.error(
+      `✗ Hata: ${path.relative(ROOT, inFile)} içinde hem "d" hem "g" alanı boş ${emptyEntries.length} paragraf bulundu: ${emptyEntries.join(', ')}`
+    );
+    process.exit(1);
+  }
+
+  fs.writeFileSync(outFile, JSON.stringify(out));
+  const total = Object.values(out).reduce((a, b) => a + b.length, 0);
+  console.log('paragraf:', total, '| DeepL:', pickedD, '| Google:', pickedG, '| dosya:', path.relative(ROOT, outFile));
+}
+
+module.exports = { loadGlossary, polish, preferGoogle, mergeBilingual };

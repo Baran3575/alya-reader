@@ -1,0 +1,83 @@
+name: Deploy Static Reader to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'data*/**'
+      - 'public/**'
+      - 'scripts/build_bundle.js'
+      - 'server.js'
+      - '.github/workflows/pages.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & Verify Static Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Ensure canonical source files are read-only
+        run: chmod 444 data*/source.json
+
+      - name: Run QC regression gates
+        run: npm test
+
+      - name: Rebuild offline browser bundle
+        run: node scripts/build_bundle.js
+
+      - name: Verify bundle integrity and read-only sources
+        run: |
+          node -e '
+            const fs = require("fs");
+            const bundle = fs.readFileSync("public/bundle.js", "utf8");
+            const art = fs.readFileSync("public/bundle-art.js", "utf8");
+            if (!bundle.includes("window.ALYA_BUNDLE=")) process.exit(1);
+            if (!art.includes("data:image/webp;base64,")) process.exit(1);
+          '
+          git diff --exit-code data*/source.json
+
+      - name: Configure Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

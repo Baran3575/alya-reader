@@ -1,52 +1,53 @@
 SADAKAT RAPORU — Cilt 4
-sayfa: 274 | kelime EN 72211 / TR 53490 | ortalama TR/EN kelime oranı: 74.1%
-cümle EN 11252 / TR 7276
+sayfa: 269 | kelime EN 70111 / TR 51586 | ortalama TR/EN kelime oranı: 74.2%
+cümle EN 10953 / TR 7239
 
-[1] Kısa kalan sayfalar (<%72): 87
-  s 12  0%  EN 39 → TR 0
-  s282  43%  EN 7 → TR 3
-  s237  53%  EN 17 → TR 9
-  s239  56%  EN 297 → TR 167
-  s 15  56%  EN 337 → TR 190
-  s 34  58%  EN 24 → TR 14
-  s101  61%  EN 290 → TR 176
-  s 20  61%  EN 220 → TR 135
-  s168  63%  EN 24 → TR 15
-  s133  64%  EN 269 → TR 172
-  s 47  64%  EN 296 → TR 190
-  s194  65%  EN 208 → TR 135
+[1] Kısa kalan sayfalar (<%72): 102
+  s 47  58%  EN 286 → TR 167
+  s 33  59%  EN 228 → TR 134
+  s135  61%  EN 287 → TR 174
+  s 20  61%  EN 207 → TR 126
+  s111  61%  EN 327 → TR 199
+  s131  61%  EN 263 → TR 161
+  s101  61%  EN 277 → TR 170
+  s 52  62%  EN 283 → TR 174
+  s 48  62%  EN 251 → TR 155
+  s107  62%  EN 300 → TR 186
+  s 21  63%  EN 282 → TR 178
+  s128  64%  EN 292 → TR 186
 
-[2] Şişkin sayfalar (>%118): 0
+[2] Şişkin sayfalar (>%118): 1
+  s109  120%  EN 15 → TR 18
 
-[3] Sayı uyuşmayan sayfalar: 269
-  s14
-  s15
-  s16
-  s17
-  s18
-  s19
-  s20
-  s21
-  s22
-  s23
-  s24
-  s25
+[3] Sayı uyuşmayan sayfalar: 14
+  s44
+  s45
+  s51
+  s52
+  s73
+  s101
+  s107
+  s113
+  s121
+  s122
+  s124
+  s207
 
-[4] İsim sayısı uyuşmayan sayfalar: 66
-  s15  eksik: Masachika  fazla: -
-  s28  eksik: -  fazla: Kuze
-  s36  eksik: -  fazla: Masachika
-  s41  eksik: -  fazla: Ayano
-  s48  eksik: -  fazla: Yuki
+[4] İsim sayısı uyuşmayan sayfalar: 96
+  s22  eksik: Masachika  fazla: -
+  s23  eksik: Yuki  fazla: -
+  s29  eksik: Masachika  fazla: -
+  s32  eksik: Masachika  fazla: -
+  s33  eksik: Masachika  fazla: -
+  s36  eksik: Yuki  fazla: -
+  s37  eksik: Yuki  fazla: -
+  s38  eksik: Yuki  fazla: -
+  s40  eksik: Masachika,Ayano  fazla: -
+  s41  eksik: Masachika,Ayano  fazla: -
+  s43  eksik: Masachika  fazla: -
+  s44  eksik: Masachika  fazla: -
+  s47  eksik: Masachika  fazla: -
+  s48  eksik: Yuki  fazla: -
   s49  eksik: Yuki  fazla: -
-  s50  eksik: -  fazla: Yuki
-  s53  eksik: -  fazla: Ayano
-  s73  eksik: Alisa  fazla: -
-  s76  eksik: Masachika  fazla: -
-  s78  eksik: Masachika  fazla: -
-  s80  eksik: Masachika  fazla: -
-  s83  eksik: Alisa  fazla: Masachika
-  s84  eksik: Masachika  fazla: -
-  s87  eksik: -  fazla: Alisa
 
-[5] Tırnak (diyalog) dengesi: EN 2169 / TR 2202
+[5] Tırnak (diyalog) dengesi: EN 2157 / TR 2135
