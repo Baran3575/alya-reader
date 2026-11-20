@@ -8,6 +8,7 @@ const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12
 // Taraması olmayan ciltler için kaynak sayfa (Orijinal görünümde bağlantı olarak verilir)
 const SOURCE_URLS = {
   '9.5': 'https://glucosetl.xyz/translations/roshidere/behind-the-scenes',
+  '12': 'https://secreftls.com/books/alya-sometimes-hides-her-feelings-in-russian-volume-12',
 };
 
 // Kaynak çevrimiçi flipbook (tarama yoksa Orijinal görünümde gömülür)

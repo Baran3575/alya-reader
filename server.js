@@ -40,6 +40,7 @@ const FLIP_URLS = {
 };
 const SOURCE_URLS = {
   '9.5': 'https://glucosetl.xyz/translations/roshidere/behind-the-scenes',
+  '12': 'https://secreftls.com/books/alya-sometimes-hides-her-feelings-in-russian-volume-12',
 };
 
 const VOLUMES = Object.fromEntries(
@@ -114,6 +115,7 @@ function buildBook(opt = {}) {
         tr: isPending ? [] : trParas,
         en: isPending ? [] : enParas,
         art,
+        hasImg: hasDiskImg,
       };
       if (isPending) item.pending = true;
       return item;
@@ -137,6 +139,7 @@ function buildBook(opt = {}) {
       tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
+      hasImg: fs.existsSync(path.join(PUB, imgUrl.replace(/^\/+/, ''))),
     };
   });
 
@@ -172,8 +175,10 @@ function buildBook(opt = {}) {
     }
   }
 
-  // Tarama (sayfa görüntüsü) bütün sayfalar için var mı?
-  const scan = pages.length > 0 && pages.every((p) => fs.existsSync(path.join(PUB, String(p.img || '').replace(/^\/+/, ''))));
+  // Bu ciltte sayfa taraması var mı? (sayfaların en az yarısı diskte ise "taranmış" sayılır;
+  // tek tek eksik sayfalar arayüzde kart olarak gösterilir)
+  const imgCount = pages.filter((p) => p.hasImg).length;
+  const scan = pages.length > 0 && imgCount * 2 >= pages.length;
   const flip = opt.flip || null;
   const sourceUrl = opt.source || null;
 

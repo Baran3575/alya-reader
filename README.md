@@ -98,12 +98,16 @@ Ayrıntı: `docs/chapters.md`
 
 ## Orijinal (EN) görünüm: OCR yok
 
-Orijinal görünümde **OCR metni gösterilmez**; kaynak ne ise o gösterilir:
+Orijinal görünümde metin OCR'ı gösterilmez; kaynak görüntü neyse o gelir. Sayfa bazında karar verilir:
 
-- Sayfa taraması olan ciltler (4 ve 4.5) → sayfanın görüntüsü (`public/pages*/NNN.webp`).
-- Taraması olmayan ciltler (5–10) → çevrimiçi FlipHTML5 flipbook gömülür.
-- Ne tarama ne flipbook olan ciltler (9.5, 11, 12) → bilgi kartı; 9.5 için kaynak
-  sayfa bağlantısı verilir.
+| Cilt | Sayfa görüntüsü | Metin sayfalarında |
+|---|---|---|
+| 4, 4.5 | `public/pages*/NNN.webp` (gerçek tarama) | tarama |
+| 5–10 | illüstrasyon sayfalarında yerel tarama | cildin FlipHTML5 flipbook'u (`iframe`, canlı sayfa görüntüleri) |
+| 9.5 | illüstrasyonlar | kaynak site kartı + bağlantı (glucosetl) |
+| 11 | illüstrasyonlar | kart (kaynak yalnızca EPUB, sayfa görüntüsü hiç indirilmedi) |
+| 12 | illüstrasyonlar | kaynak site kartı + bağlantı (secreftls) |
 
-Cilt sırası sabittir: `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`
-(`public/app.js` içindeki `VOL_ORDER`; 4.5 dörtten, 9.5 dokuzdan hemen sonra gelir).
+- API alanları: `scan` (cilt düzeyi), `pages[].hasImg` (sayfa düzeyi), `flip`, `source`.
+- `VOL_ORDER` = `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`; cilt listesi ve seçici bu diziden üretilir.
+

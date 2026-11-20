@@ -557,6 +557,13 @@
     return state.vol === '4' || state.vol === '4.5';
   }
 
+  // Bu sayfanın gerçek tarama görüntüsü diskte var mı?
+  function hasScanImg(p) {
+    if (!p) return false;
+    if (typeof p.hasImg === 'boolean') return p.hasImg;
+    return scanAvailable();
+  }
+
   function sourceFlip(url, n) {
     const box = document.createElement('div');
     box.className = 'orig-flip';
@@ -564,7 +571,7 @@
     const note = document.createElement('p');
     note.className = 'orig-flip-note';
     note.textContent =
-      'Bu cilt için sayfa taraması yok. Orijinal, çevrimiçi flipbook üzerinden açılıyor (sayfa ' + n + ').';
+      'Orijinal sayfa ' + n + ' — cildin kendi çevrimiçi görüntüleme kaynağı (flipbook) açılıyor.';
 
     const frame = document.createElement('iframe');
     frame.className = 'orig-frame';
@@ -589,9 +596,11 @@
     box.className = 'orig-missing';
     const h = document.createElement('p');
     h.className = 'orig-missing-title';
-    h.textContent = 'Sayfa ' + n + ' taraması yok';
+    h.textContent = 'Sayfa ' + n + ' görüntüsü yok';
     const t = document.createElement('p');
-    t.textContent = 'Bu cilt için görüntü kaynağı bulunmuyor. Çeviri görünümüne geçebilirsin (v).';
+    t.textContent = state.book.source
+      ? 'Bu ciltte yalnızca illüstrasyon görüntüleri var; metnin orijinali kaynak sitede.'
+      : 'Bu ciltte yalnızca illüstrasyon görüntüleri var; metnin orijinali çevrimiçi kaynakta yok. Çeviri görünümüne geçebilirsin (v).';
     box.append(h, t);
     if (state.book.source) {
       const link = document.createElement('a');
@@ -635,7 +644,7 @@
     if (ch.pending || (p && p.pending)) {
       sec.appendChild(createPendingNotice(ch));
     } else if (p) {
-      const hasImg = p.art || hasEmbeddedArt(p) || scanAvailable();
+      const hasImg = p.art || hasEmbeddedArt(p) || hasScanImg(p);
       if (hasImg) {
         sec.appendChild(figureFor(p, false));
       } else if (state.book.flip) {
@@ -732,7 +741,7 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true || (p.tr.length === 0 && (scanAvailable() || hasEmbeddedArt(p)));
+        const isIllustration = p.art === true || (p.tr.length === 0 && (hasScanImg(p) || hasEmbeddedArt(p)));
         if (isIllustration) {
           sec.classList.add('pg-art');
           if (p.tr.length) sec.classList.add('has-text');
