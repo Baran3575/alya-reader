@@ -118,7 +118,7 @@ function buildBook(opt = {}) {
         : null;
       const item = {
         n: p.page,
-        img: imgUrl,
+        img: hasDiskImg ? imgUrl : null,
         tr: isPending ? [] : trParas,
         en: isPending ? [] : enParas,
         art,
@@ -129,7 +129,6 @@ function buildBook(opt = {}) {
         if (hasScanFile) {
           item.scanN = scanN;
           item.scan = scanImg;
-          item.img = scanImg;
           item.hasImg = true;
         }
       }
@@ -157,7 +156,7 @@ function buildBook(opt = {}) {
 
     return {
       n: p.page,
-      img: scanImg2 && hasScanFile ? scanImg2 : imgUrl,
+      img: hasScanFile || fs.existsSync(path.join(PUB, imgUrl.replace(/^\/+/, ''))) ? imgUrl : null,
       tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,

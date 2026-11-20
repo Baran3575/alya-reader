@@ -333,13 +333,19 @@
 
   /* ---------------- veri ---------------- */
   /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
-  function imgSrc(p, vol) {
-    // Tam sayfa tarama varsa illüstrasyon paketinden önce o gelir
-    if (p.scan) return String(p.scan).replace(/^\/+/, '');
+  // Ressamın çizdiği illüstrasyon (çeviri görünümünde yalnızca bu gösterilir)
+  function artSrc(p, vol) {
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
     if (pack && pack[key]) return pack[key];
-    return String(p.img || '').replace(/^\/+/, '');
+    return p.img ? String(p.img).replace(/^\/+/, '') : '';
+  }
+  // Orijinal sayfa taraması (EN görünümü)
+  function scanSrc(p) {
+    return p.scan ? String(p.scan).replace(/^\/+/, '') : '';
+  }
+  function imgSrc(p, vol) {
+    return scanSrc(p) || artSrc(p, vol);
   }
 
   function hasEmbeddedArt(p, vol) {
@@ -518,11 +524,13 @@
     return box;
   }
 
-  function figureFor(p, caption) {
+  function figureFor(p, caption, prefer) {
+    const src = prefer === 'art' ? artSrc(p) : imgSrc(p);
+    if (!src) return null;
     const fig = document.createElement('figure');
     fig.className = 'page-img';
     const img = document.createElement('img');
-    img.src = imgSrc(p);
+    img.src = src;
     img.alt = 'Sayfa ' + p.n;
     img.loading = 'lazy';
     img.decoding = 'async';
@@ -534,7 +542,7 @@
       cap.textContent = 'Sayfa ' + p.n;
       fig.appendChild(cap);
     }
-    fig.addEventListener('click', () => openLightbox(imgSrc(p), 'Sayfa ' + p.n));
+    fig.addEventListener('click', () => openLightbox(src, 'Sayfa ' + p.n));
     return fig;
   }
 
@@ -878,15 +886,21 @@
         sec.className = 'pg';
         sec.dataset.page = p.n;
 
-        const isIllustration = p.art === true || (p.tr.length === 0 && (hasScanImg(p) || hasEmbeddedArt(p)));
+        // Çeviri görünümünde sayfa taraması gösterilmez; sadece ressamın illüstrasyonu.
+        const art = artSrc(p);
+        const isIllustration = Boolean(art) && (p.art === true || p.tr.length === 0);
         if (isIllustration) {
           sec.classList.add('pg-art');
           if (p.tr.length) sec.classList.add('has-text');
-          sec.appendChild(figureFor(p, true));
+          const fig = figureFor(p, true, 'art');
+          if (fig) sec.appendChild(fig);
           if (p.tr.length === 0) {
             frag.appendChild(sec);
             continue;
           }
+        } else if (p.tr.length === 0) {
+          // Ne metin ne illüstrasyon: çeviri görünümünde düz/boş sayfa bırakma.
+          continue;
         }
 
         const paras = n === startPage ? cleanHeading(p.tr, ch) : p.tr;
