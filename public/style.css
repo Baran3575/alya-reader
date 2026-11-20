@@ -867,3 +867,26 @@ input[type='range']::-moz-range-thumb {
   font-size: 0.85rem;
   color: var(--fg-soft);
 }
+
+/* Orijinal görünüm — çoklu kaynak aynaları */
+.orig-src {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.6rem;
+}
+.orig-src-tab {
+  font-size: 0.78rem;
+  line-height: 1;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.18));
+  border-radius: 999px;
+  color: var(--fg-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.orig-src-tab:hover,
+.orig-src-tab:focus-visible {
+  color: var(--fg-strong);
+  border-color: var(--fg-soft);
+}

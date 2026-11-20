@@ -96,18 +96,29 @@ node scripts/qc/clean.js --vol 4 --bolum 8
 
 Ayrıntı: `docs/chapters.md`
 
-## Orijinal (EN) görünüm: OCR yok
+## Orijinal (EN) görünüm: OCR yok, çoklu kaynak
 
-Orijinal görünümde metin OCR'ı gösterilmez; kaynak görüntü neyse o gelir. Sayfa bazında karar verilir:
+Metin OCR'ı gösterilmez. Sayfa bazında sıra: **yerel tarama → cildin flipbook'u (iframe) → kaynak kartı**.
 
-| Cilt | Sayfa görüntüsü | Metin sayfalarında |
-|---|---|---|
-| 4, 4.5 | `public/pages*/NNN.webp` (gerçek tarama) | tarama |
-| 5–10 | illüstrasyon sayfalarında yerel tarama | cildin FlipHTML5 flipbook'u (`iframe`, canlı sayfa görüntüleri) |
-| 9.5 | illüstrasyonlar | kaynak site kartı + bağlantı (glucosetl) |
-| 11 | illüstrasyonlar | kart (kaynak yalnızca EPUB, sayfa görüntüsü hiç indirilmedi) |
-| 12 | illüstrasyonlar | kaynak site kartı + bağlantı (secreftls) |
+Kaynak listesi tek dosyada: **`data/sources.json`** — her cilt için `{ label, url, embed }` dizisi.
+`embed: true` olan kaynak sayfa içinde `iframe` ile açılır; diğerleri ayna düğmesi olarak yeni sekmede açılır.
 
-- API alanları: `scan` (cilt düzeyi), `pages[].hasImg` (sayfa düzeyi), `flip`, `source`.
-- `VOL_ORDER` = `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`; cilt listesi ve seçici bu diziden üretilir.
+| Cilt | Kaynaklar |
+|---|---|
+| 4 | yerel tarama `pages/` |
+| 4.5 | yerel tarama `pages45/` |
+| 5 | FlipHTML5 · Scribd · AnyFlip |
+| 6 | FlipHTML5 · Scribd · AnyFlip |
+| 7 | FlipHTML5 · Scribd · AnyFlip |
+| 8 | FlipHTML5 (`online.fliphtml5.com/utpiy/tlew/`) · Scribd · AnyFlip |
+| 9 | FlipHTML5 · Scribd · AnyFlip |
+| 9.5 | Glucose (kaynak metin) |
+| 10 | FlipHTML5 · Scribd · AnyFlip |
+| 11 | Google Drive klasörü |
+| 12 | SecreFTLs cilt sayfası · illüstrasyonlar |
+
+- API: `sources`, `flip` (ilk gömülebilir), `source` (ilk bağlantı), `scan`, `pages[].hasImg`.
+- `scripts/write_books.js` → `public/books/v*.json` dosyalarını bu veriden yeniler.
+- `node scripts/build_site.js` → `dist/books/v*.json` aynı kaynak listesiyle üretilir.
+- `VOL_ORDER` = `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`.
 

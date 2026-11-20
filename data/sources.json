@@ -1,0 +1,146 @@
+{
+  "4": [
+    {
+      "label": "Yerel tarama",
+      "url": "/pages/001.webp",
+      "embed": false,
+      "local": true
+    }
+  ],
+  "4.5": [
+    {
+      "label": "Yerel tarama",
+      "url": "/pages45/001.webp",
+      "embed": false,
+      "local": true
+    }
+  ],
+  "5": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/hlsms/zusi/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/722853252/Alya-Sometimes-Hides-Her-Feelings-in-Russian-Vol-5",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://anyflip.com/qtyyf/mxbn/basic",
+      "embed": false
+    }
+  ],
+  "6": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/hlsms/mfba/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/719403417/Roshidere-V6-Glucose-Translations",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://anyflip.com/qtyyf/mktq/basic",
+      "embed": false
+    }
+  ],
+  "7": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/utpiy/ekus/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/719403433/Roshidere-Vol-7-Glucose-Translations",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://anyflip.com/qtyyf/edrr/basic",
+      "embed": false
+    }
+  ],
+  "8": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/utpiy/tlew/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/1024165668/Alya-Sometimes-Hides-Her-Feelings-in-Russian-Volume-08-Yen-Press-Kobo",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://anyflip.com/otsua/vddh/basic",
+      "embed": false
+    }
+  ],
+  "9": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/utpiy/ctbm/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/786818391/Roshidere-Vol-9-Glucose-Translations",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://anyflip.com/otsua/qxkc/basic",
+      "embed": false
+    }
+  ],
+  "9.5": [
+    {
+      "label": "Glucose (kaynak metin)",
+      "url": "https://glucosetl.xyz/translations/roshidere/behind-the-scenes",
+      "embed": false
+    }
+  ],
+  "10": [
+    {
+      "label": "FlipHTML5",
+      "url": "https://online.fliphtml5.com/dzxyw/fhfj/",
+      "embed": true
+    },
+    {
+      "label": "Scribd",
+      "url": "https://www.scribd.com/document/919634072/Roshidere-Vol-10-Glucose-Translations",
+      "embed": false
+    },
+    {
+      "label": "AnyFlip",
+      "url": "https://online.anyflip.com/bryaq/rmsk/mobile/index.html",
+      "embed": false
+    }
+  ],
+  "11": [
+    {
+      "label": "Google Drive (klasör)",
+      "url": "https://drive.google.com/drive/folders/1X3ZC0jvE6r11PTJHx9Cf2wfuezN4NXjL?usp=sharing",
+      "embed": false
+    }
+  ],
+  "12": [
+    {
+      "label": "SecreFTLs (cilt)",
+      "url": "https://secreftls.com/collections/alya-sometimes-hides-her-feelings-in-russian/alya-sometimes-hides-her-feelings-in-russian-volume-12",
+      "embed": false
+    },
+    {
+      "label": "SecreFTLs (illüstrasyonlar)",
+      "url": "https://secreftls.com/collections/alya-sometimes-hides-her-feelings-in-russian/alya-sometimes-hides-her-feelings-in-russian-volume-12/illustrations",
+      "embed": false
+    }
+  ]
+}

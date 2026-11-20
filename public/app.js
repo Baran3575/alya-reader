@@ -564,30 +564,84 @@
     return scanAvailable();
   }
 
-  function sourceFlip(url, n) {
+  // Cildin kaynak listesi (data/sources.json -> API `sources`).
+  function bookSources() {
+    if (!state.book) return [];
+    if (Array.isArray(state.book.sources) && state.book.sources.length) return state.book.sources;
+    const list = [];
+    if (state.book.flip) list.push({ label: 'Flipbook', url: state.book.flip, embed: true });
+    if (state.book.source && state.book.source !== state.book.flip) {
+      list.push({ label: 'Kaynak site', url: state.book.source, embed: false });
+    }
+    return list;
+  }
+
+  // Orijinal sayfa: gömülebilir kaynak (flipbook) + tüm aynalar (Scribd, AnyFlip, Drive…)
+  function sourceView(n, pageNo) {
+    const list = bookSources();
+    const embeds = list.filter((s) => s.embed);
     const box = document.createElement('div');
     box.className = 'orig-flip';
 
     const note = document.createElement('p');
     note.className = 'orig-flip-note';
     note.textContent =
-      'Orijinal sayfa ' + n + ' — cildin kendi çevrimiçi görüntüleme kaynağı (flipbook) açılıyor.';
+      'Orijinal sayfa ' + n + ' — cildin kendi görüntüleme kaynağı açılıyor (bu sayfa için yerel tarama yok).';
+    box.appendChild(note);
 
-    const frame = document.createElement('iframe');
-    frame.className = 'orig-frame';
-    frame.src = url;
-    frame.loading = 'lazy';
-    frame.referrerPolicy = 'no-referrer';
-    frame.setAttribute('allowfullscreen', '');
+    // Ayna seçici: gömülemeyenler yeni sekmede açılır
+    if (list.length > 1) {
+      const bar = document.createElement('div');
+      bar.className = 'orig-src';
+      list.forEach((src) => {
+        const b = document.createElement('a');
+        b.className = 'orig-src-tab';
+        b.textContent = src.label;
+        b.href = src.embed ? src.url : src.url;
+        b.target = '_blank';
+        b.rel = 'noopener';
+        if (src.embed) b.dataset.embed = '1';
+        bar.appendChild(b);
+      });
+      box.appendChild(bar);
+    }
 
-    const link = document.createElement('a');
-    link.className = 'orig-flip-link';
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = 'Yeni sekmede aç ↗';
+    if (embeds.length) {
+      const frame = document.createElement('iframe');
+      frame.className = 'orig-frame';
+      frame.src = embeds[0].url;
+      frame.loading = 'lazy';
+      frame.referrerPolicy = 'no-referrer';
+      frame.setAttribute('allowfullscreen', '');
+      if (pageNo) frame.dataset.page = String(pageNo);
+      box.appendChild(frame);
+      // gömülebilir aynalar arasında geçiş
+      const tabs = box.querySelectorAll('.orig-src-tab[data-embed]');
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          frame.src = tab.href;
+        });
+      });
+    } else {
+      const open = document.createElement('a');
+      open.className = 'orig-flip-link';
+      open.href = list[0].url;
+      open.target = '_blank';
+      open.rel = 'noopener';
+      open.textContent = list[0].label + ' üzerinde aç ↗';
+      box.appendChild(open);
+    }
 
-    box.append(note, frame, link);
+    if (embeds.length) {
+      const link = document.createElement('a');
+      link.className = 'orig-flip-link';
+      link.href = embeds[0].url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = 'Yeni sekmede aç ↗';
+      box.appendChild(link);
+    }
     return box;
   }
 
@@ -598,18 +652,24 @@
     h.className = 'orig-missing-title';
     h.textContent = 'Sayfa ' + n + ' görüntüsü yok';
     const t = document.createElement('p');
-    t.textContent = state.book.source
-      ? 'Bu ciltte yalnızca illüstrasyon görüntüleri var; metnin orijinali kaynak sitede.'
-      : 'Bu ciltte yalnızca illüstrasyon görüntüleri var; metnin orijinali çevrimiçi kaynakta yok. Çeviri görünümüne geçebilirsin (v).';
+    t.textContent =
+      'Bu ciltte yalnızca illüstrasyon görüntüleri var. Metnin orijinali için kaynaklardan birini açabilirsin.';
     box.append(h, t);
-    if (state.book.source) {
-      const link = document.createElement('a');
-      link.className = 'orig-flip-link';
-      link.href = state.book.source;
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = 'Kaynağı aç ↗';
-      box.appendChild(link);
+
+    const list = bookSources();
+    if (list.length) {
+      const bar = document.createElement('div');
+      bar.className = 'orig-src';
+      list.forEach((src) => {
+        const a = document.createElement('a');
+        a.className = 'orig-src-tab orig-flip-link';
+        a.href = src.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = src.label + ' ↗';
+        bar.appendChild(a);
+      });
+      box.appendChild(bar);
     }
     return box;
   }
@@ -647,8 +707,8 @@
       const hasImg = p.art || hasEmbeddedArt(p) || hasScanImg(p);
       if (hasImg) {
         sec.appendChild(figureFor(p, false));
-      } else if (state.book.flip) {
-        sec.appendChild(sourceFlip(state.book.flip, n));
+      } else if (bookSources().some((src) => src.embed)) {
+        sec.appendChild(sourceView(n, n));
       } else {
         sec.appendChild(noScanCard(n));
       }

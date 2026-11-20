@@ -29,19 +29,14 @@ const TR_CHAPTER = {
 
 const VOLUME_KEYS = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12'];
 
-// Kaynak flipbook / kaynak sayfa bağlantıları (Orijinal görünüm için)
-const FLIP_URLS = {
-  '5': 'https://online.fliphtml5.com/hlsms/zusi/',
-  '6': 'https://online.fliphtml5.com/hlsms/mfba/',
-  '7': 'https://online.fliphtml5.com/utpiy/ekus/',
-  '8': 'https://online.fliphtml5.com/utpiy/tlew/',
-  '9': 'https://online.fliphtml5.com/utpiy/ctbm/',
-  '10': 'https://online.fliphtml5.com/dzxyw/fhfj/',
+// Cilt başına kaynak listesi (tek doğru kaynak: data/sources.json)
+const SOURCES = require(path.join(ROOT, 'data', 'sources.json'));
+const sourcesOf = (k) => (Array.isArray(SOURCES[k]) ? SOURCES[k] : []);
+const flipOf = (k) => {
+  const s = sourcesOf(k).find((x) => x.embed);
+  return s ? s.url : null;
 };
-const SOURCE_URLS = {
-  '9.5': 'https://glucosetl.xyz/translations/roshidere/behind-the-scenes',
-  '12': 'https://secreftls.com/books/alya-sometimes-hides-her-feelings-in-russian-volume-12',
-};
+const sourceOf = (k) => (sourcesOf(k)[0] ? sourcesOf(k)[0].url : null);
 
 const VOLUMES = Object.fromEntries(
   VOLUME_KEYS.map((k) => {
@@ -54,8 +49,9 @@ const VOLUMES = Object.fromEntries(
           imgPrefix: '/pages/',
           volume: 'Cilt 4',
           titlesFile: path.join(ROOT, 'data/chapters.json'),
-          flip: FLIP_URLS['4'] || null,
-          source: SOURCE_URLS['4'] || null,
+          flip: flipOf('4'),
+          source: sourceOf('4'),
+          sources: sourcesOf('4'),
         },
       ];
     }
@@ -68,8 +64,9 @@ const VOLUMES = Object.fromEntries(
         imgPrefix: `/pages${suffix}/`,
         volume: `Cilt ${k}`,
         titlesFile: path.join(ROOT, `data${suffix}/chapters.json`),
-        flip: FLIP_URLS[k] || null,
-        source: SOURCE_URLS[k] || null,
+        flip: flipOf(k),
+        source: sourceOf(k),
+        sources: sourcesOf(k),
       },
     ];
   })
@@ -181,6 +178,7 @@ function buildBook(opt = {}) {
   const scan = pages.length > 0 && imgCount * 2 >= pages.length;
   const flip = opt.flip || null;
   const sourceUrl = opt.source || null;
+  const sources = Array.isArray(opt.sources) ? opt.sources : [];
 
   return {
     title: 'Alya Bazen Duygularını Rusça Saklar',
@@ -191,6 +189,7 @@ function buildBook(opt = {}) {
     scan,
     flip,
     source: sourceUrl,
+    sources,
   };
 }
 
@@ -275,7 +274,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Statik JSON uç noktası (/books/<v>.json) isteğini de destekle
-  const bookJsonMatch = pathname.match(/^\/books\/([0-9.]+)\.json$/);
+  const bookJsonMatch = pathname.match(/^\/books\/v?([0-9.]+)\.json$/);
   if (bookJsonMatch && VOLUMES[bookJsonMatch[1]]) {
     try {
       const loaded = getBook(bookJsonMatch[1]);

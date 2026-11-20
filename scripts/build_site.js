@@ -34,6 +34,9 @@ for (const k of VOLUME_KEYS) {
     imgPrefix: cfg.imgPrefix,
     volume: cfg.label,
     titlesFile: cfg.titlesFile,
+    flip: cfg.flip,
+    source: cfg.source,
+    sources: cfg.sources,
   });
 
   for (const p of book.pages) {
