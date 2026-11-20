@@ -89,6 +89,12 @@ function buildBook(opt = {}) {
 
   const hasStructuredChapters = Array.isArray(titlesMeta.chapters) && titlesMeta.chapters.length > 0;
 
+  // PDF/tarama sayfa eşlemesi (varsa): data<X>/scan_map.json -> { map: [pdfSayfa...], dir: 'scan' }
+  let scanMap = null;
+  try {
+    scanMap = JSON.parse(fs.readFileSync(path.join(ROOT, dataDir, 'scan_map.json'), 'utf8'));
+  } catch {}
+
   const pages = source.map((p) => {
     const key = String(p.page);
     const isPending = Boolean(p.pending);
@@ -106,6 +112,10 @@ function buildBook(opt = {}) {
       const hasDiskImg = fs.existsSync(relDiskPath);
       const cleanLen = String(p.text || '').replace(/\s+/g, ' ').trim().length;
       const art = !isPending && hasDiskImg && (cleanLen < 220 || trParas.length === 0);
+      const scanN = scanMap && Array.isArray(scanMap.map) ? scanMap.map[p.page - 1] || null : null;
+      const scanImg = scanN
+        ? imgPrefix.replace(/\/$/, '') + '/' + (scanMap.dir || 'scan') + '/' + String(scanN).padStart(3, '0') + '.webp'
+        : null;
       const item = {
         n: p.page,
         img: imgUrl,
@@ -114,6 +124,15 @@ function buildBook(opt = {}) {
         art,
         hasImg: hasDiskImg,
       };
+      if (scanImg) {
+        const hasScanFile = fs.existsSync(path.join(PUB, scanImg.replace(/^\/+/, '')));
+        if (hasScanFile) {
+          item.scanN = scanN;
+          item.scan = scanImg;
+          item.img = scanImg;
+          item.hasImg = true;
+        }
+      }
       if (isPending) item.pending = true;
       return item;
     }
@@ -130,13 +149,20 @@ function buildBook(opt = {}) {
       .trim().length;
     const art = p.page > 3 && cleanLen < 220;
 
+    const scanN2 = scanMap && Array.isArray(scanMap.map) ? scanMap.map[p.page - 1] || null : null;
+    const scanImg2 = scanN2
+      ? imgPrefix.replace(/\/$/, '') + '/' + (scanMap.dir || 'scan') + '/' + String(scanN2).padStart(3, '0') + '.webp'
+      : null;
+    const hasScanFile = scanImg2 ? fs.existsSync(path.join(PUB, scanImg2.replace(/^\/+/, ''))) : false;
+
     return {
       n: p.page,
-      img: imgUrl,
+      img: scanImg2 && hasScanFile ? scanImg2 : imgUrl,
       tr: usable ? trParas : [],
       en: usable ? enParas : [],
       art,
-      hasImg: fs.existsSync(path.join(PUB, imgUrl.replace(/^\/+/, ''))),
+      hasImg: hasScanFile || fs.existsSync(path.join(PUB, imgUrl.replace(/^\/+/, ''))),
+      ...(scanImg2 && hasScanFile ? { scanN: scanN2, scan: scanImg2 } : {}),
     };
   });
 

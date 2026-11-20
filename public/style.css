@@ -890,3 +890,47 @@ input[type='range']::-moz-range-thumb {
   color: var(--fg-strong);
   border-color: var(--fg-soft);
 }
+
+/* Orijinal görünüm — kaynak metin (görüntü yoksa) */
+.orig-prose {
+  margin: 0 auto;
+  max-width: var(--measure, 34rem);
+}
+.orig-prose-note {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-soft);
+  margin: 0 0 0.6rem;
+}
+.orig-prose-body {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--fg-strong);
+}
+.orig-prose-body p {
+  margin: 0 0 0.85em;
+}
+.orig-prose-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* Orijinal görünüm — flipbook açılmazsa metin düğmesi */
+.orig-text-btn {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.18));
+  background: none;
+  color: var(--fg-soft);
+  cursor: pointer;
+}
+.orig-text-btn:hover,
+.orig-text-btn:focus-visible {
+  color: var(--fg-strong);
+  border-color: var(--fg-soft);
+}
+.orig-text-holder {
+  margin-top: 0.9rem;
+}

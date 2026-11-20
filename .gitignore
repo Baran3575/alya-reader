@@ -12,3 +12,7 @@ dist/
 
 # üretilen cilt parçaları (npm run build:bundle)
 public/books/
+
+# geçici çalışma dizini (PDF indirme, hizalama çıktıları)
+.work/
+.drive.html

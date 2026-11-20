@@ -334,6 +334,8 @@
   /* ---------------- veri ---------------- */
   /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
   function imgSrc(p, vol) {
+    // Tam sayfa tarama varsa illüstrasyon paketinden önce o gelir
+    if (p.scan) return String(p.scan).replace(/^\/+/, '');
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
     if (pack && pack[key]) return pack[key];
@@ -560,6 +562,7 @@
   // Bu sayfanın gerçek tarama görüntüsü diskte var mı?
   function hasScanImg(p) {
     if (!p) return false;
+    if (p.scan) return true;
     if (typeof p.hasImg === 'boolean') return p.hasImg;
     return scanAvailable();
   }
@@ -577,7 +580,7 @@
   }
 
   // Orijinal sayfa: gömülebilir kaynak (flipbook) + tüm aynalar (Scribd, AnyFlip, Drive…)
-  function sourceView(n, pageNo) {
+  function sourceView(p, n, pageNo) {
     const list = bookSources();
     const embeds = list.filter((s) => s.embed);
     const box = document.createElement('div');
@@ -641,6 +644,71 @@
       link.rel = 'noopener';
       link.textContent = 'Yeni sekmede aç ↗';
       box.appendChild(link);
+    }
+
+    // Flipbook açılmazsa metin her zaman erişilebilir olsun
+    if ((p.en || []).some((t) => String(t).trim().length > 0)) {
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'orig-text-btn';
+      toggle.textContent = 'Metni göster';
+      const holder = document.createElement('div');
+      holder.hidden = true;
+      holder.className = 'orig-text-holder';
+      toggle.addEventListener('click', () => {
+        if (holder.hidden) {
+          if (!holder.childElementCount) holder.appendChild(origProse(p, n));
+          holder.hidden = false;
+          toggle.textContent = 'Metni gizle';
+        } else {
+          holder.hidden = true;
+          toggle.textContent = 'Metni göster';
+        }
+      });
+      box.append(toggle, holder);
+    }
+    return box;
+  }
+
+  // Orijinal metin (EN) — görüntü kaynağı olmayan ciltlerde OCR'sız kaynak metin.
+  function origProse(p, n) {
+    const box = document.createElement('div');
+    box.className = 'orig-prose';
+
+    const list = bookSources();
+    const paras = (p.en || []).filter((t) => String(t).trim().length > 0);
+
+    const head = document.createElement('p');
+    head.className = 'orig-prose-note';
+    head.textContent =
+      'Sayfa ' + n + ' — kaynak metin (' + (paras.length ? 'orijinal İngilizce' : 'bu sayfada metin yok') + ').';
+    box.appendChild(head);
+
+    if (paras.length) {
+      const body = document.createElement('div');
+      body.className = 'orig-prose-body';
+      body.lang = 'en';
+      paras.forEach((t) => {
+        const el = document.createElement('p');
+        el.textContent = t;
+        body.appendChild(el);
+      });
+      box.appendChild(body);
+    }
+
+    if (list.length) {
+      const bar = document.createElement('div');
+      bar.className = 'orig-src';
+      list.forEach((src) => {
+        const a = document.createElement('a');
+        a.className = 'orig-src-tab';
+        a.href = src.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = src.label + ' ↗';
+        bar.appendChild(a);
+      });
+      box.appendChild(bar);
     }
     return box;
   }
@@ -708,7 +776,9 @@
       if (hasImg) {
         sec.appendChild(figureFor(p, false));
       } else if (bookSources().some((src) => src.embed)) {
-        sec.appendChild(sourceView(n, n));
+        sec.appendChild(sourceView(p, n, n));
+      } else if ((p.en || []).some((t) => String(t).trim().length > 0)) {
+        sec.appendChild(origProse(p, n));
       } else {
         sec.appendChild(noScanCard(n));
       }
