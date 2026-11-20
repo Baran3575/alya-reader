@@ -610,9 +610,10 @@
     }
 
     if (embeds.length) {
+      const withPage = (u, pg) => (pg ? u.split('#')[0] + '#p=' + pg : u);
       const frame = document.createElement('iframe');
       frame.className = 'orig-frame';
-      frame.src = embeds[0].url;
+      frame.src = withPage(embeds[0].url, pageNo);
       frame.loading = 'lazy';
       frame.referrerPolicy = 'no-referrer';
       frame.setAttribute('allowfullscreen', '');
@@ -623,7 +624,7 @@
       tabs.forEach((tab) => {
         tab.addEventListener('click', (ev) => {
           ev.preventDefault();
-          frame.src = tab.href;
+          frame.src = withPage(tab.href, pageNo);
         });
       });
     } else {
