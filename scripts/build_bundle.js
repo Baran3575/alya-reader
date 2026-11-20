@@ -78,8 +78,24 @@ for (const [k, book] of Object.entries(vols)) {
   manifestVols[k] = { label: book.volume || 'Cilt ' + k, total: book.total, chapters: book.chapters };
 }
 
+// Sürüm damgası: manifest + tarama haritaları + kaynak listesi.
+// Böylece yeni sayfa taraması eklendiğinde tarayıcı önbelleği (localStorage) kendiliğinden düşer.
+const dataSig = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
+  .map((k) => {
+    const dir = k === '4' ? 'data' : 'data' + k.replace('.', '');
+    const f = path.join(ROOT, dir, 'scan_map.json');
+    return fs.existsSync(f) ? k + ':' + fs.readFileSync(f, 'utf8').length : '';
+  })
+  .join('|');
+const srcSig = fs.existsSync(path.join(ROOT, 'data', 'sources.json'))
+  ? fs.readFileSync(path.join(ROOT, 'data', 'sources.json'), 'utf8')
+  : '';
 const raw = JSON.stringify({ vols: manifestVols });
-const hash = crypto.createHash('sha1').update(raw).digest('hex').slice(0, 12);
+const hash = crypto
+  .createHash('sha1')
+  .update(raw + dataSig + srcSig)
+  .digest('hex')
+  .slice(0, 12);
 
 const body =
   '/* otomatik üretildi: scripts/build_bundle.js — elle düzenlemeyin */\n' +

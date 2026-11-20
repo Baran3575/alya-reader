@@ -392,7 +392,8 @@
     // 1) cilt parçası (ilk yüklemede yalnızca açılan cilt iner)
     let book = null;
     try {
-      const res = await fetch('books/v' + encodeURIComponent(v) + '.json');
+      const dataVer = window.ALYA_BUNDLE_VERSION || 'dev';
+      const res = await fetch('books/v' + encodeURIComponent(v) + '.json?v=' + encodeURIComponent(dataVer));
       if (res.ok) book = await res.json();
     } catch {}
 
