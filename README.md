@@ -107,10 +107,21 @@ Kaynak listesi tek dosyada: **`data/sources.json`** (`{ label, url, embed }`).
 |---|---|---|
 | 4 | `pages/` 282 tarama | — |
 | 4.5 | `pages45/` 347 tarama | — |
-| 5–10 | illüstrasyonlar (yerel) | FlipHTML5 (gömülü) · Scribd · AnyFlip |
+| 5 | `pages5/scan/` 278 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
+| 6 | `pages6/scan/` 278 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
+| 7 | `pages7/scan/` 287 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
+| 8 | `pages8/scan/` 285 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
+| 9 | `pages9/scan/` 270 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
 | 9.5 | illüstrasyonlar | kaynak metin (Glucose) |
-| 11 | **`pages11/scan/` 281 PDF sayfası** (`data11/scan_map.json` ile metne hizalı) | Google Drive klasörü |
-| 12 | illüstrasyonlar (1500 px, kaynaktan) | SecreFTLs cilt + illüstrasyonlar; metin |
+| 10 | `pages10/scan/` 272 PDF sayfası | FlipHTML5 · Scribd · AnyFlip |
+| 11 | `pages11/scan/` 281 PDF sayfası | Google Drive klasörü |
+| 12 | illüstrasyonlar (1500 px) | SecreFTLs cilt + illüstrasyonlar; metin |
+
+Tarama hizalaması: `data<N>/scan_map.json`, her kitap sayfası PDF'te kendi sayfasına eşlenir
+(`node scripts/align_scan.js --vol N --pdf-text ... --count ...`). PDF → WebP: `scripts/pdf2webp.py`.
+Kaynak PDF'ler: Cilt 5–7 `archive.org/details/roshidere-vol.-1234567`, Cilt 8–9
+`archive.org/details/roshidere-vol.-8-glucose-translations_202411`, Cilt 10
+`archive.org/details/roshidere-vol.-10-glucose-translations_202609`, Cilt 11 (Drive).
 
 - Cilt 11 taramaları: Drive'daki `Roshidere, Vol. 11 - Glucose Translations.pdf` (281 s.) indirilip
   `scripts/pdf2webp.py` ile WebP'ye çevrildi; her kitap sayfası kendi PDF sayfasına hizalandı
