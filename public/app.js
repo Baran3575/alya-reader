@@ -383,7 +383,12 @@
   async function readBook(v) {
     if (memBooks.has(v)) return memBooks.get(v);
 
-    const cached = cachedBook(v);
+    let cached = cachedBook(v);
+    // Manifest tarama vaat ediyor ama önbellekteki kitapta tarama yoksa: bayat veri, yeniden çek.
+    const manifestScan = window.ALYA_BUNDLE?.vols?.[v]?.scan;
+    if (cached && manifestScan && !(cached.pages || []).some((p) => p.scan)) {
+      cached = null;
+    }
     if (cached) {
       memBooks.set(v, cached);
       return cached;

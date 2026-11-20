@@ -75,7 +75,12 @@ for (const [k, book] of Object.entries(vols)) {
   } else if (fs.existsSync(artFile)) {
     fs.unlinkSync(artFile);
   }
-  manifestVols[k] = { label: book.volume || 'Cilt ' + k, total: book.total, chapters: book.chapters };
+  manifestVols[k] = {
+    label: book.volume || 'Cilt ' + k,
+    total: book.total,
+    chapters: book.chapters,
+    scan: book.pages.some((p) => p.scan),
+  };
 }
 
 // Sürüm damgası: manifest + tarama haritaları + kaynak listesi.
