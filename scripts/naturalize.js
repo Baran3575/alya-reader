@@ -97,8 +97,11 @@ const CONTEXT = [
 const CONNECTORS = ['Sonra', 'Derken', 'Peşinden', 'Ardından'];
 
 // çevirmen notlarını tamamen temizle: (TN: ...), (ÇN: ...), [TN: ...], vb.
+// (Sayfa sonuna eklenmiş bağımsız "ÇN: ..." dipnot paragrafları korunur.)
 function notes(t) {
-  return String(t || '')
+  const s = String(t || '');
+  if (/^\s*ÇN\s*:/u.test(s)) return s.trim();
+  return s
     .replace(/\(\s*(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note|Çevirmen\s*notu|Ed\.?\s*note)\s*:[^()]*(?:\([^()]*\)[^()]*)*\)/gi, '')
     .replace(/\[\s*(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note|Çevirmen\s*notu|Ed\.?\s*note)\s*:[^\]]*\]/gi, '')
     .replace(/(?:^|\s+)(?:\(\s*)?(?:TN|ÇN|T\/N|TL\s*note|Translator['’]?s?\s*note)\s*:[^\n)]*\)?/gi, '')

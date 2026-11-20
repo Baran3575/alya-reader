@@ -5,22 +5,50 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
+const zlib = require('zlib');
 const { buildBook } = require('../server.js');
 const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
+const ART_SEED = path.join(__dirname, 'lib', 'art_seed_v4_45.json.gz');
 
 function loadExistingArtBundle() {
-  if (!fs.existsSync(ART_OUT)) return {};
-  try {
-    const code = fs.readFileSync(ART_OUT, 'utf8');
-    const sandbox = { window: {} };
-    vm.runInNewContext(code, sandbox, { timeout: 2000 });
-    return sandbox.window.ALYA_ART || {};
-  } catch {
-    return {};
+  const out = {};
+  if (fs.existsSync(ART_SEED)) {
+    try {
+      const seeded = JSON.parse(zlib.gunzipSync(fs.readFileSync(ART_SEED)).toString('utf8'));
+      for (const [k, v] of Object.entries(seeded || {})) {
+        if (v && typeof v === 'object') out[k] = { ...v };
+      }
+    } catch {
+      // bozuk veya okunamayan yedek atlanır
+    }
   }
+  if (fs.existsSync(ART_OUT)) {
+    try {
+      const code = fs.readFileSync(ART_OUT, 'utf8');
+      const sandbox = { window: {} };
+      vm.runInNewContext(code, sandbox, { timeout: 2000 });
+      for (const [k, v] of Object.entries(sandbox.window.ALYA_ART || {})) {
+        if (v && typeof v === 'object') out[k] = { ...(out[k] || {}), ...v };
+      }
+    } catch {
+      // mevcut bundle-art yalnızca indeks içeriyorsa sorun değil
+    }
+  }
+  for (const k of ['4', '4.5']) {
+    const f = path.join(ROOT, 'public', 'books', `art-${k}.json`);
+    if (fs.existsSync(f)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(f, 'utf8'));
+        if (parsed && typeof parsed === 'object') out[k] = { ...(out[k] || {}), ...parsed };
+      } catch {
+        // geçersiz parça atlanır
+      }
+    }
+  }
+  return out;
 }
 
 const existingArt = loadExistingArtBundle();

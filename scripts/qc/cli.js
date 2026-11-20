@@ -10,7 +10,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { runVerify, hasUnbalancedDelim } = require('./verify');
+const {
+  runVerify,
+  hasUnbalancedDelim,
+  hasNestedDoubleQuotes,
+  hasSamaSenMismatch,
+  hasSenSizCollision,
+} = require('./verify');
 const { evaluateData, score } = require('./quality');
 const { validatePatches } = require('../patch');
 const { ROOT, VOLUME_KEYS, VOLUMES: REGISTRY } = require('../lib/volumes');
@@ -40,6 +46,21 @@ const KNOWN_PAGE_SPLIT_QUOTES = {
     '127.2', '133.0', '159.4', '173.1', '175.4', '197.4', '237.4', '237.5',
     '239.5', '283.2', '317.3', '317.4', '323.0', '323.1', '337.4', '337.5',
   ]),
+};
+
+// Salt okunur Cilt 4.5 içindeki bilinen iç içe çift tırnak istisnası
+const KNOWN_NESTED_QUOTES = {
+  '4.5': new Set(['113.0']),
+};
+
+// Kapsam dışı / salt okunur ciltlerdeki bilinen sen/siz ve -sama hitap istisnaları
+const KNOWN_REGISTER_EXCEPTIONS = {
+  '4.5': new Set(['49.5', '80.2', '81.1', '99.0', '121.10', '225.3', '229.6', '303.1']),
+  '8': new Set(['38.0', '81.3', '88.1', '222.9', '251.4']),
+  '9': new Set(['11.8', '59.2', '89.8', '117.0', '189.6', '216.13']),
+  '9.5': new Set(['67.0', '114.6']),
+  '10': new Set(['50.7', '182.5']),
+  '11': new Set(['31.2', '34.3', '44.8', '128.7']),
 };
 
 const ZERO_TOLERANCE = [
@@ -120,6 +141,37 @@ function findUnclosedQuotes(data, vol) {
     });
   }
   return unclosed;
+}
+
+function findNestedQuotes(data, vol) {
+  const known = KNOWN_NESTED_QUOTES[vol] || new Set();
+  const nested = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const key = `${pg}.${i}`;
+      if (hasNestedDoubleQuotes(text) && !known.has(key)) {
+        nested.push({ key, text: text.slice(0, 100) });
+      }
+    });
+  }
+  return nested;
+}
+
+function findRegisterViolations(data, vol) {
+  const known = KNOWN_REGISTER_EXCEPTIONS[vol] || new Set();
+  const issues = [];
+  for (const [pg, arr] of Object.entries(data)) {
+    arr.forEach((text, i) => {
+      const key = `${pg}.${i}`;
+      if (known.has(key)) return;
+      if (hasSamaSenMismatch(text)) {
+        issues.push({ key, kind: '-sama + sen', text: text.slice(0, 100) });
+      } else if (hasSenSizCollision(text)) {
+        issues.push({ key, kind: 'sen/siz çakışması', text: text.slice(0, 100) });
+      }
+    });
+  }
+  return issues;
 }
 
 function findEnglishResidueDetails(data) {
@@ -275,13 +327,29 @@ function main() {
       }
     }
 
-    // 3. Kapanmamış tırnak denetimi (bilinen sayfa sınırları harici)
+    // 3. Kapanmamış ve iç içe çift tırnak denetimi (bilinen istisnalar harici)
     const unclosedQuotes = findUnclosedQuotes(data, vol);
     if (unclosedQuotes.length > 0) {
       hardFails.push({
         label: 'kapanmamış tırnak',
         value: unclosedQuotes.length,
         details: unclosedQuotes.map((u) => `s${u.key}: ${u.text}`),
+      });
+    }
+    const nestedQuotes = findNestedQuotes(data, vol);
+    if (nestedQuotes.length > 0) {
+      hardFails.push({
+        label: 'iç içe çift tırnak',
+        value: nestedQuotes.length,
+        details: nestedQuotes.map((n) => `s${n.key}: ${n.text}`),
+      });
+    }
+    const registerIssues = findRegisterViolations(data, vol);
+    if (registerIssues.length > 0) {
+      hardFails.push({
+        label: 'hitap kipi ihlali (sen/siz)',
+        value: registerIssues.length,
+        details: registerIssues.map((r) => `s${r.key} [${r.kind}]: ${r.text}`),
       });
     }
 
@@ -458,8 +526,12 @@ if (require.main === module) {
 module.exports = {
   VOLUMES,
   KNOWN_PAGE_SPLIT_QUOTES,
+  KNOWN_NESTED_QUOTES,
+  KNOWN_REGISTER_EXCEPTIONS,
   validateSchema,
   findUnclosedQuotes,
+  findNestedQuotes,
+  findRegisterViolations,
   findEnglishResidueDetails,
   findTranslatorNotesDetails,
   findUnbalancedDelimDetails,
