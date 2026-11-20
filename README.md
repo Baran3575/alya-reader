@@ -96,29 +96,25 @@ node scripts/qc/clean.js --vol 4 --bolum 8
 
 Ayrıntı: `docs/chapters.md`
 
-## Orijinal (EN) görünüm: OCR yok, çoklu kaynak
+## Orijinal (EN) görünüm: OCR yok, çoklu kaynak + metin yedeği
 
-Metin OCR'ı gösterilmez. Sayfa bazında sıra: **yerel tarama → cildin flipbook'u (iframe) → kaynak kartı**.
+Sıra: **yerel/PDF taraması → flipbook (iframe) → kaynak metin → kart**.
+Flipbook açılmazsa her sayfada **"Metni göster"** düğmesi kaynak (EN) metni açar; metin hiçbir ciltte kaybolmaz.
 
-Kaynak listesi tek dosyada: **`data/sources.json`** — her cilt için `{ label, url, embed }` dizisi.
-`embed: true` olan kaynak sayfa içinde `iframe` ile açılır; diğerleri ayna düğmesi olarak yeni sekmede açılır.
+Kaynak listesi tek dosyada: **`data/sources.json`** (`{ label, url, embed }`).
 
-| Cilt | Kaynaklar |
-|---|---|
-| 4 | yerel tarama `pages/` |
-| 4.5 | yerel tarama `pages45/` |
-| 5 | FlipHTML5 · Scribd · AnyFlip |
-| 6 | FlipHTML5 · Scribd · AnyFlip |
-| 7 | FlipHTML5 · Scribd · AnyFlip |
-| 8 | FlipHTML5 (`online.fliphtml5.com/utpiy/tlew/`) · Scribd · AnyFlip |
-| 9 | FlipHTML5 · Scribd · AnyFlip |
-| 9.5 | Glucose (kaynak metin) |
-| 10 | FlipHTML5 · Scribd · AnyFlip |
-| 11 | Google Drive klasörü |
-| 12 | SecreFTLs cilt sayfası · illüstrasyonlar |
+| Cilt | Sayfa görüntüsü | Diğer kaynaklar |
+|---|---|---|
+| 4 | `pages/` 282 tarama | — |
+| 4.5 | `pages45/` 347 tarama | — |
+| 5–10 | illüstrasyonlar (yerel) | FlipHTML5 (gömülü) · Scribd · AnyFlip |
+| 9.5 | illüstrasyonlar | kaynak metin (Glucose) |
+| 11 | **`pages11/scan/` 281 PDF sayfası** (`data11/scan_map.json` ile metne hizalı) | Google Drive klasörü |
+| 12 | illüstrasyonlar (1500 px, kaynaktan) | SecreFTLs cilt + illüstrasyonlar; metin |
 
-- API: `sources`, `flip` (ilk gömülebilir), `source` (ilk bağlantı), `scan`, `pages[].hasImg`.
-- `scripts/write_books.js` → `public/books/v*.json` dosyalarını bu veriden yeniler.
-- `node scripts/build_site.js` → `dist/books/v*.json` aynı kaynak listesiyle üretilir.
+- Cilt 11 taramaları: Drive'daki `Roshidere, Vol. 11 - Glucose Translations.pdf` (281 s.) indirilip
+  `scripts/pdf2webp.py` ile WebP'ye çevrildi; her kitap sayfası kendi PDF sayfasına hizalandı
+  (monoton eşleme, 312/312 sayfa dolu).
+- API: `sources`, `flip`, `source`, `scan`, `pages[].hasImg`, `pages[].scan` (tam sayfa tarama yolu).
 - `VOL_ORDER` = `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`.
 
