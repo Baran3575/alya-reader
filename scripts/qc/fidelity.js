@@ -170,7 +170,10 @@ function scorePage(enRaw, trRaw) {
     else if (ratio < 0.55 || ratio > 1.5) s -= 15;
     else if (ratio < 0.65 || ratio > 1.35) s -= 6;
   }
-  if (paraRatio < 0.25 || paraRatio > 4) s -= 10;
+  // Paragraf oranı yalnızca kaynakta gerçek paragraf yapısı varsa anlamlıdır.
+  // Taranmış/OCR kaynaklarda satırlar tek blok hâlinde geldiği için (enParas <= 1)
+  // TR'deki meşru paragraf bölmeleri cezalandırılmamalı.
+  if (enParas >= 3 && (paraRatio < 0.25 || paraRatio > 4)) s -= 10;
 
   if (junkPage) {
     notes.push('ocr-boş');

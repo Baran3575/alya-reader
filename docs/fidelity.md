@@ -1,7 +1,12 @@
 # Metne Sadakat Raporu
 
 Yapısal sadakat göstergeleri: diyalog satırı sayısı, Rusça {…} blokları, özel adlar,
-sayılar, uzunluk oranı, paragraf oranı. 100 = yapı birebir, <70 = inceleme gerekli.
+sayılar, uzunluk oranı, paragraf oranı. 100 = yapı birebir, <85 = inceleme gerekli.
+
+Paragraf oranı cezası yalnızca kaynakta gerçek paragraf yapısı varsa (`enParas >= 3`)
+uygulanır; taranmış/OCR kaynaklarda sayfa tek blok hâlinde geldiği için TR'deki meşru
+paragraf bölmeleri cezalandırılmaz (2026-11 düzeltmesi). Bu yüzden cilt ortalamaları
+~100 bandına çıktı; kalan tek gerçek sinyaller diyalog/Rusça blok/ad/sayı ve uzunluk oranı.
 
 | Cilt | Sayfa | Ort. sadakat | <70 sayfa |
 | --- | ---: | ---: | ---: |
