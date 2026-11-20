@@ -40,7 +40,9 @@ for (const k of VOLUME_KEYS) {
   });
 
   for (const p of book.pages) {
-    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+    if (p.img || k === '4' || k === '4.5') {
+      p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+    }
     if (p.art && k !== '4' && k !== '4.5') {
       const assetPath = path.join(DIST, p.img);
       if (!fs.existsSync(assetPath)) {
