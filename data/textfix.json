@@ -1,1 +1,120 @@
-[]
+[
+ {
+  "page": 68,
+  "index": 3,
+  "find": "Okşamak olarak adlandırılmaktan",
+  "replace": "“Okşamak olarak adlandırılmaktan ziyade, daha çok bir giriş yazmaya benziyor. Tıpkı akıllı telefon ekranında yazmak gibi… ya da daha doğrusu bileğin yan tarafına. Mesela bu tarafta ‘A’ harfi var, sonra bilek tarafının ortasında ‘Ka’ harfi var, geri kalanlar sırayla şu harflerle devam ediyor: Sa, Ta, Na, Ha, Ma, Ya, Ra…”"
+ },
+ {
+  "page": 68,
+  "index": 4,
+  "find": "A“ harfi var",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 4,
+  "find": "Ka“ harfi var",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 7,
+  "find": "Akıllı telefon girişinin farkı",
+  "replace": "“Akıllı telefon girişinden farkı, ‘A’ harflerinden ‘Ra’ harflerine giden yolun hızlı bir hareketle yapılabilmesi; ‘Wa’ harfleri için dakuten, handakuten, küçük harfe dönüştürme ve silme sembollerinin işaret, orta, yüzük ve küçük parmakla yapılmasıdır. ‘Wa’ harfi için işaret parmağınıza bir kez, ‘Wo’ harfi için iki kez, ‘N’ harfi için üç kez dokunun. Orta parmağa gelince, işaret için bir kez dokunun. Dakuten ve handakuten işareti için iki kez hafifçe vurun. Küçük harfe geçmek ve bir harfi silmek için yüzük parmağı ve küçük parmakta birer dokunuş vardır.”"
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "A“ harflerinden",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "Ra“ harflerine",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "Wa“ harfleri için",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "Wa“ harfi için",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "Wo“ harfi için",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "index": 8,
+  "find": "N“ harfi için",
+  "replace": null
+ },
+ {
+  "page": 68,
+  "find": "işaret etti, sonra sol elini birleştirdi. sağ eliyle el.",
+  "replace": "işaret etti, sonra sol elini sağ eliyle birleştirdi."
+ },
+ {
+  "page": 90,
+  "index": 4,
+  "find": "Okul festivali Ekim ayının başında",
+  "replace": "“Okul festivali Ekim ayının başında. Bir aydan biraz fazla zaman kaldı. Şimdi yeni bir vokalist aramaya başlasak ve Ryuichi ile Riho’dan geri dönüp pratik yapmalarını istesek, zamanında yetişebileceğimiz çok şüpheli. Üstelik vokalleri bizim için yapmalarını istemem gerekecek! Gösteriye bir ay kaldı! Bir vokal performansı istenince ‘evet’ diyecek birini hayal etmek zor. Sonuçta vokalist grubun yüzüdür.”"
+ },
+ {
+  "page": 90,
+  "index": 5,
+  "find": "Bir vokal performansı yapması istendiğinde",
+  "replace": null
+ },
+ {
+  "page": 102,
+  "index": 4,
+  "find": "Bunu bilmiyordum",
+  "replace": "“Bunu bilmiyordum. Eh, bu benim övüneceğim bir şey değil… En iyi ihtimalle ‘Czardasz’ı iki kat hızda oynayabilirim.”"
+ },
+ {
+  "page": 102,
+  "index": 5,
+  "find": "Czardasz“ı",
+  "replace": null
+ },
+ {
+  "page": 128,
+  "find": "“Kelimenin tam anlamıyla… ”pirinç tarlalarında gün doğumu“ anlamına geliyor. Bu ne anlama gelir?”",
+  "replace": "“Kelimenin tam anlamıyla… ‘pirinç tarlalarında gün doğumu’ anlamına geliyor. Bu ne anlama geliyor?”"
+ },
+ {
+  "page": 129,
+  "index": 0,
+  "find": "Grubun tüm üyelerinin baş harfleriyle",
+  "replace": "“Grubun tüm üyelerinin baş harflerinden yola çıktım… HI, ASAHINO gibi. Ve onları yeniden düzenlediğimde ‘Sunrise of Paddy’ elde ettim! Ne düşünüyorsun?”"
+ },
+ {
+  "page": 129,
+  "index": 1,
+  "find": "Sunrise of Paddy“ elde ettim",
+  "replace": null
+ },
+ {
+  "page": 137,
+  "index": 7,
+  "find": "O halde orijinal şarkı için",
+  "replace": "Herkes Alisa’nın şarkı seçimine katılıyordu. Böylece performansın müziğine güvenli biçimde karar verildi. Masachika daha sonra konuştu: “O hâlde orijinal şarkı için Taniyama-san’ın yazdığı ‘Yumegen’i seçelim.”"
+ },
+ {
+  "page": 137,
+  "index": 8,
+  "find": "Yumegen“i seçelim",
+  "replace": null
+ }
+]
