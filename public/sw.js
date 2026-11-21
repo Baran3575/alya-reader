@@ -1,6 +1,6 @@
 // Çevrimdışı önbellek: kabuk dosyaları + sayfa görselleri (tüm ciltler 4–12) + kitap verisi.
 // Sunucu kapalıyken veya GitHub Pages üzerinde çevrimdışı okuma sağlar.
-const VERSION = 'alya-v25';
+const VERSION = 'alya-v26';
 const SHELL = ['./', './index.html', './style.css', './app.js', './bundle.js', './bundle-art.js'];
 
 self.addEventListener('install', (e) => {

@@ -334,15 +334,24 @@
   /* ---------------- veri ---------------- */
   /* görsel: gömülü illüstrasyon varsa data URI, yoksa göreli dosya yolu */
   // Ressamın çizdiği illüstrasyon (çeviri görünümünde yalnızca bu gösterilir)
+  // Dosya yolu sürüm damgası: aynı adla değişen illüstrasyon/tarama tarayıcı
+  // önbelleğinden değil sunucudan gelsin (?v=<paket sürümü>).
+  function withVer(u) {
+    const s = String(u || '');
+    if (!s || s.startsWith('data:') || s.startsWith('blob:')) return s;
+    const v = window.ALYA_BUNDLE_VERSION || '';
+    if (!v) return s;
+    return s + (s.includes('?') ? '&' : '?') + 'v=' + encodeURIComponent(v);
+  }
   function artSrc(p, vol) {
     const key = String(p.n).padStart(3, '0');
     const pack = window.ALYA_ART && window.ALYA_ART[vol || state.vol];
     if (pack && pack[key]) return pack[key];
-    return p.img ? String(p.img).replace(/^\/+/, '') : '';
+    return p.img ? withVer(String(p.img).replace(/^\/+/, '')) : '';
   }
   // Orijinal sayfa taraması (EN görünümü)
   function scanSrc(p) {
-    return p.scan ? String(p.scan).replace(/^\/+/, '') : '';
+    return p.scan ? withVer(String(p.scan).replace(/^\/+/, '')) : '';
   }
   function imgSrc(p, vol) {
     return scanSrc(p) || artSrc(p, vol);

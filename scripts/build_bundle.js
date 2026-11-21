@@ -145,13 +145,27 @@ const dataSig = ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']
     return fs.existsSync(f) ? k + ':' + fs.readFileSync(f, 'utf8').length : '';
   })
   .join('|');
+// Görsel içerik imzası: bir illüstrasyon dosyası değiştiğinde (aynı ad, yeni çizim)
+// istemci önbelleği kendiliğinden düşsün. Yalnızca gövde illüstrasyonları (scan/ hariç).
+const imgSigParts = [];
+for (const k of ['4', '4.5', '5', '6', '7', '8', '9', '9.5', '10', '11', '12']) {
+  const dir = path.join(ROOT, VOLUMES[k].imgDir);
+  if (!fs.existsSync(dir)) continue;
+  for (const f of fs.readdirSync(dir).sort()) {
+    if (!f.endsWith('.webp')) continue;
+    const fp = path.join(dir, f);
+    if (!fs.statSync(fp).isFile()) continue;
+    imgSigParts.push(k + '/' + f + ':' + crypto.createHash('sha1').update(fs.readFileSync(fp)).digest('hex').slice(0, 10));
+  }
+}
+const imgSig = imgSigParts.join('|');
 const srcSig = fs.existsSync(path.join(ROOT, 'data', 'sources.json'))
   ? fs.readFileSync(path.join(ROOT, 'data', 'sources.json'), 'utf8')
   : '';
 const raw = JSON.stringify({ vols: manifestVols });
 const hash = crypto
   .createHash('sha1')
-  .update(raw + dataSig + srcSig)
+  .update(raw + dataSig + srcSig + imgSig)
   .digest('hex')
   .slice(0, 12);
 
