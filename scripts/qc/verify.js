@@ -26,6 +26,53 @@ function hasUnbalancedDelim(str, open, close) {
   return depth !== 0;
 }
 
+function hasNestedDoubleQuotes(str) {
+  const quotes = str.match(/[“”]/g) || [];
+  if (quotes.length < 4 || quotes.length % 2 !== 0) return false;
+  let depth = 0;
+  for (const ch of quotes) {
+    if (ch === '“') {
+      depth++;
+      if (depth > 1) return true;
+    } else {
+      depth--;
+      if (depth < 0) return false;
+    }
+  }
+  return false;
+}
+
+const SEN_PRON_RE = /(?<!\p{L})(?:sen|seni|sana|sende|senden|senin|seninle|misin|mısın|musun|müsün)(?!\p{L})/iu;
+const SEN_VERB_RE = /(?<!\p{L})[\p{L}]{2,}(?:yorsun|iyorsun|ıyorsun|uyorsun|üyorsun|acaksın|eceksin|malısın|melisin|bilirsin|amazsın|emezsin|mıyorsun|miyorsun|muyorsun|müyorsun|mışsın|mişsin|muşsun|müşsün)(?!\p{L})/iu;
+const SIZ_PRON_RE = /(?<!\p{L})(?:siz|sizi|size|sizde|sizden|sizin|sizinle|misiniz|mısınız|musunuz|müsünüz)(?!\p{L})/iu;
+const SIZ_VERB_RE = /(?<!\p{L})[\p{L}]{2,}(?:yorsunuz|iyorsunuz|ıyorsunuz|uyorsunuz|üyorsunuz|acaksınız|eceksiniz|malısınız|melisiniz|bilirsiniz|amazsınız|emezsiniz|mıyorsunuz|miyorsunuz|muyorsunuz|müyorsunuz|mışsınız|mişsiniz|muşsunuz|müşsünüz|dınız|diniz|dunuz|dünüz|tınız|tiniz|tunuz|tünüz|mayın|meyin|mayınız|meyiniz)(?!\p{L})/iu;
+const PLURAL_CTX_RE = /(?<!\p{L})(?:ikiniz|ikinizi|ikinize|ikinizin|üçünüz|dördünüz|beşiniz|hepiniz|hepinize|hepinizin|sizler|sizleri|sizlere|millet|arkadaşlar|çocuklar|hanımlar|beyler|öğrenciler|üyeler|herkes|sen\s+ve\s+[\p{L}]+)(?!\p{L})/iu;
+const VOCATIVE_SAMA_RE = /(?<![\p{L}-])(?!(?:Onii|Nii|Onee|Nee|Ani|Onii-chan|Ore|Ojou|Kami)-sama(?!\p{L}))[\p{L}]+-sama(?!’)(?!\p{L})/iu;
+const INNER_SINGLE_QUOTE_RE = /‘[^’]*’|(?<!\p{L})’[^’]+’/gu;
+
+function hasSamaSenMismatch(str) {
+  const quotes = str.match(/“[^”]+”/g) || [];
+  for (const q of quotes) {
+    const outer = q.replace(INNER_SINGLE_QUOTE_RE, ' ');
+    if (VOCATIVE_SAMA_RE.test(outer) && (SEN_PRON_RE.test(outer) || SEN_VERB_RE.test(outer))) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function hasSenSizCollision(str) {
+  const quotes = str.match(/“[^”]+”/g) || [];
+  for (const q of quotes) {
+    const outer = q.replace(INNER_SINGLE_QUOTE_RE, ' ');
+    if (PLURAL_CTX_RE.test(outer)) continue;
+    const sen = SEN_PRON_RE.test(outer) || SEN_VERB_RE.test(outer);
+    const siz = SIZ_PRON_RE.test(outer) || SIZ_VERB_RE.test(outer);
+    if (sen && siz) return true;
+  }
+  return false;
+}
+
 function runVerify(filePath) {
   const FILE = filePath ? path.resolve(filePath) : (process.env.ALYA_TR_FILE ? path.resolve(process.env.ALYA_TR_FILE) : path.join(__dirname, '..', '..', 'data', 'paragraphs_final.json'));
   const f = JSON.parse(fs.readFileSync(FILE, 'utf8'));
@@ -44,16 +91,19 @@ function runVerify(filePath) {
   row('  ', count(/[!?]\./g), '"?." kalıbı');
   row('  ', count(/["']/g), 'düz tırnak');
   let unbalQ = 0;
+  let nestedQ = 0;
   let unbalP = 0;
   let unbalB = 0;
   let unbalS = 0;
   for (const x of paras) {
     if ((x.t.match(/[“”]/g) || []).length % 2) unbalQ++;
+    if (hasNestedDoubleQuotes(x.t)) nestedQ++;
     if ((x.t.match(/\(/g) || []).length !== (x.t.match(/\)/g) || []).length) unbalP++;
     if (hasUnbalancedDelim(x.t, '{', '}')) unbalB++;
     if (hasUnbalancedDelim(x.t, '[', ']')) unbalS++;
   }
   row('  ', unbalQ, 'tek sayıda tırnak (sayfa bölünmesi olabilir)');
+  row('  ', nestedQ, 'iç içe çift tırnak');
   row('  ', unbalP, 'dengesiz parantez');
   row('  ', unbalB, 'dengesiz süslü parantez');
   row('  ', unbalS, 'dengesiz köşeli parantez');
@@ -86,6 +136,14 @@ function runVerify(filePath) {
 
   row('5. gramer', count(W('(herşey|birşey|herkez|yanlız|bir çok)', 'gi')), 'bitişik/imla hatası');
   row('  ', count(W('([\\p{L}]{3,})\\s+\\1', 'gi')), 'ikiz kelime');
+  let samaSen = 0;
+  let senSiz = 0;
+  for (const x of paras) {
+    if (hasSamaSenMismatch(x.t)) samaSen++;
+    if (hasSenSizCollision(x.t)) senSiz++;
+  }
+  row('  ', samaSen, '-sama + sen kip uyumsuzluğu');
+  row('  ', senSiz, 'tek replikte sen/siz çakışması');
 
   const countEnResidue = paras.reduce((a, x) => {
     const clean = x.t.replace(/https?:\s*\/\/[^\n]+/gi, '');
@@ -104,4 +162,10 @@ if (require.main === module) {
   console.log('\nparagraf:', paras.length, '| sayfa:', pageCount);
 }
 
-module.exports = { runVerify, hasUnbalancedDelim };
+module.exports = {
+  runVerify,
+  hasUnbalancedDelim,
+  hasNestedDoubleQuotes,
+  hasSamaSenMismatch,
+  hasSenSizCollision,
+};
