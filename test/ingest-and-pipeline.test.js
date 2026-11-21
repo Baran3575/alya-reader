@@ -12,6 +12,7 @@ const {
   parseSearchConfigJs,
   isCreditsOrTocPage,
   detectPageHeading,
+  alignMidIllustrationsToBody,
 } = require('../scripts/ingest/adapters/fliphtml5');
 const { fixLigatures, selectVolumes } = require('../scripts/fix_en_ocr');
 const { repairBoundaries } = require('../scripts/fix_boundaries');
@@ -247,6 +248,270 @@ function testVols5To7StructuralAndTocInvariants() {
   console.log('   ✓ Vols 5–7 credits cleanup, TOC labels, standalone dividers, and ÇN footnotes verified');
 }
 
+function testFlipIllustrationPositionAlignment() {
+  console.log('7. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
+  const activeBody = [
+    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Prolog', enTitle: 'Prologue' } },
+    { kind: 'empty', srcIdx: 11 }, // Boş bölüm ayırıcı (illüstrasyon yok)
+    { kind: 'prose', srcIdx: 12, text: 'Chapter 1 starts here in the student council room.', heading: { label: 'Bölüm 1', enTitle: 'Chapter 1' } },
+    { kind: 'empty', srcIdx: 13 }, // Gerçek Bölüm 1 sahne illüstrasyonu (PDF s.14)
+    { kind: 'prose', srcIdx: 14, text: 'She smiled mischievously as the shutter clicked behind them.' },
+    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Sonsöz', enTitle: 'Afterword' } },
+  ];
+
+  // 1) PDF sayfa numarasına (pdfPage) göre eşleştirme + eksik yuva ekleme
+  const byPdf = alignMidIllustrationsToBody(activeBody, [
+    { buffer: Buffer.from('ch1-art'), pdfPage: 14 },
+    { buffer: Buffer.from('afterword-art'), pdfPage: 17 },
+  ]);
+  // Boş ayırıcı (srcIdx 11) elenmeli, ch1-art Chapter 1 başlangıcından SONRA (index 2), afterword-art en sonda olmalı
+  assert.strictEqual(byPdf.length, 6);
+  assert.strictEqual(byPdf[0].kind, 'prose');
+  assert.strictEqual(byPdf[1].heading.label, 'Bölüm 1', 'Blank separator before Chapter 1 must not receive Chapter 1 art');
+  assert.strictEqual(byPdf[2].kind, 'art');
+  assert.strictEqual(byPdf[2].buffer.toString(), 'ch1-art');
+  assert.strictEqual(byPdf[5].kind, 'art');
+  assert.strictEqual(byPdf[5].buffer.toString(), 'afterword-art');
+
+  // 2) EPUB metin çapalarına (prevAnchor / nextAnchor) göre eşleştirme
+  const byAnchor = alignMidIllustrationsToBody(activeBody, [
+    {
+      buffer: Buffer.from('epub-ch1-art'),
+      prevAnchor: 'Chapter 1 starts here in the student council room.',
+      nextAnchor: 'She smiled mischievously as the shutter clicked behind them.',
+    },
+  ]);
+  assert.strictEqual(byAnchor.length, 5, 'Unmatched empty separator must be omitted');
+  assert.strictEqual(byAnchor[1].heading.label, 'Bölüm 1');
+  assert.strictEqual(byAnchor[2].kind, 'art');
+  assert.strictEqual(byAnchor[2].buffer.toString(), 'epub-ch1-art');
+  console.log('   ✓ Position-based PDF page & EPUB anchor matching verified');
+}
+
+function testVol5To7BodyIllustrationScanAlignment() {
+  console.log('8. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
+
+  const pyVerify = `
+import json, os, sys
+from PIL import Image
+
+payload = json.loads(sys.argv[1])
+
+def nvec(im, size=32):
+    g = im.convert('L').resize((size, size), Image.Resampling.BILINEAR)
+    px = list(g.tobytes())
+    mean = sum(px) / len(px)
+    var = sum((x - mean) ** 2 for x in px) / len(px)
+    std = (var ** 0.5) or 1.0
+    return [(x - mean) / std for x in px]
+
+def corr(a, b):
+    return sum(x * y for x, y in zip(a, b)) / len(a)
+
+def crop_band(im):
+    small = im.resize((96, 144), Image.Resampling.BILINEAR)
+    w, h = small.size
+    px = small.convert('L').tobytes()
+    ys = [y for y in range(h) if sum(1 for v in px[y * w:(y + 1) * w] if v < 245) > w * 0.08]
+    xs = [x for x in range(w) if sum(1 for y in range(h) if px[y * w + x] < 245) > h * 0.05]
+    if ys and xs and (ys[-1] - ys[0]) > h * 0.20 and (xs[-1] - xs[0]) > w * 0.30:
+        return small.crop((xs[0], ys[0], xs[-1] + 1, ys[-1] + 1))
+    return small
+
+def pair_score(clean_im, scan_im):
+    vc_f, vc_c = nvec(clean_im), nvec(crop_band(clean_im))
+    vs_f, vs_c = nvec(scan_im), nvec(crop_band(scan_im))
+    best = max(corr(vc_f, vs_f), corr(vc_c, vs_c), corr(vc_f, vs_c))
+    if clean_im.width > clean_im.height and scan_im.height > scan_im.width:
+        g64 = scan_im.convert('L').resize((64, 96), Image.Resampling.BILINEAR)
+        th = round(64 * clean_im.height / clean_im.width)
+        if 8 <= th <= 96:
+            for y in range(0, 96 - th + 1, 2):
+                c = corr(vc_f, nvec(g64.crop((0, y, 64, y + th))))
+                if c > best:
+                    best = c
+    return best
+
+def color_sat(im):
+    raw = im.convert('RGB').resize((48, 72), Image.Resampling.BILINEAR).tobytes()
+    return sum(max(raw[i], raw[i+1], raw[i+2]) - min(raw[i], raw[i+1], raw[i+2]) for i in range(0, len(raw), 3)) / (len(raw) // 3)
+
+out = {}
+for vol, spec in payload.items():
+    scan_cache = {}
+    def get_scan(pdf_no):
+        if pdf_no not in scan_cache:
+            scan_cache[pdf_no] = Image.open(os.path.join(spec['scanDir'], f'{pdf_no:03d}.webp')).convert('RGB')
+        return scan_cache[pdf_no]
+
+    all_art_pdfs = spec['allArtPdfs']
+    vol_res = []
+    for item in spec['items']:
+        cim = Image.open(item['cleanPath']).convert('RGB')
+        sat = color_sat(cim)
+        # Kendi komşuluk PDF penceresindeki en iyi eşleşme
+        win_scores = [(pair_score(cim, get_scan(p)), p) for p in item['windowPdfs']]
+        win_scores.sort(reverse=True)
+        win_best_corr, win_best_pdf = win_scores[0] if win_scores else (0.0, None)
+
+        # Tüm gövde illüstrasyon PDF sayfaları arasındaki en iyi eşleşme
+        global_scores = [(pair_score(cim, get_scan(p)), p) for p in all_art_pdfs]
+        global_scores.sort(reverse=True)
+        glob_best_corr, glob_best_pdf = global_scores[0]
+
+        vol_res.append({
+            'page': item['page'],
+            'sat': round(sat, 2),
+            'winBestPdf': win_best_pdf,
+            'winBestCorr': round(win_best_corr, 4),
+            'globBestPdf': glob_best_pdf,
+            'globBestCorr': round(glob_best_corr, 4),
+        })
+    out[vol] = vol_res
+
+print(json.dumps(out))
+`;
+
+  const payload = {};
+  for (const vol of ['5', '6', '7']) {
+    const cfg = VOLUMES[vol];
+    const src = JSON.parse(fs.readFileSync(cfg.sourceFile, 'utf8'));
+    const tr = JSON.parse(fs.readFileSync(cfg.finalFile, 'utf8'));
+    const chMeta = JSON.parse(fs.readFileSync(cfg.titlesFile, 'utf8'));
+    const scanMapObj = JSON.parse(fs.readFileSync(path.join(ROOT, cfg.dataDir, 'scan_map.json'), 'utf8'));
+    const scanMap = scanMapObj.map;
+    const scanCount = scanMapObj.count;
+
+    assert.strictEqual(scanMap.length, src.length, `Vol ${vol} scan_map length must match source.json length`);
+
+    const book = buildBook({
+      dataDir: cfg.dataDir,
+      imgPrefix: cfg.imgPrefix,
+      volume: cfg.label,
+      titlesFile: cfg.titlesFile,
+    });
+
+    const firstStoryCh = chMeta.chapters.find((c) => c.label !== 'İllüstrasyonlar');
+    const firstBodyPage = firstStoryCh.startPage;
+
+    const volDir = path.join(ROOT, cfg.imgDir);
+    const scanDir = path.join(volDir, 'scan');
+    const diskWebps = fs
+      .readdirSync(volDir)
+      .filter((f) => f.endsWith('.webp'))
+      .map((f) => Number(f.split('.')[0]))
+      .sort((a, b) => a - b);
+
+    // Ön İllüstrasyonlar bölümü en az 4 görsel içermeli
+    const frontWebps = diskWebps.filter((p) => p < firstBodyPage);
+    assert.ok(frontWebps.length >= 4, `Vol ${vol} must have >= 4 front illustrations in İllüstrasyonlar`);
+
+    const bodyWebps = diskWebps.filter((p) => p >= firstBodyPage);
+    assert.strictEqual(bodyWebps.length, 11, `Vol ${vol} must have all 11 body scene illustrations aligned`);
+
+    // Boş ayırıcı sayfalarda (diskte .webp olmayan boş metin yuvalarında) kırık görsel yolu olmamalı
+    for (const pg of book.pages) {
+      if (pg.n >= firstBodyPage && pg.tr.length === 0 && !bodyWebps.includes(pg.n)) {
+        assert.strictEqual(pg.art, false, `Vol ${vol} separator p.${pg.n} must have art=false`);
+        assert.strictEqual(pg.img, null, `Vol ${vol} separator p.${pg.n} must have img=null`);
+      }
+    }
+
+    // Statik v<vol>.json varsa onda da boş ayırıcıların img=null olduğu doğrulanmalı
+    const staticBookPath = path.join(ROOT, 'public', 'books', `v${vol}.json`);
+    if (fs.existsSync(staticBookPath)) {
+      const staticBook = JSON.parse(fs.readFileSync(staticBookPath, 'utf8'));
+      for (const pg of staticBook.pages) {
+        if (pg.n >= firstBodyPage && pg.tr.length === 0 && !bodyWebps.includes(pg.n)) {
+          assert.strictEqual(pg.img, null, `Static v${vol}.json separator p.${pg.n} must keep img=null`);
+        }
+      }
+    }
+
+    const items = [];
+    const allArtPdfs = new Set();
+
+    for (const pno of bodyWebps) {
+      const idx = pno - 1;
+      assert.strictEqual(src[idx].text.trim(), '', `Vol ${vol} body art p.${pno} must sit on an empty source.json slot`);
+      assert.strictEqual((tr[String(pno)] || []).length, 0, `Vol ${vol} body art p.${pno} must have 0 TR paragraphs`);
+
+      // Komşu metin sayfalarının PDF aralığını [loPdf, hiPdf] bul
+      let loPdf = 1;
+      for (let j = idx - 1; j >= firstBodyPage - 1; j--) {
+        if (src[j].text.trim().length > 0) {
+          loPdf = scanMap[j];
+          break;
+        }
+      }
+      let hiPdf = scanCount;
+      for (let j = idx + 1; j < src.length; j++) {
+        if (src[j].text.trim().length > 0) {
+          hiPdf = scanMap[j];
+          break;
+        }
+      }
+
+      const windowPdfs = [];
+      for (let s = Math.max(1, loPdf); s <= Math.min(scanCount, hiPdf); s++) {
+        if (fs.existsSync(path.join(scanDir, `${String(s).padStart(3, '0')}.webp`))) {
+          windowPdfs.push(s);
+        }
+      }
+
+      allArtPdfs.add(scanMap[idx]);
+      items.push({
+        page: pno,
+        cleanPath: path.join(volDir, `${String(pno).padStart(3, '0')}.webp`),
+        mappedPdf: scanMap[idx],
+        windowPdfs,
+      });
+    }
+
+    payload[vol] = {
+      scanDir,
+      allArtPdfs: [...allArtPdfs].sort((a, b) => a - b),
+      items,
+    };
+  }
+
+  let pyRaw;
+  try {
+    pyRaw = execFileSync('python3', ['-c', pyVerify, JSON.stringify(payload)], {
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+    });
+  } catch (e) {
+    const err = String((e && (e.stderr || e.message)) || '');
+    if (/No module named 'PIL'|No module named 'Pillow'/.test(err)) {
+      console.log('   ⚠ Pillow (PIL) yok — piksel korelasyon doğrulaması atlandı (npm i -g pillow değil, pip install Pillow gerekir)');
+      return;
+    }
+    throw e;
+  }
+  const pyOut = JSON.parse(pyRaw);
+
+  for (const vol of ['5', '6', '7']) {
+    for (const r of pyOut[vol]) {
+      assert.ok(
+        r.sat < 4.0,
+        `Vol ${vol} p.${r.page} has color saturation ${r.sat} >= 4.0 (leaked front color kuchie in story body!)`
+      );
+      assert.ok(
+        r.winBestCorr >= 0.92,
+        `Vol ${vol} p.${r.page} failed neighborhood PDF scan match: best corr=${r.winBestCorr} (PDF s.${r.winBestPdf})`
+      );
+      assert.strictEqual(
+        r.winBestPdf,
+        r.globBestPdf,
+        `Vol ${vol} p.${r.page} is in the wrong chapter/slot! Neighborhood best=PDF s.${r.winBestPdf} (${r.winBestCorr}), but matches PDF s.${r.globBestPdf} (${r.globBestCorr})`
+      );
+    }
+  }
+
+  console.log('   ✓ All 33 body illustrations across Vols 5, 6, and 7 match their exact neighborhood PDF scans (corr >= 0.92, zero wrong chapters, zero kuchie leaks)');
+}
+
 function run() {
   console.log('=== Starting Ingestion, Translation & Multi-Volume Pipeline Tests ===\n');
   testVolumeRegistry();
@@ -256,6 +521,8 @@ function run() {
   testSecreftlsPendingHandling();
   testAllVolumesCanonicalArtifactsAndServer();
   testVols5To7StructuralAndTocInvariants();
+  testFlipIllustrationPositionAlignment();
+  testVol5To7BodyIllustrationScanAlignment();
   console.log('\n=== All Ingestion & Pipeline Tests Passed! ===');
 }
 

@@ -15,7 +15,7 @@
     "239": "Şimdi, Yalnızca Şu Anda",
     "251": "Slit-Paisen’in Doğduğu Gün",
     "257": "Yazarın Notu",
-    "259": "Yuri Dünyayı Kurtarır"
+    "260": "Yuri Dünyayı Kurtarır"
   },
   "chapters": [
     {
@@ -112,7 +112,7 @@
       "label": "Ek Hikâye",
       "title": "Yuri Dünyayı Kurtarır",
       "enTitle": "Yuri Saves The World",
-      "startPage": 259
+      "startPage": 260
     }
   ]
 }

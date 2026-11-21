@@ -5,53 +5,77 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
-const zlib = require('zlib');
+const { execFileSync } = require('child_process');
 const { buildBook } = require('../server.js');
 const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
-const ART_SEED = path.join(__dirname, 'lib', 'art_seed_v4_45.json.gz');
+const BOOKS_DIR = path.join(ROOT, 'public', 'books');
 
 function loadExistingArtBundle() {
-  const out = {};
-  if (fs.existsSync(ART_SEED)) {
-    try {
-      const seeded = JSON.parse(zlib.gunzipSync(fs.readFileSync(ART_SEED)).toString('utf8'));
-      for (const [k, v] of Object.entries(seeded || {})) {
-        if (v && typeof v === 'object') out[k] = { ...v };
-      }
-    } catch {
-      // bozuk veya okunamayan yedek atlanır
+  const result = { data: {}, index: null };
+  for (const k of ['4', '4.5']) {
+    const chunkFile = path.join(BOOKS_DIR, `art-${k}.json`);
+    if (fs.existsSync(chunkFile)) {
+      try {
+        result.data[k] = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
+      } catch {}
     }
   }
+
   if (fs.existsSync(ART_OUT)) {
     try {
       const code = fs.readFileSync(ART_OUT, 'utf8');
       const sandbox = { window: {} };
       vm.runInNewContext(code, sandbox, { timeout: 2000 });
-      for (const [k, v] of Object.entries(sandbox.window.ALYA_ART || {})) {
-        if (v && typeof v === 'object') out[k] = { ...(out[k] || {}), ...v };
+      if (sandbox.window.ALYA_ART_INDEX) result.index = sandbox.window.ALYA_ART_INDEX;
+      if (sandbox.window.ALYA_ART) {
+        for (const k of ['4', '4.5']) {
+          if (!result.data[k] && sandbox.window.ALYA_ART[k]) {
+            result.data[k] = sandbox.window.ALYA_ART[k];
+          }
+        }
       }
-    } catch {
-      // mevcut bundle-art yalnızca indeks içeriyorsa sorun değil
-    }
+    } catch {}
   }
-  for (const k of ['4', '4.5']) {
-    const f = path.join(ROOT, 'public', 'books', `art-${k}.json`);
-    if (fs.existsSync(f)) {
-      try {
-        const parsed = JSON.parse(fs.readFileSync(f, 'utf8'));
-        if (parsed && typeof parsed === 'object') out[k] = { ...(out[k] || {}), ...parsed };
-      } catch {
-        // geçersiz parça atlanır
+
+  // Temiz klonlarda gitignore altındaki public/pages/ ve public/books/art-*.json yoksa git geçmişinden gömülü veriyi kurtar
+  if (!result.data['4'] || !Object.keys(result.data['4']).length) {
+    try {
+      const revs = execFileSync('git', ['log', '--format=%H', '--', 'public/bundle-art.js'], {
+        cwd: ROOT,
+        encoding: 'utf8',
+      })
+        .trim()
+        .split(/\r?\n/)
+        .filter(Boolean);
+      for (const rev of revs) {
+        const legacyCode = execFileSync('git', ['show', `${rev}:public/bundle-art.js`], {
+          cwd: ROOT,
+          encoding: 'utf8',
+          maxBuffer: 24 * 1024 * 1024,
+        });
+        if (!legacyCode.includes('window.ALYA_ART=')) continue;
+        const sandbox = { window: {} };
+        vm.runInNewContext(legacyCode, sandbox, { timeout: 3000 });
+        if (sandbox.window.ALYA_ART) {
+          for (const k of ['4', '4.5']) {
+            if (!result.data[k] && sandbox.window.ALYA_ART[k]) {
+              result.data[k] = sandbox.window.ALYA_ART[k];
+            }
+          }
+          break;
+        }
       }
-    }
+    } catch {}
   }
-  return out;
+
+  return result;
 }
 
-const existingArt = loadExistingArtBundle();
+const existingArtBundle = loadExistingArtBundle();
+const existingArt = existingArtBundle.data;
 const vols = {};
 const art = {};
 
@@ -68,9 +92,11 @@ for (const k of VOLUME_KEYS) {
     source: cfg.source,
   });
 
-  // Statik barındırma (GitHub Pages alt dizini dahil) için göreli görsel yolları kullan
+  // Statik barındırma (GitHub Pages alt dizini dahil) için var olan görsel yollarını göreli yap
   for (const p of book.pages) {
-    p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+    if (p.img || k === '4' || k === '4.5') {
+      p.img = cfg.relImgPrefix + String(p.n).padStart(3, '0') + '.webp';
+    }
   }
   vols[k] = book;
 
@@ -92,7 +118,6 @@ for (const k of VOLUME_KEYS) {
 }
 
 // cilt başına ayrı JSON parçaları (ilk yükleme hafif olsun)
-const BOOKS_DIR = path.join(ROOT, 'public', 'books');
 fs.mkdirSync(BOOKS_DIR, { recursive: true });
 const manifestVols = {};
 for (const [k, book] of Object.entries(vols)) {
@@ -138,9 +163,16 @@ const body =
 
 fs.writeFileSync(OUT, body);
 
+const hasRawV4Dirs =
+  fs.existsSync(path.join(ROOT, VOLUMES['4'].imgDir)) || fs.existsSync(path.join(ROOT, VOLUMES['4.5'].imgDir));
+const artIndex =
+  !hasRawV4Dirs && existingArtBundle.index
+    ? existingArtBundle.index
+    : Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]));
+
 const artBody =
   '/* otomatik üretildi: scripts/build_bundle.js — illüstrasyon görselleri cilt başına public/books/art-<cilt>.json içinde */\n' +
-  'window.ALYA_ART_INDEX=' + JSON.stringify(Object.fromEntries(Object.entries(art).map(([k, v]) => [k, Object.keys(v).length]))) + ';\n';
+  'window.ALYA_ART_INDEX=' + JSON.stringify(artIndex) + ';\n';
 fs.writeFileSync(ART_OUT, artBody);
 
 console.log(

@@ -109,7 +109,23 @@ function writeWebp(inputBuf, outFile, { maxWidth = 1000, quality = 76 } = {}) {
       args.push('-resize', String(maxWidth), '0');
     }
     args.push(tmpIn, '-o', outFile);
-    execFileSync('cwebp', args);
+    try {
+      execFileSync('cwebp', args);
+    } catch (err) {
+      if (err && err.code === 'ENOENT') {
+        const pyScript = [
+          'import sys',
+          'from PIL import Image',
+          'im = Image.open(sys.argv[1]).convert("RGB")',
+          'mw = int(sys.argv[3])',
+          'if im.width > mw: im = im.resize((mw, round(im.height * mw / im.width)), Image.Resampling.LANCZOS)',
+          'im.save(sys.argv[2], "WEBP", quality=int(sys.argv[4]), method=4)',
+        ].join('; ');
+        execFileSync('python3', ['-c', pyScript, tmpIn, outFile, String(maxWidth), String(quality)]);
+      } else {
+        throw err;
+      }
+    }
   } finally {
     try {
       if (fs.existsSync(tmpIn)) fs.unlinkSync(tmpIn);

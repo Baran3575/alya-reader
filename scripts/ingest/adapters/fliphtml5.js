@@ -371,10 +371,29 @@ function isNonMaskPdfImage(buf) {
 }
 
 async function extractVol5PdfIllustrations(pdfFileId, colorFolderId) {
-  const cachedCount = readCacheJson('vol5-ills-meta', pdfFileId);
-  if (cachedCount && Array.isArray(cachedCount)) {
-    const bufs = cachedCount.map((k) => readCacheBuffer('vol5-ills', k));
-    if (bufs.every(Boolean)) return bufs;
+  const cachedMeta = readCacheJson('vol5-ills-meta', pdfFileId);
+  if (cachedMeta && Array.isArray(cachedMeta) && cachedMeta.length > 0) {
+    const items = cachedMeta.map((entry, idx) => {
+      if (typeof entry === 'string') {
+        const buf = readCacheBuffer('vol5-ills', entry);
+        if (!buf) return null;
+        return {
+          isFront: entry.startsWith('front_'),
+          pdfPage: null,
+          orderIndex: idx,
+          buffer: buf,
+        };
+      }
+      const buf = readCacheBuffer('vol5-ills', entry.key);
+      if (!buf) return null;
+      return {
+        isFront: Boolean(entry.isFront),
+        pdfPage: typeof entry.pdfPage === 'number' ? entry.pdfPage : null,
+        orderIndex: idx,
+        buffer: buf,
+      };
+    });
+    if (items.every(Boolean)) return items;
   }
 
   // 1) Renkli illüstrasyon klasörü (kapak + renkli sayfalar)
@@ -407,7 +426,7 @@ async function extractVol5PdfIllustrations(pdfFileId, colorFolderId) {
       const b = fs.readFileSync(path.join(tmpDir, f));
       if (!isNonMaskPdfImage(b)) continue;
       // Son sayfalardaki grup/Discord reklam kartını atla
-      if (pg > 280 && b.length < 90000) continue;
+      if (pg > 277 && b.length < 90000) continue;
       const prev = byPdfPage.get(pg);
       if (!prev || b.length > prev.buf.length) {
         byPdfPage.set(pg, { pg, buf: b });
@@ -421,41 +440,260 @@ async function extractVol5PdfIllustrations(pdfFileId, colorFolderId) {
   }
 
   // Ön kısım (pg <= 12) için yüksek çözünürlüklü renkli klasör görselleri varsa kullan,
-  // orta/arka kısım (pg > 12) için PDF'teki siyah-beyaz illüstrasyonları ekle
-  const midPdfBufs = pdfIllustrations.filter((x) => x.pg > 12).map((x) => x.buf);
-  const frontPdfBufs = pdfIllustrations.filter((x) => x.pg <= 12).map((x) => x.buf);
-  const finalFront = colorBufs.length >= 4 ? colorBufs : frontPdfBufs;
+  // orta/arka kısım (pg > 12) için PDF'teki siyah-beyaz illüstrasyonları kaynak sayfa numarasıyla (pg) koru
+  const midPdfItems = pdfIllustrations.filter((x) => x.pg > 12);
+  const frontPdfItems = pdfIllustrations.filter((x) => x.pg <= 12);
+  const finalFront =
+    colorBufs.length >= 4
+      ? colorBufs.map((buf, idx) => ({ isFront: true, pdfPage: idx + 1, buffer: buf }))
+      : frontPdfItems.map((x) => ({ isFront: true, pdfPage: x.pg, buffer: x.buf }));
   const combined = [
-    ...finalFront.map((buf) => ({ isFront: true, buffer: buf })),
-    ...midPdfBufs.map((buf) => ({ isFront: false, buffer: buf })),
-  ];
+    ...finalFront,
+    ...midPdfItems.map((x) => ({ isFront: false, pdfPage: x.pg, buffer: x.buf })),
+  ].map((item, idx) => ({ ...item, orderIndex: idx }));
 
-  const keys = combined.map((item, idx) => {
+  const metaRecords = combined.map((item, idx) => {
     const key = `${item.isFront ? 'front' : 'mid'}_${String(idx).padStart(2, '0')}`;
     writeCacheBuffer('vol5-ills', key, item.buffer);
-    return key;
+    return { key, isFront: item.isFront, pdfPage: item.pdfPage };
   });
-  writeCacheJson('vol5-ills-meta', pdfFileId, keys);
+  writeCacheJson('vol5-ills-meta', pdfFileId, metaRecords);
   return combined;
 }
 
 async function extractCleanIllustrations(volKey, artSource) {
   if (artSource.type === 'pdf_and_folder') {
     const raw = await extractVol5PdfIllustrations(artSource.pdfFileId, artSource.colorFolderId);
-    return raw.map((x) =>
-      Buffer.isBuffer(x) ? { isFront: false, buffer: x } : x
+    return raw.map((x, idx) =>
+      Buffer.isBuffer(x)
+        ? { isFront: idx < 4, pdfPage: null, orderIndex: idx, buffer: x }
+        : { ...x, isFront: Boolean(x.isFront), orderIndex: x.orderIndex ?? idx }
     );
   }
 
   const epubBuf = await downloadDriveBuffer(artSource.epubFileId);
   const ills = extractEpubIllustrationsInOrder(epubBuf);
-  return ills.map((it) => {
-    const lower = `${it.zipPath} ${it.docHref || ''}`.toLowerCase();
-    const isFront =
-      it.docIndex <= 6 &&
-      (/cover|kuchie|color|illust|front|insert0[0-4]|p00[1-7]/i.test(lower) || it.docIndex <= 4);
-    return { isFront, buffer: it.buffer, zipPath: it.zipPath };
-  });
+  return ills
+    .filter((it) => {
+      // İç başlık logosu sayfalarını (예: titlepage / p007) sahne çizimi olarak gövdeye sızdırma
+      const lower = `${it.zipPath} ${it.docHref || ''}`.toLowerCase();
+      if (it.isBeforeStory && /titlepage|logo/i.test(lower)) return false;
+      return true;
+    })
+    .map((it, idx) => {
+      const lower = `${it.zipPath} ${it.docHref || ''}`.toLowerCase();
+      const isFront =
+        Boolean(it.isBeforeStory) ||
+        (it.docIndex <= 7 &&
+          (/cover|kuchie|color|illust|front|insert0[0-6]|p00[1-8]/i.test(lower) || it.docIndex <= 4));
+      return {
+        isFront,
+        pdfPage: typeof it.pdfPage === 'number' ? it.pdfPage : null,
+        chapterHeading: it.chapterHeading || '',
+        prevAnchor: it.prevAnchor || '',
+        nextAnchor: it.nextAnchor || '',
+        orderIndex: it.orderIndex ?? idx,
+        buffer: it.buffer,
+        zipPath: it.zipPath,
+      };
+    });
+}
+
+function normalizeMatchTokens(str) {
+  return String(str || '')
+    .normalize('NFKD')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .toLowerCase()
+    .replace(/[^a-z0-9' ]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function anchorOverlapScore(anchorText, pageText, fromEnd = false) {
+  const aWords = normalizeMatchTokens(anchorText).split(' ').filter((w) => w.length >= 2);
+  const pNorm = normalizeMatchTokens(pageText);
+  if (!aWords.length || !pNorm) return 0;
+
+  const slice = fromEnd ? aWords.slice(-10) : aWords.slice(0, 10);
+  if (slice.length >= 4) {
+    const phrase6 = slice.slice(0, Math.min(7, slice.length)).join(' ');
+    const tail6 = slice.slice(-Math.min(7, slice.length)).join(' ');
+    if (pNorm.includes(phrase6) || pNorm.includes(tail6)) return 1.0;
+  }
+
+  const pSet = new Set(pNorm.split(' '));
+  let hits = 0;
+  for (const w of slice) {
+    if (pSet.has(w)) hits++;
+  }
+  return hits / slice.length;
+}
+
+/**
+ * Gövde illüstrasyonlarını (midIlls) kör dizin sırasıyla değil, kaynak PDF sayfası (pdfPage / srcIdx+1)
+ * veya EPUB metin komşuluğu çapaları (prevAnchor / nextAnchor) üzerinden activeBody konumlarına hizalar.
+ * Karşılığı olmayan boş bölüm ayırıcılarını boş bırakır; boş yuva bulunmayan gerçek görsel konumlarına
+ * yeni görsel öğesi ekler.
+ */
+function alignMidIllustrationsToBody(activeBody, midIlls) {
+  if (!Array.isArray(midIlls) || midIlls.length === 0) {
+    return activeBody.filter((x) => x.kind !== 'empty');
+  }
+
+  // Her activeBody öğesi için komşu düzyazı PDF sayfa aralığını [loPdf, hiPdf] (1-tabanlı srcIdx + 1) hesapla
+  const proseIndices = [];
+  for (let i = 0; i < activeBody.length; i++) {
+    if (activeBody[i].kind === 'prose') proseIndices.push(i);
+  }
+
+  const assignedSlotToIlls = new Map(); // emptyIdx -> ill[]
+  const insertAfterProseToIlls = new Map(); // proseIdx (-1 = en baş) -> ill[]
+  const usedEmptySlots = new Set();
+  let minAllowedBodyPos = 0;
+
+  for (const ill of midIlls) {
+    let matchedEmptyIdx = -1;
+    let matchedAfterProseIdx = null;
+
+    // 1) Kaynak PDF sayfası (pdfPage) biliniyorsa doğrudan srcIdx + 1 aralığına göre eşleştir
+    if (typeof ill.pdfPage === 'number' && ill.pdfPage > 0) {
+      let prevProseIdx = -1;
+      let nextProseIdx = -1;
+      for (const pi of proseIndices) {
+        const pPdf = activeBody[pi].srcIdx + 1;
+        if (pPdf < ill.pdfPage) prevProseIdx = pi;
+        else if (pPdf > ill.pdfPage && nextProseIdx < 0) nextProseIdx = pi;
+      }
+
+      const rangeStart = prevProseIdx >= 0 ? prevProseIdx + 1 : 0;
+      const rangeEnd = nextProseIdx >= 0 ? nextProseIdx - 1 : activeBody.length - 1;
+      let bestDist = Infinity;
+      for (let k = Math.max(minAllowedBodyPos, rangeStart); k <= rangeEnd; k++) {
+        if (activeBody[k].kind === 'empty' && !usedEmptySlots.has(k)) {
+          const d = Math.abs(activeBody[k].srcIdx + 1 - ill.pdfPage);
+          if (d < bestDist) {
+            bestDist = d;
+            matchedEmptyIdx = k;
+          }
+        }
+      }
+      if (matchedEmptyIdx < 0) {
+        matchedAfterProseIdx = prevProseIdx >= 0 ? prevProseIdx : proseIndices[proseIndices.length - 1] ?? -1;
+      }
+    }
+
+    // 2) EPUB metin çapaları (prevAnchor / nextAnchor) varsa en yüksek örtüşen düzyazı sınırını bul
+    if (matchedEmptyIdx < 0 && matchedAfterProseIdx === null && (ill.prevAnchor || ill.nextAnchor)) {
+      let bestScore = 0;
+      let bestAfterProse = -1;
+
+      for (let pOrd = 0; pOrd < proseIndices.length; pOrd++) {
+        const pi = proseIndices[pOrd];
+        if (pi < minAllowedBodyPos - 1) continue;
+        const nextPi = proseIndices[pOrd + 1] ?? -1;
+        let sc = 0;
+        if (ill.prevAnchor) {
+          sc += anchorOverlapScore(ill.prevAnchor, activeBody[pi].text, true) * 0.6;
+        }
+        if (ill.nextAnchor && nextPi >= 0) {
+          sc += anchorOverlapScore(ill.nextAnchor, activeBody[nextPi].text, false) * 0.6;
+        }
+        if (sc > bestScore) {
+          bestScore = sc;
+          bestAfterProse = pi;
+        }
+      }
+
+      if (bestScore >= 0.45 && bestAfterProse >= 0) {
+        const nextOrd = proseIndices.indexOf(bestAfterProse) + 1;
+        const nextPi = nextOrd < proseIndices.length ? proseIndices[nextOrd] : activeBody.length;
+        // Tam bu iki düzyazı sayfası arasında (veya ±1 komşu düzyazı aralığında) boş yuva var mı?
+        for (let k = Math.max(minAllowedBodyPos, bestAfterProse + 1); k < nextPi; k++) {
+          if (activeBody[k].kind === 'empty' && !usedEmptySlots.has(k)) {
+            matchedEmptyIdx = k;
+            break;
+          }
+        }
+        if (matchedEmptyIdx < 0) {
+          // Bitişik 1 sayfa kaymalı boş yuva kontrolü (aynı bölüm içinde)
+          const searchLo = Math.max(minAllowedBodyPos, bestAfterProse - 1);
+          const searchHi = Math.min(activeBody.length - 1, nextPi + 1);
+          for (let k = searchLo; k <= searchHi; k++) {
+            if (activeBody[k].kind === 'empty' && !usedEmptySlots.has(k)) {
+              matchedEmptyIdx = k;
+              break;
+            }
+          }
+        }
+        if (matchedEmptyIdx < 0) {
+          matchedAfterProseIdx = bestAfterProse;
+        }
+      }
+    }
+
+    // 3) Yedek (üstveri yoksa): bölüm içi kalan boş yuvalardan sıradakini seç, yoksa sona ekle
+    if (matchedEmptyIdx < 0 && matchedAfterProseIdx === null) {
+      for (let k = minAllowedBodyPos; k < activeBody.length; k++) {
+        if (activeBody[k].kind === 'empty' && !usedEmptySlots.has(k)) {
+          const next = activeBody[k + 1];
+          const isSeparatorBeforeHeading = next && next.kind === 'prose' && Boolean(next.heading);
+          if (!isSeparatorBeforeHeading) {
+            matchedEmptyIdx = k;
+            break;
+          }
+        }
+      }
+      if (matchedEmptyIdx < 0) {
+        matchedAfterProseIdx = proseIndices.length ? proseIndices[proseIndices.length - 1] : -1;
+      }
+    }
+
+    if (matchedEmptyIdx >= 0) {
+      usedEmptySlots.add(matchedEmptyIdx);
+      const arr = assignedSlotToIlls.get(matchedEmptyIdx) || [];
+      arr.push(ill);
+      assignedSlotToIlls.set(matchedEmptyIdx, arr);
+      minAllowedBodyPos = matchedEmptyIdx + 1;
+    } else {
+      const arr = insertAfterProseToIlls.get(matchedAfterProseIdx) || [];
+      arr.push(ill);
+      insertAfterProseToIlls.set(matchedAfterProseIdx, arr);
+      if (matchedAfterProseIdx >= 0) {
+        minAllowedBodyPos = Math.max(minAllowedBodyPos, matchedAfterProseIdx + 1);
+      }
+    }
+  }
+
+  const result = [];
+  if (insertAfterProseToIlls.has(-1)) {
+    for (const ill of insertAfterProseToIlls.get(-1)) {
+      result.push({ kind: 'art', buffer: ill.buffer, pdfPage: ill.pdfPage || null });
+    }
+  }
+
+  for (let i = 0; i < activeBody.length; i++) {
+    const item = activeBody[i];
+    if (item.kind === 'empty') {
+      const illsHere = assignedSlotToIlls.get(i);
+      if (illsHere) {
+        for (const ill of illsHere) {
+          result.push({ kind: 'art', buffer: ill.buffer, srcIdx: item.srcIdx, pdfPage: ill.pdfPage || null });
+        }
+      }
+      continue;
+    }
+
+    result.push(item);
+    const afterHere = insertAfterProseToIlls.get(i);
+    if (afterHere) {
+      for (const ill of afterHere) {
+        result.push({ kind: 'art', buffer: ill.buffer, pdfPage: ill.pdfPage || null });
+      }
+    }
+  }
+
+  return result;
 }
 
 async function ingestFlipVolume(volCfg, opts = {}) {
@@ -567,29 +805,7 @@ async function ingestFlipVolume(volCfg, opts = {}) {
   }
 
   const activeBody = bodyItems.filter((x) => x.kind !== 'merged');
-  const emptyIndices = activeBody
-    .map((x, idx) => (x.kind === 'empty' ? idx : -1))
-    .filter((idx) => idx >= 0);
-
-  // Boş sayfaları midIlls ile eşleştir: bölüm ortasındaki boşluklara öncelik ver
-  const assignedArt = new Map();
-  if (midIlls.length <= emptyIndices.length) {
-    const scored = emptyIndices.map((idx) => {
-      const next = activeBody[idx + 1];
-      const beforeNewChapter = next && next.kind === 'prose' && Boolean(next.heading);
-      return { idx, priority: beforeNewChapter ? 1 : 0 };
-    });
-    // Önceliği yüksek (0 = bölüm içi) olanları seç, sonra okuma sırasına diz
-    scored.sort((a, b) => a.priority - b.priority || a.idx - b.idx);
-    const chosen = scored.slice(0, midIlls.length).sort((a, b) => a.idx - b.idx);
-    chosen.forEach((slot, k) => {
-      assignedArt.set(slot.idx, midIlls[k].buffer);
-    });
-  } else {
-    emptyIndices.forEach((idx, k) => {
-      assignedArt.set(idx, midIlls[k].buffer);
-    });
-  }
+  const alignedBody = alignMidIllustrationsToBody(activeBody, midIlls);
 
   // Nihai kanonik sayfaları ve bölüm tablosunu oluştur
   const imgOutDir = path.join(path.dirname(volCfg.sourceFile), '..', volCfg.imgDir);
@@ -628,11 +844,10 @@ async function ingestFlipVolume(volCfg, opts = {}) {
     });
   }
 
-  activeBody.forEach((item, idx) => {
-    if (item.kind === 'empty') {
-      const artBuf = assignedArt.get(idx);
-      if (artBuf) pushArtPage(artBuf);
-      return;
+  for (const item of alignedBody) {
+    if (item.kind === 'art') {
+      pushArtPage(item.buffer);
+      continue;
     }
 
     const pNo = finalPages.length + 1;
@@ -659,13 +874,6 @@ async function ingestFlipVolume(volCfg, opts = {}) {
       thumb: '',
       text: pageText,
     });
-  });
-
-  // Eğer midIlls içinde boş yuvadan fazla görsel kaldıysa sona ekle
-  if (midIlls.length > emptyIndices.length) {
-    for (let k = emptyIndices.length; k < midIlls.length; k++) {
-      pushArtPage(midIlls[k].buffer);
-    }
   }
 
   ensureDir(path.dirname(volCfg.sourceFile));
@@ -688,5 +896,8 @@ module.exports = {
   isCreditsOrTocPage,
   cleanFlipPageText,
   detectPageHeading,
+  alignMidIllustrationsToBody,
+  extractVol5PdfIllustrations,
+  extractCleanIllustrations,
   ingestFlipVolume,
 };

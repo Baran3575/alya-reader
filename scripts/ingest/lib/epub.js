@@ -198,8 +198,11 @@ function extractXhtmlFlow(xhtml, docZipPath, entries, seenImages = new Set()) {
   return { docTitle, heading, items };
 }
 
+const STORY_HEADING_RE =
+  /\b(Prologue|Epilogue|Afterword|Interlude|Chapter\s+\d+|Side\s+Story|Short\s+Story|Bonus\s+Short\s+Story|Bookwalker\s+SS|Afterword\s+SS|Anecdote)\b/i;
+
 /**
- * Bir EPUB içinden okuma sırasındaki tüm tam sayfa illüstrasyonları çıkarır (Cilt 6-10 için de kullanılır).
+ * Bir EPUB içinden okuma sırasındaki tüm tam sayfa illüstrasyonları ve metin komşuluğu çapalarını çıkarır (Cilt 6-10 için de kullanılır).
  */
 function extractEpubIllustrationsInOrder(epubBuffer) {
   const { entries, manifest, spineDocs } = parseEpubPackage(epubBuffer);
@@ -216,20 +219,89 @@ function extractEpubIllustrationsInOrder(epubBuffer) {
         const buf = entries.get(item.zipPath).getData();
         if (isFullPageIllustration(buf, item.zipPath)) {
           seen.add(item.zipPath);
-          illustrations.push({ zipPath: item.zipPath, docIndex: 0, buffer: buf });
+          illustrations.push({
+            zipPath: item.zipPath,
+            docIndex: 0,
+            docHref: '',
+            isBeforeStory: true,
+            chapterHeading: '',
+            prevAnchor: '',
+            nextAnchor: '',
+            orderIndex: illustrations.length,
+            buffer: buf,
+          });
         }
       }
     }
   }
 
+  // Tüm spine akışını düzleştirerek her görselin hemen önceki ve sonraki hikâye metnini yakala
+  const flatFlow = [];
+  let storyStarted = false;
+  let currentChapterHeading = '';
+
   spineDocs.forEach((doc, idx) => {
     const flow = extractXhtmlFlow(doc.xhtml, doc.zipPath, entries, seen);
+    const candidateHead = flow.heading || flow.docTitle || '';
+    const isTocOrCredits = /Table of Contents|About the Translators|Translation Notes|Copyright/i.test(candidateHead);
+    if (!isTocOrCredits && STORY_HEADING_RE.test(candidateHead)) {
+      storyStarted = true;
+      currentChapterHeading = candidateHead;
+    }
+
+    let docParaChars = 0;
     for (const it of flow.items) {
-      if (it.type === 'art') {
-        illustrations.push({ zipPath: it.zipPath, docIndex: idx, docHref: doc.href, buffer: it.buffer });
+      if (it.type === 'heading' && STORY_HEADING_RE.test(it.text)) {
+        storyStarted = true;
+        currentChapterHeading = it.text;
+      } else if (it.type === 'para') {
+        docParaChars += it.text.length;
+        if (docParaChars >= 600 && !/Table of Contents|Translated by|Proofread by|All rights reserved/i.test(it.text)) {
+          storyStarted = true;
+        }
       }
+      flatFlow.push({
+        ...it,
+        docIndex: idx,
+        docHref: doc.href,
+        storyStarted,
+        chapterHeading: currentChapterHeading,
+      });
     }
   });
+
+  for (let i = 0; i < flatFlow.length; i++) {
+    const it = flatFlow[i];
+    if (it.type !== 'art') continue;
+
+    let prevAnchor = '';
+    for (let j = i - 1; j >= 0; j--) {
+      if (flatFlow[j].type === 'para' && flatFlow[j].storyStarted && flatFlow[j].text.length >= 16) {
+        prevAnchor = flatFlow[j].text;
+        break;
+      }
+    }
+
+    let nextAnchor = '';
+    for (let j = i + 1; j < flatFlow.length; j++) {
+      if (flatFlow[j].type === 'para' && flatFlow[j].storyStarted && flatFlow[j].text.length >= 16) {
+        nextAnchor = flatFlow[j].text;
+        break;
+      }
+    }
+
+    illustrations.push({
+      zipPath: it.zipPath,
+      docIndex: it.docIndex,
+      docHref: it.docHref,
+      isBeforeStory: !it.storyStarted,
+      chapterHeading: it.chapterHeading || '',
+      prevAnchor,
+      nextAnchor,
+      orderIndex: illustrations.length,
+      buffer: it.buffer,
+    });
+  }
 
   return illustrations;
 }

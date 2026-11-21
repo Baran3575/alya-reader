@@ -13,8 +13,8 @@
     "226": "Karşılaşma",
     "242": "Atlı Süvari Yarışı",
     "259": "Bu Duygu…",
-    "268": "Sadece Çocukluk Arkadaşı Olduğu Günlerden",
-    "273": "Yazarın Notu"
+    "269": "Sadece Çocukluk Arkadaşı Olduğu Günlerden",
+    "274": "Yazarın Notu"
   },
   "chapters": [
     {
@@ -99,13 +99,13 @@
       "label": "Ek Hikâye",
       "title": "Sadece Çocukluk Arkadaşı Olduğu Günlerden",
       "enTitle": "From When She Was Just a Childhood Friend",
-      "startPage": 268
+      "startPage": 269
     },
     {
       "label": "Yazarın Notu",
       "title": "Yazarın Notu",
       "enTitle": "Afterword",
-      "startPage": 273
+      "startPage": 274
     }
   ]
 }
