@@ -8,185 +8,22 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execFileSync } = require('child_process');
 const { ROOT, VOLUMES } = require('./lib/volumes');
 const { writeWebp } = require('./ingest/lib/webp');
+const {
+  forEachDecodedWebpSync,
+  rgbToGray,
+  resizeGrayBilinear,
+  cropGray,
+  nvecFromGray,
+  corr,
+  cropNonwhiteBandGray,
+  imageStats,
+  slideMatch,
+  cropScanLetterboxToWebp,
+} = require('./lib/webp_pixels');
 
 const DEFAULT_VOLS = ['5', '6', '7'];
-
-const PY_ANALYZER = `
-import glob, json, os, sys
-from PIL import Image
-
-vol_dir = sys.argv[1]
-scan_dir = os.path.join(vol_dir, 'scan')
-
-def nvec(im, size=32):
-    g = im.convert('L').resize((size, size), Image.Resampling.BILINEAR)
-    px = list(g.tobytes())
-    mean = sum(px) / len(px)
-    var = sum((x - mean) ** 2 for x in px) / len(px)
-    std = (var ** 0.5) or 1.0
-    return [(x - mean) / std for x in px]
-
-def corr(a, b):
-    return sum(x * y for x, y in zip(a, b)) / len(a)
-
-def crop_nonwhite_band(im):
-    small = im.resize((96, 144), Image.Resampling.BILINEAR)
-    w, h = small.size
-    g = small.convert('L')
-    px = g.tobytes()
-    ys = [y for y in range(h) if sum(1 for v in px[y * w:(y + 1) * w] if v < 245) > w * 0.08]
-    xs = [x for x in range(w) if sum(1 for y in range(h) if px[y * w + x] < 245) > h * 0.05]
-    if ys and xs and (ys[-1] - ys[0]) > h * 0.20 and (xs[-1] - xs[0]) > w * 0.30:
-        return small.crop((xs[0], ys[0], xs[-1] + 1, ys[-1] + 1))
-    return small
-
-def img_stats(im):
-    rgb_small = im.convert('RGB').resize((64, 96), Image.Resampling.BILINEAR)
-    raw = rgb_small.tobytes()
-    sat = sum(max(raw[i], raw[i+1], raw[i+2]) - min(raw[i], raw[i+1], raw[i+2]) for i in range(0, len(raw), 3)) / (len(raw) // 3)
-
-    g = im.convert('L').resize((100, 150), Image.Resampling.BILINEAR)
-    gb = list(g.tobytes())
-    white = sum(1 for x in gb if x > 240) / len(gb)
-    gray_mid = sum(1 for x in gb if 50 < x <= 225) / len(gb)
-    rows = [sum(gb[r * 100:(r + 1) * 100]) / 100.0 for r in range(150)]
-    osc = sum(abs(rows[r + 1] - rows[r]) for r in range(15, 135)) / 120.0
-    return round(sat, 3), round(white, 4), round(gray_mid, 4), round(osc, 3)
-
-def slide_match(clean_size, scan_g64, vc_full, vc_crop, vs_full, vs_crop):
-    best = max(corr(vc_full, vs_full), corr(vc_crop, vs_crop), corr(vc_full, vs_crop))
-    cw, ch = clean_size
-    sw, sh = scan_g64.size
-    if cw > ch and sh > sw:
-        th = round(sw * ch / cw)
-        if 8 <= th <= sh:
-            for y in range(0, sh - th + 1, 2):
-                c = corr(vc_full, nvec(scan_g64.crop((0, y, sw, y + th))))
-                if c > best:
-                    best = c
-    return best
-
-scans = {}
-for sf in sorted(glob.glob(os.path.join(scan_dir, '*.webp'))):
-    sno = int(os.path.basename(sf).split('.')[0])
-    im = Image.open(sf).convert('RGB')
-    sat, white, gray_mid, osc = img_stats(im)
-    is_scene_art = bool(white < 0.70 and gray_mid > 0.22 and osc < 7.0)
-    is_cand = bool(is_scene_art or sno <= 14 or osc < 8.5 or white < 0.75)
-    scans[sno] = {
-        'g64': im.convert('L').resize((64, 96), Image.Resampling.BILINEAR) if is_cand else None,
-        'size': list(im.size),
-        'sat': sat,
-        'white': white,
-        'gray_mid': gray_mid,
-        'osc': osc,
-        'v_full': nvec(im) if is_cand else None,
-        'v_crop': nvec(crop_nonwhite_band(im)) if is_cand else None,
-        'is_scene_art': is_scene_art,
-        'is_cand': is_cand,
-    }
-
-cleans = {}
-for cf in sorted(glob.glob(os.path.join(vol_dir, '*.webp'))):
-    pno = int(os.path.basename(cf).split('.')[0])
-    im = Image.open(cf).convert('RGB')
-    sat, white, gray_mid, osc = img_stats(im)
-    cleans[pno] = {
-        'im': im,
-        'size': list(im.size),
-        'sat': sat,
-        'white': white,
-        'gray_mid': gray_mid,
-        'osc': osc,
-        'v_full': nvec(im),
-        'v_crop': nvec(crop_nonwhite_band(im)),
-    }
-
-# Pairwise similarity among portrait front candidates (for cover variant deduplication)
-clean_keys = sorted(cleans.keys())
-cover_dups = {}
-for i, p1 in enumerate(clean_keys):
-    c1 = cleans[p1]
-    if c1['size'][0] >= c1['size'][1] or c1['sat'] < 3.0:
-        continue
-    im1 = c1['im']
-    sub1 = nvec(im1.crop((int(im1.width * 0.18), int(im1.height * 0.25), int(im1.width * 0.82), int(im1.height * 0.85))))
-    for p2 in clean_keys[i + 1:]:
-        c2 = cleans[p2]
-        if c2['size'][0] >= c2['size'][1] or c2['sat'] < 3.0:
-            continue
-        im2 = c2['im']
-        best_sub = corr(c1['v_full'], c2['v_full'])
-        for dx in (0, 30, 60):
-            for dy in (0, 25, 50):
-                x0 = min(im2.width - 32, dx + int(im2.width * 0.12))
-                y0 = min(im2.height - 32, dy + int(im2.height * 0.22))
-                x1 = min(im2.width, x0 + int(im2.width * 0.72))
-                y1 = min(im2.height, y0 + int(im2.height * 0.64))
-                if x1 - x0 > 64 and y1 - y0 > 64:
-                    sc = corr(sub1, nvec(im2.crop((x0, y0, x1, y1))))
-                    if sc > best_sub:
-                        best_sub = sc
-        if best_sub >= 0.56:
-            cover_dups.setdefault(str(p1), []).append([p2, round(best_sub, 4)])
-
-clean_out = {}
-for pno, c in sorted(cleans.items()):
-    matches = []
-    for sno, s in scans.items():
-        if not s['is_cand']:
-            continue
-        sc = slide_match(c['size'], s['g64'], c['v_full'], c['v_crop'], s['v_full'], s['v_crop'])
-        matches.append((sc, sno))
-    matches.sort(reverse=True)
-    clean_out[str(pno)] = {
-        'page': pno,
-        'size': c['size'],
-        'sat': c['sat'],
-        'white': c['white'],
-        'gray_mid': c['gray_mid'],
-        'osc': c['osc'],
-        'bestScan': matches[0][1] if matches else None,
-        'bestCorr': round(matches[0][0], 4) if matches else 0,
-        'top3': [[sno, round(sc, 4)] for sc, sno in matches[:3]],
-    }
-
-scan_out = {
-    str(sno): {
-        'pdfPage': sno,
-        'size': s['size'],
-        'sat': s['sat'],
-        'white': s['white'],
-        'gray_mid': s['gray_mid'],
-        'osc': s['osc'],
-        'isSceneArt': s['is_scene_art'],
-    }
-    for sno, s in sorted(scans.items())
-}
-
-print(json.dumps({'scans': scan_out, 'cleans': clean_out, 'coverDups': cover_dups}))
-`;
-
-const PY_CLEAN_FROM_SCAN = `
-import sys
-from PIL import Image
-
-scan_path, out_path = sys.argv[1], sys.argv[2]
-im = Image.open(scan_path).convert('RGB')
-w, h = im.size
-g = im.convert('L')
-px = g.tobytes()
-
-# Yatay çift sayfa çizim dikey PDF sayfasına yerleştirilmişse beyaz letterbox bantlarını kırp
-ys = [y for y in range(h) if sum(1 for v in px[y * w:(y + 1) * w] if v < 244) > w * 0.10]
-if ys and (ys[-1] - ys[0] + 1) < h * 0.72 and (ys[-1] - ys[0] + 1) > h * 0.35:
-    im = im.crop((0, ys[0], w, ys[-1] + 1))
-
-im.save(out_path, 'WEBP', quality=82, method=4)
-`;
 
 function parseArgs(argv) {
   let vols = [...DEFAULT_VOLS];
@@ -211,17 +48,167 @@ function parseArgs(argv) {
   return { vols, dryRun, verifyOnly };
 }
 
-function analyzeVolumeImages(volDir) {
-  const stdout = execFileSync('python3', ['-c', PY_ANALYZER, volDir], {
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024,
-  });
-  return JSON.parse(stdout);
+function analyzeVolumeImages(volDir, decodeOptions = {}) {
+  const scanDir = path.join(volDir, 'scan');
+  const scanFiles = fs
+    .readdirSync(scanDir)
+    .filter((f) => f.endsWith('.webp'))
+    .sort()
+    .map((f) => path.join(scanDir, f));
+  const cleanFiles = fs
+    .readdirSync(volDir)
+    .filter((f) => f.endsWith('.webp'))
+    .sort()
+    .map((f) => path.join(volDir, f));
+
+  const scans = new Map();
+  forEachDecodedWebpSync(
+    scanFiles,
+    (sf, frame) => {
+      const sno = Number(path.basename(sf).split('.')[0]);
+      const { width, height, rgb } = frame;
+      const gray = rgbToGray(rgb, width, height);
+      const { sat, white, grayMid, osc } = imageStats(rgb, gray, width, height);
+      const isSceneArt = Boolean(white < 0.7 && grayMid > 0.22 && osc < 7.0);
+      const isCand = Boolean(isSceneArt || sno <= 14 || osc < 8.5 || white < 0.75);
+      let vFull = null;
+      let vCrop = null;
+      let g64 = null;
+      if (isCand) {
+        vFull = nvecFromGray(gray, width, height);
+        const cropped = cropNonwhiteBandGray(gray, width, height);
+        vCrop = nvecFromGray(cropped.gray, cropped.width, cropped.height);
+        g64 = resizeGrayBilinear(gray, width, height, 64, 96);
+      }
+      scans.set(sno, {
+        pdfPage: sno,
+        size: [width, height],
+        sat,
+        white,
+        gray_mid: grayMid,
+        osc,
+        vFull,
+        vCrop,
+        g64,
+        isSceneArt,
+        isCand,
+      });
+    },
+    decodeOptions
+  );
+
+  const cleans = new Map();
+  forEachDecodedWebpSync(
+    cleanFiles,
+    (cf, frame) => {
+      const pno = Number(path.basename(cf).split('.')[0]);
+      const { width, height, rgb } = frame;
+      const gray = rgbToGray(rgb, width, height);
+      const { sat, white, grayMid, osc } = imageStats(rgb, gray, width, height);
+      const cropped = cropNonwhiteBandGray(gray, width, height);
+      // Kapak kopyası karşılaştırması için yalnızca dikey renkli adayların gri kanalını tut
+      const keepPortraitGray = width < height && sat >= 3.0 ? gray : null;
+      cleans.set(pno, {
+        page: pno,
+        size: [width, height],
+        sat,
+        white,
+        gray_mid: grayMid,
+        osc,
+        vFull: nvecFromGray(gray, width, height),
+        vCrop: nvecFromGray(cropped.gray, cropped.width, cropped.height),
+        portraitGray: keepPortraitGray,
+      });
+    },
+    decodeOptions
+  );
+
+  // Dikey renkli ön çizimler arasında kapak varyantı ikizlerini bul
+  const cleanKeys = [...cleans.keys()].sort((a, b) => a - b);
+  const coverDups = {};
+  for (let i = 0; i < cleanKeys.length; i++) {
+    const p1 = cleanKeys[i];
+    const c1 = cleans.get(p1);
+    if (!c1.portraitGray) continue;
+    const [w1, h1] = c1.size;
+    const sub1Rect = cropGray(
+      c1.portraitGray,
+      w1,
+      Math.floor(w1 * 0.18),
+      Math.floor(h1 * 0.25),
+      Math.floor(w1 * 0.82),
+      Math.floor(h1 * 0.85)
+    );
+    const sub1 = nvecFromGray(sub1Rect.gray, sub1Rect.width, sub1Rect.height);
+
+    for (let j = i + 1; j < cleanKeys.length; j++) {
+      const p2 = cleanKeys[j];
+      const c2 = cleans.get(p2);
+      if (!c2.portraitGray) continue;
+      const [w2, h2] = c2.size;
+      let bestSub = corr(c1.vFull, c2.vFull);
+      for (const dx of [0, 30, 60]) {
+        for (const dy of [0, 25, 50]) {
+          const x0 = Math.min(w2 - 32, dx + Math.floor(w2 * 0.12));
+          const y0 = Math.min(h2 - 32, dy + Math.floor(h2 * 0.22));
+          const x1 = Math.min(w2, x0 + Math.floor(w2 * 0.72));
+          const y1 = Math.min(h2, y0 + Math.floor(h2 * 0.64));
+          if (x1 - x0 > 64 && y1 - y0 > 64) {
+            const sub2 = cropGray(c2.portraitGray, w2, x0, y0, x1, y1);
+            const sc = corr(sub1, nvecFromGray(sub2.gray, sub2.width, sub2.height));
+            if (sc > bestSub) bestSub = sc;
+          }
+        }
+      }
+      if (bestSub >= 0.56) {
+        if (!coverDups[String(p1)]) coverDups[String(p1)] = [];
+        coverDups[String(p1)].push([p2, Number(bestSub.toFixed(4))]);
+      }
+    }
+  }
+
+  const cleanOut = {};
+  for (const pno of cleanKeys) {
+    const c = cleans.get(pno);
+    const matches = [];
+    for (const [sno, s] of scans.entries()) {
+      if (!s.isCand) continue;
+      const sc = slideMatch(c.size, s.size, s.g64, c.vFull, c.vCrop, s.vFull, s.vCrop);
+      matches.push([sc, sno]);
+    }
+    matches.sort((a, b) => b[0] - a[0]);
+    cleanOut[String(pno)] = {
+      page: pno,
+      size: c.size,
+      sat: c.sat,
+      white: c.white,
+      gray_mid: c.gray_mid,
+      osc: c.osc,
+      bestScan: matches.length ? matches[0][1] : null,
+      bestCorr: matches.length ? Number(matches[0][0].toFixed(4)) : 0,
+      top3: matches.slice(0, 3).map(([sc, sno]) => [sno, Number(sc.toFixed(4))]),
+    };
+  }
+
+  const scanOut = {};
+  for (const [sno, s] of [...scans.entries()].sort((a, b) => a[0] - b[0])) {
+    scanOut[String(sno)] = {
+      pdfPage: sno,
+      size: s.size,
+      sat: s.sat,
+      white: s.white,
+      gray_mid: s.gray_mid,
+      osc: s.osc,
+      isSceneArt: s.isSceneArt,
+    };
+  }
+
+  return { scans: scanOut, cleans: cleanOut, coverDups };
 }
 
 function renderCleanFromScan(scanFile, outFile) {
   try {
-    execFileSync('python3', ['-c', PY_CLEAN_FROM_SCAN, scanFile, outFile], { stdio: 'pipe' });
+    cropScanLetterboxToWebp(scanFile, outFile, { quality: 82 });
   } catch {
     const buf = fs.readFileSync(scanFile);
     writeWebp(buf, outFile);
@@ -391,19 +378,43 @@ function alignVolume(volKey, { dryRun = false, verifyOnly = false } = {}) {
   const slotTargetPdf = new Map(); // oldIdx -> pdfPage | null (null = boş ayırıcı, .webp kaldırılır)
   const slotScanFallback = new Map(); // oldIdx -> scan_map değeri
 
-  // Ön yuvalar
-  frontEmptySlots.forEach((pno, k) => {
-    const idx = pno - 1;
-    const item = chosenFront[k] || null;
-    if (item) {
-      slotTargetPdf.set(idx, { kind: 'front', frontItem: item });
-      if (item.matchedScan) {
-        slotScanFallback.set(idx, item.matchedScan);
+  // Ön yuvalar: mevcut ön çizimlerin tamamı zaten geçerli ön yuvalardaysa (örn. temizlenmiş künye sayfası
+  // boş bırakılmışsa: C6 s.6 boş + 007.webp, C7 s.5 boş + 006.webp) mevcut yuva numaralarını koru.
+  const frontEmptySet = new Set(frontEmptySlots);
+  const chosenOrigPages = new Set(chosenFront.map((f) => f.origPage));
+  const preserveExistingFrontSlots =
+    chosenFront.length < frontEmptySlots.length &&
+    chosenOrigPages.size === chosenFront.length &&
+    chosenFront.every((f) => frontEmptySet.has(f.origPage));
+
+  if (preserveExistingFrontSlots) {
+    const byOrigPage = new Map(chosenFront.map((f) => [f.origPage, f]));
+    for (const pno of frontEmptySlots) {
+      const idx = pno - 1;
+      const item = byOrigPage.get(pno) || null;
+      if (item) {
+        slotTargetPdf.set(idx, { kind: 'front', frontItem: item });
+        if (item.matchedScan) {
+          slotScanFallback.set(idx, item.matchedScan);
+        }
+      } else {
+        slotTargetPdf.set(idx, null);
       }
-    } else {
-      slotTargetPdf.set(idx, null);
     }
-  });
+  } else {
+    frontEmptySlots.forEach((pno, k) => {
+      const idx = pno - 1;
+      const item = chosenFront[k] || null;
+      if (item) {
+        slotTargetPdf.set(idx, { kind: 'front', frontItem: item });
+        if (item.matchedScan) {
+          slotScanFallback.set(idx, item.matchedScan);
+        }
+      } else {
+        slotTargetPdf.set(idx, null);
+      }
+    });
+  }
 
   // Gövde boşlukları
   for (const gap of gaps) {
@@ -635,6 +646,49 @@ function alignVolume(volKey, { dryRun = false, verifyOnly = false } = {}) {
   const newChaptersMeta = { ...chaptersMeta, titles: newTitles, chapters: newChapters };
   if (JSON.stringify(chaptersMeta) !== JSON.stringify(newChaptersMeta)) {
     fs.writeFileSync(cfg.titlesFile, JSON.stringify(newChaptersMeta, null, 2) + '\n');
+  }
+
+  // data/quality/v<vol>.json ve scripts/tn_notes.json: gövdeye yeni görsel yuvası eklendiğinde kayan sayfa anahtarlarını
+  // hizala ve hiçbir anahtarın boş illüstrasyon (art) sayfasına düşmemesini garanti et.
+  const bodyArtPageSet = new Set(
+    finalRecords.filter((r) => r.artSpec && r.artSpec.kind === 'body' && !String(r.text || '').trim()).map((r) => r.page)
+  );
+  const shiftAwayFromArtSlot = (pageNum) => {
+    let target = oldPageToNewPage.get(pageNum) || pageNum;
+    while (bodyArtPageSet.has(target) && target < finalRecords.length) {
+      target++;
+    }
+    return target;
+  };
+
+  const hasPageShift = [...oldPageToNewPage.entries()].some(([origP, newP]) => origP !== newP);
+  const qFile = path.join(ROOT, 'data', 'quality', `v${volKey}.json`);
+  if (fs.existsSync(qFile)) {
+    const qObj = JSON.parse(fs.readFileSync(qFile, 'utf8'));
+    const newQ = {};
+    for (const [k, v] of Object.entries(qObj)) {
+      const mapped = hasPageShift || bodyArtPageSet.has(Number(k)) ? shiftAwayFromArtSlot(Number(k)) : Number(k);
+      newQ[String(mapped)] = v;
+    }
+    if (JSON.stringify(qObj) !== JSON.stringify(newQ)) {
+      fs.writeFileSync(qFile, JSON.stringify(newQ, null, 2) + '\n');
+    }
+  }
+
+  const tnFile = path.join(ROOT, 'scripts', 'tn_notes.json');
+  if (fs.existsSync(tnFile)) {
+    const tnAll = JSON.parse(fs.readFileSync(tnFile, 'utf8'));
+    if (tnAll[volKey] && typeof tnAll[volKey] === 'object') {
+      const newVolTn = {};
+      for (const [k, v] of Object.entries(tnAll[volKey])) {
+        const mapped = hasPageShift || bodyArtPageSet.has(Number(k)) ? shiftAwayFromArtSlot(Number(k)) : Number(k);
+        newVolTn[String(mapped)] = v;
+      }
+      if (JSON.stringify(tnAll[volKey]) !== JSON.stringify(newVolTn)) {
+        tnAll[volKey] = newVolTn;
+        fs.writeFileSync(tnFile, JSON.stringify(tnAll, null, 2) + '\n');
+      }
+    }
   }
 
   return { vol: volKey, bodyArtAssignments, removedSeparators, insertedPages };

@@ -22,6 +22,21 @@ const { cleanOcrText } = require('../scripts/ingest/adapters/glucosetl95');
 const { polish, balanceCurlyQuotes } = require('../scripts/merge');
 const { notes, naturalize } = require('../scripts/naturalize');
 const { normalizeWhisperBraces, refineLiteraryTurkish } = require('../scripts/translate_llm');
+const { getImageDimensions } = require('../scripts/ingest/lib/webp');
+const {
+  encodePngRgb,
+  encodePpmP6,
+  parsePpmP6,
+  decodeWebpRgbSync,
+  forEachDecodedWebpSync,
+  resizeGrayBilinear,
+  nvecFromGray,
+  corr,
+  colorSat,
+  summarizeFrameForCorrelation,
+  pairScore,
+  cropScanLetterboxToWebp,
+} = require('../scripts/lib/webp_pixels');
 const { buildBook } = require('../server');
 
 function testVolumeRegistry() {
@@ -231,12 +246,15 @@ function testVols5To7StructuralAndTocInvariants() {
   assert.deepStrictEqual(v7Final['5'], [], 'Vol 7 leaked fan-translation credits page 5 must be empty');
   assert.strictEqual(v6Final['233'][0], '◇', 'Vol 6 page 233 must start with scene divider ◇');
 
+  const tnNotesAll = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts', 'tn_notes.json'), 'utf8'));
+
   for (const k of ['5', '6', '7']) {
     const ch = JSON.parse(fs.readFileSync(VOLUMES[k].titlesFile, 'utf8'));
     for (const item of ch.chapters) {
       assert.ok(!/^(?:Prolog|Epilog|Afterword)$/i.test(item.label), `Vol ${k} TOC label must use Önsöz/Sonsöz/Yazarın Notu: ${item.label}`);
       assert.ok(!/&[a-z]+;/i.test(item.enTitle || ''), `Vol ${k} enTitle must not contain raw HTML entities: ${item.enTitle}`);
     }
+    const src = JSON.parse(fs.readFileSync(VOLUMES[k].sourceFile, 'utf8'));
     const tr = JSON.parse(fs.readFileSync(VOLUMES[k].finalFile, 'utf8'));
     const allParas = Object.values(tr).flat();
     assert.ok(allParas.some((p) => p.startsWith('ÇN: ')), `Vol ${k} must contain standalone ÇN: footnotes`);
@@ -244,19 +262,34 @@ function testVols5To7StructuralAndTocInvariants() {
       if (p.includes('⋆⋅☆⋅⋆')) assert.strictEqual(p, '⋆⋅☆⋅⋆', `Vol ${k} star divider must be standalone: ${p}`);
       if (p.includes('◇')) assert.strictEqual(p, '◇', `Vol ${k} diamond divider must be standalone: ${p}`);
     }
+
+    // tn_notes.json ve data/quality/v<k>.json anahtarları asla boş illüstrasyon sayfasına düşmemeli (örn. C6 s.259 -> 260)
+    for (const notePage of Object.keys(tnNotesAll[k] || {})) {
+      const idx = Number(notePage) - 1;
+      assert.ok(src[idx] && src[idx].text.trim().length > 0, `Vol ${k} tn_notes page ${notePage} must point to a prose page, not an empty art slot`);
+      assert.ok((tr[notePage] || []).length > 0, `Vol ${k} tn_notes page ${notePage} must have non-empty TR paragraphs`);
+    }
+    const qFile = path.join(ROOT, 'data', 'quality', `v${k}.json`);
+    if (fs.existsSync(qFile)) {
+      const qData = JSON.parse(fs.readFileSync(qFile, 'utf8'));
+      for (const qPage of Object.keys(qData)) {
+        const idx = Number(qPage) - 1;
+        assert.ok(src[idx] && src[idx].text.trim().length > 0, `Vol ${k} quality v${k}.json page ${qPage} must point to a prose page`);
+      }
+    }
   }
-  console.log('   ✓ Vols 5–7 credits cleanup, TOC labels, standalone dividers, and ÇN footnotes verified');
+  console.log('   ✓ Vols 5–7 credits cleanup, TOC labels, standalone dividers, and ÇN/quality page targets verified');
 }
 
 function testFlipIllustrationPositionAlignment() {
-  console.log('7. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
+  console.log('8. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
   const activeBody = [
-    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Prolog', enTitle: 'Prologue' } },
+    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Önsöz', enTitle: 'Prologue' } },
     { kind: 'empty', srcIdx: 11 }, // Boş bölüm ayırıcı (illüstrasyon yok)
     { kind: 'prose', srcIdx: 12, text: 'Chapter 1 starts here in the student council room.', heading: { label: 'Bölüm 1', enTitle: 'Chapter 1' } },
     { kind: 'empty', srcIdx: 13 }, // Gerçek Bölüm 1 sahne illüstrasyonu (PDF s.14)
     { kind: 'prose', srcIdx: 14, text: 'She smiled mischievously as the shutter clicked behind them.' },
-    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Sonsöz', enTitle: 'Afterword' } },
+    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Yazarın Notu', enTitle: 'Afterword' } },
   ];
 
   // 1) PDF sayfa numarasına (pdfPage) göre eşleştirme + eksik yuva ekleme
@@ -288,89 +321,105 @@ function testFlipIllustrationPositionAlignment() {
   console.log('   ✓ Position-based PDF page & EPUB anchor matching verified');
 }
 
+function testPilFreeWebpPixelsPipeline() {
+  console.log('9. Testing PIL-free WebP/PPM/PNG codecs and resampling helpers (Termux/libwebp path)...');
+  // 1) PPM P6 kodlama/çözümleme (açıklama satırları dahil)
+  const sampleRgb = Buffer.from([
+    255, 0, 0, 0, 255, 0,
+    0, 0, 255, 240, 240, 240,
+  ]);
+  const ppm = encodePpmP6(2, 2, sampleRgb);
+  const parsedPpm = parsePpmP6(ppm);
+  assert.strictEqual(parsedPpm.width, 2);
+  assert.strictEqual(parsedPpm.height, 2);
+  assert.deepStrictEqual(parsedPpm.rgb, sampleRgb);
+
+  const commentedPpm = Buffer.concat([Buffer.from('P6\n# libwebp dwebp test\n2 2\n255\n', 'ascii'), sampleRgb]);
+  assert.deepStrictEqual(parsePpmP6(commentedPpm).rgb, sampleRgb);
+
+  // 2) PIL'siz PNG üretimi (pypdfium2 + cwebp yoluyla uyumlu)
+  const pngBuf = encodePngRgb(2, 2, sampleRgb);
+  assert.deepStrictEqual(getImageDimensions(pngBuf), { width: 2, height: 2, format: 'png' });
+  assert.ok(colorSat(sampleRgb, 2, 2, 2, 2) > 150, 'Primary RGB pixels must report high color saturation');
+
+  // 3) Üçgen filtreli yeniden örnekleme ve normalize korelasyon özdeşliği
+  const grad = new Uint8Array(64 * 64);
+  for (let y = 0; y < 64; y++) {
+    for (let x = 0; x < 64; x++) grad[y * 64 + x] = (x * 2 + y * 2) & 0xff;
+  }
+  const g32 = resizeGrayBilinear(grad, 64, 64, 32, 32);
+  assert.strictEqual(g32.length, 1024);
+  const v = nvecFromGray(grad, 64, 64, 32);
+  assert.ok(Math.abs(corr(v, v) - 1.0) < 1e-6, 'Self-correlation must equal 1.0');
+
+  // 4) Gerçek WebP dosyası üzerinde PIL tamamen devre dışıyken (disablePil: true) çözümleme
+  const sampleWebp = path.join(ROOT, 'public', 'pages5', '036.webp');
+  let pilFreeDecoded = null;
+  try {
+    pilFreeDecoded = decodeWebpRgbSync(sampleWebp, { disablePil: true });
+  } catch (e) {
+    if (e && e.code !== 'NO_WEBP_DECODER') throw e;
+  }
+  if (pilFreeDecoded) {
+    assert.notStrictEqual(pilFreeDecoded.backend, 'pil', 'disablePil:true must never use Pillow');
+    assert.ok(pilFreeDecoded.width > 400 && pilFreeDecoded.height > 600);
+    assert.strictEqual(pilFreeDecoded.rgb.length, pilFreeDecoded.width * pilFreeDecoded.height * 3);
+
+    // dwebp CLI sarmalayıcı yolunu da doğrula (Termux pkg install libwebp davranışı)
+    if (process.platform !== 'win32') {
+      const os = require('os');
+      const fakeDwebp = path.join(os.tmpdir(), `alya_test_dwebp_${process.pid}.js`);
+      try {
+        fs.writeFileSync(
+          fakeDwebp,
+          [
+            `#!${process.execPath}`,
+            `const fs = require('fs');`,
+            `const { encodePpmP6 } = require(${JSON.stringify(path.join(ROOT, 'scripts', 'lib', 'webp_pixels'))});`,
+            `const args = process.argv.slice(2);`,
+            `const oIdx = args.indexOf('-o');`,
+            `const outFile = args[oIdx + 1];`,
+            `fs.writeFileSync(outFile, encodePpmP6(4, 6, Buffer.alloc(4 * 6 * 3, 128)));`,
+          ].join('\n'),
+          { mode: 0o755 }
+        );
+        const viaDwebp = decodeWebpRgbSync(sampleWebp, {
+          preferredBackend: 'dwebp',
+          dwebpBin: fakeDwebp,
+          disablePil: true,
+        });
+        assert.strictEqual(viaDwebp.backend, 'dwebp');
+        assert.strictEqual(viaDwebp.width, 4);
+        assert.strictEqual(viaDwebp.height, 6);
+      } finally {
+        try {
+          if (fs.existsSync(fakeDwebp)) fs.unlinkSync(fakeDwebp);
+        } catch {}
+      }
+    }
+
+    // PIL'siz letterbox kırpma ve WebP kodlama (cwebp PPM / libwebp WebPEncodeRGB) doğrulaması
+    const os = require('os');
+    const tmpOutWebp = path.join(os.tmpdir(), `alya_test_enc_${process.pid}.webp`);
+    try {
+      const encBackend = cropScanLetterboxToWebp(path.join(ROOT, 'public', 'pages7', 'scan', '273.webp'), tmpOutWebp, {
+        quality: 80,
+        disablePil: true,
+      });
+      assert.notStrictEqual(encBackend, 'pil');
+      const outDim = getImageDimensions(fs.readFileSync(tmpOutWebp));
+      assert.ok(outDim && outDim.format === 'webp' && outDim.width > outDim.height, 'Landscape spread letterbox must crop to landscape WebP');
+    } finally {
+      try {
+        if (fs.existsSync(tmpOutWebp)) fs.unlinkSync(tmpOutWebp);
+      } catch {}
+    }
+  }
+  console.log(`   ✓ PIL-free PPM/PNG/WebP codecs verified (active backend: ${pilFreeDecoded ? pilFreeDecoded.backend : 'fallback'})`);
+}
+
 function testVol5To7BodyIllustrationScanAlignment() {
-  console.log('8. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
-
-  const pyVerify = `
-import json, os, sys
-from PIL import Image
-
-payload = json.loads(sys.argv[1])
-
-def nvec(im, size=32):
-    g = im.convert('L').resize((size, size), Image.Resampling.BILINEAR)
-    px = list(g.tobytes())
-    mean = sum(px) / len(px)
-    var = sum((x - mean) ** 2 for x in px) / len(px)
-    std = (var ** 0.5) or 1.0
-    return [(x - mean) / std for x in px]
-
-def corr(a, b):
-    return sum(x * y for x, y in zip(a, b)) / len(a)
-
-def crop_band(im):
-    small = im.resize((96, 144), Image.Resampling.BILINEAR)
-    w, h = small.size
-    px = small.convert('L').tobytes()
-    ys = [y for y in range(h) if sum(1 for v in px[y * w:(y + 1) * w] if v < 245) > w * 0.08]
-    xs = [x for x in range(w) if sum(1 for y in range(h) if px[y * w + x] < 245) > h * 0.05]
-    if ys and xs and (ys[-1] - ys[0]) > h * 0.20 and (xs[-1] - xs[0]) > w * 0.30:
-        return small.crop((xs[0], ys[0], xs[-1] + 1, ys[-1] + 1))
-    return small
-
-def pair_score(clean_im, scan_im):
-    vc_f, vc_c = nvec(clean_im), nvec(crop_band(clean_im))
-    vs_f, vs_c = nvec(scan_im), nvec(crop_band(scan_im))
-    best = max(corr(vc_f, vs_f), corr(vc_c, vs_c), corr(vc_f, vs_c))
-    if clean_im.width > clean_im.height and scan_im.height > scan_im.width:
-        g64 = scan_im.convert('L').resize((64, 96), Image.Resampling.BILINEAR)
-        th = round(64 * clean_im.height / clean_im.width)
-        if 8 <= th <= 96:
-            for y in range(0, 96 - th + 1, 2):
-                c = corr(vc_f, nvec(g64.crop((0, y, 64, y + th))))
-                if c > best:
-                    best = c
-    return best
-
-def color_sat(im):
-    raw = im.convert('RGB').resize((48, 72), Image.Resampling.BILINEAR).tobytes()
-    return sum(max(raw[i], raw[i+1], raw[i+2]) - min(raw[i], raw[i+1], raw[i+2]) for i in range(0, len(raw), 3)) / (len(raw) // 3)
-
-out = {}
-for vol, spec in payload.items():
-    scan_cache = {}
-    def get_scan(pdf_no):
-        if pdf_no not in scan_cache:
-            scan_cache[pdf_no] = Image.open(os.path.join(spec['scanDir'], f'{pdf_no:03d}.webp')).convert('RGB')
-        return scan_cache[pdf_no]
-
-    all_art_pdfs = spec['allArtPdfs']
-    vol_res = []
-    for item in spec['items']:
-        cim = Image.open(item['cleanPath']).convert('RGB')
-        sat = color_sat(cim)
-        # Kendi komşuluk PDF penceresindeki en iyi eşleşme
-        win_scores = [(pair_score(cim, get_scan(p)), p) for p in item['windowPdfs']]
-        win_scores.sort(reverse=True)
-        win_best_corr, win_best_pdf = win_scores[0] if win_scores else (0.0, None)
-
-        # Tüm gövde illüstrasyon PDF sayfaları arasındaki en iyi eşleşme
-        global_scores = [(pair_score(cim, get_scan(p)), p) for p in all_art_pdfs]
-        global_scores.sort(reverse=True)
-        glob_best_corr, glob_best_pdf = global_scores[0]
-
-        vol_res.append({
-            'page': item['page'],
-            'sat': round(sat, 2),
-            'winBestPdf': win_best_pdf,
-            'winBestCorr': round(win_best_corr, 4),
-            'globBestPdf': glob_best_pdf,
-            'globBestCorr': round(glob_best_corr, 4),
-        })
-    out[vol] = vol_res
-
-print(json.dumps(out))
-`;
+  console.log('10. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages (PIL-free)...');
 
   const payload = {};
   for (const vol of ['5', '6', '7']) {
@@ -475,41 +524,85 @@ print(json.dumps(out))
     };
   }
 
-  let pyRaw;
+  // Tüm benzersiz clean ve scan WebP yollarını PIL gerektirmeden (libwebp / dwebp -> ffmpeg -> pil yedeği) çözümle
+  const uniquePaths = new Set();
+  for (const vol of ['5', '6', '7']) {
+    const spec = payload[vol];
+    for (const p of spec.allArtPdfs) {
+      uniquePaths.add(path.join(spec.scanDir, `${String(p).padStart(3, '0')}.webp`));
+    }
+    for (const item of spec.items) {
+      uniquePaths.add(item.cleanPath);
+      for (const p of item.windowPdfs) {
+        uniquePaths.add(path.join(spec.scanDir, `${String(p).padStart(3, '0')}.webp`));
+      }
+    }
+  }
+
+  const summaries = new Map();
+  let usedBackend = 'none';
   try {
-    pyRaw = execFileSync('python3', ['-c', pyVerify, JSON.stringify(payload)], {
-      encoding: 'utf8',
-      maxBuffer: 16 * 1024 * 1024,
+    usedBackend = forEachDecodedWebpSync([...uniquePaths], (fp, frame) => {
+      summaries.set(fp, summarizeFrameForCorrelation(frame));
     });
   } catch (e) {
-    const err = String((e && (e.stderr || e.message)) || '');
-    if (/No module named 'PIL'|No module named 'Pillow'/.test(err)) {
-      console.log('   ⚠ Pillow (PIL) yok — piksel korelasyon doğrulaması atlandı (npm i -g pillow değil, pip install Pillow gerekir)');
+    if (e && e.code === 'NO_WEBP_DECODER') {
+      console.log(`   ⚠ WebP çözücü (libwebp / dwebp / ffmpeg / Pillow) bulunamadı — piksel korelasyon doğrulaması atlandı`);
       return;
     }
     throw e;
   }
-  const pyOut = JSON.parse(pyRaw);
 
   for (const vol of ['5', '6', '7']) {
-    for (const r of pyOut[vol]) {
+    const spec = payload[vol];
+    for (const item of spec.items) {
+      const cleanSum = summaries.get(item.cleanPath);
+      const sat = Number(cleanSum.sat.toFixed(2));
+
+      let winBestCorr = -Infinity;
+      let winBestPdf = null;
+      for (const p of item.windowPdfs) {
+        const scanPath = path.join(spec.scanDir, `${String(p).padStart(3, '0')}.webp`);
+        const sc = pairScore(cleanSum, summaries.get(scanPath));
+        if (sc > winBestCorr) {
+          winBestCorr = sc;
+          winBestPdf = p;
+        }
+      }
+
+      let globBestCorr = -Infinity;
+      let globBestPdf = null;
+      for (const p of spec.allArtPdfs) {
+        const scanPath = path.join(spec.scanDir, `${String(p).padStart(3, '0')}.webp`);
+        const sc = pairScore(cleanSum, summaries.get(scanPath));
+        if (sc > globBestCorr) {
+          globBestCorr = sc;
+          globBestPdf = p;
+        }
+      }
+
+      const winCorrRounded = Number(winBestCorr.toFixed(4));
+      const globCorrRounded = Number(globBestCorr.toFixed(4));
+
       assert.ok(
-        r.sat < 4.0,
-        `Vol ${vol} p.${r.page} has color saturation ${r.sat} >= 4.0 (leaked front color kuchie in story body!)`
+        sat < 4.0,
+        `Vol ${vol} p.${item.page} has color saturation ${sat} >= 4.0 (leaked front color kuchie in story body!)`
       );
       assert.ok(
-        r.winBestCorr >= 0.92,
-        `Vol ${vol} p.${r.page} failed neighborhood PDF scan match: best corr=${r.winBestCorr} (PDF s.${r.winBestPdf})`
+        winCorrRounded >= 0.92,
+        `Vol ${vol} p.${item.page} failed neighborhood PDF scan match: best corr=${winCorrRounded} (PDF s.${winBestPdf})`
       );
       assert.strictEqual(
-        r.winBestPdf,
-        r.globBestPdf,
-        `Vol ${vol} p.${r.page} is in the wrong chapter/slot! Neighborhood best=PDF s.${r.winBestPdf} (${r.winBestCorr}), but matches PDF s.${r.globBestPdf} (${r.globBestCorr})`
+        winBestPdf,
+        globBestPdf,
+        `Vol ${vol} p.${item.page} is in the wrong chapter/slot! Neighborhood best=PDF s.${winBestPdf} (${winCorrRounded}), but matches PDF s.${globBestPdf} (${globCorrRounded})`
       );
     }
   }
 
-  console.log('   ✓ All 33 body illustrations across Vols 5, 6, and 7 match their exact neighborhood PDF scans (corr >= 0.92, zero wrong chapters, zero kuchie leaks)');
+  console.log(
+    `   ✓ All 33 body illustrations across Vols 5, 6, and 7 match their exact neighborhood PDF scans (corr >= 0.92, zero wrong chapters, zero kuchie leaks) [decoder: ${usedBackend}]`
+  );
 }
 
 function run() {
@@ -522,6 +615,7 @@ function run() {
   testAllVolumesCanonicalArtifactsAndServer();
   testVols5To7StructuralAndTocInvariants();
   testFlipIllustrationPositionAlignment();
+  testPilFreeWebpPixelsPipeline();
   testVol5To7BodyIllustrationScanAlignment();
   console.log('\n=== All Ingestion & Pipeline Tests Passed! ===');
 }

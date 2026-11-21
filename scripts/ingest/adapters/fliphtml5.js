@@ -411,7 +411,17 @@ async function extractVol5PdfIllustrations(pdfFileId, colorFolderId) {
   try {
     const pdfPath = path.join(tmpDir, 'vol5.pdf');
     fs.writeFileSync(pdfPath, pdfBuf);
-    execFileSync('pdfimages', ['-png', '-p', pdfPath, path.join(tmpDir, 'img')]);
+    try {
+      execFileSync('pdfimages', ['-png', '-p', pdfPath, path.join(tmpDir, 'img')]);
+    } catch (err) {
+      if (err && err.code === 'ENOENT') {
+        // Termux/Android gibi poppler (pdfimages) bulunmayan ortamlarda pypdfium2 + zlib PNG (PIL'siz) kullan
+        const { extractPdfIllustrationPagesViaPdfiumSync } = require('../../lib/webp_pixels');
+        extractPdfIllustrationPagesViaPdfiumSync(pdfPath, tmpDir);
+      } else {
+        throw err;
+      }
+    }
     const files = fs
       .readdirSync(tmpDir)
       .filter((f) => f.startsWith('img-') && f.endsWith('.png'))
