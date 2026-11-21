@@ -249,14 +249,14 @@ function testVols5To7StructuralAndTocInvariants() {
 }
 
 function testFlipIllustrationPositionAlignment() {
-  console.log('8. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
+  console.log('7. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
   const activeBody = [
-    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Önsöz', enTitle: 'Prologue' } },
+    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Prolog', enTitle: 'Prologue' } },
     { kind: 'empty', srcIdx: 11 }, // Boş bölüm ayırıcı (illüstrasyon yok)
     { kind: 'prose', srcIdx: 12, text: 'Chapter 1 starts here in the student council room.', heading: { label: 'Bölüm 1', enTitle: 'Chapter 1' } },
     { kind: 'empty', srcIdx: 13 }, // Gerçek Bölüm 1 sahne illüstrasyonu (PDF s.14)
     { kind: 'prose', srcIdx: 14, text: 'She smiled mischievously as the shutter clicked behind them.' },
-    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Yazarın Notu', enTitle: 'Afterword' } },
+    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Sonsöz', enTitle: 'Afterword' } },
   ];
 
   // 1) PDF sayfa numarasına (pdfPage) göre eşleştirme + eksik yuva ekleme
@@ -289,7 +289,7 @@ function testFlipIllustrationPositionAlignment() {
 }
 
 function testVol5To7BodyIllustrationScanAlignment() {
-  console.log('9. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
+  console.log('8. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
 
   const pyVerify = `
 import json, os, sys
@@ -475,12 +475,21 @@ print(json.dumps(out))
     };
   }
 
-  const pyOut = JSON.parse(
-    execFileSync('python3', ['-c', pyVerify, JSON.stringify(payload)], {
+  let pyRaw;
+  try {
+    pyRaw = execFileSync('python3', ['-c', pyVerify, JSON.stringify(payload)], {
       encoding: 'utf8',
       maxBuffer: 16 * 1024 * 1024,
-    })
-  );
+    });
+  } catch (e) {
+    const err = String((e && (e.stderr || e.message)) || '');
+    if (/No module named 'PIL'|No module named 'Pillow'/.test(err)) {
+      console.log('   ⚠ Pillow (PIL) yok — piksel korelasyon doğrulaması atlandı (npm i -g pillow değil, pip install Pillow gerekir)');
+      return;
+    }
+    throw e;
+  }
+  const pyOut = JSON.parse(pyRaw);
 
   for (const vol of ['5', '6', '7']) {
     for (const r of pyOut[vol]) {

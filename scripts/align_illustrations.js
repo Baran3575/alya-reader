@@ -637,39 +637,6 @@ function alignVolume(volKey, { dryRun = false, verifyOnly = false } = {}) {
     fs.writeFileSync(cfg.titlesFile, JSON.stringify(newChaptersMeta, null, 2) + '\n');
   }
 
-  // data/quality/v<vol>.json ve scripts/tn_notes.json: gövdeye yeni görsel yuvası eklendiğinde kayan sayfa anahtarlarını hizala
-  const hasPageShift = [...oldPageToNewPage.entries()].some(([origP, newP]) => origP !== newP);
-  if (hasPageShift) {
-    const qFile = path.join(ROOT, 'data', 'quality', `v${volKey}.json`);
-    if (fs.existsSync(qFile)) {
-      const qObj = JSON.parse(fs.readFileSync(qFile, 'utf8'));
-      const newQ = {};
-      for (const [k, v] of Object.entries(qObj)) {
-        const mapped = oldPageToNewPage.get(Number(k));
-        newQ[mapped ? String(mapped) : k] = v;
-      }
-      if (JSON.stringify(qObj) !== JSON.stringify(newQ)) {
-        fs.writeFileSync(qFile, JSON.stringify(newQ, null, 2) + '\n');
-      }
-    }
-
-    const tnFile = path.join(ROOT, 'scripts', 'tn_notes.json');
-    if (fs.existsSync(tnFile)) {
-      const tnAll = JSON.parse(fs.readFileSync(tnFile, 'utf8'));
-      if (tnAll[volKey] && typeof tnAll[volKey] === 'object') {
-        const newVolTn = {};
-        for (const [k, v] of Object.entries(tnAll[volKey])) {
-          const mapped = oldPageToNewPage.get(Number(k));
-          newVolTn[mapped ? String(mapped) : k] = v;
-        }
-        if (JSON.stringify(tnAll[volKey]) !== JSON.stringify(newVolTn)) {
-          tnAll[volKey] = newVolTn;
-          fs.writeFileSync(tnFile, JSON.stringify(tnAll, null, 2) + '\n');
-        }
-      }
-    }
-  }
-
   return { vol: volKey, bodyArtAssignments, removedSeparators, insertedPages };
 }
 

@@ -5,7 +5,6 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const vm = require('vm');
-const zlib = require('zlib');
 const { execFileSync } = require('child_process');
 const { buildBook } = require('../server.js');
 const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
@@ -13,18 +12,15 @@ const { ROOT, VOLUME_KEYS, VOLUMES } = require('./lib/volumes');
 const OUT = path.join(ROOT, 'public', 'bundle.js');
 const ART_OUT = path.join(ROOT, 'public', 'bundle-art.js');
 const BOOKS_DIR = path.join(ROOT, 'public', 'books');
-const ART_SEED = path.join(__dirname, 'lib', 'art_seed_v4_45.json.gz');
 
 function loadExistingArtBundle() {
   const result = { data: {}, index: null };
-  if (fs.existsSync(ART_SEED)) {
-    try {
-      const seeded = JSON.parse(zlib.gunzipSync(fs.readFileSync(ART_SEED)).toString('utf8'));
-      for (const [k, v] of Object.entries(seeded || {})) {
-        if (v && typeof v === 'object') result.data[k] = { ...v };
-      }
-    } catch {
-      // bozuk veya okunamayan yedek atlanır
+  for (const k of ['4', '4.5']) {
+    const chunkFile = path.join(BOOKS_DIR, `art-${k}.json`);
+    if (fs.existsSync(chunkFile)) {
+      try {
+        result.data[k] = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
+      } catch {}
     }
   }
 
@@ -35,25 +31,13 @@ function loadExistingArtBundle() {
       vm.runInNewContext(code, sandbox, { timeout: 2000 });
       if (sandbox.window.ALYA_ART_INDEX) result.index = sandbox.window.ALYA_ART_INDEX;
       if (sandbox.window.ALYA_ART) {
-        for (const [k, v] of Object.entries(sandbox.window.ALYA_ART)) {
-          if (v && typeof v === 'object') result.data[k] = { ...(result.data[k] || {}), ...v };
+        for (const k of ['4', '4.5']) {
+          if (!result.data[k] && sandbox.window.ALYA_ART[k]) {
+            result.data[k] = sandbox.window.ALYA_ART[k];
+          }
         }
       }
-    } catch {
-      // mevcut bundle-art yalnızca indeks içeriyorsa sorun değil
-    }
-  }
-
-  for (const k of ['4', '4.5']) {
-    const chunkFile = path.join(BOOKS_DIR, `art-${k}.json`);
-    if (fs.existsSync(chunkFile)) {
-      try {
-        const parsed = JSON.parse(fs.readFileSync(chunkFile, 'utf8'));
-        if (parsed && typeof parsed === 'object') result.data[k] = { ...(result.data[k] || {}), ...parsed };
-      } catch {
-        // geçersiz parça atlanır
-      }
-    }
+    } catch {}
   }
 
   // Temiz klonlarda gitignore altındaki public/pages/ ve public/books/art-*.json yoksa git geçmişinden gömülü veriyi kurtar
