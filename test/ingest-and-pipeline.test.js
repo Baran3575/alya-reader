@@ -10,8 +10,12 @@ const {
   isSkippedSourceUrl,
   normalizeFlipBookUrl,
   parseSearchConfigJs,
+  isCreditsOrTocPage,
+  detectPageHeading,
   alignMidIllustrationsToBody,
 } = require('../scripts/ingest/adapters/fliphtml5');
+const { fixLigatures, selectVolumes } = require('../scripts/fix_en_ocr');
+const { repairBoundaries } = require('../scripts/fix_boundaries');
 const { solveAnubisHash, parseAnubisChallenge } = require('../scripts/ingest/lib/anubis');
 const { isTranslationInProgress, parseChapterHeadingMeta } = require('../scripts/ingest/adapters/secreftls12');
 const { cleanOcrText } = require('../scripts/ingest/adapters/glucosetl95');
@@ -90,6 +94,66 @@ function testPostProcessorsAndTranslatorHelpers() {
   const strippedNotes = notes('Masachika iç çekti (TN: Japanese pun here) ve yürüdü (ÇN: kelime oyunu).');
   assert.strictEqual(strippedNotes, 'Masachika iç çekti ve yürüdü.');
   assert.ok(!/TN:|ÇN:/i.test(naturalize('Test (TN: note) cümlesi (ÇN: not).')));
+  const preservedCn = naturalize('ÇN: Rusçada “stoykost”, sarsılmaz irade anlamına gelir.');
+  assert.ok(preservedCn.startsWith('ÇN:'), 'Standalone ÇN: footnote paragraphs must be preserved by naturalize()');
+
+  // FlipHTML5 fan-translation credits filter & canonical Turkish headings
+  assert.strictEqual(
+    isCreditsOrTocPage('Glucose Translations\nTranslation & Editing: Fan Translation\nOur discord: https://discord.gg/example\nsolely non-profit'),
+    true,
+    'Fan translation credit pages must be detected and filtered'
+  );
+  assert.deepStrictEqual(
+    detectPageHeading('Prologue\nEncounter\n“Hey, Alya,” Masachika said as he walked into the student council room.'),
+    {
+      enLabel: 'Prologue',
+      label: 'Önsöz',
+      enTitle: 'Encounter',
+      consumedLines: 2,
+    }
+  );
+  assert.deepStrictEqual(
+    detectPageHeading('Chapter 2\nWait, Did My Cowlick Just\nStand Up?\n“Whoa,” Masachika muttered while staring into the bathroom mirror.'),
+    {
+      enLabel: 'Chapter 2',
+      label: 'Bölüm 2',
+      enTitle: 'Wait, Did My Cowlick Just Stand Up?',
+      consumedLines: 3,
+    }
+  );
+  assert.deepStrictEqual(
+    detectPageHeading('Epilogue\nThe End\nMasachika looked out the window as the autumn breeze drifted past.'),
+    {
+      enLabel: 'Epilogue',
+      label: 'Sonsöz',
+      enTitle: 'The End',
+      consumedLines: 2,
+    }
+  );
+  assert.deepStrictEqual(detectPageHeading('Afterword\nHello everyone, thank you so much for picking up this volume.'), {
+    enLabel: 'Afterword',
+    label: 'Yazarın Notu',
+    enTitle: 'Afterword',
+    consumedLines: 1,
+  });
+
+  // fix_en_ocr ligature & --vol selector
+  assert.strictEqual(fixLigatures('Public Relations Of icer and dif icult choices'), 'Public Relations Officer and difficult choices');
+  assert.deepStrictEqual(selectVolumes(['--vol', '5,6,7']), ['5', '6', '7']);
+
+  // fix_boundaries source-guided orphan fragment repair
+  const sampleBoundaryData = {
+    '11': ['Sağ işaret parmağını kaydırdı ve kenarını çekti.'],
+    '12': ['Elbise. Sonra baştan çıkarıcı bir sesle fısıldadı.'],
+  };
+  const sampleBoundarySrc = [
+    { page: 11, text: 'She slid her finger and pulled the edge of the' },
+    { page: 12, text: 'dress. Then she whispered in a seductive voice.' },
+  ];
+  const boundaryRep = repairBoundaries(sampleBoundaryData, sampleBoundarySrc);
+  assert.strictEqual(boundaryRep.fragments.length, 1, 'Orphan fragment across mid-sentence page break must be repaired');
+  assert.ok(sampleBoundaryData['11'][0].includes('elbise.'), 'Fragment must attach to previous page');
+  assert.strictEqual(sampleBoundaryData['12'][0], 'Sonra baştan çıkarıcı bir sesle fısıldadı.');
 
   assert.strictEqual(normalizeWhisperBraces('【Milashka...】 (TN: cute)'), '{Milashka...}');
   const refined = refineLiteraryTurkish('"Bir şekilde söz konusu plan and this!" (TN: test)', {});
@@ -159,15 +223,40 @@ function testAllVolumesCanonicalArtifactsAndServer() {
   console.log('   ✓ All 11 volumes verified across source.json, chapters.json, WebP assets, and server.js');
 }
 
+function testVols5To7StructuralAndTocInvariants() {
+  console.log('7. Verifying Vols 5, 6, and 7 credits cleanup, canonical TOC labels, whispers, and ÇN notes...');
+  const v6Final = JSON.parse(fs.readFileSync(VOLUMES['6'].finalFile, 'utf8'));
+  const v7Final = JSON.parse(fs.readFileSync(VOLUMES['7'].finalFile, 'utf8'));
+  assert.deepStrictEqual(v6Final['6'], [], 'Vol 6 leaked fan-translation credits page 6 must be empty');
+  assert.deepStrictEqual(v7Final['5'], [], 'Vol 7 leaked fan-translation credits page 5 must be empty');
+  assert.strictEqual(v6Final['233'][0], '◇', 'Vol 6 page 233 must start with scene divider ◇');
+
+  for (const k of ['5', '6', '7']) {
+    const ch = JSON.parse(fs.readFileSync(VOLUMES[k].titlesFile, 'utf8'));
+    for (const item of ch.chapters) {
+      assert.ok(!/^(?:Prolog|Epilog|Afterword)$/i.test(item.label), `Vol ${k} TOC label must use Önsöz/Sonsöz/Yazarın Notu: ${item.label}`);
+      assert.ok(!/&[a-z]+;/i.test(item.enTitle || ''), `Vol ${k} enTitle must not contain raw HTML entities: ${item.enTitle}`);
+    }
+    const tr = JSON.parse(fs.readFileSync(VOLUMES[k].finalFile, 'utf8'));
+    const allParas = Object.values(tr).flat();
+    assert.ok(allParas.some((p) => p.startsWith('ÇN: ')), `Vol ${k} must contain standalone ÇN: footnotes`);
+    for (const p of allParas) {
+      if (p.includes('⋆⋅☆⋅⋆')) assert.strictEqual(p, '⋆⋅☆⋅⋆', `Vol ${k} star divider must be standalone: ${p}`);
+      if (p.includes('◇')) assert.strictEqual(p, '◇', `Vol ${k} diamond divider must be standalone: ${p}`);
+    }
+  }
+  console.log('   ✓ Vols 5–7 credits cleanup, TOC labels, standalone dividers, and ÇN footnotes verified');
+}
+
 function testFlipIllustrationPositionAlignment() {
-  console.log('7. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
+  console.log('8. Testing FlipHTML5 position-based illustration alignment (no blind separator shifts)...');
   const activeBody = [
-    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Prolog', enTitle: 'Prologue' } },
+    { kind: 'prose', srcIdx: 10, text: 'Prologue opening scene with Alisa and Masachika talking.', heading: { label: 'Önsöz', enTitle: 'Prologue' } },
     { kind: 'empty', srcIdx: 11 }, // Boş bölüm ayırıcı (illüstrasyon yok)
     { kind: 'prose', srcIdx: 12, text: 'Chapter 1 starts here in the student council room.', heading: { label: 'Bölüm 1', enTitle: 'Chapter 1' } },
     { kind: 'empty', srcIdx: 13 }, // Gerçek Bölüm 1 sahne illüstrasyonu (PDF s.14)
     { kind: 'prose', srcIdx: 14, text: 'She smiled mischievously as the shutter clicked behind them.' },
-    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Sonsöz', enTitle: 'Afterword' } },
+    { kind: 'prose', srcIdx: 15, text: 'Afterword thanks to Momoco-sensei for the wonderful art.', heading: { label: 'Yazarın Notu', enTitle: 'Afterword' } },
   ];
 
   // 1) PDF sayfa numarasına (pdfPage) göre eşleştirme + eksik yuva ekleme
@@ -200,7 +289,7 @@ function testFlipIllustrationPositionAlignment() {
 }
 
 function testVol5To7BodyIllustrationScanAlignment() {
-  console.log('8. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
+  console.log('9. Verifying Vol 5, 6, and 7 body illustrations against neighboring PDF scan/*.webp pages...');
 
   const pyVerify = `
 import json, os, sys
@@ -422,6 +511,7 @@ function run() {
   testPostProcessorsAndTranslatorHelpers();
   testSecreftlsPendingHandling();
   testAllVolumesCanonicalArtifactsAndServer();
+  testVols5To7StructuralAndTocInvariants();
   testFlipIllustrationPositionAlignment();
   testVol5To7BodyIllustrationScanAlignment();
   console.log('\n=== All Ingestion & Pipeline Tests Passed! ===');

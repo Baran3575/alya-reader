@@ -1,21 +1,21 @@
 {
   "titles": {
     "1": "İllüstrasyonlar",
-    "8": "Sihirbazım",
-    "12": "Bu Adamlar Bu İşe Çok Girmiş",
+    "8": "Büyücüm",
+    "12": "Bu Ekip Kendini Fazla Kaptırmış",
     "33": "Bir Otaku’nun Romantizmi",
-    "59": "Tartışmadan Daha Ciddiye Aldım",
-    "81": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
-    "101": "Bir biçimde Daha İyi Hissediyorum",
+    "59": "Münazaradan Daha Ciddiye Aldım",
+    "81": "Dürüst Olmak Gerekirse Kalbim Epey Çarptı",
+    "101": "Bir Bakıma Daha İyi Hissediyorum",
     "125": "Savaş Gücü Önemlidir, Değil mi?",
     "155": "Şiddet Her Şeyi Çözer",
-    "185": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
+    "185": "Boyun Eğmezse Kırmaktan Başka Çare Kalmaz",
     "200": "Sözümü Tutacağım",
-    "219": "Ona teşekkür etmek ve veda etmek istiyorum",
-    "239": "Şimdi, Sadece Şu Anda",
+    "219": "Ona Teşekkür Etmek ve Veda Etmek İstiyorum",
+    "239": "Şimdi, Yalnızca Şu Anda",
     "251": "Slit-Paisen’in Doğduğu Gün",
-    "257": "Sonsöz",
-    "260": "Yuri Dünyayı Kurtarıyor"
+    "257": "Yazarın Notu",
+    "260": "Yuri Dünyayı Kurtarır"
   },
   "chapters": [
     {
@@ -25,39 +25,39 @@
       "startPage": 1
     },
     {
-      "label": "Prolog",
-      "title": "Sihirbazım",
+      "label": "Önsöz",
+      "title": "Büyücüm",
       "enTitle": "My Wizard",
       "startPage": 8
     },
     {
       "label": "Bölüm 1",
-      "title": "Bu Adamlar Bu İşe Çok Girmiş",
+      "title": "Bu Ekip Kendini Fazla Kaptırmış",
       "enTitle": "These Guys Are Way Too Into This",
       "startPage": 12
     },
     {
       "label": "Bölüm 2",
       "title": "Bir Otaku’nun Romantizmi",
-      "enTitle": "An Otaku&rsquo;s Romance",
+      "enTitle": "An Otaku’s Romance",
       "startPage": 33
     },
     {
       "label": "Bölüm 3",
-      "title": "Tartışmadan Daha Ciddiye Aldım",
+      "title": "Münazaradan Daha Ciddiye Aldım",
       "enTitle": "I Took It More Seriously Than The Debate",
       "startPage": 59
     },
     {
       "label": "Bölüm 4",
-      "title": "Doğrusunu söylemek gerekirse kalbim biraz titredi",
+      "title": "Dürüst Olmak Gerekirse Kalbim Epey Çarptı",
       "enTitle": "Honestly, My Heart Wavered Quite A Bit",
       "startPage": 81
     },
     {
       "label": "Bölüm 5",
-      "title": "Bir biçimde Daha İyi Hissediyorum",
-      "enTitle": "I&rsquo;m Feeling Better, In A Way",
+      "title": "Bir Bakıma Daha İyi Hissediyorum",
+      "enTitle": "I’m Feeling Better, In A Way",
       "startPage": 101
     },
     {
@@ -74,25 +74,25 @@
     },
     {
       "label": "Bölüm 8",
-      "title": "Verilmezse Kırmaktan Başka Seçenek Kalmaz",
-      "enTitle": "If It Doesn&rsquo;t Yield, Then There&rsquo;s No Choice But To Break It",
+      "title": "Boyun Eğmezse Kırmaktan Başka Çare Kalmaz",
+      "enTitle": "If It Doesn’t Yield, Then There’s No Choice But To Break It",
       "startPage": 185
     },
     {
       "label": "Bölüm 9",
       "title": "Sözümü Tutacağım",
-      "enTitle": "I&rsquo;ll Keep My Word",
+      "enTitle": "I’ll Keep My Word",
       "startPage": 200
     },
     {
       "label": "Bölüm 10",
-      "title": "Ona teşekkür etmek ve veda etmek istiyorum",
+      "title": "Ona Teşekkür Etmek ve Veda Etmek İstiyorum",
       "enTitle": "I Want To Thank Her And Say Goodbye",
       "startPage": 219
     },
     {
-      "label": "Epilog",
-      "title": "Şimdi, Sadece Şu Anda",
+      "label": "Sonsöz",
+      "title": "Şimdi, Yalnızca Şu Anda",
       "enTitle": "Now, Only At This Moment",
       "startPage": 239
     },
@@ -103,14 +103,14 @@
       "startPage": 251
     },
     {
-      "label": "Sonsöz",
-      "title": "Sonsöz",
+      "label": "Yazarın Notu",
+      "title": "Yazarın Notu",
       "enTitle": "Afterword",
       "startPage": 257
     },
     {
       "label": "Ek Hikâye",
-      "title": "Yuri Dünyayı Kurtarıyor",
+      "title": "Yuri Dünyayı Kurtarır",
       "enTitle": "Yuri Saves The World",
       "startPage": 260
     }

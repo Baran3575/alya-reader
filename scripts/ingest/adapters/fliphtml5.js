@@ -177,10 +177,15 @@ function isCreditsOrTocPage(rawText) {
   if (/Glucose Translations/i.test(t) && t.replace(/Glucose\s+Translations\s*\d*/gi, '').trim().length < 220) {
     return true;
   }
-  if (/(?:Translated by|Proofread by|Edited by|Cover art by|All rights reserved|KADOKAWA CORPORATION)/i.test(t) && t.length < 900) {
+  if (
+    /(?:Translated by|Proofread by|Edited by|Cover art by|All rights reserved|KADOKAWA CORPORATION|Fan\s+Translation|Translation\s*&|Editing\s*&|solely\s+non-profit)/i.test(
+      t
+    ) &&
+    t.length < 1200
+  ) {
     return true;
   }
-  if (/join\s+our\s+discord|ko-fi\.com|glucosetl\.xyz|wordpress\.com/i.test(t) && t.length < 700) {
+  if (/(?:join\s+our\s+discord|Our\s+discord|ko-fi\.com|glucosetl\.xyz|wordpress\.com)/i.test(t) && t.length < 1200) {
     return true;
   }
   return false;
@@ -329,9 +334,9 @@ function detectPageHeading(text, canonicalTitles = new Map()) {
   }
 
   let trLabel = rawLabel;
-  if (/^Prologue$/i.test(rawLabel)) trLabel = 'Prolog';
-  else if (/^Epilogue$/i.test(rawLabel)) trLabel = 'Epilog';
-  else if (isAfterword) trLabel = 'Sonsöz';
+  if (/^Prologue$/i.test(rawLabel)) trLabel = 'Önsöz';
+  else if (/^Epilogue$/i.test(rawLabel)) trLabel = 'Sonsöz';
+  else if (isAfterword) trLabel = 'Yazarın Notu';
   else if (/^Interlude$/i.test(rawLabel)) trLabel = 'Ara Bölüm';
   else if (/^Chapter\s+(\d+)$/i.test(rawLabel)) trLabel = 'Bölüm ' + rawLabel.match(/\d+/)[0];
   else if (/^(?:Bonus\s+)?Short\s+Story(?:\s+(\d+))?$/i.test(rawLabel) || /^(?:Bookwalker|Afterword)\s+SS$/i.test(rawLabel)) {
@@ -888,6 +893,9 @@ module.exports = {
   isSkippedSourceUrl,
   normalizeFlipBookUrl,
   parseSearchConfigJs,
+  isCreditsOrTocPage,
+  cleanFlipPageText,
+  detectPageHeading,
   alignMidIllustrationsToBody,
   extractVol5PdfIllustrations,
   extractCleanIllustrations,

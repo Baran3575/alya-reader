@@ -1,19 +1,20 @@
 {
   "titles": {
     "1": "İllüstrasyonlar",
-    "5": "Rastlamak",
+    "5": "Karşılaşma",
     "16": "Kavuşma ve Veda",
-    "31": "Rüya olması gerçek olduğu anlamına gelmez…",
-    "53": "O tarafta ne yapacaktı?",
-    "77": "Bir Erkeğin Allığına Kim İhtiyaç Duyar?",
-    "100": "Rus Dere veya Kısaca Açığa Çıkan Aşk",
-    "122": "Gerçekten Bunda Suçlu Olmadığımı Düşünüyorum",
-    "147": "Üzgünüm, Suçluyum",
-    "171": "Erkeklerin Yüzü Bu yüzden Kızarır…",
-    "187": "Bu Adamlar Çok Güçlü Değil mi?",
+    "31": "Rüya Olması Gerçek Olmadığı Anlamına Gelmez…",
+    "53": "Perde Arkasında Ne Yapacaktı?",
+    "77": "Bir Erkeğin Yüz Kızarmasını Kim Neylesin?",
+    "100": "Rusça Cilve ya da Kısaca Roshidere",
+    "122": "Bunda Gerçekten Suçum Olmadığını Düşünüyorum",
+    "147": "Özür Dilerim, Suçluyum",
+    "171": "Erkeklerin Yüzü İşte Bu Yüzden Kızarır…",
+    "187": "Bu Ekip Fazla Güçlü Değil mi?",
     "205": "İrade ve Gurur",
     "228": "Kazanan…",
-    "243": "Sonsöz"
+    "243": "Sonsöz",
+    "250": "Yazarın Notu"
   },
   "chapters": [
     {
@@ -23,8 +24,8 @@
       "startPage": 1
     },
     {
-      "label": "Prolog",
-      "title": "Rastlamak",
+      "label": "Önsöz",
+      "title": "Karşılaşma",
       "enTitle": "Encounter",
       "startPage": 5
     },
@@ -36,49 +37,49 @@
     },
     {
       "label": "Bölüm 2",
-      "title": "Rüya olması gerçek olduğu anlamına gelmez…",
+      "title": "Rüya Olması Gerçek Olmadığı Anlamına Gelmez…",
       "enTitle": "Just Because It’s A Dream Doesn’t Mean It’s Real…",
       "startPage": 31
     },
     {
       "label": "Bölüm 3",
-      "title": "O tarafta ne yapacaktı?",
+      "title": "Perde Arkasında Ne Yapacaktı?",
       "enTitle": "What Was He Going To Do On The Side?",
       "startPage": 53
     },
     {
       "label": "Bölüm 4",
-      "title": "Bir Erkeğin Allığına Kim İhtiyaç Duyar?",
+      "title": "Bir Erkeğin Yüz Kızarmasını Kim Neylesin?",
       "enTitle": "Who Needs A Man’s Blush?",
       "startPage": 77
     },
     {
       "label": "Bölüm 5",
-      "title": "Rus Dere veya Kısaca Açığa Çıkan Aşk",
+      "title": "Rusça Cilve ya da Kısaca Roshidere",
       "enTitle": "Russian Dere, or Exposed Love For Short",
       "startPage": 100
     },
     {
       "label": "Bölüm 6",
-      "title": "Gerçekten Bunda Suçlu Olmadığımı Düşünüyorum",
+      "title": "Bunda Gerçekten Suçum Olmadığını Düşünüyorum",
       "enTitle": "I Really Think I’m Not Guilty of This",
       "startPage": 122
     },
     {
       "label": "Bölüm 7",
-      "title": "Üzgünüm, Suçluyum",
+      "title": "Özür Dilerim, Suçluyum",
       "enTitle": "I’m Sorry, I’m Guilty",
       "startPage": 147
     },
     {
       "label": "Bölüm 8",
-      "title": "Erkeklerin Yüzü Bu yüzden Kızarır…",
+      "title": "Erkeklerin Yüzü İşte Bu Yüzden Kızarır…",
       "enTitle": "That’s Why Men Blush…",
       "startPage": 171
     },
     {
       "label": "Bölüm 9",
-      "title": "Bu Adamlar Çok Güçlü Değil mi?",
+      "title": "Bu Ekip Fazla Güçlü Değil mi?",
       "enTitle": "Aren’t These Guys Too Strong?",
       "startPage": 187
     },
@@ -95,10 +96,16 @@
       "startPage": 228
     },
     {
-      "label": "Epilog",
+      "label": "Sonsöz",
       "title": "Sonsöz",
-      "enTitle": "Epilog",
+      "enTitle": "Epilogue",
       "startPage": 243
+    },
+    {
+      "label": "Yazarın Notu",
+      "title": "Yazarın Notu",
+      "enTitle": "Afterword",
+      "startPage": 250
     }
   ]
 }

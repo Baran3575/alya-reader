@@ -393,6 +393,41 @@ function testIntentionalCornerQuotesAndCyrillic() {
   }
 }
 
+function testIntentionalNestedQuotesAndRegisterViolations() {
+  console.log('Testing nested double quotes and sen/siz register violation checks in CLI...');
+  const v5Path = path.join(ROOT, 'data5', 'paragraphs_final.json');
+  const orig = fs.readFileSync(v5Path, 'utf8');
+  try {
+    // 1. Nested double quotes “... “...” ...”
+    const dNested = JSON.parse(orig);
+    dNested['16'][0] = '“Merhaba, “iç içe” çift tırnak hatası.”';
+    fs.writeFileSync(v5Path, JSON.stringify(dNested));
+    const resNested = runCLI(['--volume', '5', '--strict'], false);
+    assert.strictEqual(resNested.code, 1);
+    assert(resNested.out.includes('iç içe çift tırnak'), 'Must report nested double quotes');
+
+    // 2. -sama + sen register mismatch
+    const dSama = JSON.parse(orig);
+    dSama['16'][0] = '“Seni beklettiğim için üzgünüm, Yuki-sama.”';
+    fs.writeFileSync(v5Path, JSON.stringify(dSama));
+    const resSama = runCLI(['--volume', '5', '--strict'], false);
+    assert.strictEqual(resSama.code, 1);
+    assert(resSama.out.includes('hitap kipi ihlali (sen/siz)'), 'Must report -sama + sen mismatch');
+
+    // 3. Single-utterance sen/siz collision
+    const dColl = JSON.parse(orig);
+    dColl['16'][0] = '“Sana söylüyorum ama lütfen bunu unutmayın.”';
+    fs.writeFileSync(v5Path, JSON.stringify(dColl));
+    const resColl = runCLI(['--volume', '5', '--strict'], false);
+    assert.strictEqual(resColl.code, 1);
+    assert(resColl.out.includes('hitap kipi ihlali (sen/siz)'), 'Must report single-utterance sen/siz collision');
+
+    console.log('  ✓ Nested double quotes and sen/siz register violations caught with code 1');
+  } finally {
+    fs.writeFileSync(v5Path, orig);
+  }
+}
+
 function runAll() {
   console.log('=== Starting QC CLI and Matrix Verification Tests ===\n');
   testCleanPass();
@@ -403,6 +438,7 @@ function runAll() {
   testIntentionalTranslatorNote();
   testIntentionalUnbalancedDelimiters();
   testIntentionalCornerQuotesAndCyrillic();
+  testIntentionalNestedQuotesAndRegisterViolations();
   testPatchValidationAndRegression();
   testScoreRegressionGate();
   testSchemaValidation();

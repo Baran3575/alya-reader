@@ -1,20 +1,20 @@
 {
   "titles": {
     "1": "İllüstrasyonlar",
-    "7": "Bu",
-    "14": "Yeniden Birleşme",
-    "42": "Bu Tür Öngörülere İhtiyacımız Yoktu",
-    "69": "Bir dakika, Cowlick’im ayağa mı kalktı?",
-    "99": "Yüzyılın En Büyük Karışıklık Duygusu",
-    "128": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
-    "161": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
-    "185": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
+    "7": "Bu Duygu…",
+    "14": "Yeniden Buluşma",
+    "42": "Böyle Bir Ön Belirtiye İhtiyacımız Yoktu",
+    "69": "Bir Dakika, Tepemdeki Saç Tutamım mı Dikildi?",
+    "99": "Yüzyılın En Büyük Kafa Karışıklığı",
+    "128": "Rol Yapacaksak Utanmayı Bir Kenara Bırakalım",
+    "161": "Kalbe Zararlı Senpai ve Kalbe İyi Gelen Senpai",
+    "185": "Yuvarlanan Dev Bir Top Muhtemelen Kazaya Yol Açar",
     "210": "Gerçekten Büyüdün, Değil mi?",
-    "226": "Rastlamak",
-    "242": "At Yarışması",
-    "259": "Bu",
-    "269": "Çocukluk Arkadaşı Olduğu Zamanlardan",
-    "274": "Sonsöz"
+    "226": "Karşılaşma",
+    "242": "Atlı Süvari Yarışı",
+    "259": "Bu Duygu…",
+    "269": "Sadece Çocukluk Arkadaşı Olduğu Günlerden",
+    "274": "Yazarın Notu"
   },
   "chapters": [
     {
@@ -24,50 +24,50 @@
       "startPage": 1
     },
     {
-      "label": "Prolog",
-      "title": "Bu",
+      "label": "Önsöz",
+      "title": "Bu Duygu…",
       "enTitle": "This Is",
       "startPage": 7
     },
     {
       "label": "Bölüm 1",
-      "title": "Yeniden Birleşme",
+      "title": "Yeniden Buluşma",
       "enTitle": "Reunion",
       "startPage": 14
     },
     {
       "label": "Bölüm 2",
-      "title": "Bu Tür Öngörülere İhtiyacımız Yoktu",
+      "title": "Böyle Bir Ön Belirtiye İhtiyacımız Yoktu",
       "enTitle": "We Didn’t Need This Kind of Foreshadowing",
       "startPage": 42
     },
     {
       "label": "Bölüm 3",
-      "title": "Bir dakika, Cowlick’im ayağa mı kalktı?",
+      "title": "Bir Dakika, Tepemdeki Saç Tutamım mı Dikildi?",
       "enTitle": "Wait a Moment, Did My Cowlick Just Stand Up?",
       "startPage": 69
     },
     {
       "label": "Bölüm 4",
-      "title": "Yüzyılın En Büyük Karışıklık Duygusu",
+      "title": "Yüzyılın En Büyük Kafa Karışıklığı",
       "enTitle": "The Century’s Greatest Sense of Confusion",
       "startPage": 99
     },
     {
       "label": "Bölüm 5",
-      "title": "Karakter Yaratacaksanız Utancı Bir kenara bırakalım",
+      "title": "Rol Yapacaksak Utanmayı Bir Kenara Bırakalım",
       "enTitle": "If You’re Gonna Create a Character, Let’s Cast Aside the Shame",
       "startPage": 128
     },
     {
       "label": "Bölüm 6",
-      "title": "Kalbe Zarar Veren Senpai ve Kalbe İyilik Yapan Senpai",
+      "title": "Kalbe Zararlı Senpai ve Kalbe İyi Gelen Senpai",
       "enTitle": "The Senpai Who’s Bad for the Heart and the Senpai Who’s Kind for the Heart",
       "startPage": 161
     },
     {
       "label": "Bölüm 7",
-      "title": "Yuvarlanan Büyük Bir Top Muhtemelen Kazaya Sebep Olur",
+      "title": "Yuvarlanan Dev Bir Top Muhtemelen Kazaya Yol Açar",
       "enTitle": "A Big Rolling Ball Would Probably Cause an Accident",
       "startPage": 185
     },
@@ -79,31 +79,31 @@
     },
     {
       "label": "Bölüm 9",
-      "title": "Rastlamak",
+      "title": "Karşılaşma",
       "enTitle": "Encounter",
       "startPage": 226
     },
     {
       "label": "Bölüm 10",
-      "title": "At Yarışması",
+      "title": "Atlı Süvari Yarışı",
       "enTitle": "The Horseback Competition",
       "startPage": 242
     },
     {
-      "label": "Epilog",
-      "title": "Bu",
+      "label": "Sonsöz",
+      "title": "Bu Duygu…",
       "enTitle": "This Is",
       "startPage": 259
     },
     {
-      "label": "Yan Hikâye",
-      "title": "Çocukluk Arkadaşı Olduğu Zamanlardan",
+      "label": "Ek Hikâye",
+      "title": "Sadece Çocukluk Arkadaşı Olduğu Günlerden",
       "enTitle": "From When She Was Just a Childhood Friend",
       "startPage": 269
     },
     {
-      "label": "Sonsöz",
-      "title": "Sonsöz",
+      "label": "Yazarın Notu",
+      "title": "Yazarın Notu",
       "enTitle": "Afterword",
       "startPage": 274
     }
