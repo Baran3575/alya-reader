@@ -129,3 +129,4 @@ Kaynak PDF'ler: Cilt 5–7 `archive.org/details/roshidere-vol.-1234567`, Cilt 8�
 - API: `sources`, `flip`, `source`, `scan`, `pages[].hasImg`, `pages[].scan` (tam sayfa tarama yolu).
 - `VOL_ORDER` = `4 · 4.5 · 5 · 6 · 7 · 8 · 9 · 9.5 · 10 · 11 · 12`.
 
+Not: Bu bir test reposudur
